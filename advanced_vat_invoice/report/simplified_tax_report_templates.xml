@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--Template for simplified tax report-->
+    <template id="simplified_tax_template">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="doc">
+                <t t-call="advanced_vat_invoice.custom_vat_layout">
+                    <div class="page" style="font-family: sans-serif; color: #333333; padding-top: 30px;">
+                        <!-- Document Title -->
+                        <div class="row mb-4">
+                            <div class="col-12 text-center">
+                                <h3 style="font-weight: 800; margin-bottom: 2px; color: #1E293B; font-size: 20pt; letter-spacing: -0.5px;">فاتورة ضريبية مبسطة</h3>
+                                <h4 style="font-weight: bold; color: #64748B; margin-top: 0; font-size: 14pt; text-transform: uppercase; letter-spacing: 1px;">Simplified Tax Invoice</h4>
+                            </div>
+                        </div>
+
+                        <!-- Metadata Card -->
+                        <div class="row mb-4" style="background-color: #F8F9FA; border: 1px solid #E2E8F0; border-radius: 6px; padding: 15px 5px; margin-left: 0; margin-right: 0;">
+                            <div class="col-4 text-center">
+                                <div style="font-size: 9pt; color: #64748B; text-transform: uppercase; font-weight: bold; letter-spacing: 0.5px;">Invoice Number / رقم الفاتورة</div>
+                                <div style="font-size: 10pt; font-weight: normal; color: #1E293B; margin-top: 6px;"><span t-field="doc.name"/></div>
+                            </div>
+                            <div class="col-4 text-center" style="border-left: 1px solid #E2E8F0;">
+                                <div style="font-size: 9pt; color: #64748B; text-transform: uppercase; font-weight: bold; letter-spacing: 0.5px;">Issue Date / تاريخ الإصدار</div>
+                                <div style="font-size: 10pt; font-weight: normal; color: #1E293B; margin-top: 6px;"><span t-field="doc.invoice_date"/></div>
+                            </div>
+                            <div class="col-4 text-center" style="border-left: 1px solid #E2E8F0;">
+                                <div style="font-size: 9pt; color: #64748B; text-transform: uppercase; font-weight: bold; letter-spacing: 0.5px;">Verification / التحقق</div>
+                                <div style="margin-top: 4px; text-align: center;">
+                                    <img t-if="doc.qr" t-attf-src="data:image/png;base64, {{doc.qr}}" style="max-height: 55px; max-width: 55px; object-fit: contain; display: inline-block;" alt="QR Code"/>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Items Table -->
+                        <div style="margin-top: 25px;">
+                            <h5 style="color: #1E293B; font-weight: bold; margin-bottom: 10px; border-bottom: 2px solid #1E293B; padding-bottom: 5px;">
+                                Order Line Items / البنود
+                            </h5>
+                            <table class="table table-sm" style="width: 100%; font-size: 10pt; border-collapse: collapse; margin-bottom: 15px; font-family: sans-serif;">
+                                <thead>
+                                    <!-- RESTORED DARK BACKGROUND, FORCED WHITE TEXT FOR READABILITY -->
+                                    <tr style="background-color: #475569; border: none;">
+                                        <th style="padding: 10px 8px; text-align: left; font-weight: bold; border: none; color: #FFFFFF !important;">
+                                            Description / تفاصيل السلع أو الخدمات
+                                        </th>
+                                        <th style="padding: 10px 8px; text-align: right; font-weight: bold; border: none; width: 20%; color: #FFFFFF !important;">
+                                            Unit Price / سعر الوحدة
+                                        </th>
+                                        <th style="padding: 10px 8px; text-align: center; font-weight: bold; border: none; width: 15%; color: #FFFFFF !important;">
+                                            Quantity / الكمية
+                                        </th>
+                                        <th style="padding: 10px 8px; text-align: right; font-weight: bold; border: none; width: 25%; color: #FFFFFF !important;">
+                                            Total (excl. VAT) / المجموع (غير شامل الضريبة)
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-set="tax_total" t-value="0"/>
+                                    <tr t-foreach="doc.invoice_line_ids" t-as="line" style="border-bottom: 1px solid #E2E8F0; color: #1E293B; font-weight: normal;">
+                                        <t t-foreach="line.tax_ids" t-as="tax">
+                                            <t t-set="tax_total" t-value="tax_total + line.price_subtotal * tax.amount / 100"/>
+                                        </t>
+                                        
+                                        <td style="padding: 8px 6px; vertical-align: middle;">
+                                            <span t-field="line.name"/>
+                                        </td>
+                                        <td style="padding: 8px 6px; text-align: right; vertical-align: middle;">
+                                            <span t-field="line.price_unit" t-options='{"widget": "monetary", "display_currency": doc.currency_id}'/>
+                                        </td>
+                                        <td style="padding: 8px 6px; text-align: center; vertical-align: middle;">
+                                            <span t-esc="'%.2f %s '%(line.quantity,line.product_uom_id.name)"/>
+                                        </td>
+                                        <td style="padding: 8px 6px; text-align: right; vertical-align: middle; font-weight: normal;">
+                                            <span t-field="line.price_subtotal" t-options='{"widget": "monetary", "display_currency": doc.currency_id}'/>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Totals Section -->
+                        <div class="row justify-content-end" style="margin-top: 15px; font-size: 10pt; page-break-inside: avoid;">
+                            <div class="col-7">
+                                <!-- Empty area -->
+                            </div>
+                            <div class="col-5">
+                                <table class="table table-sm table-borderless" style="width: 100%; color: #1E293B;">
+                                    <tbody>
+                                        <tr style="border-bottom: 1px solid #E2E8F0;">
+                                            <td style="padding: 6px 0; font-weight: bold; color: #1E293B;">
+                                                Total Taxable Amount (excl. VAT)<br/>
+                                                <span style="font-size: 8pt; color: #64748B; font-weight: normal;">إجمالي المبلغ الخاضع للضريبة (غير شامل الضريبة)</span>
+                                            </td>
+                                            <td style="text-align: right; padding: 6px 0; font-weight: normal; color: #1E293B; vertical-align: middle;" class="text-right text-end">
+                                                <span t-field="doc.amount_untaxed"/>
+                                            </td>
+                                        </tr>
+                                        <tr style="border-bottom: 1px solid #E2E8F0;">
+                                            <td style="padding: 6px 0; font-weight: bold; color: #1E293B;">
+                                                Total VAT<br/>
+                                                <span style="font-size: 8pt; color: #64748B; font-weight: normal;">مجموع ضريبة القيمة المضافة</span>
+                                            </td>
+                                            <td style="text-align: right; padding: 6px 0; font-weight: normal; color: #1E293B; vertical-align: middle;" class="text-right text-end">
+                                                <span t-esc="tax_total" t-options='{"widget": "monetary", "display_currency": doc.currency_id}'/>
+                                            </td>
+                                        </tr>
+                                        <tr style="border-bottom: 2px solid #1E293B; background-color: #F8F9FA;">
+                                            <td style="padding: 8px 5px; font-weight: bold; color: #1E293B;">
+                                                Amount Due<br/>
+                                                <span style="font-size: 8pt; color: #475569; font-weight: normal;">إجمالي المبلغ المستحق</span>
+                                            </td>
+                                            <td style="text-align: right; padding: 8px 5px; font-weight: normal; color: #1E293B; font-size: 11pt; vertical-align: middle;" class="text-right text-end">
+                                                <span t-field="doc.amount_residual"/>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+</odoo>

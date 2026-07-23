@@ -1,0 +1,147 @@
+.o_web_client {
+    .o_action.o_base_settings_view,
+    .o_base_settings_view,
+    .o_base_settings_view .o_form_renderer,
+    .o_base_settings_view .o_form_renderer.o_form_nosheet,
+    .o_base_settings_view .o_setting_container {
+        --settings__tab-bg: #111827;
+        --settings__tab-bg--active: rgba(255, 135, 68, 0.16);
+        --settings__tab-color: #e5e7eb;
+        --settings__title-bg: #18212f;
+        background: #111827 !important;
+        color: var(--kr-dark-text) !important;
+    }
+
+    .o_base_settings_view .o_setting_container .settings_tab,
+    .o_base_settings_view .o_setting_container .settings,
+    .o_base_settings_view .o_setting_container .app_settings_block,
+    .o_base_settings_view .o_setting_container .o_settings_container {
+        border-color: var(--kr-dark-border) !important;
+        background: #111827 !important;
+        color: var(--kr-dark-text) !important;
+    }
+
+    .o_base_settings_view .o_setting_container .settings_tab .tab {
+        color: var(--kr-dark-text) !important;
+    }
+
+    .o_base_settings_view .o_setting_container .settings_tab .tab:hover,
+    .o_base_settings_view .o_setting_container .settings_tab .tab.selected,
+    .o_base_settings_view .o_setting_container .settings_tab .selected {
+        background: rgba(255, 135, 68, 0.16) !important;
+        color: #ffffff !important;
+        box-shadow: inset 2px 0 0 var(--kr-dark-accent);
+    }
+
+    .o_base_settings_view .o_setting_container .settings > .app_settings_block h2,
+    .o_base_settings_view .o_setting_container .settings .settingSearchHeader,
+    .o_base_settings_view .o_setting_container .settings .app_settings_header {
+        border-color: var(--kr-dark-border) !important;
+        background: #18212f !important;
+        color: var(--kr-dark-text) !important;
+    }
+
+    .o_base_settings_view .o_setting_container .settings > .app_settings_block h3,
+    .o_base_settings_view .o_setting_box,
+    .o_base_settings_view .o_setting_left_pane,
+    .o_base_settings_view .o_setting_right_pane {
+        border-color: var(--kr-dark-border) !important;
+        background: transparent !important;
+        color: var(--kr-dark-text) !important;
+    }
+
+    .o_base_settings_view .o_setting_right_pane {
+        border-left-color: var(--kr-dark-border) !important;
+    }
+
+    .o_base_settings_view .o_form_label,
+    .o_base_settings_view .o_setting_right_pane label,
+    .o_base_settings_view .o_setting_right_pane .o_form_label,
+    .o_base_settings_view .o_setting_right_pane span,
+    .o_base_settings_view .o_setting_right_pane p,
+    .o_base_settings_view .o_setting_right_pane div,
+    .o_base_settings_view .o_setting_right_pane strong,
+    .o_base_settings_view .o_setting_right_pane b,
+    .o_base_settings_view .o_setting_right_pane h1,
+    .o_base_settings_view .o_setting_right_pane h2,
+    .o_base_settings_view .o_setting_right_pane h3,
+    .o_base_settings_view .o_setting_right_pane h4,
+    .o_base_settings_view .o_setting_right_pane h5,
+    .o_base_settings_view .o_setting_right_pane h6 {
+        color: var(--kr-dark-text) !important;
+    }
+
+    .o_base_settings_view .text-muted,
+    .o_base_settings_view .o_setting_right_pane .text-muted,
+    .o_base_settings_view .o_setting_right_pane small,
+    .o_base_settings_view .o_setting_right_pane .o_form_label.text-muted {
+        color: var(--kr-dark-muted) !important;
+    }
+
+    .o_base_settings_view a,
+    .o_base_settings_view .btn-link,
+    .o_base_settings_view .oe-link {
+        color: #c4b5fd !important;
+    }
+
+    .o_base_settings_view a:hover,
+    .o_base_settings_view .btn-link:hover,
+    .o_base_settings_view .oe-link:hover {
+        color: var(--kr-dark-accent) !important;
+    }
+
+    .o_base_settings_view .o_input,
+    .o_base_settings_view input,
+    .o_base_settings_view select,
+    .o_base_settings_view textarea,
+    .o_base_settings_view .form-control,
+    .o_base_settings_view .o_field_widget:not(.o_field_boolean) {
+        border-color: var(--kr-dark-border) !important;
+        background: #111827 !important;
+        color: var(--kr-dark-text) !important;
+    }
+
+    .o_base_settings_view .o_form_statusbar .btn,
+    .o_base_settings_view .o_control_panel .btn {
+        border-color: var(--kr-dark-border);
+        background: #18212f;
+        color: var(--kr-dark-text);
+    }
+
+    .o_base_settings_view .o_form_button_save,
+    .o_base_settings_view .o_form_statusbar .o_form_button_save,
+    .o_base_settings_view .o_control_panel .o_form_button_save {
+        border-color: transparent !important;
+        background: var(--kr-dark-accent) !important;
+        color: #111827 !important;
+        box-shadow: none !important;
+    }
+
+    .o_base_settings_view .o_form_button_save:disabled,
+    .o_base_settings_view .o_form_button_save.disabled {
+        border-color: var(--kr-dark-border) !important;
+        background: #18212f !important;
+        color: #64748b !important;
+        opacity: 1;
+    }
+
+    .o_base_settings_view .o_form_button_cancel,
+    .o_base_settings_view .o_form_statusbar .o_form_button_cancel,
+    .o_base_settings_view .o_control_panel .o_form_button_cancel {
+        border-color: var(--kr-dark-border) !important;
+        background: #202b3a !important;
+        color: var(--kr-dark-text) !important;
+    }
+
+    .o_base_settings_view .badge,
+    .o_base_settings_view .o_tag {
+        border-color: var(--kr-dark-border);
+        background: #202b3a;
+        color: var(--kr-dark-text);
+    }
+
+    .o_base_settings_view .highlighter {
+        background: rgba(255, 135, 68, 0.28) !important;
+        color: #ffffff !important;
+    }
+}

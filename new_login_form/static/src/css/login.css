@@ -1,0 +1,417 @@
+/* ═══════════════════════════════════════════════════════════
+   Analytix Login – Odoo 19   (prefix: anlx_)
+═══════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+:root {
+  --anlx-bg:           #faf9f6;
+  --anlx-panel:        #ffffff;
+  --anlx-border:       #e4e2db;
+  --anlx-text:         #171a1c;
+  --anlx-muted:        #6b7178;
+  --anlx-muted-dim:    #9a9fa5;
+  --anlx-green:        #0f9d6e;
+  --anlx-green-dim:    #bfe9d9;
+  --anlx-red:          #d1453d;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body, .anlx_body {
+  margin: 0 !important;
+  padding: 0 !important;
+  min-height: 100vh !important;
+  overflow-x: hidden !important;
+  background: var(--anlx-bg) !important;
+  color: var(--anlx-text) !important;
+  font-family: 'Inter', sans-serif !important;
+}
+
+/* ── Ticker tape ─────────────────────────────────────────── */
+.anlx_ticker_wrap {
+  width: 100% !important;
+  background: #f1f0eb !important;
+  border-bottom: 1px solid var(--anlx-border) !important;
+  overflow: hidden !important;
+  white-space: nowrap !important;
+  padding: 9px 0 !important;
+  position: relative !important;
+  z-index: 10 !important;
+}
+.anlx_ticker_wrap::before,
+.anlx_ticker_wrap::after {
+  content: '' !important;
+  position: absolute !important;
+  top: 0 !important; bottom: 0 !important;
+  width: 60px !important;
+  z-index: 2 !important;
+  pointer-events: none !important;
+}
+.anlx_ticker_wrap::before { left: 0 !important; background: linear-gradient(90deg, #f1f0eb, transparent) !important; }
+.anlx_ticker_wrap::after  { right: 0 !important; background: linear-gradient(270deg, #f1f0eb, transparent) !important; }
+
+.anlx_ticker_track {
+  display: inline-flex !important;
+  animation: anlxScrollTicker 38s linear infinite !important;
+}
+.anlx_ticker_item {
+  font-family: 'IBM Plex Mono', monospace !important;
+  font-size: 12.5px !important;
+  letter-spacing: 0.02em !important;
+  color: var(--anlx-muted) !important;
+  padding: 0 28px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  border-right: 1px solid var(--anlx-border) !important;
+}
+.anlx_ticker_item b  { color: var(--anlx-text) !important; font-weight: 500 !important; }
+.anlx_tick_up   { color: var(--anlx-green) !important; }
+.anlx_tick_down { color: var(--anlx-red)   !important; }
+
+@keyframes anlxScrollTicker {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* ── Stage ───────────────────────────────────────────────── */
+.anlx_stage {
+  min-height: calc(100vh - 36px) !important;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 70px !important;
+  padding: 32px 6vw !important;
+  position: relative !important;
+}
+.anlx_stage::before {
+  content: '' !important;
+  position: absolute !important;
+  inset: 0 !important;
+  background:
+    radial-gradient(700px 500px at 30% 30%, rgba(15,157,110,0.06), transparent),
+    radial-gradient(600px 500px at 80% 80%, rgba(193,125,16,0.05), transparent) !important;
+  pointer-events: none !important;
+}
+
+/* ── Left panel ──────────────────────────────────────────── */
+.anlx_left {
+  max-width: 460px !important;
+  width: 100% !important;
+  position: relative !important;
+  z-index: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  text-align: left !important;
+}
+
+.anlx_hero_mark {
+  width: 44px !important;
+  height: auto !important;
+  display: block !important;
+  margin-bottom: 20px !important;
+}
+
+.anlx_eyebrow {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  font-family: 'IBM Plex Mono', monospace !important;
+  font-size: 11.5px !important;
+  letter-spacing: 0.14em !important;
+  text-transform: uppercase !important;
+  color: var(--anlx-muted) !important;
+  margin-bottom: 22px !important;
+}
+.anlx_eyebrow_dot {
+  width: 6px !important; height: 6px !important;
+  border-radius: 50% !important;
+  background: var(--anlx-green) !important;
+  box-shadow: 0 0 0 3px rgba(15,157,110,0.15) !important;
+  animation: anlxPulse 2s ease-in-out infinite !important;
+  display: inline-block !important;
+}
+@keyframes anlxPulse {
+  0%,100% { opacity:1; }
+  50%      { opacity:0.4; }
+}
+
+.anlx_h1 {
+  font-family: 'Space Grotesk', sans-serif !important;
+  font-weight: 700 !important;
+  font-size: clamp(30px, 3.4vw, 42px) !important;
+  line-height: 1.08 !important;
+  letter-spacing: -0.02em !important;
+  margin: 0 0 14px !important;
+  color: var(--anlx-text) !important;
+}
+.anlx_h1_accent { color: var(--anlx-green) !important; }
+
+.anlx_lead {
+  color: var(--anlx-muted) !important;
+  font-size: 14.5px !important;
+  line-height: 1.6 !important;
+  max-width: 420px !important;
+  margin: 0 0 28px !important;
+}
+
+/* ── Chart card ──────────────────────────────────────────── */
+.anlx_chart_card {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  gap: 12px !important;
+  width: 100% !important;
+  max-width: 400px !important;
+}
+.anlx_chart_label_row {
+  display: flex !important;
+  align-items: baseline !important;
+  justify-content: space-between !important;
+  width: 100% !important;
+}
+.anlx_chart_label {
+  font-family: 'IBM Plex Mono', monospace !important;
+  font-size: 11px !important;
+  letter-spacing: 0.1em !important;
+  text-transform: uppercase !important;
+  color: var(--anlx-muted-dim) !important;
+}
+.anlx_chart_value {
+  font-family: 'Space Grotesk', sans-serif !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  color: var(--anlx-green) !important;
+}
+
+/* SVG chart animations */
+.anlx_chart_path {
+  fill: none !important;
+  stroke: var(--anlx-green) !important;
+  stroke-width: 2.2 !important;
+  stroke-linecap: round !important;
+  stroke-dasharray: 900 !important;
+  stroke-dashoffset: 900 !important;
+  animation: anlxDraw 2.1s cubic-bezier(.4,0,.2,1) forwards 0.3s !important;
+}
+@keyframes anlxDraw { to { stroke-dashoffset: 0; } }
+
+.anlx_chart_fill {
+  opacity: 0 !important;
+  animation: anlxFadeFill 1.2s ease forwards 1.7s !important;
+}
+@keyframes anlxFadeFill { to { opacity: 1; } }
+
+.anlx_chart_node {
+  opacity: 0 !important;
+  animation: anlxPopNode 0.4s ease forwards !important;
+}
+.anlx_chart_node_end {
+  opacity: 0 !important;
+  animation: anlxPopNode 0.4s ease forwards, anlxGlow 1.8s ease-in-out infinite 2.4s !important;
+}
+@keyframes anlxPopNode {
+  from { opacity:0; transform:scale(0.3); }
+  to   { opacity:1; transform:scale(1);   }
+}
+@keyframes anlxGlow {
+  0%,100% { filter: drop-shadow(0 0 0px rgba(15,157,110,0));   }
+  50%      { filter: drop-shadow(0 0 6px rgba(15,157,110,0.9)); }
+}
+
+/* ── Right card ──────────────────────────────────────────── */
+.anlx_card {
+  width: 400px !important;
+  flex-shrink: 0 !important;
+  background: var(--anlx-panel) !important;
+  border: 1px solid var(--anlx-border) !important;
+  border-radius: 14px !important;
+  padding: 34px 32px 26px !important;
+  position: relative !important;
+  z-index: 1 !important;
+  box-shadow: 0 20px 50px -18px rgba(23,26,28,0.14) !important;
+}
+
+.anlx_brand_row {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  margin-bottom: 4px !important;
+}
+.anlx_brand_mark { width: 32px !important; height: auto !important; flex-shrink: 0 !important; }
+.anlx_brand_name {
+  font-family: 'Space Grotesk', sans-serif !important;
+  font-size: 21px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.01em !important;
+  margin: 0 !important;
+  color: #163456 !important;
+}
+.anlx_brand_x { color: #e0453b !important; }
+
+.anlx_subhead {
+  color: var(--anlx-muted) !important;
+  font-size: 13.5px !important;
+  margin-bottom: 28px !important;
+  font-family: 'Inter', sans-serif !important;
+}
+.anlx_subhead b { color: var(--anlx-green) !important; font-weight: 500 !important; }
+
+/* ── Strip Odoo card chrome ──────────────────────────────── */
+.anlx_form_wrap .card,
+.anlx_form_wrap .card-body {
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+.anlx_form_wrap .card-title,
+.anlx_form_wrap .text-center.pb-3.border-bottom { display: none !important; }
+
+/* ── Labels ──────────────────────────────────────────────── */
+.anlx_form_wrap label.form-label,
+.anlx_form_wrap label.col-form-label {
+  font-family: 'IBM Plex Mono', monospace !important;
+  font-size: 10.5px !important;
+  letter-spacing: 0.1em !important;
+  text-transform: uppercase !important;
+  color: var(--anlx-muted-dim) !important;
+  margin-bottom: 8px !important;
+  display: block !important;
+}
+
+/* ── Inputs ──────────────────────────────────────────────── */
+.anlx_form_wrap .form-control {
+  width: 100% !important;
+  background: #f6f5f1 !important;
+  border: 1px solid var(--anlx-border) !important;
+  border-radius: 8px !important;
+  padding: 12px 14px !important;
+  color: var(--anlx-text) !important;
+  font-size: 14px !important;
+  font-family: 'Inter', sans-serif !important;
+  outline: none !important;
+  box-shadow: none !important;
+  transition: border-color .15s ease, box-shadow .15s ease !important;
+}
+.anlx_form_wrap .form-control::placeholder { color: var(--anlx-muted-dim) !important; }
+.anlx_form_wrap .form-control:focus {
+  border-color: var(--anlx-green-dim) !important;
+  box-shadow: 0 0 0 3px rgba(15,157,110,0.14) !important;
+}
+
+/* ── Password group ──────────────────────────────────────── */
+.anlx_form_wrap .input-group { border-radius: 8px !important; overflow: hidden !important; }
+.anlx_form_wrap .input-group .form-control {
+  border-right: none !important;
+  border-radius: 8px 0 0 8px !important;
+}
+.anlx_form_wrap .input-group .o_show_password,
+.anlx_form_wrap .input-group .btn {
+  border: 1px solid var(--anlx-border) !important;
+  border-left: none !important;
+  border-radius: 0 8px 8px 0 !important;
+  background: #f6f5f1 !important;
+  color: var(--anlx-muted) !important;
+  padding: 0 13px !important;
+}
+.anlx_form_wrap .input-group:focus-within .form-control,
+.anlx_form_wrap .input-group:focus-within .o_show_password,
+.anlx_form_wrap .input-group:focus-within .btn {
+  border-color: var(--anlx-green-dim) !important;
+}
+
+/* ── Submit button ───────────────────────────────────────── */
+.anlx_form_wrap button[type="submit"],
+.anlx_form_wrap button.btn-primary,
+.anlx_form_wrap .oe_login_buttons button.btn-primary {
+  width: 100% !important;
+  margin-top: 8px !important;
+  background: var(--anlx-green) !important;
+  color: #06140f !important;
+  border: none !important;
+  border-radius: 8px !important;
+  padding: 13px 16px !important;
+  font-size: 14.5px !important;
+  font-weight: 600 !important;
+  font-family: 'Inter', sans-serif !important;
+  cursor: pointer !important;
+  transition: transform .12s ease, box-shadow .15s ease, background .15s ease !important;
+  letter-spacing: 0.3px !important;
+}
+.anlx_form_wrap button[type="submit"]:hover,
+.anlx_form_wrap button.btn-primary:hover {
+  background: #3fe3a6 !important;
+  box-shadow: 0 8px 20px -6px rgba(15,157,110,0.45) !important;
+}
+.anlx_form_wrap button[type="submit"]:active,
+.anlx_form_wrap button.btn-primary:active { transform: scale(0.98) !important; }
+
+/* ── Links ───────────────────────────────────────────────── */
+.anlx_form_wrap a,
+.anlx_form_wrap a.btn-link {
+  color: var(--anlx-green) !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  text-decoration: none !important;
+}
+.anlx_form_wrap a:hover { text-decoration: underline !important; }
+
+/* ── Alerts ──────────────────────────────────────────────── */
+.anlx_form_wrap .alert {
+  border-radius: 8px !important;
+  font-size: 13px !important;
+  padding: 10px 14px !important;
+  margin-bottom: 14px !important;
+}
+
+/* ── Hide unwanted Odoo elements ─────────────────────────── */
+.anlx_form_wrap input[name="db"],
+.anlx_form_wrap select[name="db"] { display: none !important; }
+.anlx_form_wrap .mb-3:has(input[name="db"]),
+.anlx_form_wrap .mb-3:has(select[name="db"]),
+.anlx_form_wrap .mb-3:has(label[for="db"]) { display: none !important; }
+.anlx_form_wrap .text-center.small.mt-4,
+.anlx_form_wrap .text-center.small.mt-4.pt-3.border-top { display: none !important; }
+.o_caps_lock_warning_text { display: none !important; }
+.o_login_auth, .o_login_auth em, .o_login_separator { display: none !important; }
+button.o_user_switch_btn, .o_user_switch_btn, .o_user_switch { display: none !important; }
+input#login, input[name="login"] {
+  border-radius: 8px !important;
+  width: 100% !important;
+}
+
+/* ── Remember/Forgot row ─────────────────────────────────── */
+.anlx_form_wrap .d-flex.justify-content-between {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  margin: 12px 0 !important;
+}
+.anlx_form_wrap .form-check-label { font-size: 13px !important; color: #374151 !important; }
+
+/* ── Divider ─────────────────────────────────────────────── */
+.anlx_divider {
+  border: none !important;
+  border-top: 1px solid var(--anlx-border) !important;
+  margin: 24px 0 16px !important;
+}
+
+/* ── Footer ──────────────────────────────────────────────── */
+.anlx_foot {
+  font-size: 11.5px !important;
+  color: var(--anlx-muted-dim) !important;
+  text-align: center !important;
+  font-family: 'Inter', sans-serif !important;
+}
+
+/* ── Responsive ──────────────────────────────────────────── */
+@media (max-width: 880px) {
+  .anlx_stage { padding: 40px 24px 60px !important; gap: 36px !important; flex-direction: column !important; }
+  .anlx_left  { max-width: 100% !important; }
+  .anlx_card  { width: 100% !important; max-width: 400px !important; }
+}

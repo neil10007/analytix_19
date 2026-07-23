@@ -1,0 +1,37 @@
+.o_web_client {
+    .o_hr_employee_kanban,
+    .o_hr_department_kanban {
+        background: #111827 !important;
+        color: var(--kr-dark-text);
+    }
+
+    .o_hr_employee_kanban .o_kanban_renderer,
+    .o_hr_department_kanban .o_kanban_renderer {
+        background: #111827 !important;
+    }
+
+    .o_hr_employee_kanban .o_kanban_record,
+    .o_hr_department_kanban .o_kanban_record {
+        border-color: var(--kr-dark-border);
+        background: #18212f !important;
+        color: var(--kr-dark-text);
+    }
+
+    .o_hr_employee_kanban .o_kanban_record:hover,
+    .o_hr_department_kanban .o_kanban_record:hover {
+        border-color: #475569;
+        background: #202b3a !important;
+    }
+
+    .o_hr_employee_kanban .o_kanban_image,
+    .o_hr_employee_kanban .o_kanban_image_fill_left,
+    .o_hr_department_kanban .o_kanban_image,
+    .o_hr_department_kanban .o_kanban_image_fill_left {
+        background-color: #0f172a;
+    }
+
+    .o_hr_employee_kanban .text-muted,
+    .o_hr_department_kanban .text-muted {
+        color: var(--kr-dark-muted) !important;
+    }
+}

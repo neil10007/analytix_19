@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Wizard Form View -->
+    <record id="view_user_creation_limit_wizard_form" model="ir.ui.view">
+        <field name="name">user.creation.limit.wizard.form</field>
+        <field name="model">user.creation.limit.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Adjust User Creation Limit">
+                <sheet>
+                    <div class="alert alert-info" role="alert">
+                        Adjust the user creation limit for the selected admin. Specify positive numbers to increase or negative numbers to decrease the limit.
+                    </div>
+                    <group>
+                        <group>
+                            <field name="user_id"/>
+                            <field name="current_limit"/>
+                        </group>
+                        <group>
+                            <field name="change_amount" string="Adjustment (e.g. +5 or -2)"/>
+                            <field name="reason" placeholder="e.g. Hiring campaign expansion"/>
+                        </group>
+                    </group>
+                </sheet>
+                <footer>
+                    <button name="action_confirm" string="Adjust Limit" type="object" class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Log List/Tree View -->
+    <record id="view_user_creation_limit_log_tree" model="ir.ui.view">
+        <field name="name">user.creation.limit.log.tree</field>
+        <field name="model">user.creation.limit.log</field>
+        <field name="arch" type="xml">
+            <list string="Limit Change History" create="false" edit="false" delete="false">
+                <field name="create_date" string="Change Date"/>
+                <field name="user_id" string="Target Admin"/>
+                <field name="previous_limit"/>
+                <field name="change_amount"/>
+                <field name="new_limit"/>
+                <field name="reason"/>
+                <field name="modified_by_id"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Log Search View -->
+    <record id="view_user_creation_limit_log_search" model="ir.ui.view">
+        <field name="name">user.creation.limit.log.search</field>
+        <field name="model">user.creation.limit.log</field>
+        <field name="arch" type="xml">
+            <search string="Search Limit Changes">
+                <field name="user_id" string="Target Admin"/>
+                <field name="modified_by_id" string="Modifier"/>
+                <filter string="Group By Target Admin" name="group_by_user" context="{'group_by': 'user_id'}"/>
+                <filter string="Group By Modifier" name="group_by_modifier" context="{'group_by': 'modified_by_id'}"/>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action to View All Logs -->
+    <record id="action_user_creation_limit_log" model="ir.actions.act_window">
+        <field name="name">Creation Limit Change Logs</field>
+        <field name="res_model">user.creation.limit.log</field>
+        <field name="view_mode">list</field>
+        <field name="search_view_id" ref="view_user_creation_limit_log_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No limit changes have been logged yet.
+            </p>
+        </field>
+    </record>
+
+    <!-- Menuitem for All Logs -->
+    <menuitem id="menu_user_creation_limit_log"
+              name="Creation Limit Logs"
+              parent="base.menu_users"
+              action="action_user_creation_limit_log"
+              groups="acces_right_users.group_super_admin"
+              sequence="31"/>
+
+</odoo>

@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_analytix_document_user,analytix.document.user,model_analytix_document,base.group_user,1,1,1,1
+access_analytix_finance_alert_user,analytix.finance.alert.user,model_analytix_finance_alert,base.group_user,1,1,1,1
+access_analytix_finance_alert_tag_user,analytix.finance.alert.tag.user,model_analytix_finance_alert_tag,base.group_user,1,1,1,1
+access_analytix_finance_alert_escalation_user,analytix.finance.alert.escalation.user,model_analytix_finance_alert_escalation,base.group_user,1,1,1,1

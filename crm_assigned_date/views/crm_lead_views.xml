@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ================================================================
+         Inherit the main CRM Lead/Opportunity Form View
+         Add 'Assigned Date' field above 'Salesperson' in both groups
+         ================================================================ -->
+    <record id="crm_lead_form_view_assigned_date" model="ir.ui.view">
+        <field name="name">crm.lead.form.assigned_date</field>
+        <field name="model">crm.lead</field>
+        <field name="inherit_id" ref="crm.crm_lead_view_form"/>
+        <field name="arch" type="xml">
+
+            <!--
+                Opportunity group (invisible when type == 'lead'):
+                Insert 'Assigned Date' before Salesperson (user_id).
+            -->
+            <xpath expr="//group[@invisible=&quot;type == 'lead'&quot;]/field[@name='user_id']" position="before">
+                <field name="assigned_date" string="Assigned Date"/>
+            </xpath>
+
+            <!--
+                Lead group (invisible when type == 'opportunity'):
+                Insert 'Assigned Date' before Salesperson (user_id).
+            -->
+            <xpath expr="//group[@invisible=&quot;type == 'opportunity'&quot;]/field[@name='user_id']" position="before">
+                <field name="assigned_date" string="Assigned Date"/>
+            </xpath>
+
+        </field>
+    </record>
+
+    <!-- ================================================================
+         Inherit the Opportunities List View
+         Add 'Assigned Date' column shown by default, after Salesperson
+         ================================================================ -->
+    <record id="crm_case_tree_view_oppor_assigned_date" model="ir.ui.view">
+        <field name="name">crm.lead.list.opportunity.assigned_date</field>
+        <field name="model">crm.lead</field>
+        <field name="inherit_id" ref="crm.crm_case_tree_view_oppor"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='user_id'][@optional='show']" position="after">
+                <field name="assigned_date" string="Assigned Date" optional="show"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- ================================================================
+         Inherit the Leads List View
+         Add 'Assigned Date' column shown by default, after Salesperson
+         ================================================================ -->
+    <record id="crm_case_tree_view_leads_assigned_date" model="ir.ui.view">
+        <field name="name">crm.lead.list.lead.assigned_date</field>
+        <field name="model">crm.lead</field>
+        <field name="inherit_id" ref="crm.crm_case_tree_view_leads"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='user_id']" position="after">
+                <field name="assigned_date" string="Assigned Date" optional="show"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

@@ -1,0 +1,264 @@
+<?xml version="1.0"?>
+<odoo>
+    <data>
+        <record id="view_sale_order_proforma_form" model="ir.ui.view">
+            <field name="name">sale.order.proforma.form</field>
+            <field name="model">sale.order.proforma</field>
+            <field name="arch" type="xml">
+                <form string="Sales Order Proforma" class="o_sale_order">
+                    <header>
+                        <field name="state" widget="statusbar"/>
+                        <button name="action_pi_request" string="Request" type="object"
+                                class="btn-primary"
+                                invisible="state != 'draft'"/>
+                        <button name="action_pi_approve" string="Approve" type="object"
+                                class="btn-primary"
+                                invisible="state != 'requested'"
+                                groups="proforma_invoice.group_sale_proforma_approver"/>
+                        <button name="action_cancel"
+                                string="Cancel"
+                                type="object"
+                                class="btn-primary"
+                                invisible="state in ('draft', 'cancel','requested')"/>
+                        <button name="action_draft"
+                                string="Rest to Draft"
+                                type="object"
+                                class="btn-secondary"
+                                icon="fa-undo"
+                                invisible="state in ('draft', 'approved')"/>
+                        <button name="action_create_invoice"
+                                string="Create Invoice"
+                                type="object"
+                                class="btn-primary"
+                                invisible="state != 'approved'"/>
+                    </header>
+                    <sheet>
+                        <div class="oe_button_box" name="button_box">
+                            <button name="action_view_invoice" type="object" groups="base.group_no_one"
+                                    class="oe_stat_button" icon="fa-pencil-square-o">
+                                <field name="invoice_count" widget="statinfo" string="Invoices"/>
+                            </button>
+                        </div>
+                        <div class="oe_title">
+                            <h1>
+                                <field name="name"/>
+                            </h1>
+                        </div>
+                        <group>
+                            <group name="group_one">
+                                <field name="partner_id" readonly="state == 'approved'"/>
+                                <field name="order_id" readonly="state == 'approved'" options="{'no_create': True}"/>
+                                <field name="sales_amount_total"/>
+                                <field name="user_id" readonly="1"/>
+                                <field name="approved_user_id" readonly="1"/>
+                            </group>
+                            <group name="group_two">
+                                <field name="proforma_date" readonly="state == 'approved'"/>
+                                <field name="company_id" readonly="state == 'approved'"/>
+                                <field name="bank_partner_id"/>
+                                <field name="bank_id" readonly="state == 'approved'"/>
+                                <field name="currency_new_id"/>
+                                <field name="pricelist_id" invisible="1"/>
+                                <field name="tax_country_id" invisible="1"/>
+                                <field name="company_bank_ids" invisible="1"/>
+                                <field name="currency_id" invisible="1"/>
+                                <field name="invoice_ids" widget="many2many_tags" invisible="1"/>
+                            </group>
+                        </group>
+                        <notebook>
+                            <page string="Proforma Lines" name="proforma_line_ids">
+                                <field name="proforma_line_ids"
+                                       widget="section_and_note_one2many"
+                                       mode="list,kanban" readonly="state == 'approved'">
+                                    <form>
+                                        <field name="display_type" invisible="1"/>
+                                        <field name="sequence" invisible="1"/>
+                                        <field name="company_id" invisible="1"/>
+
+                                        <field name="product_type" invisible="1"/>
+                                        <group>
+                                            <group invisible="display_type">
+                                                <field name="product_id"
+                                                       domain="[('sale_ok', '=', True)]"
+                                                       context="{'partner_id': parent.partner_id, 'quantity': product_uom_qty, 'pricelist': parent.pricelist_id, 'uom': product_uom, 'company_id': parent.company_id}"
+                                                       required="not display_type"
+                                                       widget="many2one_barcode"/>
+                                                <field name="product_uom_qty"/>
+                                                <field name="product_uom"
+                                                       required="not display_type"/>
+                                                <field name="price_unit"/>
+                                                <field name="discount" string="Discount (%)"/>
+                                                <field name="tax_id"
+                                                       widget="many2many_tags"
+                                                       domain="[('type_tax_use', '=', 'sale'), ('company_id', '=', parent.company_id)]"
+                                                       context="{'active_test': False}"/>
+                                                <field name="price_subtotal" readonly="1"/>
+                                                <field name="price_tax" readonly="1"/>
+                                                <field name="price_total" readonly="1"/>
+                                            </group>
+
+                                            <group invisible="display_type">
+                                                <field name="analytic_distribution"
+                                                       widget="analytic_distribution"
+                                                       groups="analytic.group_analytic_accounting"
+                                                       options="{'product_field': 'product_id', 'business_domain': 'sale_order'}"/>
+                                                <field name="qty_invoiced" readonly="1"/>
+                                            </group>
+                                        </group>
+
+                                        <label for="name" string="Description" invisible="display_type"/>
+                                        <label for="name" string="Section Name"
+                                               invisible="display_type != 'line_section'"/>
+                                        <label for="name" string="Note" invisible="display_type != 'line_note'"/>
+                                        <field name="name"/>
+
+                                        <div name="invoice_lines" invisible="display_type">
+                                            <label for="invoice_lines"/>
+                                            <field name="invoice_lines"/>
+                                        </div>
+                                    </form>
+
+                                    <!-- TREE VIEW -->
+                                    <list string="Proforma Lines" editable="bottom" limit="200">
+                                        <control>
+                                            <create string="Add Product"/>
+                                            <create string="Add Section"
+                                                    context="{'default_display_type': 'line_section'}"/>
+                                            <create string="Add Note" context="{'default_display_type': 'line_note'}"/>
+                                        </control>
+                                        <field name="sequence" widget="handle"/>
+                                        <field name="display_type" column_invisible="1"/>
+
+                                        <field name="product_type" column_invisible="1"/>
+                                        <field name="product_id" required="not display_type"/>
+                                        <field name="name" widget="section_and_note_text" optional="show"/>
+                                        <field name="product_uom_qty"/>
+                                        <field name="product_uom" optional="hide"/>
+                                        <field name="price_unit"/>
+                                        <field name="discount" string="Disc.%" column_invisible="1"/>
+                                        <field name="tax_id" widget="many2many_tags" optional="show"/>
+                                        <field name="price_subtotal" string="Tax Excl." optional="show"/>
+                                        <field name="price_tax" column_invisible="True"/>
+                                        <field name="price_total" string="Tax Incl." optional="hide"/>
+                                        <field name="currency_id" column_invisible="True"/>
+                                        <field name="company_id" column_invisible="True"/>
+                                    </list>
+
+                                    <!-- KANBAN VIEW -->
+                                    <kanban class="o_kanban_mobile">
+                                        <field name="name"/>
+                                        <field name="product_id"/>
+                                        <field name="product_uom_qty"/>
+                                        <field name="product_uom"/>
+                                        <field name="price_subtotal"/>
+                                        <field name="price_total"/>
+                                        <field name="price_tax"/>
+                                        <field name="price_unit"/>
+                                        <field name="discount"/>
+                                        <field name="display_type"/>
+                                        <field name="tax_id"/>
+
+                                        <field name="product_type" invisible="1"/>
+                                        <templates>
+                                            <t t-name="card">
+                                                <div t-attf-class="oe_kanban_card oe_kanban_global_click ps-0 pe-0 {{ record.display_type.raw_value ? 'o_is_' + record.display_type.raw_value : '' }}">
+                                                    <t t-if="!record.display_type.raw_value">
+                                                        <div class="row g-0">
+                                                            <div class="col">
+                                                                <strong t-out="record.product_id.value"/>
+                                                                <span class="text-muted">-
+                                                                    <t t-out="record.product_uom_qty.value"/>
+                                                                    <t t-out="record.product_uom.value"/>
+                                                                </span>
+                                                            </div>
+                                                            <div class="col-auto">
+                                                                <strong>
+                                                                    <t t-out="record.price_subtotal.value"/>
+                                                                </strong>
+                                                            </div>
+                                                        </div>
+                                                    </t>
+                                                    <t t-if="record.display_type.raw_value">
+                                                        <div>
+                                                            <t t-out="record.name.value"/>
+                                                        </div>
+                                                    </t>
+                                                </div>
+                                            </t>
+                                        </templates>
+                                    </kanban>
+                                </field>
+                                <!-- FOOTER -->
+                                <group name="note_group" col="6" class="mt-2 mt-md-0">
+                                    <group colspan="4">
+                                        <field colspan="2" name="note" nolabel="1"
+                                               placeholder="Terms and conditions..."/>
+                                    </group>
+                                    <group class="oe_subtotal_footer" colspan="2" name="sale_total">
+                                        <field name="tax_totals" widget="account-tax-totals-field" nolabel="1"
+                                               colspan="2" readonly="1"/>
+                                    </group>
+                                    <div class="clearfix"/>
+                                </group>
+                            </page>
+                        </notebook>
+                    </sheet>
+                    <chatter/>
+                </form>
+            </field>
+        </record>
+
+        <record id="view_sale_order_proforma_tree" model="ir.ui.view">
+            <field name="name">sale.order.proforma.tree</field>
+            <field name="model">sale.order.proforma</field>
+            <field name="arch" type="xml">
+                <list>
+                    <field name="name"/>
+                    <field name="proforma_date"/>
+                    <field name="partner_id"/>
+                    <field name="order_id"/>
+                    <field name="user_id" optional="hide"/>
+                    <field name="approved_user_id" optional="hide"/>
+                    <field name="company_id" optional="hide"/>
+                    <field name="state" widget="badge" decoration-success="state == 'approved'"
+                           decoration-info="state == 'draft'" decoration-danger="state == 'cancel'"
+                           decoration-warning="state == 'requested'"/>
+                </list>
+            </field>
+        </record>
+
+        <record id="view_sale_order_proforma_search" model="ir.ui.view">
+            <field name="name">sale.order.proforma.search</field>
+            <field name="model">sale.order.proforma</field>
+            <field name="arch" type="xml">
+                <search>
+                    <field name="name"/>
+                    <field name="partner_id"/>
+                    <field name="proforma_date"/>
+                    <field name="order_id"/>
+                    <field name="user_id" optional="hide"/>
+                    <field name="approved_user_id" optional="hide"/>
+                    <field name="company_id" optional="hide"/>
+                </search>
+            </field>
+        </record>
+
+        <record id="action_sale_order_proforma_view" model="ir.actions.act_window">
+            <field name="name">Proforma Invoice</field>
+            <field name="res_model">sale.order.proforma</field>
+            <field name="view_mode">list,form</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Create your first Record
+                </p>
+            </field>
+        </record>
+
+        <menuitem id="menu_sale_order_proforma"
+                  name="Proforma Invoice"
+                  parent="sale.sale_order_menu"
+                  action="action_sale_order_proforma_view"
+                  sequence="50"/>
+    </data>
+</odoo>
+

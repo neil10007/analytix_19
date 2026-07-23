@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+        Inherits the default VAT invoice report (advanced_vat_invoice.vat_template)
+        to apply a professional bilingual header and reduce spacing.
+    -->
+
+    <!-- Custom paper format -->
+    <record id="paperformat_vat_invoice" model="report.paperformat">
+        <field name="name">VAT Invoice A4</field>
+        <field name="default" eval="False"/>
+        <field name="format">A4</field>
+        <field name="page_height">0</field>
+        <field name="page_width">0</field>
+        <field name="orientation">Portrait</field>
+        <field name="margin_top">23</field>
+        <field name="margin_bottom">10</field>
+        <field name="margin_left">7</field>
+        <field name="margin_right">7</field>
+        <field name="header_line" eval="False"/>
+        <field name="header_spacing">0</field>
+        <field name="dpi">96</field>
+    </record>
+
+    <!-- Override report actions — restore to original template, keep our paper format -->
+    <record id="advanced_vat_invoice.action_report_vat_report" model="ir.actions.report">
+        <field name="report_name">advanced_vat_invoice.vat_template</field>
+        <field name="report_file">advanced_vat_invoice.vat_template</field>
+        <field name="paperformat_id" ref="paperformat_vat_invoice"/>
+    </record>
+    <record id="advanced_vat_invoice.action_vat_invoice" model="ir.actions.report">
+        <field name="report_name">advanced_vat_invoice.vat_template</field>
+        <field name="report_file">advanced_vat_invoice.vat_template</field>
+        <field name="paperformat_id" ref="paperformat_vat_invoice"/>
+    </record>
+
+    <!-- Inherit and customize the base vat_template -->
+    <template id="vat_template_custom_header" inherit_id="advanced_vat_invoice.vat_template">
+
+        <!-- 1. Replace the title h4 with professional bilingual header -->
+        <xpath expr="//div[hasclass('page')]/h4" position="replace">
+            <div style="width:100%; border-bottom:2px solid #1a3a5c; padding-bottom:4px; margin-bottom:4px; margin-top:0px; padding-top:0px; font-family:'Helvetica Neue',Helvetica,Arial,sans-serif; text-align:center;">
+                <div style="font-size:17px; font-weight:700; color:#0f172a; line-height:1.2;" dir="rtl">
+                    فاتورة ضريبية مبسطة
+                </div>
+                <div style="font-size:18px; font-weight:800; color:#0f172a; line-height:1.1;">
+                    VAT Invoice
+                </div>
+            </div>
+        </xpath>
+
+        <!-- 2. Reduce spacing between header and page content -->
+        <xpath expr="//div[hasclass('page')]" position="attributes">
+            <attribute name="style">margin-top:0px !important; padding-top:0px !important;</attribute>
+        </xpath>
+
+    </template>
+
+</odoo>

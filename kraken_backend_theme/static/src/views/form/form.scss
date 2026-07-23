@@ -1,0 +1,289 @@
+// Template Theme: customize this file for your theme.
+// This file contains styles for Form views.
+
+.o_form_view {
+    font-family: "Inter", "Spline Sans", sans-serif;
+    color: #111827;
+    background: var(--my-theme-bg, #f3f4f6);
+
+    &:not(.o_field_highlight) .o_field_widget:not(.o_field_invalid):not(.o_field_highlight) .o_input:not(:hover):not(:focus) {
+        --o-input-border-color: #{$gray-200};
+    }
+
+    &:not(.o_field_highlight) .o_required_modifier.o_field_widget:not(.o_field_invalid):not(.o_field_highlight) .o_input:not(:hover):not(:focus) {
+        --o-input-border-color: #{$gray-400};
+    }
+}
+
+.o_form_view .o_form_sheet_bg {
+    background: var(--my-theme-bg, #f3f4f6);
+    padding-inline: 20px;
+
+    @media (max-width: 1200px) {
+        padding-inline: 12px;
+    }
+
+    > .alert {
+        background-color: color-mix(in srgb, var(--tt-form-primary, #1e3a8a) 15%, #fff);
+        border: 1px solid color-mix(in srgb, var(--tt-form-primary, #1e3a8a) 30%, #fff);
+        color: var(--tt-form-primary, #1e3a8a);
+
+        &.alert-info {
+            background-color: color-mix(in srgb, #0ea5e9 15%, #fff);
+            border-color: color-mix(in srgb, #0ea5e9 30%, #fff);
+            color: #0369a1;
+        }
+
+        &.alert-warning {
+             background-color: color-mix(in srgb, #f59e0b 15%, #fff);
+             border-color: color-mix(in srgb, #f59e0b 30%, #fff);
+             color: #92400e;
+        }
+
+        &.alert-danger {
+             background-color: color-mix(in srgb, #ef4444 15%, #fff);
+             border-color: color-mix(in srgb, #ef4444 30%, #fff);
+             color: #b91c1c;
+        }
+
+        &:nth-last-child(1 of .alert) {
+             margin-bottom: 20px;
+        }
+    }
+}
+
+.o_form_view .o_form_sheet {
+    background: var(--tt-form-surface, #ffffff);
+    border: 1px solid var(--tt-form-border, #e5e7eb);
+    border-radius: 10px;
+    box-shadow: var(--tt-form-shadow, 0 12px 24px rgba(81, 85, 95, 0.08));
+    padding-inline: 50px;
+
+    @media (max-width: 1400px) {
+        padding-inline: 32px;
+    }
+
+    @media (max-width: 1200px) {
+        padding-inline: 24px;
+        border-radius: 12px;
+    }
+}
+
+.o_form_view .oe_title>h1,
+.o_form_view .oe_title>h1 .o_input {
+    font-size: 34px;
+    font-weight: 700;
+    color: #111827;
+}
+
+.o_form_view .oe_title>h2 {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--tt-form-primary, #1e3a8a);
+    margin-top: 4px;
+}
+
+.o_form_view .oe_avatar img,
+.o_form_view .oe_avatar .img {
+    width: 120px;
+    height: 120px;
+    border-radius: 12px;
+    border: 2px solid #ffffff;
+    box-shadow: 0 6px 14px rgba(15, 23, 42, 0.12);
+    object-fit: cover;
+}
+
+.o_form_view .o_form_label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--tt-form-muted, #6b7280);
+    letter-spacing: 0.02em;
+}
+
+.o_form_view .o_input,
+.o_form_view input,
+.o_form_view select,
+.o_form_view textarea {
+    font-size: 13px;
+    border-radius: 3px;
+    border-bottom: none !important;
+}
+
+.o_form_view .o_input:hover,
+.o_form_view input:hover,
+.o_form_view select:hover,
+.o_form_view textarea:hover {
+    box-shadow: 0 2px 0 rgba(105, 105, 105, 0.08);
+}
+
+.o_form_view .o_form_uri,
+.o_form_view .o_form_uri>span:first-child {
+    color: var(--tt-form-primary, #1e3a8a);
+}
+
+.o_form_view .o_statusbar_buttons .btn,
+.o_form_view .o_form_statusbar .btn {
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 10px;
+    padding: 6px 12px;
+}
+
+.o_form_view .o_form_statusbar {
+    z-index: 0 !important;
+
+    @media (max-width: 991.98px) {
+        flex-wrap: wrap;
+        height: auto !important;
+
+        .o_statusbar_buttons {
+            flex-shrink: 0;
+        }
+
+        .o_statusbar_status {
+            order: 2;
+            flex: 1 1 100%;
+            width: 100%;
+            margin-top: 8px;
+            justify-content: flex-end;
+        }
+    }
+}
+
+.o_form_view .o_statusbar_buttons .btn.btn-primary {
+    background: var(--tt-form-primary, #1e3a8a);
+    border-color: var(--tt-form-primary, #1e3a8a);
+}
+
+.o_form_view .o_statusbar_buttons .btn.btn-secondary {
+    background: #f9fafb;
+    border-color: var(--tt-form-border, #e5e7eb);
+    color: #4b5563;
+}
+
+.o_form_view .o_form_button_cancel,
+.o_form_view .o_form_button_save {
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+.o_base_settings_view.o_form_view .o_form_button_save,
+.o_base_settings_view .o_form_view .o_form_button_save,
+.o_base_settings_view .o_control_panel .o_form_button_save {
+    border-color: transparent !important;
+    background: #000000 !important;
+    color: #ffffff !important;
+}
+
+.o_base_settings_view.o_form_view .o_form_button_save:hover:not(:disabled),
+.o_base_settings_view .o_form_view .o_form_button_save:hover:not(:disabled),
+.o_base_settings_view .o_control_panel .o_form_button_save:hover:not(:disabled) {
+    background: #151b23 !important;
+    color: #ffffff !important;
+}
+
+.o_form_view .o-form-buttonbox {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.o_form_view .o-form-buttonbox .oe_stat_button {
+    border-radius: 12px;
+    margin-right: 0;
+    background: #f9fafb;
+    border: 1px solid var(--tt-form-border, #e5e7eb);
+    color: #374151;
+    padding: 8px 12px;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+}
+
+.o_form_view .o-form-buttonbox .oe_stat_button {
+    border-radius: 12px;
+    margin-right: 0;
+}
+
+.o_form_view .oe_stat_button .o_stat_value {
+    font-size: 16px;
+    font-weight: 700;
+    color: #111827;
+}
+
+.o_form_view .oe_stat_button .o_stat_text {
+    font-size: 11px;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--tt-form-muted, #6b7280);
+}
+
+.o_form_view .o_notebook {
+    --notebook-link-border-color: transparent;
+    --notebook-link-border-color-hover: transparent;
+    --notebook-link-border-color-active: transparent;
+    --notebook-link-border-color-active-accent: transparent;
+}
+
+.o_form_view .o_notebook .o_notebook_headers .nav-tabs {
+    border-bottom: none;
+    gap: 24px;
+    padding-inline: 2px;
+}
+
+.o_notebook .o_notebook_headers {
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    scrollbar-width: thin;
+}
+
+.o_form_view .o_notebook .o_notebook_headers .nav-tabs .nav-item {
+    margin: 0;
+}
+
+.o_form_view .o_notebook .o_notebook_headers .nav-tabs .nav-item>.nav-link {
+    border: none !important;
+    background: transparent;
+    color: var(--tt-form-muted, #6b7280) !important;
+    font-size: 16px !important;
+    font-weight: 500 !important;
+    padding: 12px 0;
+    position: relative;
+    margin-bottom: -1px;
+    border-bottom: 3px solid transparent;
+    border-left: 1px solid transparent;
+    border-right: 1px solid transparent;
+    border-top: 1px solid transparent;
+    outline: none;
+    box-shadow: none !important;
+    background-clip: padding-box;
+}
+
+.o_form_view .o_notebook .o_notebook_headers .nav-tabs .nav-item>.nav-link.active,
+.o_form_view .o_notebook .o_notebook_headers .nav-tabs .nav-item>.nav-link:hover {
+    color: var(--tt-form-primary, #1e3a8a) !important;
+}
+
+.o_form_view .o_notebook .o_notebook_headers .nav-tabs .nav-item>.nav-link.active {
+    font-weight: 700 !important;
+    border-color: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    background-image: linear-gradient(var(--tt-form-primary, #1e3a8a), var(--tt-form-primary, #1e3a8a));
+    background-size: 100% 3px;
+    background-position: 0 100%;
+    background-repeat: no-repeat;
+}
+
+.o_form_view .o_notebook>.tab-content {
+    border-bottom: none;
+    padding-top: 12px;
+}
+
+@media (max-width: 991.98px) {
+    .o_form_view .o_form_sheet_bg {
+        padding: 16px;
+    }
+
+    .o_form_view .o_form_sheet {
+        padding: 24px;
+    }
+}

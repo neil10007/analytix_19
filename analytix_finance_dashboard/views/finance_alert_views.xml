@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_analytix_finance_alert_form" model="ir.ui.view">
+        <field name="name">analytix.finance.alert.form</field>
+        <field name="model">analytix.finance.alert</field>
+        <field name="arch" type="xml">
+            <form string="Alert">
+                <header>
+                    <button name="action_run_test" string="Run Test" type="object" class="oe_highlight"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="Alert Name"/>
+                        </h1>
+                    </div>
+                    
+                    <group>
+                        <group string="1. Basic Information">
+                            <field name="name"/>
+                            <field name="module"/>
+                            <field name="alert_category"/>
+                            <field name="alert_type"/>
+                            <field name="priority"/>
+                        </group>
+                        <group string=" ">
+                            <field name="company_id"/>
+                            <field name="active" widget="boolean_toggle"/>
+                            <field name="tag_ids" widget="many2many_tags" options="{'color_field': 'color'}"/>
+                        </group>
+                    </group>
+
+                    <group>
+                        <group string="2. Trigger Configuration">
+                            <field name="trigger_type"/>
+                            <field name="check_frequency"/>
+                            <field name="execution_time" widget="float_time"/>
+                            <field name="run_for"/>
+                        </group>
+                        <group string=" ">
+                            <field name="start_from"/>
+                            <field name="next_execution"/>
+                            <field name="stop_after"/>
+                        </group>
+                    </group>
+
+                    <group>
+                        <group string="3. Rule Configuration">
+                            <field name="model_id"/>
+                            <field name="domain_condition"/>
+                            <field name="due_date_field_id"/>
+                            <field name="warning_days"/>
+                        </group>
+                        <group string=" ">
+                            <field name="trigger_when"/>
+                            <field name="create_alert"/>
+                            <field name="auto_close"/>
+                        </group>
+                    </group>
+                    <div>
+                        <p class="text-muted"><field name="rule_description"/></p>
+                    </div>
+
+                    <group>
+                        <group string="4. Alert Message">
+                            <field name="alert_title"/>
+                            <field name="alert_description"/>
+                        </group>
+                        <group string="Action Buttons (CTA)">
+                            <field name="action_button_label"/>
+                            <field name="action_button_link"/>
+                        </group>
+                    </group>
+
+                    <group>
+                        <group string="5. Notification Settings">
+                            <field name="notify_dashboard"/>
+                            <field name="notify_bell"/>
+                            <field name="notify_email"/>
+                            <field name="notify_mobile_push"/>
+                            <field name="notify_whatsapp"/>
+                        </group>
+                        <group string="Recipients">
+                            <field name="recipient_ids" widget="many2many_tags_avatar"/>
+                        </group>
+                    </group>
+
+                    <group string="6. AI Recommendation">
+                        <group>
+                            <field name="enable_ai_recommendation" widget="boolean_toggle"/>
+                        </group>
+                    </group>
+
+                    <group string="7. Escalation Rules">
+                        <field name="escalation_rule_ids" nolabel="1">
+                            <list editable="bottom">
+                                <field name="days_remaining"/>
+                                <field name="priority"/>
+                                <field name="action"/>
+                            </list>
+                        </field>
+                    </group>
+                    
+                    <group string="8. Test Rule">
+                         <button name="action_run_test" string="Run Test" type="object" icon="fa-play" class="btn-secondary"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_analytix_finance_alert_tree" model="ir.ui.view">
+        <field name="name">analytix.finance.alert.list</field>
+        <field name="model">analytix.finance.alert</field>
+        <field name="arch" type="xml">
+            <list string="Alerts">
+                <field name="name"/>
+                <field name="module"/>
+                <field name="alert_category"/>
+                <field name="priority"/>
+                <field name="active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_analytix_finance_alert" model="ir.actions.act_window">
+        <field name="name">Alerts</field>
+        <field name="res_model">analytix.finance.alert</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first Finance Alert
+            </p>
+        </field>
+    </record>
+
+</odoo>

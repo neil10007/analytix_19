@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="menu_analytix_finance_dashboard"
+              name="Dashboard"
+              action="action_analytix_finance_dashboard"
+              sequence="0"/>
+
+    <menuitem id="menu_analytix_finance_dashboard_accounting"
+              name="Dashboard"
+              action="action_analytix_finance_dashboard"
+              parent="account.menu_finance"
+              sequence="0"/>
+
+    <menuitem id="menu_alert_management"
+              name="ALERT MANAGEMENT"
+              parent="account.menu_finance"
+              sequence="2"/>
+
+    <menuitem id="menu_finance_alert"
+              name="Alerts"
+              action="action_analytix_finance_alert"
+              parent="menu_alert_management"
+              sequence="10"/>
+
+    <record id="account.menu_board_journal_1" model="ir.ui.menu">
+        <field name="active" eval="False"/>
+    </record>
+
+    <!-- Restrict the Apps menu strictly to the Super Admin (User ID = 2) -->
+    <record id="base.menu_management" model="ir.ui.menu">
+        <field name="group_ids" eval="[(6, 0, [ref('analytix_finance_dashboard.group_groq_super_admin')])]"/>
+    </record>
+
+    <!-- Action for Bank Accounts -->
+    <record id="action_analytix_partner_bank" model="ir.actions.act_window">
+        <field name="name">Bank Accounts</field>
+        <field name="res_model">res.partner.bank</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create a new Bank Account
+            </p>
+        </field>
+    </record>
+
+    <!-- Bind list view (default) -->
+    <record id="action_analytix_partner_bank_view_list" model="ir.actions.act_window.view">
+        <field name="sequence" eval="1"/>
+        <field name="view_mode">list</field>
+        <field name="act_window_id" ref="action_analytix_partner_bank"/>
+    </record>
+
+    <!-- Bind specific form view as requested -->
+    <record id="action_analytix_partner_bank_view_form" model="ir.actions.act_window.view">
+        <field name="sequence" eval="2"/>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="account.view_partner_bank_form_inherit_account"/>
+        <field name="act_window_id" ref="action_analytix_partner_bank"/>
+    </record>
+
+    <!-- Menu item under Configuration -->
+    <menuitem id="menu_analytix_partner_bank"
+              name="Bank Accounts"
+              action="action_analytix_partner_bank"
+              parent="account.menu_finance_configuration"
+              sequence="15"/>
+
+</odoo>

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t
+        t-name="kraken_backend_theme.SearchBarMenu"
+        t-inherit="web.SearchBarMenu"
+        t-inherit-mode="extension"
+    >
+        <xpath expr="//Dropdown" position="attributes">
+            <attribute name="noClasses">true</attribute>
+            <attribute name="position">'bottom'</attribute>
+        </xpath>
+        <xpath expr="//button[hasclass('o_searchview_dropdown_toggler')]" position="replace">
+            <div class="kr_cp_search_menu_anchor">
+                <button
+                    class="o_searchview_dropdown_toggler d-print-none btn btn-outline-secondary o-dropdown-caret rounded-start-0"
+                    data-hotkey="shift+q"
+                    title="Toggle Search Panel"
+                />
+            </div>
+        </xpath>
+    </t>
+</templates>

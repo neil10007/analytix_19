@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <mask id="arrowCut">
+      <rect width="512" height="512" fill="white"/>
+      <!-- Curved upward arrow cutout -->
+      <path d="
+        M 256 110
+        L 290 175
+        L 270 175
+        C 268 250 266 300 262 340
+        Q 258 420 240 460
+        Q 230 470 225 460
+        C 240 400 242 340 244 280
+        L 244 175
+        L 222 175
+        Z
+      " fill="black"/>
+    </mask>
+  </defs>
+  <!-- Main red rounded-triangle "A" body -->
+  <path d="
+    M 256 32
+    Q 280 32 300 70
+    L 470 365
+    Q 500 420 470 455
+    Q 450 475 415 470
+    L 345 460
+    Q 310 455 290 415
+    L 256 340
+    L 222 415
+    Q 202 455 167 460
+    L 97 470
+    Q 62 475 42 455
+    Q 12 420 42 365
+    L 212 70
+    Q 232 32 256 32
+    Z
+  " fill="#EF4444" mask="url(#arrowCut)"/>
+</svg>

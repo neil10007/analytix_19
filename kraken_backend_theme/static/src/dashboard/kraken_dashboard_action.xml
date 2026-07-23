@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="kraken_backend_theme.KrakenDashboardAction">
+        <div class="o_action o_kraken_dashboard_action" t-att-class="{ 'is-loading': state.loading }">
+            <div class="kr_shell">
+                <aside class="kr_utility_rail">
+                    <button type="button" title="Apps" t-on-click="openApps"><i class="fa fa-th-large"/></button>
+                    <button type="button" title="Messages"><i class="fa fa-envelope-o"/></button>
+                    <button type="button" title="Tasks"><i class="fa fa-check-square-o"/></button>
+                    <button type="button" title="People"><i class="fa fa-users"/></button>
+                    <button type="button" title="Settings"><i class="fa fa-cog"/></button>
+                </aside>
+
+                <main class="kr_main">
+                    <section class="kr_header">
+                        <div>
+                            <h1><t t-esc="state.greeting"/>, <t t-esc="state.userName"/></h1>
+                            <p>Live operational summary from your Odoo database.</p>
+                        </div>
+                        <div class="kr_header_actions">
+                            <button type="button"><i class="fa fa-search"/></button>
+                            <button type="button"><i class="fa fa-bell-o"/></button>
+                            <button type="button"><i class="fa fa-clock-o"/></button>
+                        </div>
+                    </section>
+
+                    <section class="kr_grid kr_top_grid">
+                        <div class="kr_card_group">
+                            <article class="kr_card kr_metric kr_metric_hot">
+                                <span>Partners</span>
+                                <strong t-esc="formatCount(state.partnerCount)"/>
+                                <p>Contacts in system</p>
+                            </article>
+                            <article class="kr_card kr_metric">
+                                <span>Users</span>
+                                <strong t-esc="formatCount(state.userCount)"/>
+                                <p>Internal and portal users</p>
+                            </article>
+                            <article class="kr_card kr_metric">
+                                <span>Activities</span>
+                                <strong t-esc="formatCount(state.activityCount)"/>
+                                <p>Scheduled activity items</p>
+                            </article>
+                            <article class="kr_card kr_metric">
+                                <span>Attachments</span>
+                                <strong t-esc="formatCount(state.attachmentCount)"/>
+                                <p>Documents stored</p>
+                            </article>
+                        </div>
+                    </section>
+
+                    <section class="kr_grid kr_bottom_grid">
+                        <article class="kr_card kr_activity_card">
+                            <div class="kr_card_head">
+                                <h3>Recent Activities</h3>
+                                <button type="button" class="kr_table_search" t-on-click="openActivities">Open</button>
+                            </div>
+                            <table class="kr_table">
+                                <thead>
+                                    <tr>
+                                        <th>Reference</th>
+                                        <th>Activity</th>
+                                        <th>Status</th>
+                                        <th>Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr t-foreach="safeRows" t-as="row" t-key="row.ref">
+                                        <td t-esc="row.ref"/>
+                                        <td t-esc="row.label"/>
+                                        <td>
+                                            <span class="kr_status" t-att-class="{
+                                                'is-done': row.status === 'Completed',
+                                                'is-pending': row.status === 'Pending',
+                                                'is-progress': row.status === 'In Progress'
+                                            }" t-esc="row.status"/>
+                                        </td>
+                                        <td t-esc="row.date"/>
+                                    </tr>
+                                    <tr t-if="!safeRows.length">
+                                        <td colspan="4">No activities yet</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </article>
+                    </section>
+                </main>
+            </div>
+        </div>
+    </t>
+</templates>

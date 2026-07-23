@@ -1,0 +1,125 @@
+.badge {
+    border-radius: 5px !important;
+}
+
+.o_list_view .o_list_renderer {
+    --ListRenderer-thead-bg-color: #fbfcfd;
+    --ListRenderer-thead-bg-active-color: #f5f7fa;
+    --ListRenderer-thead-border-end-color: transparent;
+    --ListRenderer-table-row-gap: 5px;
+    --ListRenderer-table-background-color: rgba(0, 0, 0, 0.023);
+    background-color: var(--my-theme-bg, #ffffff);
+    border: 1px rgba(0, 0, 0, 0.062) solid;
+    border-radius: 18px;
+    box-shadow: none;
+    min-height: 0;
+    overflow: auto;
+    scrollbar-width: thin;
+    // margin-inline: 10px;
+    // margin-top: 10px;
+}
+
+.o_list_view .o_list_renderer .o_list_table {
+    padding-inline: 10px;
+    border-collapse: separate;
+    border-spacing: 0 var(--ListRenderer-table-row-gap);
+    background: var(--ListRenderer-table-background-color);
+}
+
+.o_list_view .o_list_renderer .o_list_table thead,
+.o_list_view .o_list_renderer .o_list_table thead tr,
+.o_list_view .o_list_renderer .o_list_table thead th,
+.o_list_view .o_list_renderer .o_list_table thead .position-sticky {
+    position: static !important;
+    top: auto !important;
+    right: auto !important;
+    left: auto !important;
+    z-index: auto !important;
+}
+
+.o_list_view .o_list_renderer .o_list_table thead tr,
+.o_list_view .o_list_renderer .o_list_table tfoot tr {
+    background-color: transparent;
+}
+
+.o_list_view .o_list_renderer .o_list_table thead th {
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 12px;
+    font-weight: 600;
+    color: #111827;
+    background: transparent;
+    border-bottom: 1px solid transparent;
+}
+
+.o_list_view .o_list_renderer .o_list_table thead th:hover,
+.o_list_view .o_list_renderer .o_list_table thead th:active,
+.o_list_view .o_list_renderer .o_list_table thead th:focus-within {
+    background-color: var(--ListRenderer-thead-bg-active-color);
+}
+
+.o_list_view .o_list_renderer .o_list_table thead th .o_list_sortable_icon {
+    color: #94a3b8;
+}
+
+.o_list_view .o_list_renderer .o_list_table tbody td {
+    color: #374151;
+    font-size: 14px;
+    padding-top: 16px;
+    padding-bottom: 16px;
+    background-color: #ffffff;
+}
+
+.o_list_view .o_list_renderer .o_list_table tbody tr.o_data_row > td:first-child {
+    border-left: 1px solid #edf2f7;
+    border-top-left-radius: 2.5px;
+    border-bottom-left-radius: 2.5px;
+}
+
+.o_list_view .o_list_renderer .o_list_table tbody tr.o_data_row > td:last-child {
+    border-right: 1px solid #edf2f7;
+    border-top-right-radius: 2.5px;
+    border-bottom-right-radius: 2.5px;
+}
+
+.o_list_view .o_list_renderer .o_list_table tbody tr:hover td {
+    background-color: #f8fafc;
+}
+
+.o_list_view .o_list_renderer .o_list_table tbody tr.table-info,
+.o_list_view .o_list_renderer .o_list_table tbody tr.o_data_row_selected {
+    background-color: transparent !important;
+}
+
+.o_list_view .o_list_renderer .o_list_table tbody tr.table-info td,
+.o_list_view .o_list_renderer .o_list_table tbody tr.o_data_row_selected td {
+    background-color: #eef2ff;
+}
+
+.o_list_view .o_list_renderer .o_list_table .form-check-input {
+    width: 16px;
+    height: 16px;
+    min-width: 16px;
+    min-height: 16px;
+    border-radius: 2px;
+    border: 1.5px solid #a0a0a0;
+}
+
+.o_list_view .o_list_renderer .o_list_table thead .o_list_record_selector .form-check-input,
+.o_list_view .o_list_renderer .o_list_table tbody .o_list_record_selector .form-check-input {
+    width: 16px;
+    height: 16px;
+    min-width: 16px;
+    min-height: 16px;
+    border-radius: 2px;
+    transform: none !important;
+}
+
+.o_list_view .o_list_renderer .o_list_table .form-check-input:checked {
+    background-color: #111827;
+    border-color: #111827;
+}
+
+.o_list_view .o_list_renderer .o_list_table tbody tr.o_data_row {
+    border-bottom: none;
+}

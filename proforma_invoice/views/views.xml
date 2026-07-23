@@ -1,0 +1,60 @@
+<odoo>
+  <data>
+    <!-- explicit list view definition -->
+<!--
+    <record model="ir.ui.view" id="proforma_invoice.list">
+      <field name="name">proforma_invoice list</field>
+      <field name="model">proforma_invoice.proforma_invoice</field>
+      <field name="arch" type="xml">
+        <list>
+          <field name="name"/>
+          <field name="value"/>
+          <field name="value2"/>
+        </list>
+      </field>
+    </record>
+-->
+
+    <!-- actions opening views on models -->
+<!--
+    <record model="ir.actions.act_window" id="proforma_invoice.action_window">
+      <field name="name">proforma_invoice window</field>
+      <field name="res_model">proforma_invoice.proforma_invoice</field>
+      <field name="view_mode">list,form</field>
+    </record>
+-->
+
+    <!-- server action to the one above -->
+<!--
+    <record model="ir.actions.server" id="proforma_invoice.action_server">
+      <field name="name">proforma_invoice server</field>
+      <field name="model_id" ref="model_proforma_invoice_proforma_invoice"/>
+      <field name="state">code</field>
+      <field name="code">
+        action = {
+          "type": "ir.actions.act_window",
+          "view_mode": "list,form",
+          "res_model": model._name,
+        }
+      </field>
+    </record>
+-->
+
+    <!-- Top menu item -->
+<!--
+    <menuitem name="proforma_invoice" id="proforma_invoice.menu_root"/>
+-->
+    <!-- menu categories -->
+<!--
+    <menuitem name="Menu 1" id="proforma_invoice.menu_1" parent="proforma_invoice.menu_root"/>
+    <menuitem name="Menu 2" id="proforma_invoice.menu_2" parent="proforma_invoice.menu_root"/>
+-->
+    <!-- actions -->
+<!--
+    <menuitem name="List" id="proforma_invoice.menu_1_list" parent="proforma_invoice.menu_1"
+              action="proforma_invoice.action_window"/>
+    <menuitem name="Server to list" id="proforma_invoice" parent="proforma_invoice.menu_2"
+              action="proforma_invoice.action_server"/>
+-->
+  </data>
+</odoo>

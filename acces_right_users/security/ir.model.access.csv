@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_res_users_super_admin,res.users Super Admin,base.model_res_users,acces_right_users.group_super_admin,1,1,1,1
+access_res_users_normal_admin,res.users Normal Admin,base.model_res_users,acces_right_users.group_normal_admin,1,1,1,0
+access_user_creation_limit_log_super_admin,user.creation.limit.log.super.admin,model_user_creation_limit_log,acces_right_users.group_super_admin,1,1,1,1
+access_user_creation_limit_wizard_super_admin,user.creation.limit.wizard.super.admin,model_user_creation_limit_wizard,acces_right_users.group_super_admin,1,1,1,1

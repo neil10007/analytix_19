@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="0">
+    <!--
+        Force-set the Analytix Finance Dashboard as the home action
+        for all internal users on every module install/upgrade.
+        noupdate="0" ensures this runs every time.
+    -->
+    <function model="res.users" name="write">
+        <value model="res.users" search="[('share', '=', False)]"/>
+        <value eval="{'action_id': ref('analytix_finance_dashboard.action_analytix_finance_dashboard')}"/>
+    </function>
+</odoo>

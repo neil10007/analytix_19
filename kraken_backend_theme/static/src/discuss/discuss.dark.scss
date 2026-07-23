@@ -1,0 +1,114 @@
+.o_web_client:has(.o-mail-Discuss) {
+    --mail-Discuss-surface: #111827;
+    --mail-Discuss-panel: #18212f;
+    --mail-Discuss-panel-soft: #202b3a;
+    --mail-Discuss-border: #2b3647;
+    --mail-Discuss-text: #e5e7eb;
+    --mail-Discuss-muted: #9ca3af;
+}
+
+.o_web_client:has(.o-mail-Discuss) .o-mail-Discuss,
+.o_web_client:has(.o-mail-Discuss) .o-mail-DiscussContent,
+.o_web_client:has(.o-mail-Discuss) .o-mail-DiscussContent-main,
+.o_web_client:has(.o-mail-Discuss) .o-mail-DiscussContent-core,
+.o_web_client:has(.o-mail-Discuss) .o-mail-Thread {
+    background: var(--mail-Discuss-surface) !important;
+    color: var(--mail-Discuss-text);
+}
+
+.o_web_client:has(.o-mail-Discuss) .o-mail-DiscussSidebar-resizablePanelContainer,
+.o_web_client:has(.o-mail-Discuss) .o-mail-DiscussSidebar,
+.o_web_client:has(.o-mail-Discuss) .o-mail-DiscussSearch,
+.o_web_client:has(.o-mail-Discuss) .o-mail-discussSidebarBgColor,
+.o_web_client:has(.o-mail-Discuss) .o-mail-DiscussContent-header,
+.o_web_client:has(.o-mail-Discuss) .o-mail-DiscussContent-panelContainer {
+    border-color: var(--mail-Discuss-border) !important;
+    background: var(--mail-Discuss-panel) !important;
+    color: var(--mail-Discuss-text);
+}
+
+.o_web_client:has(.o-mail-Discuss) .o-mail-DiscussSearch-inputContainer,
+.o_web_client:has(.o-mail-Discuss) .o-mail-DiscussSearch input,
+.o_web_client:has(.o-mail-Discuss) .o-mail-Composer,
+.o_web_client:has(.o-mail-Discuss) .o-mail-Composer-input {
+    border-color: var(--mail-Discuss-border) !important;
+    background: #0f172a !important;
+    color: var(--mail-Discuss-text) !important;
+}
+
+.o_web_client:has(.o-mail-Discuss) .o-mail-DiscussSearch input::placeholder,
+.o_web_client:has(.o-mail-Discuss) .o-mail-Composer-input::placeholder,
+.o_web_client:has(.o-mail-Discuss) .o-mail-Discuss .text-muted,
+.o_web_client:has(.o-mail-Discuss) .o-mail-Message-date,
+.o_web_client:has(.o-mail-Discuss) .o-mail-Message-seenIndicator {
+    color: var(--mail-Discuss-muted) !important;
+}
+
+.o_web_client:has(.o-mail-Discuss) .o-mail-DiscussSidebar-item,
+.o_web_client:has(.o-mail-Discuss) .o-mail-DiscussSidebarCategory,
+.o_web_client:has(.o-mail-Discuss) .o-mail-DiscussSidebarChannel,
+.o_web_client:has(.o-mail-Discuss) .o-mail-DiscussSidebarChannel-subChannel,
+.o_web_client:has(.o-mail-Discuss) .o-mail-Mailbox {
+    color: var(--mail-Discuss-text) !important;
+}
+
+.o_web_client:has(.o-mail-Discuss) .o-mail-DiscussSidebar-item:hover,
+.o_web_client:has(.o-mail-Discuss) .o-mail-DiscussSidebar-item.o-active,
+.o_web_client:has(.o-mail-Discuss) .o-mail-DiscussSidebarChannel.o-active,
+.o_web_client:has(.o-mail-Discuss) .o-mail-DiscussSidebarChannel-subChannel.o-active {
+    background: var(--mail-Discuss-panel-soft) !important;
+    color: #ffffff !important;
+}
+
+.o_web_client:has(.o-mail-Discuss) .o-mail-DiscussContent-headerActions button,
+.o_web_client:has(.o-mail-Discuss) .o-mail-DiscussContent-headerActions .btn,
+.o_web_client:has(.o-mail-Discuss) .o-mail-Composer button,
+.o_web_client:has(.o-mail-Discuss) .o-mail-Composer .btn,
+.o_web_client:has(.o-mail-Discuss) .o-mail-DiscussContent-panelContainer .btn {
+    border-color: var(--mail-Discuss-border) !important;
+    background: var(--mail-Discuss-panel-soft) !important;
+    color: var(--mail-Discuss-text) !important;
+    box-shadow: none !important;
+}
+
+.o_web_client:has(.o-mail-Discuss) .o-mail-DiscussContent-headerActions button:hover,
+.o_web_client:has(.o-mail-Discuss) .o-mail-DiscussContent-headerActions .btn:hover,
+.o_web_client:has(.o-mail-Discuss) .o-mail-Composer button:hover,
+.o_web_client:has(.o-mail-Discuss) .o-mail-Composer .btn:hover,
+.o_web_client:has(.o-mail-Discuss) .o-mail-DiscussContent-panelContainer .btn:hover {
+    border-color: rgba(255, 135, 68, 0.5) !important;
+    background: #263244 !important;
+    color: #ffffff !important;
+}
+
+.o_web_client:has(.o-mail-Discuss) .o-mail-Message {
+    color: var(--mail-Discuss-text);
+}
+
+.o_web_client:has(.o-mail-Discuss) .o-mail-Message-bubble,
+.o_web_client:has(.o-mail-Discuss) .o-mail-Message-content,
+.o_web_client:has(.o-mail-Discuss) .o-mail-Message-body {
+    color: var(--mail-Discuss-text);
+}
+
+.o_web_client:has(.o-mail-Discuss) .o-mail-Message-bubble {
+    border-color: var(--mail-Discuss-border) !important;
+    background: #1d2a39 !important;
+}
+
+.o_web_client:has(.o-mail-Discuss) .o-mail-Message-bubble.bg-success-subtle,
+.o_web_client:has(.o-mail-Discuss) .o-mail-Message-bubble.bg-info-subtle {
+    background: rgba(37, 99, 235, 0.18) !important;
+    color: var(--mail-Discuss-text) !important;
+}
+
+.o_web_client:has(.o-mail-Discuss) .o-mail-DiscussContent-panelContainer :is(.bg-white, .bg-light, .bg-view, .bg-100, .text-bg-light) {
+    background: var(--mail-Discuss-panel) !important;
+    color: var(--mail-Discuss-text) !important;
+}
+
+.o_web_client:has(.o-mail-Discuss) .o-discuss-ChannelMember,
+.o_web_client:has(.o-mail-Discuss) .o-discuss-ChannelMemberList,
+.o_web_client:has(.o-mail-Discuss) .o-discuss-ChannelMemberList * {
+    color: var(--mail-Discuss-text);
+}

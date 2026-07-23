@@ -1,0 +1,376 @@
+.kr_sp_action_shell,
+.kr_sp_dashboard_scroll,
+html .o_web_client > .o_action_manager > .o_action .o_content.kr_sp_dashboard_content {
+    background: #111827;
+    color: #e5e7eb;
+}
+
+.kr_sp_header h1,
+.kr_sp_balance_card > strong,
+.kr_sp_metric strong,
+.kr_sp_chart_card h3,
+.kr_sp_live_card h3,
+.kr_sp_recent_table h3,
+.kr_sp_footer_heading,
+.kr_sp_footer_pair strong,
+.kr_sp_footer_status strong {
+    color: #f8fafc;
+}
+
+.kr_sp_header p,
+.kr_sp_card_head,
+.kr_sp_refresh_time,
+.kr_sp_balance_card > p,
+.kr_sp_metric span,
+.kr_sp_metric small,
+.kr_sp_chart_card p,
+.kr_sp_chart_bars small,
+.kr_sp_footer_caption,
+.kr_sp_footer_label {
+    color: #9ca3af;
+}
+
+.kr_sp_card,
+.kr_sp_metric,
+.kr_sp_footer,
+.kr_sp_footer_section,
+.kr_sp_live_card li {
+    border-color: #2b3647;
+    background: #18212f;
+    box-shadow: none;
+}
+
+.kr_sp_card[data-kr-action]:hover,
+.kr_sp_card[data-kr-scroll]:hover,
+.kr_sp_metric[data-kr-action]:hover,
+.kr_sp_live_card li[data-kr-action]:hover {
+    border-color: rgba(255, 135, 68, 0.48);
+    box-shadow: none;
+}
+
+.kr_sp_metric.is-hot {
+    background: linear-gradient(135deg, #ff8744, #f04f3e);
+}
+
+.kr_sp_metric.is-hot span,
+.kr_sp_metric.is-hot strong,
+.kr_sp_metric.is-hot small {
+    color: #ffffff;
+}
+
+.kr_sp_balance_card::after {
+    background: rgba(255, 135, 68, 0.12);
+}
+
+.kr_sp_refresh_btn,
+.kr_sp_footer_action {
+    border-color: #2b3647;
+    background: #111827;
+    color: #cbd5e1;
+}
+
+.kr_sp_refresh_btn:hover,
+.kr_sp_footer_action:hover {
+    border-color: rgba(255, 135, 68, 0.48);
+    background: #202b3a;
+    color: #ffffff;
+}
+
+.kr_sp_chart_bars span {
+    background: #263244;
+}
+
+.kr_sp_chart_bars span[data-kr-action]:hover {
+    background: #334155;
+}
+
+.kr_sp_chart_bars strong,
+.kr_sp_live_card strong {
+    color: #e5e7eb;
+}
+
+.kr_sp_recent_table table,
+.kr_sp_recent_table th,
+.kr_sp_recent_table td {
+    border-color: #2b3647;
+    color: #e5e7eb;
+}
+
+.kr_sp_recent_table th {
+    color: #9ca3af;
+}
+
+.kr_sp_recent_table .kr_sp_card_head {
+    border-color: rgba(255, 135, 68, 0.18);
+    background: linear-gradient(90deg, rgba(255, 135, 68, 0.1), rgba(17, 24, 39, 0) 62%);
+}
+
+.kr_sp_recent_table .kr_sp_card_head h3,
+.kr_sp_recent_table td,
+.kr_sp_recent_table td strong,
+.kr_sp_recent_table td span,
+.kr_sp_recent_table td a {
+    color: #f8fafc !important;
+}
+
+.kr_sp_recent_table tbody tr[data-kr-action]:hover td {
+    background: rgba(255, 135, 68, 0.08);
+    color: #ffffff !important;
+}
+
+.kr_sp_footer_status {
+    border-color: #2b3647;
+    background: #111827;
+}
+
+.kr_sp_action_shell .kr_sp_intro.kr_sp_pending_live:not([data-kr-ready="1"]) {
+    .kr_sp_card,
+    .kr_sp_metric {
+        background: #18212f;
+    }
+
+    .kr_sp_card::before,
+    .kr_sp_metric::before {
+        background:
+            linear-gradient(90deg, rgba(31, 41, 55, 0.92) 0%, rgba(43, 54, 71, 0.98) 44%, rgba(31, 41, 55, 0.92) 88%),
+            linear-gradient(180deg, #18212f 0%, #111827 100%);
+        background-size: 220% 100%, 100% 100%;
+    }
+}
+
+.kr_sp_dashboard_content .o_renderer,
+.kr_sp_dashboard_content .o_renderer_with_searchpanel,
+.kr_sp_dashboard_content .o_spreadsheet_container,
+.kr_sp_dashboard_content .o-spreadsheet,
+.kr_sp_dashboard_content .o-spreadsheet .o-figure,
+.kr_sp_dashboard_content .o-spreadsheet .o-chart,
+.kr_sp_dashboard_content .o-spreadsheet .o-chart-container {
+    background: #111827;
+    color: #e5e7eb;
+}
+
+.kr_sp_dashboard_content,
+.kr_sp_dashboard_content > *,
+.kr_sp_dashboard_content .o_spreadsheet_container,
+.kr_sp_dashboard_content .o_spreadsheet_container > *,
+.kr_sp_dashboard_content .o-spreadsheet,
+.kr_sp_dashboard_content .o-spreadsheet > *,
+.kr_sp_dashboard_content .o-spreadsheet .o-grid,
+.kr_sp_dashboard_content .o-spreadsheet .o-grid-container,
+.kr_sp_dashboard_content .o-spreadsheet .o-spreadsheet-content,
+.kr_sp_dashboard_content .o-spreadsheet .o-spreadsheet-canvas-container,
+.kr_sp_dashboard_content .o-spreadsheet .o-scrollbar {
+    background-color: #111827 !important;
+    color: #e5e7eb !important;
+}
+
+.o_web_client .o_spreadsheet_dashboard_action,
+.o_web_client .o_spreadsheet_dashboard_action > .o_content,
+.o_web_client .o_spreadsheet_dashboard_action .o_content,
+.o_web_client .o_spreadsheet_dashboard_action .o_renderer,
+.o_web_client .o_spreadsheet_dashboard_action .o_renderer_with_searchpanel,
+.o_web_client .o_spreadsheet_dashboard_action .o_spreadsheet_container {
+    background: #111827 !important;
+    color: #e5e7eb;
+}
+
+.o_web_client .o_spreadsheet_dashboard_action .o_spreadsheet_dashboard_search_panel,
+.o_web_client .o_spreadsheet_dashboard_action .o_search_panel,
+.o_web_client .o_spreadsheet_dashboard_action .o_search_panel_sidebar {
+    border-color: #2b3647 !important;
+    background: #111827 !important;
+    color: #e5e7eb;
+}
+
+.o_web_client .o_spreadsheet_dashboard_action .o_search_panel_section_header,
+.o_web_client .o_spreadsheet_dashboard_action .o_search_panel_counter,
+.o_web_client .o_spreadsheet_dashboard_action .o_search_panel_current_selection {
+    color: #9ca3af !important;
+}
+
+.o_web_client .o_spreadsheet_dashboard_action .o_search_panel_category_value,
+.o_web_client .o_spreadsheet_dashboard_action .o_search_panel_filter_value,
+.o_web_client .o_spreadsheet_dashboard_action .list-group-item {
+    border-color: transparent !important;
+    background: transparent !important;
+    color: #e5e7eb;
+}
+
+.o_web_client .o_spreadsheet_dashboard_action .o_search_panel_category_value:hover,
+.o_web_client .o_spreadsheet_dashboard_action .o_search_panel_filter_value:hover,
+.o_web_client .o_spreadsheet_dashboard_action .list-group-item:hover {
+    background: #202b3a !important;
+    color: #ffffff;
+}
+
+.o_web_client .o_spreadsheet_dashboard_action .o_search_panel_category_value.active,
+.o_web_client .o_spreadsheet_dashboard_action .o_search_panel_filter_value.active,
+.o_web_client .o_spreadsheet_dashboard_action .list-group-item.active {
+    background: rgba(255, 135, 68, 0.16) !important;
+    color: #ffffff;
+}
+
+.o_web_client .o_spreadsheet_dashboard_action .o-spreadsheet {
+    color-scheme: dark;
+    background: #111827 !important;
+    color: #e5e7eb;
+}
+
+.o_web_client .o_spreadsheet_dashboard_action .o-spreadsheet .bg-white,
+.o_web_client .o_spreadsheet_dashboard_action .o-spreadsheet .bg-view,
+.o_web_client .o_spreadsheet_dashboard_action .o-spreadsheet .o-figure,
+.o_web_client .o_spreadsheet_dashboard_action .o-spreadsheet .o-figure-wrapper,
+.o_web_client .o_spreadsheet_dashboard_action .o-spreadsheet .o-chart,
+.o_web_client .o_spreadsheet_dashboard_action .o-spreadsheet .o-chart-container,
+.o_web_client .o_spreadsheet_dashboard_action .o-spreadsheet .o-mobile-figure {
+    border-color: #2b3647 !important;
+    background: #18212f !important;
+    color: #e5e7eb !important;
+}
+
+.o_web_client .o_spreadsheet_dashboard_action .o-spreadsheet .border,
+.o_web_client .o_spreadsheet_dashboard_action .o-spreadsheet .border-bottom,
+.o_web_client .o_spreadsheet_dashboard_action .o-spreadsheet .border-top,
+.o_web_client .o_spreadsheet_dashboard_action .o-spreadsheet .border-start,
+.o_web_client .o_spreadsheet_dashboard_action .o-spreadsheet .border-end {
+    border-color: #2b3647 !important;
+}
+
+.o_web_client .o_spreadsheet_dashboard_action .o-spreadsheet input,
+.o_web_client .o_spreadsheet_dashboard_action .o-spreadsheet textarea,
+.o_web_client .o_spreadsheet_dashboard_action .o-spreadsheet select,
+.o_web_client .o_spreadsheet_dashboard_action .o-spreadsheet .o_input,
+.o_web_client .o_spreadsheet_dashboard_action .o-spreadsheet .btn {
+    border-color: #2b3647 !important;
+    background: #111827 !important;
+    color: #e5e7eb !important;
+}
+
+.o_web_client .o_spreadsheet_dashboard_action .o-spreadsheet .btn:hover {
+    background: #202b3a !important;
+    color: #ffffff !important;
+}
+
+.o_web_client .o_spreadsheet_dashboard_action .o-spreadsheet .o-dropdown-content,
+.o_web_client .o_spreadsheet_dashboard_action .o-spreadsheet .o-carousel-empty,
+.o_web_client .o_spreadsheet_dashboard_action .o-spreadsheet .o-spreadsheet-small-bottom-bar,
+.o_web_client .o_spreadsheet_dashboard_action .o-spreadsheet .o-small-composer,
+.o_web_client .o_spreadsheet_dashboard_action .o-spreadsheet .bottom-bar-menu {
+    border-color: #2b3647 !important;
+    background-color: #111827 !important;
+    color: #e5e7eb !important;
+}
+
+.o_web_client .o_spreadsheet_dashboard_action .o-spreadsheet .o-grid canvas {
+    background-color: #0b0f16;
+}
+
+.o_web_client .o_spreadsheet_dashboard_action .o-spreadsheet .o-figure canvas,
+.o_web_client .o_spreadsheet_dashboard_action .o-spreadsheet .o-chart canvas,
+.o_web_client .o_spreadsheet_dashboard_action .o-spreadsheet .o-chart-container canvas {
+    background-color: #0b0f16 !important;
+    filter: none !important;
+}
+
+.o_web_client .o_spreadsheet_dashboard_action .o-spreadsheet .o-dashboard-chart-select,
+.o_web_client .o_spreadsheet_dashboard_action .o-spreadsheet .o-chart-dashboard-item,
+.o_web_client .o_spreadsheet_dashboard_action .o-spreadsheet .o-figure select {
+    border-color: #2b3647 !important;
+    background: #111827 !important;
+    color: #cbd5e1 !important;
+}
+
+.o_web_client .o_spreadsheet_dashboard_action .o-spreadsheet .o-dashboard-chart-select > div {
+    border-color: #2b3647 !important;
+    background-color: #111827 !important;
+    color: #cbd5e1 !important;
+}
+
+.o_web_client .o_spreadsheet_dashboard_action .o-spreadsheet .o-dashboard-chart-select:hover,
+.o_web_client .o_spreadsheet_dashboard_action .o-spreadsheet .o-chart-dashboard-item:hover,
+.o_web_client .o_spreadsheet_dashboard_action .o-spreadsheet .o-figure select:hover {
+    background: #202b3a !important;
+    color: #ffffff !important;
+}
+
+.o_web_client .o_spreadsheet_dashboard_action .o-spreadsheet .o-figure button,
+.o_web_client .o_spreadsheet_dashboard_action .o-spreadsheet .o-chart-container button {
+    border-color: #2b3647 !important;
+    background: #111827 !important;
+    color: #cbd5e1 !important;
+}
+
+.o_web_client .o_spreadsheet_dashboard_action .o-spreadsheet .o-figure button:hover,
+.o_web_client .o_spreadsheet_dashboard_action .o-spreadsheet .o-chart-container button:hover {
+    border-color: rgba(255, 135, 68, 0.48) !important;
+    background: #202b3a !important;
+    color: #ffffff !important;
+}
+
+.o_web_client .o_spreadsheet_dashboard_action .o-spreadsheet .o-chart-custom-tooltip {
+    border-color: #334155 !important;
+    background-color: #111827 !important;
+    color: #e5e7eb !important;
+    box-shadow: 0 16px 36px rgba(2, 6, 23, 0.46) !important;
+}
+
+.o_web_client .o_spreadsheet_dashboard_action .o-spreadsheet .o-chart-custom-tooltip table,
+.o_web_client .o_spreadsheet_dashboard_action .o-spreadsheet .o-chart-custom-tooltip th,
+.o_web_client .o_spreadsheet_dashboard_action .o-spreadsheet .o-chart-custom-tooltip td,
+.o_web_client .o_spreadsheet_dashboard_action .o-spreadsheet .o-chart-custom-tooltip small {
+    border-color: transparent !important;
+    background-color: transparent !important;
+    color: #e5e7eb !important;
+}
+
+.o_web_client .o_spreadsheet_dashboard_action .o-spreadsheet .o-chart-custom-tooltip .o-tooltip-title {
+    color: #f8fafc !important;
+}
+
+.o_web_client .o_spreadsheet_dashboard_action .o-spreadsheet .o-chart-custom-tooltip .o-tooltip-label {
+    color: #cbd5e1 !important;
+}
+
+.o_web_client .o_spreadsheet_dashboard_action .o-spreadsheet .o-chart-custom-tooltip .o-tooltip-value {
+    color: #ffffff !important;
+}
+
+html .o_web_client > .o_action_manager > .o_action .o_content.kr_sp_dashboard_content,
+.o_web_client .o_spreadsheet_dashboard_action .kr_sp_dashboard_content,
+.o_web_client .o_spreadsheet_dashboard_action .o_content.kr_sp_dashboard_content {
+    border-color: #243244 !important;
+    box-shadow: none !important;
+}
+
+.o_web_client .o_spreadsheet_dashboard_action .o_spreadsheet_container,
+.o_web_client .o_spreadsheet_dashboard_action .o-spreadsheet,
+.o_web_client .o_spreadsheet_dashboard_action .o-spreadsheet .o-grid,
+.o_web_client .o_spreadsheet_dashboard_action .o-spreadsheet .o-grid-overlay,
+.o_web_client .o_spreadsheet_dashboard_action .o-spreadsheet .o-grid-container,
+.o_web_client .o_spreadsheet_dashboard_action .o-spreadsheet .o-spreadsheet-content,
+.o_web_client .o_spreadsheet_dashboard_action .o-spreadsheet .o-spreadsheet-canvas-container,
+.o_web_client .o_spreadsheet_dashboard_action .o-spreadsheet .o-figure,
+.o_web_client .o_spreadsheet_dashboard_action .o-spreadsheet .o-figure-wrapper,
+.o_web_client .o_spreadsheet_dashboard_action .o-spreadsheet .o-chart,
+.o_web_client .o_spreadsheet_dashboard_action .o-spreadsheet .o-chart-container,
+.o_web_client .o_spreadsheet_dashboard_action .o-spreadsheet .o-mobile-figure {
+    border-color: #243244 !important;
+    outline-color: #243244 !important;
+    box-shadow: none !important;
+}
+
+.o_web_client .o_spreadsheet_dashboard_action .o_spreadsheet_dashboard_search_panel,
+.o_web_client .o_spreadsheet_dashboard_action .o_search_panel,
+.o_web_client .o_spreadsheet_dashboard_action .o_search_panel_sidebar {
+    border-color: #243244 !important;
+    box-shadow: inset -1px 0 0 #243244 !important;
+}
+
+.o_web_client .o_spreadsheet_dashboard_action .o-spreadsheet .border,
+.o_web_client .o_spreadsheet_dashboard_action .o-spreadsheet .border-top,
+.o_web_client .o_spreadsheet_dashboard_action .o-spreadsheet .border-bottom,
+.o_web_client .o_spreadsheet_dashboard_action .o-spreadsheet .border-start,
+.o_web_client .o_spreadsheet_dashboard_action .o-spreadsheet .border-end,
+.o_web_client .o_spreadsheet_dashboard_action .o-spreadsheet [class*="border-"] {
+    border-color: #243244 !important;
+}

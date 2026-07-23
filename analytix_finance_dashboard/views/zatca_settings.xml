@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <!-- Add ZATCA VAT Return toggle inside Accounting → Configuration → Settings -->
+    <record id="analytix_zatca_res_config_settings_view" model="ir.ui.view">
+        <field name="name">analytix.zatca.res.config.settings.view</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="account.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <!-- Insert just before the closing of the form (after all existing sections) -->
+            <xpath expr="//app[@name='account']" position="inside">
+                <block title="Analytix 360 Finance Dashboard" name="analytix_dashboard_settings">
+                    <setting id="analytix_zatca_settings" help="Show ZATCA VAT return deadline alerts on the Finance Dashboard. When enabled, a reminder will appear in the Alerts section 30 days before each quarterly ZATCA filing deadline.">
+                        <field name="analytix_zatca_enabled"/>
+                    </setting>
+                </block>
+            </xpath>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+        Security Groups for the three-tier access control:
+        1. Super Admin Group
+        2. Normal Admin Group
+    -->
+
+    <!-- Super Admin Group -->
+    <record id="group_super_admin" model="res.groups">
+        <field name="name">Super Admin</field>
+        <!-- Super Admin implies full system admin rights -->
+        <field name="implied_ids" eval="[(4, ref('base.group_system'))]"/>
+    </record>
+
+    <!-- Normal Admin Group -->
+    <record id="group_normal_admin" model="res.groups">
+        <field name="name">Normal Admin</field>
+        <!-- Normal Admin implies base admin rights -->
+        <field name="implied_ids" eval="[(4, ref('base.group_system'))]"/>
+    </record>
+
+    <!--
+        Bootstrap: Automatically assign Super Admin role to the default Odoo
+        administrator users during module installation. This breaks the
+        chicken-and-egg problem where is_super_admin is required to grant it.
+    -->
+    <record id="base.user_admin" model="res.users">
+        <field name="is_super_admin" eval="True"/>
+        <field name="group_ids" eval="[(4, ref('acces_right_users.group_super_admin'))]"/>
+    </record>
+
+    <record id="base.user_root" model="res.users">
+        <field name="is_super_admin" eval="True"/>
+        <field name="group_ids" eval="[(4, ref('acces_right_users.group_super_admin'))]"/>
+    </record>
+
+</odoo>

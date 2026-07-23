@@ -1,0 +1,136 @@
+.o_web_client {
+    .o_pivot_view,
+    .o_content:has(.o_pivot_view),
+    .o_pivot_view .o_renderer,
+    .o_pivot_view .o_renderer_with_searchpanel,
+    .o_pivot_view .o_pivot {
+        background: #111827 !important;
+        color: var(--kr-dark-text);
+    }
+
+    .o_pivot_view .o_pivot {
+        border: 1px solid var(--kr-dark-border);
+        box-shadow: none;
+    }
+
+    .o_pivot_view .o_pivot_buttons {
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .o_pivot_view .o_pivot_buttons .o_pivot_flip_button,
+    .o_pivot_view .o_pivot_buttons .o_pivot_expand_button,
+    .o_pivot_view .o_pivot_buttons .o_pivot_download {
+        width: 36px;
+        min-width: 36px;
+        max-width: 36px;
+        height: 36px;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-color: var(--kr-dark-border);
+        background: #18212f;
+        color: var(--kr-dark-text);
+        box-shadow: none;
+    }
+
+    .o_pivot_view .o_pivot_buttons .btn-primary,
+    .o_pivot_view .o_pivot_buttons .dropdown-toggle:not(.o_pivot_flip_button):not(.o_pivot_expand_button):not(.o_pivot_download) {
+        min-height: 36px;
+        border-color: transparent;
+        background: var(--kr-dark-accent);
+        color: #111827;
+        box-shadow: none;
+        white-space: nowrap;
+    }
+
+    .o_pivot_view .o_pivot_buttons .o-dropdown,
+    .o_pivot_view .o_pivot_buttons .btn-group {
+        flex: 0 0 auto;
+    }
+
+    .o_pivot_view .o_pivot_buttons .btn:hover,
+    .o_pivot_view .o_pivot_buttons .btn:focus,
+    .o_pivot_view .o_pivot_buttons .btn.show,
+    .o_pivot_view .o_pivot_buttons .dropdown-toggle.show {
+        border-color: rgba(255, 135, 68, 0.48);
+        background: #202b3a;
+        color: #ffffff;
+        box-shadow: none;
+    }
+
+    .o_pivot_view .o_pivot_buttons .btn.active,
+    .o_pivot_view .o_pivot_buttons .btn.active:hover,
+    .o_pivot_view .o_pivot_buttons .btn.active:focus {
+        border-color: transparent !important;
+        background: var(--kr-dark-accent) !important;
+        color: #111827 !important;
+        box-shadow: none !important;
+    }
+
+    .o_pivot_view .o_pivot_buttons .btn.active i {
+        color: #111827 !important;
+    }
+
+    .o_pivot_view .o_pivot_buttons .btn-primary:hover,
+    .o_pivot_view .o_pivot_buttons .btn-primary:focus,
+    .o_pivot_view .o_pivot_buttons .btn-primary.show {
+        border-color: transparent;
+        background: #ff9a62;
+        color: #111827;
+    }
+
+    .o_pivot_view .o_pivot table,
+    .o_pivot_view .o_pivot .table,
+    .o_pivot_view .o_pivot thead,
+    .o_pivot_view .o_pivot tbody,
+    .o_pivot_view .o_pivot tr {
+        border-color: var(--kr-dark-border) !important;
+        background: #111827 !important;
+        color: var(--kr-dark-text);
+    }
+
+    .o_pivot_view .o_pivot th,
+    .o_pivot_view .o_pivot td,
+    .o_pivot_view .o_pivot .bg-view,
+    .o_pivot_view .o_pivot .bg-100,
+    .o_pivot_view .o_pivot .text-bg-100 {
+        border-color: var(--kr-dark-border) !important;
+        background: #18212f !important;
+        color: var(--kr-dark-text) !important;
+    }
+
+    .o_pivot_view .o_pivot .o_pivot_measure_row,
+    .o_pivot_view .o_pivot .o_pivot_origin_row,
+    .o_pivot_view .o_pivot .o_pivot_header_cell_closed,
+    .o_pivot_view .o_pivot .o_pivot_header_cell_opened {
+        background: #18212f !important;
+        color: var(--kr-dark-text) !important;
+    }
+
+    .o_pivot_view .o_pivot .o_pivot_measure_row:hover,
+    .o_pivot_view .o_pivot .o_pivot_origin_row:hover,
+    .o_pivot_view .o_pivot .o_pivot_header_cell_closed:hover,
+    .o_pivot_view .o_pivot .o_pivot_header_cell_opened:hover,
+    .o_pivot_view .o_pivot .o_pivot_cell_value.o_cell_hover,
+    .o_pivot_view .o_pivot .o_pivot_cell_value:hover {
+        background: #202b3a !important;
+        color: #ffffff !important;
+    }
+
+    .o_pivot_view .o_pivot .o_pivot_cell_value.o_empty {
+        background: #111827 !important;
+        color: #64748b !important;
+    }
+
+    .o_pivot_view .o_pivot .fa,
+    .o_pivot_view .o_pivot .o_value,
+    .o_pivot_view .o_pivot .text-muted {
+        color: var(--kr-dark-muted) !important;
+    }
+
+    .o_pivot_view .o_pivot .o_enable_linking .o_pivot_cell_value:not(.o_empty):hover {
+        color: var(--kr-dark-accent) !important;
+    }
+}

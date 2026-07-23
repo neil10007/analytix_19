@@ -1,0 +1,251 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="l10n_sa_report_invoice_document_custom" inherit_id="l10n_sa.l10n_sa_report_invoice_document">
+        <!-- Replace the entire top address row (including t-if, t-elif, t-else) with a balanced, professional two-column layout (Seller & Buyer) -->
+        <xpath expr="//div[@name='address_not_same_as_shipping']/../.." position="replace">
+            <div class="row mb-4 header-cards-row">
+                <!-- Left Column: Seller (Company) Details -->
+                <div class="col-6">
+                    <div class="company-card">
+                        <span class="card-title">Seller / البائع</span>
+                        <div class="company-name" t-field="o.company_id.partner_id.name"/>
+                        <div class="company-details">
+                            <span t-field="o.company_id.partner_id" t-options='{"widget": "contact", "fields": ["address"], "no_marker": True}'/>
+                            <div t-if="o.company_id.vat" class="company-vat">
+                                VAT Number / الرقم الضريبي: <strong t-field="o.company_id.vat"/>
+                            </div>
+                            <div t-if="o.company_id.company_registry" class="company-cr">
+                                CR Number / السجل التجاري: <strong t-field="o.company_id.company_registry"/>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Right Column: Buyer (Customer) Details -->
+                <div class="col-6">
+                    <div class="address-card">
+                        <span class="card-title">Invoice To / فاتورة إلى</span>
+                        <div class="customer-name" t-field="o.partner_id.name"/>
+                        <div class="customer-details">
+                            <span t-field="o.partner_id" t-options='{"widget": "contact", "fields": ["address"], "no_marker": True}'/>
+                            <div t-if="o.partner_id.vat" class="customer-vat">
+                                VAT Number / الرقم الضريبي: <strong t-field="o.partner_id.vat"/>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </xpath>
+
+        <!-- Inject our professional layout styles -->
+        <xpath expr="//div[hasclass('invoice_main')]" position="before">
+            <style>
+                /* General Report Styling */
+                .invoice_main {
+                    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif !important;
+                    color: #1e293b !important;
+                    font-size: 13px !important;
+                }
+
+
+
+                /* Header Cards Styling (Symmetrical Seller/Buyer Grid) */
+                .header-cards-row {
+                    margin-top: 15px !important;
+                    margin-bottom: 25px !important;
+                    clear: both !important;
+                }
+
+                .company-card, .address-card {
+                    border: 1px solid #cbd5e1 !important;
+                    border-left: 4px solid #1e3a8a !important; /* Premium navy border accent */
+                    border-radius: 8px !important;
+                    background-color: #f8fafc !important;
+                    padding: 16px !important;
+                    min-height: 160px !important;
+                    box-shadow: 0 1px 3px rgba(0,0,0,0.02) !important;
+                }
+
+                .card-title {
+                    font-size: 11px !important;
+                    font-weight: 700 !important;
+                    color: #1e3a8a !important;
+                    text-transform: uppercase !important;
+                    letter-spacing: 0.5px !important;
+                    border-bottom: 2px solid #e2e8f0 !important;
+                    padding-bottom: 6px !important;
+                    margin-bottom: 10px !important;
+                    display: block !important;
+                }
+
+                .company-name, .customer-name {
+                    font-size: 14px !important;
+                    font-weight: 700 !important;
+                    color: #0f172a !important;
+                    margin-bottom: 6px !important;
+                }
+
+                .company-details, .customer-details {
+                    font-size: 12px !important;
+                    line-height: 1.5 !important;
+                    color: #334155 !important;
+                }
+
+                .company-details address, .customer-details address {
+                    margin-bottom: 4px !important;
+                    font-style: normal !important;
+                }
+
+                .company-vat, .company-cr, .customer-vat {
+                    font-size: 11px !important;
+                    color: #475569 !important;
+                    margin-top: 8px !important;
+                    border-top: 1px dashed #e2e8f0 !important;
+                    padding-top: 6px !important;
+                    font-weight: 500 !important;
+                }
+
+                /* Document Title */
+                .invoice_main h3, .invoice_main h2 {
+                    font-size: 22px !important;
+                    font-weight: 700 !important;
+                    color: #0f172a !important;
+                    margin-top: 20px !important;
+                    margin-bottom: 20px !important;
+                    border-bottom: 2px solid #475569 !important;
+                    padding-bottom: 8px !important;
+                    text-transform: uppercase;
+                    letter-spacing: 0.5px;
+                    clear: both !important;
+                }
+
+                /* Info Metadata Section */
+                #informations {
+                    border: 1px solid #e2e8f0 !important;
+                    border-radius: 8px !important;
+                    background-color: #f8fafc !important;
+                    padding: 14px 10px !important;
+                    margin-bottom: 30px !important;
+                    box-shadow: inset 0 1px 2px rgba(0,0,0,0.02);
+                }
+                #informations .col {
+                    border-right: 1px solid #e2e8f0 !important;
+                    padding: 0 15px !important;
+                }
+                #informations .col:last-child {
+                    border-right: none !important;
+                }
+                #informations strong {
+                    font-size: 11px !important;
+                    text-transform: uppercase !important;
+                    color: #64748b !important;
+                    display: block !important;
+                    margin-bottom: 4px !important;
+                    font-weight: 600 !important;
+                    letter-spacing: 0.5px;
+                }
+                #informations div {
+                    font-size: 13px !important;
+                    font-weight: 600 !important;
+                    color: #0f172a !important;
+                }
+
+                /* Items Table Styling */
+                table.o_main_table {
+                    width: 100% !important;
+                    border-collapse: separate !important;
+                    border-spacing: 0 !important;
+                    border: 1px solid #cbd5e1 !important;
+                    border-radius: 8px !important;
+                    overflow: hidden !important;
+                    margin-bottom: 30px !important;
+                    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+                }
+                table.o_main_table thead tr {
+                    background-color: #0f172a !important;
+                }
+                table.o_main_table th {
+                    color: #ffffff !important;
+                    font-weight: 700 !important;
+                    text-transform: uppercase !important;
+                    font-size: 11px !important;
+                    padding: 12px 10px !important;
+                    border-bottom: 2px solid #cbd5e1 !important;
+                }
+                table.o_main_table td {
+                    padding: 12px 10px !important;
+                    font-size: 13px !important;
+                    border-bottom: 1px solid #e2e8f0 !important;
+                    color: #334155 !important;
+                    vertical-align: middle !important;
+                }
+                table.o_main_table tbody tr:last-child td {
+                    border-bottom: none !important;
+                }
+                table.o_main_table tbody tr:nth-child(even) {
+                    background-color: #f8fafc !important;
+                }
+
+                /* Totals Block Styling */
+                #right-elements {
+                    margin-top: 25px !important;
+                }
+                .o_total_table {
+                    width: 100% !important;
+                    border-collapse: collapse !important;
+                }
+                .o_total_table tr td {
+                    padding: 8px 12px !important;
+                    font-size: 13px !important;
+                    border: none !important;
+                }
+                .o_total_table tr.o_subtotal td {
+                    border-top: 1px solid #e2e8f0 !important;
+                    color: #475569 !important;
+                }
+                .o_total_table tr.o_taxes td {
+                    color: #475569 !important;
+                }
+                .o_total_table tr.o_total {
+                    background-color: #f1f5f9 !important;
+                }
+                .o_total_table tr.o_total td {
+                    border-top: 2px solid #94a3b8 !important;
+                    border-bottom: 2px solid #94a3b8 !important;
+                    font-size: 15px !important;
+                    font-weight: bold !important;
+                    color: #0f172a !important;
+                }
+
+                /* Payment communication / details box */
+                #payment_term {
+                    border-top: 1px dashed #e2e8f0 !important;
+                    padding-top: 20px !important;
+                    margin-top: 25px !important;
+                    font-size: 12px !important;
+                    color: #64748b !important;
+                    line-height: 1.5 !important;
+                }
+                #payment_term p {
+                    margin-bottom: 8px !important;
+                }
+                #payment_term .fw-bold {
+                    color: #0f172a !important;
+                }
+
+                /* QR Code box */
+                #l10n_sa_qr_code {
+                    margin-top: 20px !important;
+                }
+                #l10n_sa_qr_code img {
+                    border: 1px solid #e2e8f0 !important;
+                    border-radius: 6px !important;
+                    padding: 6px !important;
+                    background-color: #ffffff !important;
+                }
+            </style>
+        </xpath>
+    </template>
+
+
+</odoo>

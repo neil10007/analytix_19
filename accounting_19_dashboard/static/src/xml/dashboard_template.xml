@@ -1,0 +1,590 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates xml:space="preserve">
+<t t-name="accounting_19_dashboard.DashboardMain">
+<div class="acc_dashboard_root">
+
+    <!-- particle canvas -->
+    <canvas id="acc_particle_canvas"/>
+
+    <div class="acc_dash_inner">
+
+        <!-- HEADER -->
+        <div class="acc_dash_header">
+            <div class="acc_dash_header_left">
+                <div class="acc_logo_wrap">📊</div>
+                <div>
+                    <h1 class="acc_dash_title">Accounting Dashboard</h1>
+                    <p class="acc_dash_subtitle"><t t-esc="state.company"/> · Live Financial Overview</p>
+                </div>
+            </div>
+            <div class="acc_dash_header_right">
+                <!-- Total Balance pill in header -->
+                <t t-if="!state.loading">
+                    <div class="acc_header_balance_wrap">
+                        <div class="acc_header_balance_label">🏦 Total Balance</div>
+                        <div class="acc_header_balance_val">
+                            <t t-esc="state.currency"/><span id="hdr_bank_val">0.00</span>
+                        </div>
+                        <div class="acc_header_balance_sub">
+                            <t t-foreach="state.bank_accounts" t-as="acc" t-key="acc.name">
+                                <span class="acc_hdr_acc_pill">
+                                    <t t-if="acc.type === 'bank'">🏛</t><t t-else="">💵</t>
+                                    <t t-esc="acc.name"/>:
+                                    <b><t t-esc="acc.currency"/><t t-esc="formatAmount(acc.balance)"/></b>
+                                </span>
+                            </t>
+                        </div>
+                    </div>
+                </t>
+                <div class="acc_date_badge">📅 <t t-esc="state.today"/></div>
+                <button class="acc_refresh_btn" t-on-click="loadData">
+                    <span class="acc_refresh_icon">↻</span> Refresh
+                </button>
+            </div>
+        </div>
+
+        <!-- LOADING -->
+        <t t-if="state.loading">
+            <div class="acc_loading_wrap">
+                <div class="acc_spinner_ring"/>
+                <p class="acc_loading_text">Fetching financial data…</p>
+            </div>
+            <div class="acc_shimmer_grid">
+                <div class="acc_shimmer_card"/>
+                <div class="acc_shimmer_card"/>
+                <div class="acc_shimmer_card"/>
+            </div>
+        </t>
+
+        <t t-else="">
+
+            <!-- KPI GRID -->
+            <div class="acc_kpi_grid">
+
+                <!-- Receivables -->
+                <div class="acc_kpi_card acc_kpi_green acc_kpi_clickable" t-on-click="openReceivables">
+                    <div class="acc_kpi_top">
+                        <div class="acc_kpi_icon acc_icon_green">💰</div>
+                        <span class="acc_kpi_badge acc_badge_green">Receivables</span>
+                    </div>
+                    <div class="acc_kpi_label_row">Total Outstanding</div>
+                    <div class="acc_kpi_value">
+                        <span class="acc_currency_sym"><t t-esc="state.currency"/></span><span id="kpi_receivable_val">0.00</span>
+                    </div>
+                    <div class="acc_kpi_sub">
+                        <span class="acc_sub_label">Overdue:</span>
+                        <span class="acc_sub_val"><t t-esc="state.currency"/><t t-esc="formatAmount(state.overdue_receivable)"/></span>
+                    </div>
+                    <div class="acc_bar_track">
+                        <div class="acc_bar_fill acc_bar_green acc_bar_animated"
+                             t-att-data-width="overduePercent(state.overdue_receivable, state.total_receivable)"/>
+                    </div>
+                </div>
+
+                <!-- Payables -->
+                <div class="acc_kpi_card acc_kpi_red acc_kpi_clickable" t-on-click="openPayables">
+                    <div class="acc_kpi_top">
+                        <div class="acc_kpi_icon acc_icon_red">📤</div>
+                        <span class="acc_kpi_badge acc_badge_red">Payables</span>
+                    </div>
+                    <div class="acc_kpi_label_row">Total Outstanding</div>
+                    <div class="acc_kpi_value">
+                        <span class="acc_currency_sym"><t t-esc="state.currency"/></span><span id="kpi_payable_val">0.00</span>
+                    </div>
+                    <div class="acc_kpi_sub">
+                        <span class="acc_sub_label">Overdue:</span>
+                        <span class="acc_sub_val"><t t-esc="state.currency"/><t t-esc="formatAmount(state.overdue_payable)"/></span>
+                    </div>
+                    <div class="acc_bar_track">
+                        <div class="acc_bar_fill acc_bar_red acc_bar_animated"
+                             t-att-data-width="overduePercent(state.overdue_payable, state.total_payable)"/>
+                    </div>
+                </div>
+
+                <!-- Cash &amp; Bank -->
+                <div class="acc_kpi_card acc_kpi_blue acc_kpi_clickable" t-on-click="openBank">
+                    <div class="acc_kpi_top">
+                        <div class="acc_kpi_icon acc_icon_blue">🏦</div>
+                        <span class="acc_kpi_badge acc_badge_blue">Cash &amp; Bank</span>
+                    </div>
+                    <div class="acc_kpi_label_row">Total Balance</div>
+                    <div class="acc_kpi_value">
+                        <span class="acc_currency_sym"><t t-esc="state.currency"/></span><span id="kpi_bank_val">0.00</span>
+                    </div>
+                    <div class="acc_mini_bank">
+                        <t t-foreach="state.bank_accounts" t-as="acc" t-key="acc.name">
+                            <div class="acc_mini_bank_row">
+                                <span class="acc_mini_bank_name"><t t-esc="acc.name"/></span>
+                                <span class="acc_mini_bank_val"><t t-esc="acc.currency"/><t t-esc="formatAmount(acc.balance)"/></span>
+                            </div>
+                        </t>
+                    </div>
+                </div>
+
+                <!-- Revenue MTD -->
+                <div class="acc_kpi_card acc_kpi_purple acc_kpi_clickable" t-on-click="openRevenue">
+                    <div class="acc_kpi_top">
+                        <div class="acc_kpi_icon acc_icon_purple">📈</div>
+                        <span class="acc_kpi_badge acc_badge_purple">Revenue (MTD)</span>
+                    </div>
+                    <div class="acc_kpi_label_row">This Month Income</div>
+                    <div class="acc_kpi_value">
+                        <span class="acc_currency_sym"><t t-esc="state.currency"/></span><span id="kpi_revenue_val">0.00</span>
+                    </div>
+                    <div class="acc_kpi_sub">
+                        <span class="acc_sub_label">vs Last Month:</span>
+                        <span t-att-class="state.revenue_change >= 0 ? 'acc_up' : 'acc_down'">
+                            <t t-esc="state.revenue_change >= 0 ? '▲' : '▼'"/>
+                            <t t-esc="Math.abs(state.revenue_change)"/>%
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Expenses MTD -->
+                <div class="acc_kpi_card acc_kpi_orange acc_kpi_clickable" t-on-click="openExpenses">
+                    <div class="acc_kpi_top">
+                        <div class="acc_kpi_icon acc_icon_orange">📉</div>
+                        <span class="acc_kpi_badge acc_badge_orange">Expenses (MTD)</span>
+                    </div>
+                    <div class="acc_kpi_label_row">This Month Cost (excl. Tax)</div>
+                    <div class="acc_kpi_value">
+                        <span class="acc_currency_sym"><t t-esc="state.currency"/></span><span id="kpi_expense_val">0.00</span>
+                    </div>
+                    <div class="acc_kpi_sub">
+                        <span class="acc_sub_label">🧾 Tax:</span>
+                        <span class="acc_up"><t t-esc="state.currency"/><span id="kpi_expense_tax_val">0.00</span></span>
+                    </div>
+                    <div class="acc_kpi_sub">
+                        <span class="acc_sub_label">Net Profit:</span>
+                        <span t-att-class="(state.revenue_this_month - state.expense_this_month) >= 0 ? 'acc_up' : 'acc_down'">
+                            <t t-esc="state.currency"/>
+                            <t t-esc="formatAmount(state.revenue_this_month - state.expense_this_month)"/>
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Pending Docs -->
+                <div class="acc_kpi_card acc_kpi_teal acc_kpi_clickable" t-on-click="openPending">
+                    <div class="acc_kpi_top">
+                        <div class="acc_kpi_icon acc_icon_teal">🧾</div>
+                        <span class="acc_kpi_badge acc_badge_teal">Pending</span>
+                    </div>
+                    <div class="acc_kpi_label_row">Unpaid Documents</div>
+                    <div class="acc_pending_row">
+                        <div class="acc_pending_item">
+                            <span class="acc_pending_count" id="kpi_unpaid_inv">0</span>
+                            <span class="acc_pending_lbl">Invoices</span>
+                        </div>
+                        <div class="acc_pending_sep"/>
+                        <div class="acc_pending_item">
+                            <span class="acc_pending_count" id="kpi_unpaid_bill">0</span>
+                            <span class="acc_pending_lbl">Bills</span>
+                        </div>
+                    </div>
+                    <div class="acc_kpi_sub">
+                        <span class="acc_sub_label">Total:</span>
+                        <span class="acc_down"><t t-esc="state.unpaid_invoices + state.unpaid_bills"/> pending docs</span>
+                    </div>
+                </div>
+
+                <!-- Gross Profit -->
+                <div class="acc_kpi_card acc_kpi_lime acc_kpi_clickable" t-on-click="openRevenue">
+                    <div class="acc_kpi_top">
+                        <div class="acc_kpi_icon acc_icon_lime">📊</div>
+                        <span class="acc_kpi_badge acc_badge_lime">Gross Profit</span>
+                    </div>
+                    <div class="acc_kpi_label_row">Revenue − Direct Costs</div>
+                    <div class="acc_kpi_value">
+                        <span class="acc_currency_sym"><t t-esc="state.currency"/></span>
+                        <span id="kpi_gross_profit_val">0.00</span>
+                    </div>
+                    <div class="acc_kpi_sub">
+                        <span class="acc_sub_label">Gross Margin:</span>
+                        <span t-att-class="state.gross_profit >= 0 ? 'acc_up' : 'acc_down'">
+                            <t t-esc="state.revenue_this_month ? (state.gross_profit / state.revenue_this_month * 100).toFixed(1) : '0.0'"/>%
+                        </span>
+                    </div>
+                    <div class="acc_profit_indicator" t-att-class="state.gross_profit >= 0 ? 'acc_profit_pos' : 'acc_profit_neg'">
+                        <t t-esc="state.gross_profit >= 0 ? '▲ Profitable' : '▼ Loss'"/>
+                    </div>
+                </div>
+
+                <!-- Net Profit -->
+                <div class="acc_kpi_card acc_kpi_indigo acc_kpi_clickable" t-on-click="openRevenue">
+                    <div class="acc_kpi_top">
+                        <div class="acc_kpi_icon acc_icon_indigo">💎</div>
+                        <span class="acc_kpi_badge acc_badge_indigo">Net Profit</span>
+                    </div>
+                    <div class="acc_kpi_label_row">After Tax &amp; All Expenses</div>
+                    <div class="acc_kpi_value">
+                        <span class="acc_currency_sym"><t t-esc="state.currency"/></span>
+                        <span id="kpi_net_profit_val">0.00</span>
+                    </div>
+                    <div class="acc_kpi_sub">
+                        <span class="acc_sub_label">Net Margin:</span>
+                        <span t-att-class="state.net_profit >= 0 ? 'acc_up' : 'acc_down'">
+                            <t t-esc="state.revenue_this_month ? (state.net_profit / state.revenue_this_month * 100).toFixed(1) : '0.0'"/>%
+                        </span>
+                    </div>
+                    <div class="acc_profit_indicator" t-att-class="state.net_profit >= 0 ? 'acc_profit_pos' : 'acc_profit_neg'">
+                        <t t-esc="state.net_profit >= 0 ? '▲ Profitable' : '▼ Loss'"/>
+                    </div>
+                </div>
+
+            </div><!-- /kpi_grid -->
+
+            <!-- BOTTOM GRID -->
+            <div class="acc_bottom_grid">
+
+                <div class="acc_card">
+                    <div class="acc_card_head">
+                        <h2 class="acc_card_title">
+                            <span class="acc_title_dot"/>
+                            Income vs Expense
+                        </h2>
+                        <span class="acc_card_tag">Last 6 Months</span>
+                    </div>
+                    <div class="acc_chart_wrap">
+                        <canvas id="incomeExpenseChart" height="280"/>
+                    </div>
+                </div>
+
+                <div class="acc_card">
+                    <div class="acc_card_head">
+                        <h2 class="acc_card_title">
+                            <span class="acc_title_dot"/>
+                            Accounts
+                        </h2>
+                    </div>
+                    <div class="acc_bank_list">
+                        <t t-if="state.bank_accounts.length === 0">
+                            <div class="acc_empty">No bank accounts found</div>
+                        </t>
+                        <t t-foreach="state.bank_accounts" t-as="acc" t-key="acc.name">
+                            <div class="acc_bank_item">
+                                <div class="acc_bank_icon">
+                                    <t t-if="acc.type === 'bank'">🏛️</t>
+                                    <t t-else="">💵</t>
+                                </div>
+                                <div class="acc_bank_info">
+                                    <div class="acc_bank_name"><t t-esc="acc.name"/></div>
+                                    <div class="acc_bank_type"><t t-esc="acc.type"/></div>
+                                </div>
+                                <div t-att-class="acc.balance >= 0 ? 'acc_bank_bal acc_bal_pos' : 'acc_bank_bal acc_bal_neg'">
+                                    <t t-esc="acc.currency"/><t t-esc="formatAmount(acc.balance)"/>
+                                </div>
+                            </div>
+                        </t>
+                    </div>
+                </div>
+
+            </div><!-- /bottom_grid -->
+
+            <!-- INVOICES / BILLS TOGGLE TABLE -->
+            <div class="acc_card acc_invoices_card">
+                <div class="acc_card_head">
+                    <h2 class="acc_card_title">
+                        <span class="acc_title_dot"/>
+                        <t t-esc="state.showBills ? 'Recent Bills' : 'Recent Invoices'"/>
+                    </h2>
+                    <div class="acc_toggle_wrap">
+                        <button t-att-class="!state.showBills ? 'acc_toggle_btn acc_toggle_active' : 'acc_toggle_btn'"
+                                t-on-click="showInvoicesTab">
+                            🧾 Invoices
+                        </button>
+                        <button t-att-class="state.showBills ? 'acc_toggle_btn acc_toggle_active' : 'acc_toggle_btn'"
+                                t-on-click="showBillsTab">
+                            📄 Bills
+                        </button>
+                    </div>
+                </div>
+                <div class="acc_table_wrap">
+                    <table class="acc_table">
+                        <thead>
+                            <tr>
+                                <th><t t-esc="state.showBills ? 'Bill #' : 'Invoice #'"/></th>
+                                <th><t t-esc="state.showBills ? 'Vendor' : 'Customer'"/></th>
+                                <th>Date</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- INVOICES -->
+                            <t t-if="!state.showBills">
+                                <t t-if="state.recent_invoices.length === 0">
+                                    <tr><td colspan="5" class="acc_tbl_empty">No invoices found</td></tr>
+                                </t>
+                                <t t-foreach="state.recent_invoices" t-as="inv" t-key="inv.name">
+                                    <tr class="acc_table_row">
+                                        <td class="acc_inv_ref"><t t-esc="inv.name"/></td>
+                                        <td><t t-esc="inv.partner"/></td>
+                                        <td><t t-esc="inv.date"/></td>
+                                        <td class="acc_inv_amt"><t t-esc="inv.currency"/><t t-esc="formatAmount(inv.amount)"/></td>
+                                        <td>
+                                            <span t-att-class="'acc_pill acc_pill_' + inv.state">
+                                                <t t-esc="inv.state === 'paid' ? 'Paid' : inv.state === 'partial' ? 'Partial' : inv.state === 'not_paid' ? 'Unpaid' : inv.state"/>
+                                            </span>
+                                        </td>
+                                    </tr>
+                                </t>
+                            </t>
+                            <!-- BILLS -->
+                            <t t-if="state.showBills">
+                                <t t-if="state.recent_bills.length === 0">
+                                    <tr><td colspan="5" class="acc_tbl_empty">No bills found</td></tr>
+                                </t>
+                                <t t-foreach="state.recent_bills" t-as="bill" t-key="bill.name">
+                                    <tr class="acc_table_row">
+                                        <td class="acc_inv_ref acc_bill_ref"><t t-esc="bill.name"/></td>
+                                        <td><t t-esc="bill.partner"/></td>
+                                        <td><t t-esc="bill.date"/></td>
+                                        <td class="acc_inv_amt"><t t-esc="bill.currency"/><t t-esc="formatAmount(bill.amount)"/></td>
+                                        <td>
+                                            <span t-att-class="'acc_pill acc_pill_' + bill.state">
+                                                <t t-esc="bill.state === 'paid' ? 'Paid' : bill.state === 'partial' ? 'Partial' : bill.state === 'not_paid' ? 'Unpaid' : bill.state"/>
+                                            </span>
+                                        </td>
+                                    </tr>
+                                </t>
+                            </t>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ══════════════════════════════════════════════════════════════ -->
+            <!-- BALANCE SHEET PANEL                                           -->
+            <!-- ══════════════════════════════════════════════════════════════ -->
+            <div class="acc_card acc_bs_card">
+
+                <!-- Card Header -->
+                <div class="acc_card_head">
+                    <h2 class="acc_card_title">
+                        <span class="acc_title_dot acc_bs_dot"/>
+                        Balance Sheet
+                    </h2>
+                    <div class="acc_bs_header_actions">
+                        <span class="acc_card_tag">As of Today</span>
+                        <button class="acc_bs_report_btn" t-on-click="openBalanceSheet">
+                            📊 Full Report ↗
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Summary pills -->
+                <div class="acc_bs_summary_row">
+                    <div class="acc_bs_summary_pill acc_bs_pill_assets">
+                        <div class="acc_bs_pill_label">Total Assets</div>
+                        <div class="acc_bs_pill_val">
+                            <span><t t-esc="state.currency"/></span>
+                            <span id="bs_total_assets">0.00</span>
+                        </div>
+                    </div>
+                    <div class="acc_bs_summary_pill acc_bs_pill_liab">
+                        <div class="acc_bs_pill_label">Total Liabilities</div>
+                        <div class="acc_bs_pill_val">
+                            <span><t t-esc="state.currency"/></span>
+                            <span id="bs_total_liabilities">0.00</span>
+                        </div>
+                    </div>
+                    <div class="acc_bs_summary_pill acc_bs_pill_equity">
+                        <div class="acc_bs_pill_label">Total Equity</div>
+                        <div class="acc_bs_pill_val">
+                            <span><t t-esc="state.currency"/></span>
+                            <span id="bs_total_equity">0.00</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab Navigation -->
+                <div class="acc_bs_tabs">
+                    <button t-att-class="state.bsActiveSection === 'assets' ? 'acc_bs_tab acc_bs_tab_active' : 'acc_bs_tab'"
+                            t-on-click="setBsSectionAssets">
+                        🏛 Assets
+                    </button>
+                    <button t-att-class="state.bsActiveSection === 'liabilities' ? 'acc_bs_tab acc_bs_tab_active' : 'acc_bs_tab'"
+                            t-on-click="setBsSectionLiabilities">
+                        📋 Liabilities
+                    </button>
+                    <button t-att-class="state.bsActiveSection === 'equity' ? 'acc_bs_tab acc_bs_tab_active' : 'acc_bs_tab'"
+                            t-on-click="setBsSectionEquity">
+                        💰 Equity
+                    </button>
+                </div>
+
+                <!-- ── ASSETS TAB ── -->
+                <t t-if="state.bsActiveSection === 'assets'">
+                    <div class="acc_bs_section">
+                        <!-- Current Assets -->
+                        <div class="acc_bs_group_header acc_bs_group_current">
+                            <span>Current Assets</span>
+                            <span class="acc_bs_group_total">
+                                <t t-esc="state.currency"/>
+                                <t t-esc="formatAmount(state.balance_sheet.assets.total_current)"/>
+                            </span>
+                        </div>
+                        <t t-if="state.balance_sheet.assets.current.length === 0">
+                            <div class="acc_bs_empty">No current asset accounts with balance</div>
+                        </t>
+                        <t t-foreach="state.balance_sheet.assets.current" t-as="item" t-key="item.code">
+                            <div class="acc_bs_row">
+                                <span class="acc_bs_code"><t t-esc="item.code"/></span>
+                                <span class="acc_bs_name"><t t-esc="item.name"/></span>
+                                <span t-att-class="item.balance >= 0 ? 'acc_bs_amount acc_bs_pos' : 'acc_bs_amount acc_bs_neg'">
+                                    <t t-esc="state.currency"/><t t-esc="formatAmount(item.balance)"/>
+                                </span>
+                            </div>
+                        </t>
+
+                        <!-- Non-Current Assets -->
+                        <div class="acc_bs_group_header acc_bs_group_noncurrent" style="margin-top:16px;">
+                            <span>Non-Current Assets</span>
+                            <span class="acc_bs_group_total">
+                                <t t-esc="state.currency"/>
+                                <t t-esc="formatAmount(state.balance_sheet.assets.total_non_current)"/>
+                            </span>
+                        </div>
+                        <t t-if="state.balance_sheet.assets.non_current.length === 0">
+                            <div class="acc_bs_empty">No non-current asset accounts with balance</div>
+                        </t>
+                        <t t-foreach="state.balance_sheet.assets.non_current" t-as="item" t-key="item.code">
+                            <div class="acc_bs_row">
+                                <span class="acc_bs_code"><t t-esc="item.code"/></span>
+                                <span class="acc_bs_name"><t t-esc="item.name"/></span>
+                                <span t-att-class="item.balance >= 0 ? 'acc_bs_amount acc_bs_pos' : 'acc_bs_amount acc_bs_neg'">
+                                    <t t-esc="state.currency"/><t t-esc="formatAmount(item.balance)"/>
+                                </span>
+                            </div>
+                        </t>
+
+                        <!-- Total Assets footer -->
+                        <div class="acc_bs_total_footer">
+                            <span>TOTAL ASSETS</span>
+                            <span class="acc_bs_footer_val acc_bs_pos">
+                                <t t-esc="state.currency"/>
+                                <t t-esc="formatAmount(state.balance_sheet.assets.total)"/>
+                            </span>
+                        </div>
+                    </div>
+                </t>
+
+                <!-- ── LIABILITIES TAB ── -->
+                <t t-if="state.bsActiveSection === 'liabilities'">
+                    <div class="acc_bs_section">
+                        <!-- Current Liabilities -->
+                        <div class="acc_bs_group_header acc_bs_group_liab_cur">
+                            <span>Current Liabilities</span>
+                            <span class="acc_bs_group_total">
+                                <t t-esc="state.currency"/>
+                                <t t-esc="formatAmount(state.balance_sheet.liabilities.total_current)"/>
+                            </span>
+                        </div>
+                        <t t-if="state.balance_sheet.liabilities.current.length === 0">
+                            <div class="acc_bs_empty">No current liability accounts with balance</div>
+                        </t>
+                        <t t-foreach="state.balance_sheet.liabilities.current" t-as="item" t-key="item.code">
+                            <div class="acc_bs_row">
+                                <span class="acc_bs_code"><t t-esc="item.code"/></span>
+                                <span class="acc_bs_name"><t t-esc="item.name"/></span>
+                                <span t-att-class="item.balance &lt;= 0 ? 'acc_bs_amount acc_bs_pos' : 'acc_bs_amount acc_bs_neg'">
+                                    <t t-esc="state.currency"/><t t-esc="formatAmount(Math.abs(item.balance))"/>
+                                </span>
+                            </div>
+                        </t>
+
+                        <!-- Non-Current Liabilities -->
+                        <div class="acc_bs_group_header acc_bs_group_liab_nc" style="margin-top:16px;">
+                            <span>Non-Current Liabilities</span>
+                            <span class="acc_bs_group_total">
+                                <t t-esc="state.currency"/>
+                                <t t-esc="formatAmount(state.balance_sheet.liabilities.total_non_current)"/>
+                            </span>
+                        </div>
+                        <t t-if="state.balance_sheet.liabilities.non_current.length === 0">
+                            <div class="acc_bs_empty">No non-current liability accounts with balance</div>
+                        </t>
+                        <t t-foreach="state.balance_sheet.liabilities.non_current" t-as="item" t-key="item.code">
+                            <div class="acc_bs_row">
+                                <span class="acc_bs_code"><t t-esc="item.code"/></span>
+                                <span class="acc_bs_name"><t t-esc="item.name"/></span>
+                                <span t-att-class="item.balance &lt;= 0 ? 'acc_bs_amount acc_bs_pos' : 'acc_bs_amount acc_bs_neg'">
+                                    <t t-esc="state.currency"/><t t-esc="formatAmount(Math.abs(item.balance))"/>
+                                </span>
+                            </div>
+                        </t>
+
+                        <!-- Total Liabilities footer -->
+                        <div class="acc_bs_total_footer">
+                            <span>TOTAL LIABILITIES</span>
+                            <span class="acc_bs_footer_val acc_bs_neg">
+                                <t t-esc="state.currency"/>
+                                <t t-esc="formatAmount(Math.abs(state.balance_sheet.liabilities.total))"/>
+                            </span>
+                        </div>
+                    </div>
+                </t>
+
+                <!-- ── EQUITY TAB ── -->
+                <t t-if="state.bsActiveSection === 'equity'">
+                    <div class="acc_bs_section">
+                        <div class="acc_bs_group_header acc_bs_group_equity">
+                            <span>Equity Accounts</span>
+                            <span class="acc_bs_group_total">
+                                <t t-esc="state.currency"/>
+                                <t t-esc="formatAmount(state.balance_sheet.equity.total)"/>
+                            </span>
+                        </div>
+                        <t t-if="state.balance_sheet.equity.items.length === 0">
+                            <div class="acc_bs_empty">No equity accounts with balance</div>
+                        </t>
+                        <t t-foreach="state.balance_sheet.equity.items" t-as="item" t-key="item.code">
+                            <div class="acc_bs_row">
+                                <span class="acc_bs_code"><t t-esc="item.code"/></span>
+                                <span class="acc_bs_name"><t t-esc="item.name"/></span>
+                                <span t-att-class="item.balance >= 0 ? 'acc_bs_amount acc_bs_pos' : 'acc_bs_amount acc_bs_neg'">
+                                    <t t-esc="state.currency"/><t t-esc="formatAmount(item.balance)"/>
+                                </span>
+                            </div>
+                        </t>
+
+                        <!-- Equity + Liabilities check -->
+                        <div class="acc_bs_total_footer">
+                            <span>TOTAL EQUITY</span>
+                            <span class="acc_bs_footer_val acc_bs_equity_color">
+                                <t t-esc="state.currency"/>
+                                <t t-esc="formatAmount(state.balance_sheet.equity.total)"/>
+                            </span>
+                        </div>
+
+                        <!-- Accounting equation check -->
+                        <div class="acc_bs_equation">
+                            <span class="acc_bs_eq_label">Assets</span>
+                            <span class="acc_bs_eq_val acc_bs_pos">
+                                <t t-esc="state.currency"/>
+                                <t t-esc="formatAmount(state.balance_sheet.assets.total)"/>
+                            </span>
+                            <span class="acc_bs_eq_op">=</span>
+                            <span class="acc_bs_eq_label">Liabilities</span>
+                            <span class="acc_bs_eq_val acc_bs_neg">
+                                <t t-esc="state.currency"/>
+                                <t t-esc="formatAmount(Math.abs(state.balance_sheet.liabilities.total))"/>
+                            </span>
+                            <span class="acc_bs_eq_op">+</span>
+                            <span class="acc_bs_eq_label">Equity</span>
+                            <span class="acc_bs_eq_val acc_bs_equity_color">
+                                <t t-esc="state.currency"/>
+                                <t t-esc="formatAmount(state.balance_sheet.equity.total)"/>
+                            </span>
+                        </div>
+                    </div>
+                </t>
+
+            </div><!-- /balance sheet card -->
+
+        </t><!-- /else -->
+    </div><!-- /inner -->
+</div><!-- /root -->
+</t>
+</templates>
+

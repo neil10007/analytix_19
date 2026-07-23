@@ -1,0 +1,32 @@
+.o_field_statusbar > .o_statusbar_status {
+    --o-statusbar-background-active: #ff8744;
+    --o-statusbar-background-hover: rgba(255, 135, 68, 0.14);
+    --o-statusbar-border: transparent;
+    --o-statusbar-border-active: transparent;
+}
+
+.o_field_statusbar > .o_statusbar_status .o_arrow_button,
+.o_field_statusbar > .o_statusbar_status .o_arrow_button::before {
+    background-color: #202b3a;
+    color: #cbd5e1;
+}
+
+.o_field_statusbar > .o_statusbar_status .o_arrow_button:not(.d-none) {
+    background-color: #263244;
+}
+
+.o_field_statusbar > .o_statusbar_status .o_arrow_button:hover,
+.o_field_statusbar > .o_statusbar_status .o_arrow_button:hover::before {
+    background-color: rgba(255, 135, 68, 0.16);
+    color: #ffffff;
+}
+
+.o_field_statusbar > .o_statusbar_status .o_arrow_button.o_arrow_button_current,
+.o_field_statusbar > .o_statusbar_status .o_arrow_button.o_arrow_button_current::before {
+    background-color: #ff8744;
+    color: #111827;
+}
+
+.o_field_statusbar > .o_statusbar_status .o_arrow_button:disabled:not(.o_arrow_button_current) {
+    color: #64748b;
+}

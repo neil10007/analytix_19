@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Menu Item under Accounting -->
+    <menuitem
+        id="menu_accounting_custom_dashboard"
+        name="Custom Dashboard"
+        parent="account.menu_finance"
+        action="action_accounting_custom_dashboard"
+        sequence="1"
+    />
+</odoo>

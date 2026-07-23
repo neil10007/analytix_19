@@ -1,0 +1,77 @@
+{
+    "name": "Kraken Backend Theme (Community Edition)",
+    "summary": "Modern card-based backend theme and dashboard inspired by Kraken UI",
+    "version": "19.0.1.0.0",
+    "category": "Themes/Backend",
+    "license": "OPL-1",
+    "author": "Amal Oooo Analytix",
+    "contributors": ["Daniel Geremew"],
+    "maintainer": "www.beineto.com",
+    "website": "https://www.beineto.com",
+    "support": "danielgeremew93@gmail.com",
+    "images": [
+        "static/description/banner.png",
+        "static/description/theme_screenshot.png"
+    ],
+    "depends": ["mail", "web", "spreadsheet_dashboard"],
+    "data": [
+        "views/kraken_dashboard_action.xml",
+        "views/res_users_chatter.xml"
+    ],
+    "assets": {
+        "spreadsheet.o_spreadsheet": [
+            "kraken_backend_theme/static/src/dashboard/spreadsheet/dashboard_action.xml",
+            "kraken_backend_theme/static/src/dashboard/spreadsheet/dashboard_dark_charts.js"
+        ],
+        "web.assets_backend": [
+            "kraken_backend_theme/static/src/webclient/kraken_backend_theme.scss",
+            "kraken_backend_theme/static/src/webclient/search_bar_menu.xml",
+            "kraken_backend_theme/static/src/webclient/shell/global_shell.scss",
+            "kraken_backend_theme/static/src/webclient/shell/global_shell.js",
+            "kraken_backend_theme/static/src/webclient/shell/dashboard_route.js",
+            "kraken_backend_theme/static/src/views/list/list.scss",
+            "kraken_backend_theme/static/src/views/form/form_renderer.js",
+            "kraken_backend_theme/static/src/views/form/form_compiler.js",
+            "kraken_backend_theme/static/src/views/form/button_box_patch.js",
+            "kraken_backend_theme/static/src/views/form/form.scss",
+            "kraken_backend_theme/static/src/views/form/statusbar.scss",
+            "kraken_backend_theme/static/src/views/graph/graph.scss",
+            "kraken_backend_theme/static/src/views/apps/apps.scss",
+            "kraken_backend_theme/static/src/core/thread/thread.xml",
+            "kraken_backend_theme/static/src/core/thread/thread.js",
+            "kraken_backend_theme/static/src/chatter/chatter.xml",
+            "kraken_backend_theme/static/src/chatter/chatter.scss",
+            "kraken_backend_theme/static/src/chatter/chatter.js",
+            "kraken_backend_theme/static/src/dashboard/spreadsheet/dashboard_action.scss",
+            "kraken_backend_theme/static/src/dashboard/spreadsheet/dashboard_scroll.js",
+            "kraken_backend_theme/static/src/dashboard/kraken_dashboard_action.scss",
+            "kraken_backend_theme/static/src/dashboard/kraken_dashboard_action.xml",
+            "kraken_backend_theme/static/src/dashboard/kraken_dashboard_action.js"
+        ],
+        "web.assets_web_dark": [
+            "kraken_backend_theme/static/src/webclient/kraken_backend_theme.dark.scss",
+            "kraken_backend_theme/static/src/webclient/shell/global_shell.dark.scss",
+            "kraken_backend_theme/static/src/webclient/search/search.dark.scss",
+            "kraken_backend_theme/static/src/views/list/list.dark.scss",
+            "kraken_backend_theme/static/src/views/kanban/kanban.dark.scss",
+            "kraken_backend_theme/static/src/views/activity/activity.dark.scss",
+            "kraken_backend_theme/static/src/views/pivot/pivot.dark.scss",
+            "kraken_backend_theme/static/src/views/graph/graph.dark.scss",
+            "kraken_backend_theme/static/src/views/calendar/calendar.dark.scss",
+            "kraken_backend_theme/static/src/views/purchase/purchase.dark.scss",
+            "kraken_backend_theme/static/src/views/hr/hr.dark.scss",
+            "kraken_backend_theme/static/src/views/settings/settings.dark.scss",
+            "kraken_backend_theme/static/src/views/apps/apps.dark.scss",
+            "kraken_backend_theme/static/src/views/form/form.dark.scss",
+            "kraken_backend_theme/static/src/views/form/statusbar.dark.scss",
+            "kraken_backend_theme/static/src/chatter/chatter.dark.scss",
+            "kraken_backend_theme/static/src/discuss/discuss.dark.scss",
+            "kraken_backend_theme/static/src/dashboard/spreadsheet/dashboard_action.dark.scss",
+            "kraken_backend_theme/static/src/dashboard/kraken_dashboard_action.dark.scss"
+        ]
+    },
+    "post_init_hook": "post_init_hook",
+    "uninstall_hook": "uninstall_hook",
+    "installable": True,
+    "application": False,
+}

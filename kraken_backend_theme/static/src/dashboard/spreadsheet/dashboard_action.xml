@@ -1,0 +1,322 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="kraken_backend_theme.SpreadsheetDashboardAction" t-inherit="spreadsheet_dashboard.DashboardAction" t-inherit-mode="extension">
+        <xpath expr="//div[hasclass('o_action') and hasclass('o_spreadsheet_dashboard_action')]" position="attributes">
+            <attribute name="class" add="kr_sp_action_shell" separator=" "/>
+        </xpath>
+
+        <xpath expr="//div[hasclass('o_content') and hasclass('o_component_with_search_panel')]" position="replace">
+            <t t-set="companyService" t-value="env.services.company"/>
+            <t t-set="userService" t-value="env.services.user"/>
+
+            <div class="kr_sp_dashboard_scroll">
+                <section class="kr_sp_intro kr_sp_pending_live" id="kr_sp_overview">
+                    <div class="kr_sp_header">
+                        <div class="kr_sp_header_copy">
+                            <h1>Good morning, <span id="kr_sp_overview_user" t-esc="(userService and userService.name) or 'User'"/></h1>
+                            <p id="kr_sp_overview_scope">Stay on top of your tasks, monitor progress, and track status.</p>
+                        </div>
+                    </div>
+
+                    <div class="kr_sp_top_grid">
+                        <article class="kr_sp_card kr_sp_balance_card">
+                            <div class="kr_sp_card_head">
+                                <span>Total Records</span>
+                                <span class="kr_sp_overview_tools">
+                                    <span id="kr_sp_overview_updated" class="kr_sp_refresh_time">Updating...</span>
+                                    <button type="button" class="kr_sp_refresh_btn" data-kr-action="refresh-dashboard-overview" title="Refresh dashboard">
+                                        <i class="fa fa-refresh"/>
+                                    </button>
+                                    <span class="kr_sp_chip">Live</span>
+                                </span>
+                            </div>
+                            <strong id="kr_sp_overview_total">-</strong>
+                            <p id="kr_sp_overview_total_note">Across core operational records</p>
+                            <div class="kr_sp_buttons">
+                                <button type="button" data-kr-action="open-search"><i class="fa fa-bolt"/> Search</button>
+                                <button type="button" class="is-ghost" data-kr-action="open-users"><i class="fa fa-users"/> Users</button>
+                            </div>
+                            <div class="kr_sp_wallets">
+                                <div>
+                                    <span>Companies</span>
+                                    <strong id="kr_sp_wallet_companies">-</strong>
+                                    <small>Accounts</small>
+                                </div>
+                                <div>
+                                    <span>Customers</span>
+                                    <strong id="kr_sp_wallet_customers">-</strong>
+                                    <small>Ranked</small>
+                                </div>
+                                <div>
+                                    <span>Vendors</span>
+                                    <strong id="kr_sp_wallet_vendors">-</strong>
+                                    <small>Ranked</small>
+                                </div>
+                            </div>
+                        </article>
+
+                        <div class="kr_sp_metrics" id="kr_sp_metrics">
+                            <article class="kr_sp_metric is-hot" data-kr-action="open-overdue-activities" role="button" tabindex="0">
+                                <span id="kr_sp_metric_label_1">Overdue Activities</span>
+                                <strong id="kr_sp_metric_value_1">-</strong>
+                                <small id="kr_sp_metric_note_1">Need attention</small>
+                            </article>
+                            <article class="kr_sp_metric" data-kr-action="open-today-activities" role="button" tabindex="0">
+                                <span id="kr_sp_metric_label_2">Due Today</span>
+                                <strong id="kr_sp_metric_value_2">-</strong>
+                                <small id="kr_sp_metric_note_2">Scheduled work</small>
+                            </article>
+                            <article class="kr_sp_metric" data-kr-action="open-sales-orders" role="button" tabindex="0">
+                                <span id="kr_sp_metric_label_3">Sales Orders</span>
+                                <strong id="kr_sp_metric_value_3">-</strong>
+                                <small id="kr_sp_metric_note_3">Confirmed sales</small>
+                            </article>
+                            <article class="kr_sp_metric" data-kr-action="open-invoices" role="button" tabindex="0">
+                                <span id="kr_sp_metric_label_4">Invoices</span>
+                                <strong id="kr_sp_metric_value_4">-</strong>
+                                <small id="kr_sp_metric_note_4">Customer invoices</small>
+                            </article>
+                        </div>
+
+                        <article class="kr_sp_card kr_sp_chart_card" data-kr-scroll="kr_sp_dashboard_canvas" role="button" tabindex="0">
+                            <div class="kr_sp_card_head">
+                                <div>
+                                    <h3>Record Mix</h3>
+                                    <p>Live count by operational area</p>
+                                </div>
+                                <div class="kr_sp_legend">
+                                    <span>Count</span>
+                                </div>
+                            </div>
+                            <div class="kr_sp_chart_bars" aria-label="Record mix by category">
+                                <span data-kr-action="open-customers" role="button" tabindex="0" style="--p: 44px;"><strong id="kr_sp_chart_customers">-</strong><i/><small>Customers</small></span>
+                                <span data-kr-action="open-vendors" role="button" tabindex="0" style="--p: 71px;"><strong id="kr_sp_chart_vendors">-</strong><i/><small>Vendors</small></span>
+                                <span data-kr-action="open-sales-orders" role="button" tabindex="0" style="--p: 52px;"><strong id="kr_sp_chart_sales_orders">-</strong><i/><small>Sales</small></span>
+                                <span data-kr-action="open-invoices" role="button" tabindex="0" style="--p: 63px;"><strong id="kr_sp_chart_invoices">-</strong><i/><small>Invoices</small></span>
+                            </div>
+                        </article>
+                    </div>
+
+                    <div class="kr_sp_bottom_grid">
+                        <article class="kr_sp_card kr_sp_limit_card" data-kr-action="open-activities" role="button" tabindex="0">
+                            <h3>Activity Workload</h3>
+                            <div class="kr_sp_progress">
+                                <div class="kr_sp_progress_fill" id="kr_sp_progress_fill"/>
+                            </div>
+                            <div class="kr_sp_progress_meta">
+                                <span id="kr_sp_progress_current">Loading...</span>
+                                <span id="kr_sp_progress_total">Live records</span>
+                            </div>
+                            <div class="kr_sp_limit_insights">
+                                <div>
+                                    <span>Workload share</span>
+                                    <strong id="kr_sp_progress_share">-</strong>
+                                </div>
+                                <div>
+                                    <span>Due today</span>
+                                    <strong id="kr_sp_progress_today">-</strong>
+                                </div>
+                                <div>
+                                    <span>Next due</span>
+                                    <strong id="kr_sp_progress_due">-</strong>
+                                </div>
+                            </div>
+                        </article>
+
+                        <article class="kr_sp_card kr_sp_live_card">
+                            <h3>Live Summary</h3>
+                            <ul>
+                                <li data-kr-action="open-crm-leads" role="button" tabindex="0"><span>CRM Leads</span><strong id="kr_sp_live_leads">-</strong></li>
+                                <li data-kr-action="open-quotations" role="button" tabindex="0"><span>Quotations</span><strong id="kr_sp_live_quotations">-</strong></li>
+                                <li data-kr-action="open-unpaid-invoices" role="button" tabindex="0"><span>Unpaid Inv.</span><strong id="kr_sp_live_unpaid_invoices">-</strong></li>
+                                <li data-kr-action="open-helpdesk-tickets" role="button" tabindex="0"><span>Tickets</span><strong id="kr_sp_live_tickets">-</strong></li>
+                            </ul>
+                        </article>
+
+                        <article class="kr_sp_card kr_sp_recent_table" data-kr-action="open-activities" role="button" tabindex="0">
+                            <div class="kr_sp_card_head">
+                                <h3>Recent Activities</h3>
+                                <span id="kr_sp_activity_status" class="kr_sp_chip is-muted">Loading</span>
+                            </div>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Activity</th>
+                                        <th>Model</th>
+                                        <th>Status</th>
+                                        <th>Due Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="kr_sp_recent_table_body">
+                                    <tr><td>Loading...</td><td>-</td><td>-</td><td>-</td></tr>
+                                </tbody>
+                            </table>
+                        </article>
+                    </div>
+                </section>
+
+                <div id="kr_sp_dashboard_canvas" class="o_content o_component_with_search_panel kr_sp_dashboard_content" t-att-class="{ o_mobile_dashboard: env.isSmall }">
+                    <t t-if="!env.isSmall">
+                        <t t-if="state.sidebarExpanded" t-call="spreadsheet_dashboard.DashboardAction.Expanded"/>
+                        <t t-else="" t-call="spreadsheet_dashboard.DashboardAction.Collapsed"/>
+                    </t>
+
+                    <t t-if="!env.isSmall">
+                        <div class="kr_sp_rail_group kr_sp_rail_group_top">
+                            <button type="button" class="kr_sp_rail_btn is-active" data-kr-action="theme-light" title="Light mode"><i class="fa fa-sun-o"/></button>
+                            <button type="button" class="kr_sp_rail_btn" data-kr-action="theme-dark" title="Dark mode"><i class="fa fa-moon-o"/></button>
+                        </div>
+
+
+                        <div class="kr_sp_rail_group kr_sp_rail_group_main">
+                            <button type="button" class="kr_sp_rail_btn is-active" data-kr-action="workspace-modal" title="Workspace"><i class="fa fa-th-large"/></button>
+                            <div id="kr_sp_rail_apps" class="kr_sp_rail_apps"/>
+                        </div>
+
+                        <div class="kr_sp_rail_group kr_sp_rail_group_bottom">
+                            <button type="button" class="kr_sp_rail_btn" data-kr-action="open-apps" title="Apps"><i class="fa fa-th-large"/></button>
+                            <button type="button" class="kr_sp_rail_btn" data-kr-action="open-settings" title="Settings"><i class="fa fa-cog"/></button>
+                            <button type="button" class="kr_sp_rail_btn" data-kr-action="go-home" title="Logout"><i class="fa fa-sign-out"/></button>
+                        </div>
+
+                        <div id="kr_sp_workspace_modal" class="kr_sp_workspace_modal" aria-hidden="true">
+                            <div class="kr_sp_workspace_backdrop" data-kr-action="workspace-close"/>
+                            <div class="kr_sp_workspace_dialog" role="dialog" aria-modal="true" aria-label="Installed modules">
+                                <div class="kr_sp_workspace_head">
+                                    <h3>Installed Modules</h3>
+                                    <button type="button" class="kr_sp_workspace_close" data-kr-action="workspace-close" title="Close">
+                                        <i class="fa fa-times"/>
+                                    </button>
+                                </div>
+                                <div id="kr_sp_workspace_grid" class="kr_sp_workspace_grid"/>
+                            </div>
+                        </div>
+                    </t>
+
+                    <h3 t-if="!dashboard" class="dashboard-loading-status">No available dashboard</h3>
+                    <t t-else="">
+                        <t t-set="status" t-value="dashboard.status"/>
+                        <h3 t-if="status === Status.Loading" class="dashboard-loading-status">Loading...</h3>
+                        <div t-elif="status === Status.Error" class="dashboard-loading-status error">
+                            An error occured while loading the dashboard
+                        </div>
+                        <t t-else="">
+                            <MobileFigureContainer t-if="env.isSmall" spreadsheetModel="dashboard.model" t-key="dashboard.data.id"/>
+                            <div t-else="" class="o_renderer" t-att-class="{'o-sample-dashboard': dashboard.isSample}">
+                                <SpreadsheetComponent
+                                    model="dashboard.model"
+                                    t-key="dashboard.data.id"/>
+                            </div>
+                        </t>
+                    </t>
+                </div>
+
+                <footer class="kr_sp_footer kr_sp_pending_shell" id="kr_sp_footer">
+                    <div class="kr_sp_footer_grid">
+                        <section class="kr_sp_footer_section">
+                            <div class="kr_sp_footer_heading">
+                                <span class="kr_sp_footer_label">Context</span>
+                                <span id="kr_sp_footer_env_badge" class="kr_sp_env_badge is-production">Production</span>
+                            </div>
+                            <div class="kr_sp_footer_pair">
+                                <span class="kr_sp_footer_label">Company / Database</span>
+                                <strong id="kr_sp_footer_company_db">
+                                    <t t-esc="((userService and userService.activeCompany and userService.activeCompany.name) or (companyService and companyService.currentCompany and companyService.currentCompany.name) or 'Current Company') + ' / Database'"/>
+                                </strong>
+                            </div>
+                            <div class="kr_sp_footer_pair">
+                                <span class="kr_sp_footer_label">User / Role</span>
+                                <strong id="kr_sp_footer_user_role" t-esc="((userService and userService.name) or 'Administrator') + ' / Internal User'"/>
+                            </div>
+                            <div class="kr_sp_footer_pair">
+                                <span class="kr_sp_footer_label">Fiscal / Today</span>
+                                <strong id="kr_sp_footer_period">Today</strong>
+                            </div>
+                        </section>
+
+                        <section class="kr_sp_footer_section">
+                            <div class="kr_sp_footer_heading">
+                                <span class="kr_sp_footer_label">Freshness</span>
+                                <span class="kr_sp_footer_caption">Operational view</span>
+                            </div>
+                            <div class="kr_sp_footer_pair">
+                                <span class="kr_sp_footer_label">Last refresh</span>
+                                <strong id="kr_sp_footer_last_refresh">Refreshing...</strong>
+                            </div>
+                            <div class="kr_sp_footer_pair">
+                                <span class="kr_sp_footer_label">Dashboard scope</span>
+                                <strong id="kr_sp_footer_scope">All records</strong>
+                            </div>
+                            <div class="kr_sp_footer_pair">
+                                <span class="kr_sp_footer_label">Active filters</span>
+                                <strong id="kr_sp_footer_filters">No filters applied</strong>
+                            </div>
+                        </section>
+
+                        <section class="kr_sp_footer_section">
+                            <div class="kr_sp_footer_heading">
+                                <span class="kr_sp_footer_label">Admin</span>
+                                <span class="kr_sp_footer_caption" id="kr_sp_footer_shortcut">Ctrl+K search</span>
+                            </div>
+                            <div class="kr_sp_footer_actions" id="kr_sp_footer_actions">
+                                <button type="button" class="kr_sp_footer_action" data-kr-action="open-settings">Settings</button>
+                                <button type="button" class="kr_sp_footer_action" data-kr-action="open-users">Users</button>
+                                <button type="button" class="kr_sp_footer_action" data-kr-action="open-scheduled-actions">Scheduled Actions</button>
+                                <button type="button" class="kr_sp_footer_action" data-kr-action="toggle-debug" id="kr_sp_footer_debug_link">Developer Mode</button>
+                            </div>
+                            <div class="kr_sp_footer_pair">
+                                <span class="kr_sp_footer_label">Timezone / Locale</span>
+                                <strong id="kr_sp_footer_locale">UTC / en_US</strong>
+                            </div>
+                            <div class="kr_sp_footer_pair" id="kr_sp_footer_support_row">
+                                <span class="kr_sp_footer_label">Support contact</span>
+                                <strong id="kr_sp_footer_support">Internal ops or system admin via Settings &gt; Technical</strong>
+                            </div>
+                        </section>
+
+                        <section class="kr_sp_footer_section" id="kr_sp_footer_status_section">
+                            <div class="kr_sp_footer_heading">
+                                <span class="kr_sp_footer_label">System Status</span>
+                                <span class="kr_sp_footer_caption">Live summary</span>
+                            </div>
+                            <div class="kr_sp_footer_statuses">
+                                <div class="kr_sp_footer_status">
+                                    <span class="kr_sp_footer_label">Background jobs</span>
+                                    <strong id="kr_sp_footer_jobs">Checking...</strong>
+                                </div>
+                                <div class="kr_sp_footer_status">
+                                    <span class="kr_sp_footer_label">Mail queue</span>
+                                    <strong id="kr_sp_footer_mail_queue">Checking...</strong>
+                                </div>
+                                <div class="kr_sp_footer_status">
+                                    <span class="kr_sp_footer_label">Integrations</span>
+                                    <strong id="kr_sp_footer_integrations">Checking...</strong>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section class="kr_sp_footer_section">
+                            <div class="kr_sp_footer_heading">
+                                <span class="kr_sp_footer_label">Versioning</span>
+                                <span class="kr_sp_footer_caption">Traceability</span>
+                            </div>
+                            <div class="kr_sp_footer_pair">
+                                <span class="kr_sp_footer_label">Odoo</span>
+                                <strong id="kr_sp_footer_odoo_version">19.0</strong>
+                            </div>
+                            <div class="kr_sp_footer_pair">
+                                <span class="kr_sp_footer_label">Theme</span>
+                                <strong id="kr_sp_footer_theme_version">19.0.1.0.0</strong>
+                            </div>
+                            <div class="kr_sp_footer_pair" id="kr_sp_footer_build_row">
+                                <span class="kr_sp_footer_label">Build</span>
+                                <strong id="kr_sp_footer_build_version">Not tracked</strong>
+                            </div>
+                        </section>
+                    </div>
+                </footer>
+            </div>
+        </xpath>
+    </t>
+
+</templates>

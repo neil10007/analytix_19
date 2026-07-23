@@ -1,0 +1,59 @@
+.o_graph_view .o_graph_renderer > .d-flex.d-print-none {
+    align-items: center;
+    gap: 8px !important;
+    padding: 8px 12px;
+}
+
+.o_graph_view .o_graph_renderer .btn-group {
+    gap: 4px;
+}
+
+.o_graph_view .o_graph_renderer .btn {
+    min-height: 38px;
+    border: 1px solid #d8e0e8;
+    border-radius: 10px !important;
+    background: #ffffff;
+    color: #24303d;
+    box-shadow: none;
+    font-weight: 700;
+}
+
+.o_graph_view .o_graph_renderer .btn:hover,
+.o_graph_view .o_graph_renderer .btn:focus-visible {
+    border-color: rgba(255, 135, 68, 0.46);
+    background: #fff7ed;
+    color: #111827;
+    box-shadow: none;
+}
+
+.o_graph_view .o_graph_renderer .btn-primary {
+    border-color: transparent;
+    background: #111827;
+    color: #ffffff;
+    padding-inline: 14px;
+}
+
+.o_graph_view .o_graph_renderer .btn-primary:hover,
+.o_graph_view .o_graph_renderer .btn-primary:focus-visible {
+    background: #ff8744;
+    color: #111827;
+}
+
+.o_graph_view .o_graph_renderer .o_graph_button {
+    width: 38px;
+    min-width: 38px;
+    max-width: 38px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 38px;
+}
+
+.o_graph_view .o_graph_renderer .o_graph_button.active,
+.o_graph_view .o_graph_renderer .o_graph_button.o-active,
+.o_graph_view .o_graph_renderer .o_graph_button[aria-pressed="true"] {
+    border-color: transparent;
+    background: #ff8744;
+    color: #111827;
+}

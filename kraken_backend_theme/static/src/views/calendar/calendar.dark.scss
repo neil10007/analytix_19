@@ -1,0 +1,195 @@
+.o_web_client {
+    .o_calendar_view,
+    .o_calendar_container,
+    .o_calendar_wrapper,
+    .o_calendar_renderer,
+    .o_calendar_widget {
+        --fc-page-bg-color: #111827;
+        --fc-neutral-bg-color: #18212f;
+        --fc-border-color: #2b3647;
+        --fc-today-bg-color: rgba(255, 135, 68, 0.12);
+        --fc-now-indicator-color: #f43f5e;
+        --fc-list-event-hover-bg-color: #202b3a;
+        background: #111827 !important;
+        color: var(--kr-dark-text);
+    }
+
+    .o_calendar_container {
+        border-color: var(--kr-dark-border);
+    }
+
+    .o_calendar_header {
+        border-color: var(--kr-dark-border) !important;
+        background: #18212f;
+        color: var(--kr-dark-text);
+    }
+
+    .o_calendar_header :is(h1, h2, h3, h4, h5, h6, strong, b, span, div, button),
+    .o_calendar_view .o_calendar_header :is(.o_calendar_title, .o_calendar_scale, .o_calendar_week_number, .o_calendar_button_today),
+    .o_calendar_view .fc-toolbar-title,
+    .o_calendar_renderer .fc-toolbar-title {
+        color: var(--kr-dark-text) !important;
+    }
+
+    .o_calendar_header .btn,
+    .o_calendar_navigation_buttons .btn,
+    .o_calendar_view .btn,
+    .o_calendar_view .dropdown-toggle,
+    .o_calendar_renderer .fc-button {
+        border-color: var(--kr-dark-border) !important;
+        background: #202b3a !important;
+        color: var(--kr-dark-text) !important;
+        box-shadow: none !important;
+    }
+
+    .o_calendar_header .btn:hover,
+    .o_calendar_navigation_buttons .btn:hover,
+    .o_calendar_view .btn:hover,
+    .o_calendar_view .dropdown-toggle:hover,
+    .o_calendar_renderer .fc-button:hover {
+        border-color: rgba(255, 135, 68, 0.48) !important;
+        background: #263244 !important;
+        color: #ffffff !important;
+    }
+
+    .o_calendar_header .btn.active,
+    .o_calendar_header .btn.show,
+    .o_calendar_header .btn:active,
+    .o_calendar_view .btn.active,
+    .o_calendar_view .btn.show,
+    .o_calendar_view .btn:active,
+    .o_calendar_renderer .fc-button-active {
+        border-color: transparent !important;
+        background: var(--kr-dark-accent) !important;
+        color: #111827 !important;
+    }
+
+    .o_calendar_renderer .fc,
+    .o_calendar_renderer .fc-view,
+    .o_calendar_renderer .fc-scrollgrid,
+    .o_calendar_renderer .fc-scrollgrid-section,
+    .o_calendar_renderer .fc-scrollgrid-sync-table,
+    .o_calendar_renderer .fc-daygrid-body,
+    .o_calendar_renderer .fc-timegrid-body,
+    .o_calendar_renderer .fc-timegrid-slots,
+    .o_calendar_renderer .fc-timegrid-cols,
+    .o_calendar_renderer .fc-timegrid-col,
+    .o_calendar_renderer .fc-daygrid-day,
+    .o_calendar_renderer .fc-list {
+        border-color: var(--kr-dark-border) !important;
+        background: #111827 !important;
+        color: var(--kr-dark-text);
+    }
+
+    .o_calendar_renderer .fc-theme-standard td,
+    .o_calendar_renderer .fc-theme-standard th,
+    .o_calendar_renderer .fc-col-header-cell,
+    .o_calendar_renderer .fc-timegrid-slot,
+    .o_calendar_renderer .fc-timegrid-axis,
+    .o_calendar_renderer .fc-timegrid-divider,
+    .o_calendar_renderer .fc-daygrid-day-frame {
+        border-color: var(--kr-dark-border) !important;
+        background: transparent;
+        color: var(--kr-dark-muted);
+    }
+
+    .o_calendar_renderer .fc-col-header-cell-cushion,
+    .o_calendar_renderer .fc-daygrid-day-number,
+    .o_calendar_renderer .fc-timegrid-slot-label,
+    .o_calendar_renderer .fc-list-day-text,
+    .o_calendar_renderer .fc-list-day-side-text {
+        color: var(--kr-dark-muted);
+    }
+
+    .o_calendar_renderer .fc .fc-col-header-cell-cushion,
+    .o_calendar_renderer .fc .fc-daygrid-day-number,
+    .o_calendar_renderer .fc .fc-timegrid-slot-label-cushion,
+    .o_calendar_renderer .fc .fc-timegrid-axis-cushion,
+    .o_calendar_sidebar :is(.o_datetime_picker_header, .o_datetime_picker .o_date_item_cell, .o_calendar_filter_item, .o_calendar_filter label) {
+        color: var(--kr-dark-muted) !important;
+    }
+
+    .o_calendar_renderer .fc-day-today:not(.o_calendar_disabled),
+    .o_calendar_renderer .fc-bg .fc-day-today:not(.o_calendar_disabled) {
+        background: rgba(255, 135, 68, 0.12) !important;
+    }
+
+    .o_calendar_renderer .fc-non-business,
+    .o_calendar_renderer .o_calendar_disabled {
+        background: rgba(148, 163, 184, 0.12) !important;
+        color: #64748b !important;
+    }
+
+    .o_calendar_renderer .fc-highlight,
+    .o_calendar_renderer .o_cw_custom_highlight {
+        background: rgba(255, 135, 68, 0.18) !important;
+    }
+
+    .o_calendar_renderer .fc-timegrid-now-indicator-line,
+    .o_calendar_renderer .fc-timegrid-now-indicator-arrow,
+    .o_calendar_renderer .o_calendar_time_indicator_now {
+        border-color: #f43f5e !important;
+        background: #f43f5e;
+    }
+
+    .o_calendar_renderer .fc-popover,
+    .o_calendar_renderer .fc-more-popover,
+    .o_cw_popover,
+    .o_calendar_popover {
+        border-color: var(--kr-dark-border);
+        background: #18212f;
+        color: var(--kr-dark-text);
+        box-shadow: 0 18px 42px rgba(0, 0, 0, 0.34);
+    }
+
+    .o_calendar_renderer .fc-popover-header,
+    .o_calendar_renderer .fc-list-day-cushion {
+        border-color: var(--kr-dark-border);
+        background: #202b3a !important;
+        color: var(--kr-dark-text);
+    }
+
+    .o_calendar_renderer .fc-event,
+    .o_calendar_renderer .fc-h-event,
+    .o_calendar_renderer .fc-v-event {
+        border-color: rgba(255, 135, 68, 0.46);
+        background: rgba(255, 135, 68, 0.2);
+        color: #ffffff;
+    }
+
+    .o_calendar_sidebar_container,
+    .o_calendar_sidebar {
+        border-color: var(--kr-dark-border) !important;
+        background: #111827 !important;
+        color: var(--kr-dark-text);
+    }
+
+    .o_calendar_sidebar .o_datetime_picker,
+    .o_calendar_sidebar .o_datetime_picker_header,
+    .o_calendar_sidebar .o_datetime_picker .o_date_item_cell,
+    .o_calendar_sidebar .o_calendar_filter {
+        background: transparent;
+        color: var(--kr-dark-text);
+    }
+
+    .o_calendar_sidebar .o_datetime_picker .o_date_item_cell:not(.o_out_of_range):hover,
+    .o_calendar_sidebar .o_datetime_picker .o_date_item_cell.o_selected {
+        background: rgba(255, 135, 68, 0.16);
+        color: #ffffff;
+    }
+
+    .o_calendar_filter,
+    .o_calendar_filter_item,
+    .o_calendar_filter_items_checkall {
+        color: var(--kr-dark-text);
+    }
+
+    .o_calendar_filter_item:hover {
+        background: #202b3a;
+    }
+
+    .o_calendar_filter label,
+    .o_calendar_sidebar .text-muted {
+        color: var(--kr-dark-muted) !important;
+    }
+}

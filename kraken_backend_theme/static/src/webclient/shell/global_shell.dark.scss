@@ -1,0 +1,322 @@
+body.kr_sp_theme_dark,
+.o_web_client.kr_sp_theme_dark {
+    background: #111827;
+}
+
+.kr_sp_global_shell,
+.kr_sp_action_shell,
+.kr_sp_dashboard_scroll,
+.o_web_client.kr_sp_global_mode .o_action_manager,
+.o_web_client.kr_sp_global_mode:has(.o-mail-Discuss) .o_action_manager,
+.o_web_client.kr_sp_global_mode:has(.o-mail-Discuss) .o_action_manager > .o_action {
+    background: #111827;
+    color: #e5e7eb;
+}
+
+.kr_sp_global_shell {
+    background: rgba(17, 24, 39, 0.2) !important;
+}
+
+.kr_sp_topbar {
+    color: #e5e7eb;
+}
+
+.kr_sp_topbar,
+.kr_sp_topbar:hover,
+.kr_sp_topbar:focus-within,
+.o_web_client.kr_sp_global_mode .o_control_panel,
+.o_web_client.kr_sp_global_mode .o_control_panel:hover,
+.o_web_client.kr_sp_global_mode .o_control_panel:focus-within {
+    border-color: #2b3647 !important;
+    box-shadow: none !important;
+}
+
+.kr_sp_topbar::before,
+.kr_sp_topbar::after,
+.o_web_client.kr_sp_global_mode .o_control_panel::before,
+.o_web_client.kr_sp_global_mode .o_control_panel::after {
+    display: none !important;
+}
+
+.kr_sp_brand_section,
+.kr_sp_tabs_section,
+.kr_sp_topbar_icons,
+.kr_sp_rail_group,
+.kr_sp_pending_dashboard_content,
+.kr_sp_pending_grid article,
+.kr_sp_pending_dashboard_cards article,
+.kr_sp_pending_dashboard_chart,
+.kr_sp_pending_dashboard_tables article {
+    border-color: #2b3647;
+    background: #18212f;
+    box-shadow: none;
+}
+
+.kr_sp_right_section {
+    background: transparent;
+}
+
+.kr_sp_profile {
+    border-color: #2b3647;
+    background: #18212f;
+    color: #e5e7eb;
+    box-shadow: none;
+}
+
+.kr_sp_profile:hover,
+.kr_sp_profile:focus-within {
+    border-color: rgba(255, 135, 68, 0.48);
+    background: #202b3a;
+}
+
+.kr_sp_user_avatar {
+    border-color: #2b3647;
+}
+
+.kr_sp_user_name {
+    color: #f8fafc;
+}
+
+.kr_sp_user_meta {
+    color: #9ca3af;
+}
+
+.kr_sp_user_meta.is-db-badge {
+    border-color: rgba(255, 135, 68, 0.48);
+    background: rgba(255, 135, 68, 0.16);
+    color: #fed7aa;
+}
+
+.kr_sp_user_meta.is-db-badge .fa-database {
+    color: #ff8744;
+}
+
+.kr_sp_profile_menu_mount .dropdown-menu,
+.kr_sp_profile_menu_mount .o-dropdown--menu,
+.kr_sp_profile_menu .dropdown-menu,
+.kr_sp_profile_menu .o-dropdown--menu,
+.kr_sp_topbar_icons .o_menu_systray .dropdown-menu,
+.kr_sp_topbar_icons .o_menu_systray .o-dropdown--menu,
+.kr_sp_topbar_icons .o_menu_systray .o_popover {
+    border-color: #2b3647;
+    background: #18212f;
+    color: #e5e7eb;
+    box-shadow: 0 18px 42px rgba(0, 0, 0, 0.34);
+}
+
+.kr_sp_profile_menu_mount .dropdown-item,
+.kr_sp_profile_menu_mount .o-dropdown-item,
+.kr_sp_profile_menu .dropdown-item,
+.kr_sp_profile_menu .o-dropdown-item,
+.kr_sp_topbar_icons .o_menu_systray .dropdown-item,
+.kr_sp_topbar_icons .o_menu_systray .o-dropdown-item {
+    color: #e5e7eb;
+}
+
+.kr_sp_profile_menu_mount .dropdown-item:hover,
+.kr_sp_profile_menu_mount .dropdown-item:focus,
+.kr_sp_profile_menu_mount .o-dropdown-item:hover,
+.kr_sp_profile_menu_mount .o-dropdown-item:focus,
+.kr_sp_profile_menu .dropdown-item:hover,
+.kr_sp_profile_menu .dropdown-item:focus,
+.kr_sp_profile_menu .o-dropdown-item:hover,
+.kr_sp_profile_menu .o-dropdown-item:focus,
+.kr_sp_topbar_icons .o_menu_systray .dropdown-item:hover,
+.kr_sp_topbar_icons .o_menu_systray .dropdown-item:focus,
+.kr_sp_topbar_icons .o_menu_systray .o-dropdown-item:hover,
+.kr_sp_topbar_icons .o_menu_systray .o-dropdown-item:focus {
+    background: #202b3a;
+    color: #ffffff;
+}
+
+.o-mail-ActivityMenu,
+.o-mail-MessagingMenu,
+.o-mail-ActivityMenu .list-group,
+.o-mail-MessagingMenu .list-group,
+.o-mail-MessagingMenu-list {
+    border-color: #2b3647 !important;
+    background: #18212f !important;
+    color: #e5e7eb;
+}
+
+.o-mail-ActivityMenu .border-bottom,
+.o-mail-ActivityMenu .border-top,
+.o-mail-MessagingMenu .border-bottom,
+.o-mail-MessagingMenu .border-top,
+.o-mail-MessagingMenu-header {
+    border-color: #2b3647 !important;
+}
+
+.o-mail-ActivityMenu .list-group-item,
+.o-mail-MessagingMenu .list-group-item,
+.o-mail-ActivityMenu a,
+.o-mail-MessagingMenu a {
+    background: transparent !important;
+    color: #e5e7eb;
+}
+
+.o-mail-ActivityMenu .list-group-item:hover,
+.o-mail-MessagingMenu .list-group-item:hover {
+    background: #202b3a !important;
+}
+
+.o-mail-ActivityMenu .text-muted,
+.o-mail-MessagingMenu .text-muted {
+    color: #9ca3af !important;
+}
+
+.kr_sp_brand_name {
+    color: #f8fafc;
+}
+
+.kr_sp_tabs span,
+.kr_sp_tabs a,
+.kr_sp_tabs .kr_sp_submenu_btn,
+.kr_sp_search_btn,
+.kr_sp_topbar_icons .o_menu_systray > * > button,
+.kr_sp_topbar_icons .o_menu_systray > * .dropdown > button {
+    color: #9ca3af;
+}
+
+.kr_sp_tabs .kr_sp_submenu_btn:hover,
+.kr_sp_search_btn:hover,
+.kr_sp_topbar_icons .o_menu_systray > * > button:hover,
+.kr_sp_topbar_icons .o_menu_systray > * .dropdown > button:hover {
+    background: #202b3a;
+    color: #ffffff;
+}
+
+.kr_sp_tabs .is-active,
+.kr_sp_tabs .is-active:hover {
+    background: #ff8744;
+    color: #111827;
+    box-shadow: none;
+}
+
+.kr_sp_tabs_scroll {
+    background: #202b3a;
+    color: #cbd5e1;
+}
+
+.kr_sp_tabs_scroll:hover:not(:disabled) {
+    background: #2b3647;
+}
+
+.kr_sp_submenu_popover_wrap,
+.kr_sp_submenu_popover .popover-body {
+    border-color: #2b3647;
+    background: #18212f;
+    color: #e5e7eb;
+}
+
+.kr_sp_submenu_group_title,
+.kr_sp_submenu_popover .dropdown-item {
+    color: #e5e7eb;
+}
+
+.kr_sp_submenu_group_title.is-active::before,
+.kr_sp_submenu_popover .dropdown-item:hover,
+.kr_sp_submenu_popover .dropdown-item:focus {
+    color: #ff8744;
+}
+
+.kr_sp_submenu_popover .dropdown-item:hover,
+.kr_sp_submenu_popover .dropdown-item:focus {
+    background: rgba(255, 135, 68, 0.14);
+}
+
+.kr_sp_rail_group button,
+.kr_sp_rail_btn {
+    background: #18212f;
+    color: #9ca3af;
+}
+
+.kr_sp_rail_group button:hover,
+.kr_sp_rail_btn:hover {
+    background: #202b3a;
+    color: #ffffff;
+}
+
+.kr_sp_rail_group button.is-active,
+.kr_sp_rail_btn.is-active {
+    background: #ff8744;
+    color: #111827;
+}
+
+/* Dark mode – color dot & divider */
+
+.kr_sp_rail_divider {
+    background: #2b3647;
+}
+
+.kr_sp_color_swatch:hover {
+    background: #202b3a !important;
+}
+
+.kr_sp_color_swatch.is-active {
+    border-color: #ff8744 !important;
+    box-shadow: 0 0 0 1px rgba(255, 135, 68, 0.22) !important;
+}
+
+
+.kr_sp_workspace_modal.is-open {
+    background: linear-gradient(145deg, #0f1a26 0%, #0a1520 40%, #060e17 100%);
+}
+
+.kr_sp_workspace_topbar {
+    border-bottom-color: rgba(255, 255, 255, 0.05);
+    background: rgba(0, 0, 0, 0.28);
+}
+
+.kr_sp_workspace_item {
+    border-color: rgba(255, 255, 255, 0.06);
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.kr_sp_workspace_item:hover,
+.kr_sp_workspace_item:focus-visible {
+    border-color: rgba(255, 135, 68, 0.45);
+    background: rgba(255, 135, 68, 0.08);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 135, 68, 0.2);
+}
+
+.kr_sp_workspace_item:hover .kr_sp_workspace_icon_wrap {
+    box-shadow: 0 8px 24px rgba(255, 135, 68, 0.25), inset 0 1px 0 rgba(255,255,255,0.2);
+}
+
+.kr_sp_workspace_favorite.is-active {
+    background: rgba(255, 135, 68, 0.22);
+    color: #ff8744;
+}
+
+.kr_sp_pending_header span,
+.kr_sp_pending_header strong,
+.kr_sp_pending_header em,
+.kr_sp_pending_grid article,
+.kr_sp_pending_dashboard_content,
+.kr_sp_pending_dashboard_content aside span,
+.kr_sp_pending_dashboard_content aside strong,
+.kr_sp_pending_dashboard_content aside em,
+.kr_sp_pending_dashboard_cards article,
+.kr_sp_pending_dashboard_chart,
+.kr_sp_pending_dashboard_tables article {
+    background: linear-gradient(90deg, #1f2937 0%, #2b3647 44%, #1f2937 88%);
+    background-size: 220% 100%;
+}
+
+.o_web_client.kr_sp_global_mode .o-mail-Discuss {
+    background: #111827;
+}
+
+.o_web_client.kr_sp_global_mode .o-mail-DiscussSidebar-resizablePanelContainer,
+.o_web_client.kr_sp_global_mode .o-mail-DiscussSidebar,
+.o_web_client.kr_sp_global_mode .o-mail-DiscussContent-header {
+    background: #18212f !important;
+    color: #e5e7eb;
+}
+
+.o_web_client.kr_sp_global_mode .o-mail-DiscussContent,
+.o_web_client.kr_sp_global_mode .o-mail-DiscussContent-core {
+    background: #111827 !important;
+    color: #e5e7eb;
+}

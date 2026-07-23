@@ -1,0 +1,411 @@
+.o_kraken_dashboard_action {
+    min-height: 100%;
+    padding: 10px 14px 18px;
+    background: radial-gradient(circle at top right, #f2f2f2, #e7e8ea 55%, #e1e3e6);
+}
+
+.kr_shell {
+    display: grid;
+    grid-template-columns: 56px minmax(0, 1fr);
+    gap: 16px;
+    max-width: 1440px;
+    margin: 0 auto;
+}
+
+.kr_utility_rail {
+    background: #f6f7f8;
+    border: 1px solid #dde2e7;
+    border-radius: 18px;
+    box-shadow: 0 8px 20px rgba(36, 44, 54, 0.08);
+    padding: 12px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.kr_utility_rail button {
+    border: 0;
+    border-radius: 12px;
+    min-height: 40px;
+    background: #ffffff;
+    color: #5f6b75;
+}
+
+.kr_utility_rail button:hover {
+    background: #111418;
+    color: #ffffff;
+}
+
+.kr_main {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.kr_header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 2px;
+}
+
+.kr_header h1 {
+    margin: 0;
+    font-size: clamp(26px, 2vw, 36px);
+    color: #1e2328;
+    letter-spacing: -0.03em;
+}
+
+.kr_header p {
+    margin: 3px 0 0;
+    color: #646f79;
+}
+
+.kr_header_actions {
+    display: flex;
+    gap: 8px;
+}
+
+.kr_header_actions button {
+    border: 0;
+    border-radius: 12px;
+    width: 38px;
+    height: 38px;
+    background: #f6f7f8;
+    color: #394047;
+}
+
+.kr_grid {
+    display: grid;
+    gap: 14px;
+}
+
+.kr_top_grid {
+    grid-template-columns: minmax(320px, 1.2fr) minmax(320px, 1fr) minmax(320px, 1fr);
+}
+
+.kr_bottom_grid {
+    grid-template-columns: minmax(260px, 0.7fr) minmax(0, 1.3fr);
+}
+
+.kr_card {
+    background: #f9fafb;
+    border: 1px solid #dde2e7;
+    border-radius: 20px;
+    box-shadow: 0 14px 28px rgba(40, 46, 54, 0.08);
+    padding: 16px;
+}
+
+.kr_card_head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.kr_card_head h3 {
+    margin: 0;
+    font-size: 18px;
+}
+
+.kr_card_head p {
+    margin: 2px 0 0;
+    font-size: 12px;
+    color: #707982;
+}
+
+.kr_chip {
+    background: #ebedf0;
+    border-radius: 999px;
+    padding: 4px 10px;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.kr_balance strong {
+    display: block;
+    font-size: clamp(28px, 2vw, 40px);
+    line-height: 1;
+    letter-spacing: -0.04em;
+    margin-bottom: 6px;
+}
+
+.kr_balance p {
+    margin: 0;
+    color: #5e6873;
+    font-size: 12px;
+}
+
+.kr_actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    margin-top: 14px;
+}
+
+.kr_actions button {
+    border: 0;
+    border-radius: 12px;
+    min-height: 38px;
+    background: #111418;
+    color: #fff;
+    font-weight: 600;
+}
+
+.kr_actions button:last-child {
+    background: #eceef1;
+    color: #21262c;
+}
+
+.kr_wallets {
+    margin-top: 12px;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.kr_wallet {
+    background: #ffffff;
+    border-radius: 12px;
+    border: 1px solid #e3e7ec;
+    padding: 8px;
+}
+
+.kr_wallet_code {
+    display: block;
+    font-size: 11px;
+    color: #6c7580;
+    margin-bottom: 2px;
+}
+
+.kr_wallet strong {
+    display: block;
+    font-size: 14px;
+}
+
+.kr_wallet small {
+    color: #1e8c4d;
+    font-weight: 600;
+}
+
+.kr_card_group {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.kr_metric {
+    min-height: 126px;
+}
+
+.kr_metric span {
+    font-size: 12px;
+    color: #6b7680;
+}
+
+.kr_metric strong {
+    display: block;
+    margin-top: 8px;
+    font-size: 34px;
+    line-height: 1;
+}
+
+.kr_metric p {
+    margin-top: 8px;
+    font-size: 12px;
+    color: #6f7983;
+}
+
+.kr_metric_hot {
+    color: #ffffff;
+    background: linear-gradient(135deg, #ff8744, #f04f3e);
+    border: 0;
+}
+
+.kr_metric_hot span,
+.kr_metric_hot p {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.kr_legend {
+    display: flex;
+    gap: 10px;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.kr_legend_profit::before,
+.kr_legend_loss::before {
+    content: "";
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 4px;
+}
+
+.kr_legend_profit::before {
+    background: #f4602f;
+}
+
+.kr_legend_loss::before {
+    background: #191f26;
+}
+
+.kr_chart {
+    height: 170px;
+    margin-top: 8px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 8px;
+    border-bottom: 1px solid #d9dee4;
+    padding: 0 2px 10px;
+}
+
+.kr_chart_col {
+    flex: 1;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 4px;
+}
+
+.kr_bar {
+    width: 10px;
+    border-radius: 5px 5px 0 0;
+}
+
+.kr_bar_profit {
+    background: #f4602f;
+}
+
+.kr_bar_loss {
+    background: #1b232b;
+}
+
+.kr_months {
+    margin-top: 8px;
+    display: grid;
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+    color: #6f7983;
+    font-size: 11px;
+    text-align: center;
+}
+
+.kr_limit_card h3 {
+    margin: 0;
+    font-size: 18px;
+}
+
+.kr_progress {
+    margin-top: 16px;
+    height: 10px;
+    background: #eceff2;
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.kr_progress_fill {
+    height: 100%;
+    background: linear-gradient(90deg, #f4602f, #ffa52d);
+}
+
+.kr_progress_meta {
+    margin-top: 10px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: #66707a;
+}
+
+.kr_activity_card .kr_card_head {
+    margin-bottom: 12px;
+}
+
+.kr_table_search {
+    border: 1px solid #dae0e7;
+    border-radius: 999px;
+    min-height: 32px;
+    padding: 0 12px;
+    width: 200px;
+    background: #fff;
+}
+
+.kr_table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 13px;
+}
+
+.kr_table thead th {
+    text-align: left;
+    color: #6a7580;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 0 8px 8px;
+}
+
+.kr_table tbody td {
+    padding: 10px 8px;
+    border-top: 1px solid #e4e8ee;
+}
+
+.kr_status {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    padding: 2px 9px;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.kr_status.is-done {
+    background: #dcf7e4;
+    color: #1f8f4f;
+}
+
+.kr_status.is-pending {
+    background: #ffe8df;
+    color: #c96a37;
+}
+
+.kr_status.is-progress {
+    background: #eef2f7;
+    color: #44525f;
+}
+
+@media (max-width: 1280px) {
+    .kr_top_grid {
+        grid-template-columns: 1fr;
+    }
+
+    .kr_bottom_grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 900px) {
+    .kr_shell {
+        grid-template-columns: 1fr;
+    }
+
+    .kr_utility_rail {
+        flex-direction: row;
+        overflow-x: auto;
+    }
+
+    .kr_header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .kr_wallets,
+    .kr_card_group {
+        grid-template-columns: 1fr;
+    }
+}

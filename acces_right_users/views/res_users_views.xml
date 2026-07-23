@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ================================================================
+         Extend Users List View – show Super Admin badge (super admins only)
+         ================================================================ -->
+
+    <record id="view_users_list_inherit_super_admin" model="ir.ui.view">
+        <field name="name">res.users.list.inherit.super.admin</field>
+        <field name="model">res.users</field>
+        <field name="inherit_id" ref="base.view_users_tree"/>
+        <field name="arch" type="xml">
+            <!-- Highlight super admin rows in amber (only super admins see this column) -->
+            <xpath expr="//list" position="attributes">
+                <attribute name="decoration-warning">is_super_admin == True</attribute>
+            </xpath>
+            <xpath expr="//field[@name='name']" position="after">
+                <field
+                    name="is_super_admin"
+                    string="Super Admin"
+                    optional="show"
+                    groups="acces_right_users.group_super_admin"
+                />
+            </xpath>
+        </field>
+    </record>
+
+    <!-- ================================================================
+         Extend Users Form View – Super Admin toggle (super admins only)
+         ================================================================ -->
+
+    <record id="view_users_form_inherit_super_admin" model="ir.ui.view">
+        <field name="name">res.users.form.inherit.super.admin</field>
+        <field name="model">res.users</field>
+        <field name="inherit_id" ref="base.view_users_form"/>
+        <field name="arch" type="xml">
+            <!-- Warning banner visible only on super admin accounts, only to super admins -->
+            <xpath expr="//field[@name='name']" position="before">
+                <div
+                    class="alert alert-warning mb-2"
+                    role="alert"
+                    invisible="not is_super_admin"
+                    groups="acces_right_users.group_super_admin"
+                >
+                    <i class="fa fa-shield me-1"/> This account has <strong>Super Admin</strong> privileges.
+                </div>
+            </xpath>
+            <!-- Super Admin toggle – only super admins can see/change it -->
+            <xpath expr="//notebook/page[1]" position="before">
+                <group groups="acces_right_users.group_super_admin">
+                    <field
+                        name="is_super_admin"
+                        widget="boolean_toggle"
+                        string="Super Admin Account"
+                        help="Super Admin accounts are hidden from Normal Admins and regular users."
+                    />
+                    <field
+                        name="max_users_to_create"
+                        string="User Creation Limit"
+                        readonly="1"
+                    />
+                </group>
+            </xpath>
+            <!-- Add User Creation Limit History page to notebook -->
+            <xpath expr="//notebook" position="inside">
+                <page string="User Creation Limit History" groups="acces_right_users.group_super_admin">
+                    <field name="creation_limit_log_ids" readonly="1">
+                        <list string="Limit Change History" create="false" edit="false" delete="false">
+                            <field name="create_date" string="Change Date"/>
+                            <field name="previous_limit"/>
+                            <field name="change_amount"/>
+                            <field name="new_limit"/>
+                            <field name="reason"/>
+                            <field name="modified_by_id"/>
+                        </list>
+                    </field>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- ================================================================
+         Record Rules
+         ================================================================ -->
+
+    <!-- Rule A: restrict all base internal users (group_user) to non-super-admin records -->
+    <record id="rule_hide_super_admin_from_normal" model="ir.rule">
+        <field name="name">Hide Super Admin Accounts from Normal Admins</field>
+        <field name="model_id" ref="base.model_res_users"/>
+        <field name="domain_force">[('is_super_admin', '=', False)]</field>
+        <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <!-- Rule B: super admins see ALL users with no restriction -->
+    <record id="rule_super_admin_full_access" model="ir.rule">
+        <field name="name">Super Admin – Full User Access</field>
+        <field name="model_id" ref="base.model_res_users"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('acces_right_users.group_super_admin'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+    <!-- ================================================================
+         User Creation Limits - List View, Action and Menuitem
+         ================================================================ -->
+
+    <record id="view_users_creation_limits_tree" model="ir.ui.view">
+        <field name="name">res.users.creation.limits.tree</field>
+        <field name="model">res.users</field>
+        <field name="arch" type="xml">
+            <list string="User Creation Limits" create="false" delete="false">
+                <field name="name" readonly="1"/>
+                <field name="login" readonly="1"/>
+                <field name="max_users_to_create" readonly="1"/>
+                <button name="action_open_creation_limit_wizard" string="Adjust Limit" type="object" class="btn-primary" icon="fa-edit"/>
+                <button name="action_view_creation_limit_history" string="History Log" type="object" class="btn-secondary" icon="fa-history"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_user_creation_limits" model="ir.actions.act_window">
+        <field name="name">User Creation Limits</field>
+        <field name="res_model">res.users</field>
+        <field name="view_mode">list</field>
+        <field name="view_id" ref="view_users_creation_limits_tree"/>
+        <field name="domain" eval="[('is_super_admin', '=', False), ('group_ids', 'in', [ref('base.group_system')])]"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Define the maximum number of users each admin or user is allowed to create.
+            </p>
+        </field>
+    </record>
+
+    <menuitem id="menu_user_creation_limits"
+              name="User Creation Limits"
+              parent="base.menu_users"
+              action="action_user_creation_limits"
+              groups="acces_right_users.group_super_admin"
+              sequence="30"/>
+
+</odoo>

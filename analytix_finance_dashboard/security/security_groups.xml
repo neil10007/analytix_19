@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Force Odoo to remove the category/privileges from the DB so these groups become Extra Rights -->
+    <delete model="res.groups.privilege" search="[('name', 'in', ['validate documents', 'Groq Super Admin'])]"/>
+    <delete model="ir.module.category" search="[('name', '=', '360 accesss')]"/>
+
+    <record id="group_validate_documents" model="res.groups">
+        <field name="name">validate documents</field>
+        <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+    </record>
+
+    <!-- Auto-assign Admin user to the validation group for testing -->
+    <record id="base.user_admin" model="res.users">
+        <field name="group_ids" eval="[(4, ref('analytix_finance_dashboard.group_validate_documents'))]"/>
+    </record>
+
+    <record id="group_groq_super_admin" model="res.groups">
+        <field name="name">Groq Super Admin</field>
+    </record>
+
+    <!-- Assign ONLY the Super Admin user (uid=2 / base.user_admin) to this group -->
+    <record id="base.user_admin" model="res.users">
+        <field name="group_ids" eval="[(4, ref('analytix_finance_dashboard.group_groq_super_admin'))]"/>
+    </record>
+</odoo>

@@ -1,0 +1,344 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <!-- Report Action -->
+        <record id="action_report_proforma_invoice" model="ir.actions.report">
+            <field name="name">Proforma Invoice</field>
+            <field name="model">sale.order.proforma</field>
+            <field name="report_type">qweb-pdf</field>
+            <field name="report_name">proforma_invoice.performa_sale_invoice_report</field>
+            <field name="report_file">proforma_invoice.performa_sale_invoice_report</field>
+            <field name="binding_model_id" ref="model_sale_order_proforma"/>
+            <field name="binding_type">report</field>
+        </record>
+
+        <template id="performa_sale_invoice_report">
+            <t t-call="web.html_container">
+                <xpath expr="//t[@t-call='web.external_layout']" position="after">
+                    <t t-call="web.basic_layout">
+                        <t t-foreach="docs" t-as="doc">
+                            <!-- Header Section - Fixed alignment -->
+                            <div class="header"
+                                 style="display: flex; justify-content: space-between; align-items: flex-start; width: 100%; margin-bottom: 15px;">
+
+                                <div style="flex: 0 0 60%; text-align: right;">
+                                    <!-- Logo -->
+                                    <div style="margin-bottom: 15px;">
+                                        <img t-att-src="'/web/image/res.company/%s/logo' % doc.company_id.id"
+                                             style="width: 300px; max-width: 100%; height: auto;"/>
+                                    </div>
+                                    <div style="text-align: left; flex: 0 0 20%;">
+                                        <h1 style="color: #2c3e50; font-weight: bold; margin: 0; font-size: 24px;">
+                                            PROFORMA INVOICE
+                                        </h1>
+                                        <t t-if="doc.state != 'approved'">
+                                            <h1 style="color: #ff0000; text-align: center; margin: 10px 0;">DRAFT</h1>
+                                        </t>
+                                    </div>
+
+                                    <div style="padding: 25px;">
+                                        <p style="margin: 0; font-size: 13px; font-weight: bold;">
+                                            Date:
+                                            <span t-field="doc.proforma_date" t-options='{"format": "dd MMM yyyy"}'/>
+                                        </p>
+                                        <p style="margin: 0; font-size: 13px; font-weight: bold;">
+                                            Proforma No:
+                                            <t t-esc="doc.name"/>
+                                        </p>
+                                        <p style="margin: 0; font-size: 13px; font-weight: bold;">
+                                            Proposal Ref No:
+                                            <t t-esc="doc.order_id.name"/>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="font-family: Arial, sans-serif; color: #333;">
+                                <!--                                <div style="text-align: center; margin: 25px 0;">-->
+                                <!--                                    <h1 style="color: #2c3e50; font-weight: bold; margin: 0; font-size: 24px;">-->
+                                <!--                                        PROFORMA INVOICE-->
+                                <!--                                    </h1>-->
+                                <!--                                </div>-->
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 25px;">
+
+                                    <div style="flex: 0 0 65%;">
+<!--                                        <p style="margin: 2px 0; font-weight: bold; font-size: 14px; line-height: 1.2;"-->
+<!--                                           t-esc="doc.company_id.company_arabic_name"/>-->
+                                        <p style="margin: 2px 0; font-weight: bold; font-size: 14px; line-height: 1.2;"
+                                           t-esc="doc.company_id.name"/>
+                                        <br/>
+                                        <p style="margin: 2px 0; font-size: 12px; line-height: 1.2;"
+                                           t-esc="doc.company_id.street"/>
+                                        <p style="margin: 2px 0; font-size: 12px; line-height: 1.2;"
+                                           t-esc="doc.company_id.street2"/>
+                                        <p style="margin: 2px 0; font-size: 12px; line-height: 1.2;">
+                                            <t t-if="doc.company_id.city">
+                                                <t t-esc="doc.company_id.city"/>
+                                            </t>
+                                            <t t-if="doc.company_id.zip">
+                                                ,
+                                                <t t-esc="doc.company_id.zip"/>
+                                            </t>
+                                        </p>
+                                        <p style="margin: 2px 0; font-size: 12px; line-height: 1.2;"
+                                           t-esc="doc.company_id.country_id.name or ''"/>
+                                        <p style="margin: 2px 0; font-size: 12px; line-height: 1.2;">
+                                            <strong>TRN:</strong>
+                                            <t t-esc="doc.company_id.vat"/>
+                                        </p>
+                                        <p style="margin: 2px 0; font-size: 12px; line-height: 1.2;">
+                                            <strong>Phone:</strong>
+                                            <t t-esc="doc.company_id.phone"/>
+                                        </p>
+                                        <p style="margin: 2px 0; font-size: 12px; line-height: 1.2;">
+                                            <strong>Email:</strong>
+                                            <t t-esc="doc.company_id.email"/>
+                                        </p>
+                                        <p style="margin: 2px 0; font-size: 12px; line-height: 1.2;">
+                                            <strong>Website:</strong>
+                                            <t t-esc="doc.company_id.website"/>
+                                        </p>
+                                    </div>
+                                    <hr style="border-top: 2px solid #2c3e50; margin: 10px 0;"/>
+                                    <div style="flex: 0 0 55%;">
+                                        <h3 style="color: #2c3e50; margin: 0 0 8px 0; font-size: 16px; font-weight: bold;">
+                                            Invoice To:
+                                        </h3>
+                                        <p style="margin: 4px 0; font-weight: bold; font-size: 14px;"
+                                           t-esc="doc.partner_id.name"/>
+                                        <t t-if="doc.partner_id.street">
+                                            <p style="margin: 2px 0; font-size: 12px;" t-esc="doc.partner_id.street"/>
+                                        </t>
+                                        <t t-if="doc.partner_id.street2">
+                                            <p style="margin: 2px 0; font-size: 12px;" t-esc="doc.partner_id.street2"/>
+                                        </t>
+                                        <p style="margin: 2px 0; font-size: 12px;">
+                                            <t t-if="doc.partner_id.city">
+                                                <t t-esc="doc.partner_id.city"/>
+                                            </t>
+                                            <t t-if="doc.partner_id.zip">
+                                                <t t-if="doc.partner_id.city">,</t>
+                                                <t t-esc="doc.partner_id.zip"/>
+                                            </t>
+                                        </p>
+                                        <t t-if="doc.partner_id.country_id">
+                                            <p style="margin: 2px 0; font-size: 12px;"
+                                               t-esc="doc.partner_id.country_id.name"/>
+                                        </t>
+                                        <t t-if="doc.partner_id.vat">
+                                            <p style="margin: 2px 0; font-size: 12px;">
+                                                <strong>TRN:</strong>
+                                                <t t-esc="doc.partner_id.vat"/>
+                                            </p>
+                                        </t>
+                                    </div>
+
+                                    <!-- Invoice Details - Right -->
+                                    <!--                                    <div style="flex: 0 0 40%; text-align: right;">-->
+                                    <!--                                        <div style="background-color: #f8f9fa; padding: 12px; border: 1px solid #ddd; display: inline-block; text-align: left;">-->
+                                    <!--                                            <p style="margin: 5px 0; font-size: 14px;">-->
+                                    <!--                                                <strong>Number #:</strong>-->
+                                    <!--                                                <t t-esc="doc.sequence_number"/>-->
+                                    <!--                                            </p>-->
+                                    <!--                                            <p style="margin: 5px 0; font-size: 14px;">-->
+                                    <!--                                                <strong>Date:</strong>-->
+                                    <!--                                                <span t-field="doc.date_order" t-options='{"format": "dd MMM yyyy"}'/>-->
+                                    <!--                                            </p>-->
+                                    <!--                                        </div>-->
+                                    <!--                                    </div>-->
+                                </div>
+
+                                <hr style="border-top: 1px solid #2c3e50; margin: 20px 0;"/>
+
+                                <!-- Line Items Table -->
+                                <table style="width: 100%; border-collapse: collapse; margin-bottom: 25px; font-size: 12px;">
+                                    <thead>
+                                        <tr style="background-color: #2c3e50; color: white;">
+                                            <th style="text-align: left; padding: 12px; border: 1px solid #ddd; font-weight: bold;">
+                                                Description
+                                            </th>
+                                            <th style="text-align: center; padding: 12px; border: 1px solid #ddd; font-weight: bold; width: 12%;">
+                                                QTY
+                                            </th>
+                                            <th style="text-align: right; padding: 12px; border: 1px solid #ddd; font-weight: bold; width: 18%;">
+                                                RATE
+                                            </th>
+                                            <th style="text-align: center; padding: 12px; border: 1px solid #ddd; font-weight: bold; width: 12%;">
+                                                Tax Rate
+                                            </th>
+                                            <th style="text-align: center; padding: 12px; border: 1px solid #ddd; font-weight: bold; width: 12%;">
+                                                Tax Amount
+                                            </th>
+                                            <th style="text-align: right; padding: 12px; border: 1px solid #ddd; font-weight: bold; width: 18%;">
+                                                AMOUNT
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr t-foreach="doc.proforma_line_ids" t-as="line">
+                                            <td style="padding: 12px; border: 1px solid #ddd; vertical-align: top;">
+                                                <span t-field="line.name"/>
+                                            </td>
+                                            <td style="text-align: center; padding: 12px; border: 1px solid #ddd; vertical-align: top;">
+                                                <span t-field="line.product_uom_qty"/>
+                                            </td>
+                                            <td style="text-align: right; padding: 12px; border: 1px solid #ddd; vertical-align: top;">
+                                                <span t-field="line.price_unit"
+                                                      t-options="{'widget': 'monetary', 'display_currency': doc.company_id.currency_id}"/>
+                                            </td>
+                                            <td style="text-align: right; padding: 12px; border: 1px solid #ddd; vertical-align: top;">
+                                                <span t-field="line.tax_id"/>
+                                            </td>
+                                            <td style="text-align: right; padding: 12px; border: 1px solid #ddd; vertical-align: top;">
+                                                <span t-field="line.price_tax"
+                                                      t-options="{'widget': 'monetary', 'display_currency': doc.company_id.currency_id}"/>
+                                            </td>
+                                            <td style="text-align: right; padding: 12px; border: 1px solid #ddd; vertical-align: top;">
+                                                <span t-field="line.price_total"
+                                                      t-options="{'widget': 'monetary', 'display_currency': doc.company_id.currency_id}"/>
+                                            </td>
+                                        </tr>
+
+                                        <!-- Empty row for spacing -->
+                                        <tr>
+                                            <td colspan="4" style="padding: 8px; border: none;"></td>
+                                        </tr>
+
+                                        <!-- Totals -->
+                                        <tr>
+                                            <td colspan="5"
+                                                style="text-align: right; padding: 10px; border: 1px solid #ddd; font-weight: bold;">
+                                                Subtotal
+                                            </td>
+                                            <td style="text-align: right; padding: 10px; border: 1px solid #ddd; font-weight: bold;">
+                                                <span t-field="doc.amount_untaxed"
+                                                      t-options="{'widget': 'monetary', 'display_currency': doc.company_id.currency_id}"/>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="5"
+                                                style="text-align: right; padding: 10px; border: 1px solid #ddd;">
+                                                Tax Amount
+                                            </td>
+                                            <td style="text-align: right; padding: 10px; border: 1px solid #ddd;">
+                                                <span t-field="doc.amount_tax"
+                                                      t-options="{'widget': 'monetary', 'display_currency': doc.company_id.currency_id}"/>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="5"
+                                                style="text-align: right; padding: 10px; border: 1px solid #ddd; font-weight: bold; background-color: #f8f9fa;">
+                                                TOTAL
+                                            </td>
+                                            <td style="text-align: right; padding: 10px; border: 1px solid #ddd; font-weight: bold; background-color: #f8f9fa;">
+                                                <span t-field="doc.amount_total"
+                                                      t-options="{'widget': 'monetary', 'display_currency': doc.company_id.currency_id}"/>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+
+                                <!-- Tax Summary -->
+                                <!--                                <div style="margin-bottom: 25px;">-->
+                                <!--                                    <h3 style="color: #2c3e50; border-bottom: 1px solid #ddd; padding-bottom: 5px; margin: 0 0 12px 0; font-size: 16px;">-->
+                                <!--                                        TAX SUMMARY-->
+                                <!--                                    </h3>-->
+                                <!--                                    <table style="width: 50%; border-collapse: collapse; font-size: 12px;">-->
+                                <!--                                        <thead>-->
+                                <!--                                            <tr style="background-color: #2c3e50; color: white;">-->
+                                <!--                                                <th style="text-align: left; padding: 10px; border: 1px solid #ddd; font-weight: bold;">-->
+                                <!--                                                    RATE-->
+                                <!--                                                </th>-->
+                                <!--                                                <th style="text-align: right; padding: 10px; border: 1px solid #ddd; font-weight: bold;">-->
+                                <!--                                                    TAX-->
+                                <!--                                                </th>-->
+                                <!--                                                <th style="text-align: right; padding: 10px; border: 1px solid #ddd; font-weight: bold;">-->
+                                <!--                                                    NET-->
+                                <!--                                                </th>-->
+                                <!--                                            </tr>-->
+                                <!--                                        </thead>-->
+                                <!--                                        <tbody>-->
+                                <!--                                            <tr>-->
+                                <!--                                                <td style="padding: 10px; border: 1px solid #ddd;">-->
+                                <!--                                                    <span t-esc="doc.get_tax_names()"/>-->
+                                <!--                                                </td>-->
+                                <!--                                                <td style="text-align: right; padding: 10px; border: 1px solid #ddd;">-->
+                                <!--                                                    <span t-field="doc.amount_tax"-->
+                                <!--                                                          t-options="{'widget': 'monetary', 'display_currency': doc.currency_id}"/>-->
+                                <!--                                                </td>-->
+                                <!--                                                <td style="text-align: right; padding: 10px; border: 1px solid #ddd;">-->
+                                <!--                                                    <span t-field="doc.amount_untaxed"-->
+                                <!--                                                          t-options="{'widget': 'monetary', 'display_currency': doc.currency_id}"/>-->
+                                <!--                                                </td>-->
+                                <!--                                            </tr>-->
+                                <!--                                        </tbody>-->
+                                <!--                                    </table>-->
+                                <!--                                </div>-->
+
+                                <div style="margin-bottom: 25px;">
+                                    <h3 style="color: #2c3e50; border-bottom: 1px solid #ddd; padding-bottom: 5px; margin: 0 0 12px 0; font-size: 16px;">
+                                        Bank Details
+                                    </h3>
+                                    <t t-if="doc.bank_id">
+                                        <div style="margin-bottom: 15px; font-size: 12px;">
+                                            <p style="margin: 4px 0;">
+                                                <strong>Name:</strong>
+                                                <span t-esc="doc.bank_id.acc_holder_name"/>
+                                            </p>
+                                            <p style="margin: 4px 0;">
+                                                <strong>Account Number:</strong>
+                                                <span t-esc="doc.bank_id.acc_number"/>
+                                            </p>
+<!--                                            <t t-if="doc.bank_id.iban">-->
+<!--                                                <p style="margin: 4px 0;">-->
+<!--                                                    <strong>IBAN:</strong>-->
+<!--                                                    <span t-esc="doc.bank_id.iban"/>-->
+<!--                                                </p>-->
+<!--                                            </t>-->
+<!--                                            <t t-if="doc.bank_id.swift_code">-->
+<!--                                                <p style="margin: 4px 0;">-->
+<!--                                                    <strong>Swift Code:</strong>-->
+<!--                                                    <span t-esc="doc.bank_id.swift_code"/>-->
+<!--                                                </p>-->
+<!--                                            </t>-->
+                                            <p style="margin: 4px 0;">
+                                                <strong>Bank:</strong>
+                                                <span t-esc="doc.bank_id.bank_id.name"/>
+                                            </p>
+                                        </div>
+                                    </t>
+                                    <t t-else="">
+                                        <p style="margin: 5px 0; color: #999; font-size: 12px;">
+                                            No bank account selected
+                                        </p>
+                                    </t>
+                                </div>
+
+                                <div style="margin-bottom: 25px;">
+
+                                    <t t-esc="doc.note"/>
+
+
+                                </div>
+
+                                <!-- Footer -->
+                                <div class="footer" style="margin-top: 40px;">
+                                    <hr style="border-top: 2px solid #2c3e50;"/>
+                                    <div style="text-align: center; padding: 15px; margin-top: 20px;">
+                                        <p style="margin: 5px 0; font-size: 12px;">
+                                            <strong>Thank you for your business. This is an electronic document.
+                                                <br/>
+                                                No signature required. For any questions, please contact us.
+                                            </strong>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </t>
+                    </t>
+                </xpath>
+            </t>
+        </template>
+
+    </data>
+</odoo>

@@ -1,0 +1,52 @@
+.o_web_client {
+    .o_purchase_dashboard {
+        border-color: var(--kr-dark-border) !important;
+        background: #111827 !important;
+        color: var(--kr-dark-text);
+    }
+
+    .o_purchase_dashboard .purchase-dashboard-card,
+    .o_purchase_dashboard .o_purchase_dashboard_card_top,
+    .o_purchase_dashboard .o_purchase_dashboard_card_bottom,
+    .o_purchase_dashboard .o_purchase_dashboard_card_sole,
+    .o_purchase_dashboard .o_no_hover {
+        border-color: var(--kr-dark-border) !important;
+        background: #18212f !important;
+        color: var(--kr-dark-text) !important;
+        box-shadow: none;
+    }
+
+    .o_purchase_dashboard .purchase-dashboard-card:hover,
+    .o_purchase_dashboard .purchase-dashboard-card:focus {
+        border-color: rgba(255, 135, 68, 0.48) !important;
+        background: #202b3a !important;
+        color: #ffffff !important;
+    }
+
+    .o_purchase_dashboard .bg-view,
+    .o_purchase_dashboard .bg-secondary-subtle,
+    .o_purchase_dashboard .text-secondary-emphasis {
+        background: #202b3a !important;
+        color: var(--kr-dark-text) !important;
+    }
+
+    .o_purchase_dashboard .text-muted,
+    .o_purchase_dashboard small {
+        color: var(--kr-dark-muted) !important;
+    }
+
+    .o_purchase_dashboard .text-danger,
+    .o_purchase_dashboard .text-warning,
+    .o_purchase_dashboard .text-success,
+    .o_purchase_dashboard .text-info {
+        filter: saturate(1.08) brightness(1.08);
+    }
+
+    .o_purchase_dashboard_list_view,
+    .o_purchase_dashboard_list_view .o_list_renderer,
+    .o_purchase_dashboard_kanban,
+    .o_purchase_dashboard_kanban .o_kanban_renderer {
+        background: #111827 !important;
+        color: var(--kr-dark-text);
+    }
+}

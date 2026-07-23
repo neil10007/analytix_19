@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_sale_order_proforma_user,sale.order.proforma user,model_sale_order_proforma,base.group_user,1,1,1,0
+access_sale_order_proforma_manager,sale.order.proforma manager,model_sale_order_proforma,base.group_system,1,1,1,1
+access_sale_order_proforma_line_user,sale.order.proforma.line user,model_sale_order_proforma_line,base.group_user,1,1,1,0
+access_sale_order_proforma_line_manager,sale.order.proforma.line manager,model_sale_order_proforma_line,base.group_system,1,1,1,1

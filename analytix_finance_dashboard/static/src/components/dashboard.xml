@@ -1,0 +1,2446 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="analytix_finance_dashboard.Dashboard" owl="1">
+        <div class="anx-wrap">
+
+            <!-- TOP NAV BAR -->
+            <div class="anx-topbar">
+                <div class="anx-topbar-left">
+                    <span class="anx-logo-dot"></span>
+                    <span class="anx-logo-text">Analytix 360 Finance</span>
+                    <span class="anx-topbar-sep">|</span>
+                    <span class="anx-company-name" t-if="state.data">
+                        <t t-esc="state.data.companies"/>
+                    </span>
+                </div>
+                <div class="anx-topbar-right">
+                    <div class="anx-date-badge" t-if="state.data">
+                        <i class="fa fa-calendar"></i>
+                        &#160;<t t-esc="formatDate(state.data.date_range.start)"/>
+                        <t t-if="state.filter === 'custom' and state.customFrom and state.customTo">
+                            &#160;→&#160;<t t-esc="formatDate(state.data.date_range.end)"/>
+                        </t>
+                    </div>
+                    <select class="anx-filter-select" t-on-change="setFilter" t-model="state.filter">
+                        <option value="this_month">This Month</option>
+                        <option value="last_3_months">Last 3 Months</option>
+                        <option value="this_year">This Year</option>
+                        <option value="custom">Custom Range</option>
+                    </select>
+                    <div class="anx-avatar">DW</div>
+                </div>
+            </div>
+
+            <!-- CUSTOM DATE RANGE PICKER -->
+            <div t-if="state.showCustomPicker" class="anx-custom-date-bar">
+                <span class="anx-custom-date-label">
+                    <i class="fa fa-calendar-o"></i> Custom Range
+                </span>
+                <div class="anx-custom-date-group">
+                    <label class="anx-custom-date-lbl">From</label>
+                    <input class="anx-custom-date-input"
+                           type="date"
+                           data-field="from"
+                           t-att-value="state.customFrom"
+                           t-on-change="onCustomDateChange"/>
+                </div>
+                <div class="anx-custom-date-group">
+                    <label class="anx-custom-date-lbl">To</label>
+                    <input class="anx-custom-date-input"
+                           type="date"
+                           data-field="to"
+                           t-att-value="state.customTo"
+                           t-on-change="onCustomDateChange"/>
+                </div>
+                <button class="anx-custom-apply-btn" t-on-click="applyCustomRange">
+                    <i class="fa fa-check"></i> Apply
+                </button>
+            </div>
+
+            <!-- TAB BAR -->
+            <div class="anx-tabs">
+                <button t-attf-class="anx-tab {{ state.activeTab === 'overview'  ? 'active' : '' }}"
+                        data-tab="overview"  t-on-click="onTabClick">
+                    <i class="fa fa-th-large"></i> Overview
+                </button>
+                <button t-attf-class="anx-tab {{ state.activeTab === 'invoices'  ? 'active' : '' }}"
+                        data-tab="invoices"  t-on-click="onTabClick">
+                    <i class="fa fa-file-text-o"></i> Invoices
+                </button>
+                <button t-attf-class="anx-tab {{ state.activeTab === 'expenses'  ? 'active' : '' }}"
+                        data-tab="expenses"  t-on-click="onTabClick">
+                    <i class="fa fa-credit-card"></i> Expenses
+                </button>
+                <button t-attf-class="anx-tab {{ state.activeTab === 'vat'       ? 'active' : '' }}"
+                        data-tab="vat"       t-on-click="onTabClick">
+                    <i class="fa fa-percent"></i> TAX
+                </button>
+                <button t-attf-class="anx-tab {{ state.activeTab === 'journals'  ? 'active' : '' }}"
+                        data-tab="journals"  t-on-click="onTabClick">
+                    <i class="fa fa-book"></i> Journals
+                </button>
+                <button t-attf-class="anx-tab {{ state.activeTab === 'trial_balance' ? 'active' : '' }}"
+                        data-tab="trial_balance" t-on-click="onTabClick">
+                    <i class="fa fa-balance-scale"></i> Trial Balance
+                </button>
+                <button t-attf-class="anx-tab {{ state.activeTab === 'documents' ? 'active' : '' }}"
+                        data-tab="documents" t-on-click="onTabClick">
+                    <i class="fa fa-folder-open-o"></i> Documents
+                </button>
+                <button t-attf-class="anx-tab {{ state.activeTab === 'chat' ? 'active' : '' }}"
+                        data-tab="chat" t-on-click="onTabClick">
+                    <i class="fa fa-comments-o"></i> Chat
+                </button>
+            </div>
+
+            <!-- BODY -->
+            <div t-attf-class="anx-body {{ state.activeTab === 'chat' ? 'anx-body-chat' : '' }}">
+
+                <!-- LOADING -->
+                <div t-if="!state.data" class="anx-loading">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading…</span>
+                    </div>
+                </div>
+
+                <!-- OVERVIEW TAB -->
+                <t t-if="state.data and state.activeTab === 'overview'">
+
+                    <div class="anx-section-label">TODAY'S PULSE</div>
+
+                    <!-- 5 KPI CARDS — uses data-card + onCardClick -->
+                    <div class="anx-kpi-row">
+
+                        <div class="anx-kpi-card" data-card="revenue" t-on-click="onCardClick">
+                            <div class="anx-kpi-top">
+                                <div class="anx-kpi-icon anx-icon-blue"><i class="fa fa-bar-chart"></i></div>
+                                <span t-attf-class="anx-kpi-badge {{ state.data.revenue.percentage >= 0 ? 'badge-up' : 'badge-down' }}">
+                                    <i t-attf-class="fa fa-arrow-{{ state.data.revenue.percentage >= 0 ? 'up' : 'down' }}"></i>
+                                    <t t-esc="formatPct(state.data.revenue.percentage)"/>
+                                </span>
+                            </div>
+                            <div class="anx-kpi-value"><t t-esc="formatCurrency(state.data.revenue.value)"/></div>
+                            <div class="anx-kpi-label">Revenue this period</div>
+                            <div class="anx-kpi-sub">
+                                <i class="fa fa-diamond" style="color:#1e88e5;"></i>
+                                &#160;<t t-esc="formatCurrency(state.data.revenue.today)"/> today
+                            </div>
+                        </div>
+
+                        <div class="anx-kpi-card" data-card="invoices" t-on-click="onCardClick">
+                            <div class="anx-kpi-top">
+                                <div class="anx-kpi-icon anx-icon-green"><i class="fa fa-file-text-o"></i></div>
+                                <span class="anx-kpi-badge badge-up">
+                                    <i class="fa fa-arrow-up"></i>
+                                    <t t-esc="state.data.invoices.sales"/> new
+                                </span>
+                            </div>
+                            <div class="anx-kpi-value"><t t-esc="state.data.invoices.sales"/> sales</div>
+                            <div class="anx-kpi-label">Invoices raised this period</div>
+                            <div class="anx-kpi-sub">
+                                <i class="fa fa-check-circle-o" style="color:#3ea053;"></i>
+                                &#160;<t t-esc="state.data.invoices.paid"/> paid ·
+                                <t t-esc="state.data.invoices.pending"/> pending
+                            </div>
+                        </div>
+
+                        <div class="anx-kpi-card" data-card="expenses" t-on-click="onCardClick">
+                            <div class="anx-kpi-top">
+                                <div class="anx-kpi-icon anx-icon-red"><i class="fa fa-line-chart"></i></div>
+                                <span t-attf-class="anx-kpi-badge {{ state.data.expenses.percentage >= 0 ? 'badge-down' : 'badge-up' }}">
+                                    <i t-attf-class="fa fa-arrow-{{ state.data.expenses.percentage >= 0 ? 'up' : 'down' }}"></i>
+                                    <t t-esc="formatPct(state.data.expenses.percentage)"/>
+                                </span>
+                            </div>
+                            <div class="anx-kpi-value"><t t-esc="formatCurrency(state.data.expenses.value)"/></div>
+                            <div class="anx-kpi-label">Expenses this period</div>
+                            <div class="anx-kpi-sub">
+                                <i class="fa fa-money" style="color:#e53935;"></i>
+                                &#160;<t t-esc="formatCurrency(state.data.expenses.today)"/> today
+                            </div>
+                        </div>
+
+                        <div class="anx-kpi-card" data-card="net_profit" t-on-click="onCardClick">
+                            <div class="anx-kpi-top">
+                                <div class="anx-kpi-icon anx-icon-teal"><i class="fa fa-pie-chart"></i></div>
+                                <span t-attf-class="anx-kpi-badge {{ state.data.net_profit.percentage >= 0 ? 'badge-up' : 'badge-down' }}">
+                                    <i t-attf-class="fa fa-arrow-{{ state.data.net_profit.percentage >= 0 ? 'up' : 'down' }}"></i>
+                                    <t t-esc="formatPct(state.data.net_profit.percentage)"/>
+                                </span>
+                            </div>
+                            <div class="anx-kpi-value"><t t-esc="formatCurrency(state.data.net_profit.value)"/></div>
+                            <div class="anx-kpi-label">Net profit this period</div>
+                            <div class="anx-kpi-sub">
+                                <i class="fa fa-percent" style="color:#8a93a4;"></i>
+                                &#160;Margin: <t t-esc="state.data.net_profit.margin"/>%
+                            </div>
+                        </div>
+
+                        <div class="anx-kpi-card" data-card="receivables" t-on-click="onCardClick">
+                            <div class="anx-kpi-top">
+                                <div class="anx-kpi-icon anx-icon-orange"><i class="fa fa-clock-o"></i></div>
+                                <span class="anx-kpi-badge badge-warn">
+                                    <t t-esc="state.data.receivables.clients"/> overdue
+                                </span>
+                            </div>
+                            <div class="anx-kpi-value"><t t-esc="formatCurrency(state.data.receivables.value)"/></div>
+                            <div class="anx-kpi-label">Unpaid receivables</div>
+                            <div class="anx-kpi-sub">
+                                <i class="fa fa-users" style="color:#f57c00;"></i>
+                                &#160;From <t t-esc="state.data.receivables.clients"/> clients
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- CHARTS ROW -->
+                    <div class="anx-charts-row">
+
+                        <div class="anx-chart-main anx-panel">
+                            <div class="anx-panel-header">
+                                <span class="anx-panel-title">Revenue vs expenses</span>
+                                <div class="anx-chart-legend">
+                                    <span class="anx-legend-dot" style="background:#2b7b9b;"></span>
+                                    <span class="anx-legend-label">Revenue</span>
+                                    <span class="anx-legend-dot" style="background:#b1d4e0; margin-left:12px;"></span>
+                                    <span class="anx-legend-label">Expenses</span>
+                                </div>
+                                <span class="anx-period-badge"><t t-esc="state.data.chart.title"/></span>
+                            </div>
+                            <div class="anx-chart-canvas-wrap">
+                                <canvas t-ref="revExpChart"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="anx-chart-side anx-panel">
+                            <div class="anx-panel-header">
+                                <span class="anx-panel-title">
+                                    <t t-if="state.topPartnerMode === 'customers'">Top customers</t>
+                                    <t t-else="">Top vendors</t>
+                                </span>
+                                <span class="anx-period-badge" t-on-click="toggleTopPartners" style="cursor: pointer; user-select: none;" title="Click to toggle between Revenue and Expense">
+                                    <t t-if="state.topPartnerMode === 'customers'">By revenue</t>
+                                    <t t-else="">By expense</t>
+                                </span>
+                            </div>
+                            <div class="anx-customer-list">
+                                <t t-if="state.topPartnerMode === 'customers'">
+                                    <t t-foreach="state.data.top_customers" t-as="cust" t-key="cust.rank">
+                                        <div class="anx-customer-row">
+                                            <span class="anx-customer-rank"><t t-esc="cust.rank"/></span>
+                                            <div class="anx-customer-name"><t t-esc="cust.name"/></div>
+                                            <div class="anx-customer-bar-wrap">
+                                                <t t-set="maxRev" t-value="state.data.top_customers[0]?.revenue || 1"/>
+                                                <div class="anx-customer-bar"
+                                                     t-attf-style="width:{{ Math.round((cust.revenue / maxRev) * 100) }}%;">
+                                                </div>
+                                            </div>
+                                            <span class="anx-customer-amt">
+                                                <t t-esc="state.data.currency"/>&#160;<t t-esc="formatShort(cust.revenue)"/>
+                                            </span>
+                                        </div>
+                                    </t>
+                                    <div t-if="!state.data.top_customers.length" class="anx-empty-state">
+                                        No customer data found.
+                                    </div>
+                                </t>
+                                <t t-if="state.topPartnerMode === 'vendors'">
+                                    <t t-foreach="state.data.top_vendors" t-as="vend" t-key="vend.rank">
+                                        <div class="anx-customer-row">
+                                            <span class="anx-customer-rank"><t t-esc="vend.rank"/></span>
+                                            <div class="anx-customer-name"><t t-esc="vend.name"/></div>
+                                            <div class="anx-customer-bar-wrap">
+                                                <t t-set="maxExp" t-value="state.data.top_vendors[0]?.expense || 1"/>
+                                                <div class="anx-customer-bar"
+                                                     t-attf-style="background-color: #e53935; width:{{ Math.round((vend.expense / maxExp) * 100) }}%;">
+                                                </div>
+                                            </div>
+                                            <span class="anx-customer-amt">
+                                                <t t-esc="state.data.currency"/>&#160;<t t-esc="formatShort(vend.expense)"/>
+                                            </span>
+                                        </div>
+                                    </t>
+                                    <div t-if="!state.data.top_vendors.length" class="anx-empty-state">
+                                        No vendor data found.
+                                    </div>
+                                </t>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- QUICK ACTIONS — data-action + onActionClick -->
+                    <div class="anx-section-label">QUICK ACTIONS</div>
+                    <div class="anx-actions-row">
+                        <div class="anx-action-card anx-panel" data-action="new_invoice"    t-on-click="onActionClick">
+                            <div class="anx-action-icon anx-icon-blue"><i class="fa fa-file-text-o"></i></div>
+                            <div class="anx-action-title">New invoice</div>
+                            <div class="anx-action-sub">Bill a customer</div>
+                        </div>
+                        <div class="anx-action-card anx-panel" data-action="new_bill"       t-on-click="onActionClick">
+                            <div class="anx-action-icon anx-icon-red"><i class="fa fa-file-text"></i></div>
+                            <div class="anx-action-title">New bill</div>
+                            <div class="anx-action-sub">Record an expense</div>
+                        </div>
+                        <div class="anx-action-card anx-panel" data-action="proforma_list"  t-on-click="onActionClick">
+                            <div class="anx-action-icon anx-icon-teal"><i class="fa fa-file-o"></i></div>
+                            <div class="anx-action-title">Pro-Forma Invoice</div>
+                            <div class="anx-action-sub">View pro-forma list</div>
+                        </div>
+                        <div class="anx-action-card anx-panel" data-action="new_journal"    t-on-click="onActionClick">
+                            <div class="anx-action-icon anx-icon-green"><i class="fa fa-pencil"></i></div>
+                            <div class="anx-action-title">New journal entry</div>
+                            <div class="anx-action-sub">Manual accounting</div>
+                        </div>
+                        <div class="anx-action-card anx-panel" data-action="record_payment" t-on-click="onActionClick">
+                            <div class="anx-action-icon anx-icon-orange"><i class="fa fa-check-circle-o"></i></div>
+                            <div class="anx-action-title">Record payment</div>
+                            <div class="anx-action-sub">Mark invoice paid</div>
+                        </div>
+                    </div>
+
+                    <!-- MY REPORTS -->
+                    <div class="anx-section-label">MY REPORTS — ONE CLICK</div>
+                    <div class="anx-reports-row">
+                        <div class="anx-report-card anx-panel" data-action="pl_statement"  t-on-click="onActionClick">
+                            <div class="anx-report-icon anx-icon-blue"><i class="fa fa-line-chart"></i></div>
+                            <div class="anx-report-info">
+                                <div class="anx-report-title">P&amp;L statement</div>
+                                <div class="anx-report-sub">Profit &amp; loss</div>
+                            </div>
+                            <i class="fa fa-chevron-right anx-report-arrow"></i>
+                        </div>
+                        <div class="anx-report-card anx-panel" data-action="balance_sheet" t-on-click="onActionClick">
+                            <div class="anx-report-icon anx-icon-blue"><i class="fa fa-file-text"></i></div>
+                            <div class="anx-report-info">
+                                <div class="anx-report-title">Balance sheet</div>
+                                <div class="anx-report-sub">Assets &amp; liabilities</div>
+                            </div>
+                            <i class="fa fa-chevron-right anx-report-arrow"></i>
+                        </div>
+                        <div class="anx-report-card anx-panel" data-action="vat_summary"   t-on-click="onActionClick">
+                            <div class="anx-report-icon anx-icon-orange"><i class="fa fa-percent"></i></div>
+                            <div class="anx-report-info">
+                                <div class="anx-report-title">VAT summary</div>
+                                <div class="anx-report-sub">ZATCA filing ready</div>
+                            </div>
+                            <i class="fa fa-chevron-right anx-report-arrow"></i>
+                        </div>
+                        <!-- UPLOAD CARD (occupies the 4th column in the row) -->
+                        <div t-attf-class="anx-report-card anx-panel anx-upload-card {{ state.uploadDragOver ? 'anx-upload-drag-over' : '' }} {{ state.uploadFile ? 'active-file' : '' }}">
+                            <input type="file" id="anx-file-input" class="anx-upload-file-input"
+                                   accept=".pdf,.png,.jpg,.jpeg,.gif,.bmp,.tiff"
+                                   t-on-change="onFileSelected"/>
+                            
+                            <!-- If no file is selected -->
+                            <t t-if="!state.uploadFile">
+                                <div class="anx-report-card-inner" t-on-click="triggerFileInput" style="display: flex; align-items: center; gap: 12px; width: 100%;">
+                                    <div class="anx-report-icon anx-icon-blue">
+                                        <i class="fa fa-cloud-upload"></i>
+                                    </div>
+                                    <div class="anx-report-info">
+                                        <div class="anx-report-title">Upload document</div>
+                                        <div class="anx-report-sub">Drag or click to upload</div>
+                                    </div>
+                                    <i class="fa fa-chevron-right anx-report-arrow"></i>
+                                </div>
+                            </t>
+
+                            <!-- If a file is selected and not submitting -->
+                            <t t-if="state.uploadFile &amp;&amp; !state.uploadSubmitting">
+                                <div class="anx-upload-card-active" style="width: 100%;">
+                                    <div class="anx-upload-card-file">
+                                        <i t-attf-class="fa {{ state.uploadFile.type === 'application/pdf' ? 'fa-file-pdf-o' : 'fa-file-image-o' }} anx-upload-card-file-icon"/>
+                                        <span class="anx-upload-card-filename" t-att-title="state.uploadFile.name">
+                                            <t t-esc="state.uploadFile.name"/>
+                                        </span>
+                                        <button class="anx-upload-card-remove" t-on-click="clearUpload">✕</button>
+                                    </div>
+                                    <div class="anx-upload-card-buttons">
+                                        <button class="anx-upload-card-btn active-invoice" data-dtype="invoice" t-on-click="setUploadDocType">
+                                            Invoice
+                                        </button>
+                                        <button class="anx-upload-card-btn active-bill" data-dtype="bill" t-on-click="setUploadDocType">
+                                            Bill
+                                        </button>
+                                    </div>
+                                </div>
+                            </t>
+
+                            <!-- If submitting -->
+                            <t t-if="state.uploadSubmitting">
+                                <div class="anx-upload-card-creating" style="width: 100%;">
+                                    <i class="fa fa-spinner fa-spin"></i>
+                                    <span>Creating...</span>
+                                </div>
+                            </t>
+                        </div>
+                    </div>
+
+
+                    <t t-if="state.data.alerts and state.data.alerts.length">
+                        <div class="anx-section-label">ALERTS</div>
+                        <div class="anx-alerts-panel anx-panel">
+                            <t t-foreach="state.data.alerts" t-as="alert" t-key="alert_index">
+                                <div t-attf-class="anx-alert-row {{ alert_index > 0 ? 'anx-alert-divider' : '' }}"
+                                     t-att-data-alert="alert.action"
+                                     t-on-click="onAlertClick">
+                                    <div t-attf-class="anx-alert-stripe anx-alert-stripe-{{ alert.type }}"></div>
+                                    <div class="anx-alert-body">
+                                        <div class="anx-alert-title"><t t-esc="alert.title"/></div>
+                                        <div class="anx-alert-detail"><t t-esc="alert.detail"/></div>
+                                    </div>
+                                    <div t-attf-class="anx-alert-cta anx-alert-cta-{{ alert.type }}">
+                                        <t t-esc="alert.cta"/> →
+                                    </div>
+                                </div>
+                            </t>
+                        </div>
+                    </t>
+
+                </t><!-- /overview -->
+
+
+
+                <!-- INVOICE TAB -->
+                <t t-if="state.data and state.activeTab === 'invoices'">
+                    <div t-if="state.invLoading" class="anx-inv-loading">
+                        <div class="anx-inv-spinner"></div><span>Loading invoices…</span>
+                    </div>
+                    <t t-if="!state.invLoading">
+                        <div class="anx-inv-kpi-bar" t-if="state.invoices">
+                            <div class="anx-inv-kpi-pill anx-inv-kpi-total">
+                                <span class="anx-inv-kpi-pill-label">Total Invoices</span>
+                                <span class="anx-inv-kpi-pill-val"><t t-esc="state.invoices.total_count"/></span>
+                            </div>
+                            <div class="anx-inv-kpi-pill anx-inv-kpi-amount">
+                                <span class="anx-inv-kpi-pill-label">Total Amount</span>
+                                <span class="anx-inv-kpi-pill-val"><t t-esc="state.invoices.currency_sym"/>&#160;<t t-esc="formatShort(state.invoices.total_amount)"/></span>
+                            </div>
+                            <div class="anx-inv-kpi-pill anx-inv-kpi-paid">
+                                <span class="anx-inv-kpi-pill-label">Paid</span>
+                                <span class="anx-inv-kpi-pill-val"><t t-esc="state.invoices.currency_sym"/>&#160;<t t-esc="formatShort(state.invoices.paid_amount)"/></span>
+                            </div>
+                            <div class="anx-inv-kpi-pill anx-inv-kpi-unpaid">
+                                <span class="anx-inv-kpi-pill-label">Outstanding</span>
+                                <span class="anx-inv-kpi-pill-val"><t t-esc="state.invoices.currency_sym"/>&#160;<t t-esc="formatShort(state.invoices.unpaid_amount)"/></span>
+                            </div>
+                            <div class="anx-inv-company-legend" t-if="state.invoices.companies.length > 1">
+                                <t t-foreach="state.invoices.companies" t-as="comp" t-key="comp.id">
+                                    <span t-attf-class="anx-inv-co-legend-item {{ state.invCompanyFilter == comp.id ? 'active' : '' }}"
+                                          t-attf-style="color:{{ comp.color.text }};"
+                                          t-att-data-company="comp.id" t-on-click="onInvCompanyFilter">
+                                        <span class="anx-inv-co-dot" t-attf-style="background:{{ comp.color.dot }};"></span>
+                                        <t t-esc="comp.name"/>
+                                    </span>
+                                </t>
+                                <span t-if="state.invCompanyFilter !== 'all'" class="anx-inv-co-legend-item anx-inv-co-clear" data-company="all" t-on-click="onInvCompanyFilter">✕ All</span>
+                            </div>
+                        </div>
+                        <div class="anx-inv-toolbar">
+                            <div class="anx-inv-chips">
+                                <button t-attf-class="anx-inv-chip {{ state.invTypeFilter === 'all' ? 'active' : '' }}" data-type="all" t-on-click="onInvTypeFilter">All</button>
+                                <button t-attf-class="anx-inv-chip anx-chip-blue {{ state.invTypeFilter === 'customer' ? 'active' : '' }}" data-type="customer" t-on-click="onInvTypeFilter"><i class="fa fa-file-text-o"/> Customer</button>
+                                <button t-attf-class="anx-inv-chip anx-chip-red {{ state.invTypeFilter === 'vendor' ? 'active' : '' }}" data-type="vendor" t-on-click="onInvTypeFilter"><i class="fa fa-file-text"/> Vendor</button>
+                                <button t-attf-class="anx-inv-chip anx-chip-purple {{ state.invTypeFilter === 'credit_note' ? 'active' : '' }}" data-type="credit_note" t-on-click="onInvTypeFilter"><i class="fa fa-undo"/> Credit Notes</button>
+                            </div>
+                            <div class="anx-inv-status-pills">
+                                <span t-attf-class="anx-inv-spill {{ state.invStatusFilter === 'all' ? 'active' : '' }}" data-status="all" t-on-click="onInvStatusFilter">All</span>
+                                <span t-attf-class="anx-inv-spill anx-spill-paid {{ state.invStatusFilter === 'paid' ? 'active' : '' }}" data-status="paid" t-on-click="onInvStatusFilter">Paid</span>
+                                <span t-attf-class="anx-inv-spill anx-spill-partial {{ state.invStatusFilter === 'partial' ? 'active' : '' }}" data-status="partial" t-on-click="onInvStatusFilter">Partial</span>
+                                <span t-attf-class="anx-inv-spill anx-spill-unpaid {{ state.invStatusFilter === 'not_paid' ? 'active' : '' }}" data-status="not_paid" t-on-click="onInvStatusFilter">Unpaid</span>
+                                <span t-attf-class="anx-inv-spill anx-spill-draft {{ state.invStatusFilter === 'draft' ? 'active' : '' }}" data-status="draft" t-on-click="onInvStatusFilter">Draft</span>
+                            </div>
+                            <div class="anx-inv-search-wrap">
+                                <i class="fa fa-search anx-inv-search-icon"/>
+                                <input class="anx-inv-search" type="text" placeholder="Search invoice, partner…" t-on-input="onInvSearch"/>
+                            </div>
+                        </div>
+                        <div class="anx-inv-table-wrap anx-panel">
+                            <table class="anx-inv-table">
+                                <thead>
+                                    <tr>
+                                        <th class="anx-inv-th anx-inv-th-sort" data-col="name" t-on-click="onInvSort">Invoice # <i t-attf-class="fa {{ state.invSortCol==='name'?(state.invSortDir==='asc'?'fa-sort-asc':'fa-sort-desc'):'fa-sort' }} anx-inv-sort-icon"/></th>
+                                        <th class="anx-inv-th anx-inv-th-sort" data-col="partner" t-on-click="onInvSort">Partner <i t-attf-class="fa {{ state.invSortCol==='partner'?(state.invSortDir==='asc'?'fa-sort-asc':'fa-sort-desc'):'fa-sort' }} anx-inv-sort-icon"/></th>
+                                        <th class="anx-inv-th">Type</th>
+                                        <th class="anx-inv-th">Company</th>
+                                        <th class="anx-inv-th anx-inv-th-sort" data-col="invoice_date" t-on-click="onInvSort">Date <i t-attf-class="fa {{ state.invSortCol==='invoice_date'?(state.invSortDir==='asc'?'fa-sort-asc':'fa-sort-desc'):'fa-sort' }} anx-inv-sort-icon"/></th>
+                                        <th class="anx-inv-th anx-inv-th-sort" data-col="due_date" t-on-click="onInvSort">Due Date <i t-attf-class="fa {{ state.invSortCol==='due_date'?(state.invSortDir==='asc'?'fa-sort-asc':'fa-sort-desc'):'fa-sort' }} anx-inv-sort-icon"/></th>
+                                        <th class="anx-inv-th anx-inv-th-right anx-inv-th-sort" data-col="amount" t-on-click="onInvSort">Amount <i t-attf-class="fa {{ state.invSortCol==='amount'?(state.invSortDir==='asc'?'fa-sort-asc':'fa-sort-desc'):'fa-sort' }} anx-inv-sort-icon"/></th>
+                                        <th class="anx-inv-th anx-inv-th-center">Status</th>
+                                        <th class="anx-inv-th anx-inv-th-center"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-if="filteredInvoices.length === 0">
+                                        <tr><td colspan="9" class="anx-inv-empty"><i class="fa fa-inbox fa-2x" style="color:#c8cdd8;display:block;margin-bottom:10px;"/>No invoices found.</td></tr>
+                                    </t>
+                                    <t t-foreach="filteredInvoices" t-as="inv" t-key="inv.id">
+                                        <tr t-attf-class="anx-inv-row {{ inv.is_overdue ? 'anx-inv-row-overdue' : '' }}" t-att-data-id="inv.id" t-on-click="openInvoice">
+                                            <td class="anx-inv-td anx-inv-td-name">
+                                                <span class="anx-inv-num"><i t-attf-class="fa {{ inv.move_type_icon }}" t-attf-style="color:{{ inv.move_type_color }};"/>&#160;<t t-esc="inv.name"/></span>
+                                                <span t-if="inv.partner_ref" class="anx-inv-ref"><t t-esc="inv.partner_ref"/></span>
+                                            </td>
+                                            <td class="anx-inv-td">
+                                                <div class="anx-inv-partner">
+                                                    <span class="anx-inv-partner-avatar" t-attf-style="background:{{ inv.company_color.dot }}22;color:{{ inv.company_color.dot }};"><t t-esc="inv.partner.charAt(0).toUpperCase()"/></span>
+                                                    <span class="anx-inv-partner-name"><t t-esc="inv.partner"/></span>
+                                                </div>
+                                            </td>
+                                            <td class="anx-inv-td"><span class="anx-inv-type-badge" t-attf-style="color:{{ inv.move_type_color }};background:{{ inv.move_type_color }}18;"><t t-esc="inv.move_type_label"/></span></td>
+                                            <td class="anx-inv-td"><span class="anx-inv-company-badge" t-attf-style="background:{{ inv.company_color.bg }};color:{{ inv.company_color.text }};"><span class="anx-inv-co-dot-sm" t-attf-style="background:{{ inv.company_color.dot }};"></span><t t-esc="inv.company_name"/></span></td>
+                                            <td class="anx-inv-td anx-inv-td-date"><t t-esc="inv.invoice_date"/></td>
+                                            <td class="anx-inv-td anx-inv-td-date"><span t-attf-class="{{ inv.is_overdue ? 'anx-inv-due-overdue' : '' }}"><i t-if="inv.is_overdue" class="fa fa-exclamation-circle" style="font-size:10px;margin-right:3px;"/><t t-esc="inv.due_date or '—'"/></span></td>
+                                            <td class="anx-inv-td anx-inv-td-amount"><t t-esc="inv.amount_display"/></td>
+                                            <td class="anx-inv-td anx-inv-td-center"><span class="anx-inv-status-pill" t-attf-style="background:{{ inv.status_bg }};color:{{ inv.status_text }};"><span class="anx-inv-status-dot" t-attf-style="background:{{ inv.status_dot }};"></span><t t-esc="inv.status_label"/></span></td>
+                                            <td class="anx-inv-td anx-inv-td-center"><button class="anx-inv-open-btn" t-att-data-id="inv.id" t-on-click.stop="openInvoice"><i class="fa fa-external-link"/></button></td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+                            <div class="anx-inv-table-footer" t-if="state.invoices">
+                                <span>Showing <strong><t t-esc="filteredInvoices.length"/></strong> of <strong><t t-esc="state.invoices.total_count"/></strong> invoices</span>
+                                <span class="anx-inv-footer-range">Period: <t t-esc="state.invoices.date_range.start"/> → <t t-esc="state.invoices.date_range.end"/></span>
+                            </div>
+                        </div>
+                    </t>
+                </t>
+
+                <!-- EXPENSE TAB -->
+                <t t-if="state.data and state.activeTab === 'expenses'">
+                    <div t-if="state.expLoading" class="anx-inv-loading">
+                        <div class="anx-inv-spinner"></div><span>Loading expenses…</span>
+                    </div>
+                    <t t-if="!state.expLoading">
+                        <!-- KPI bar -->
+                        <div class="anx-inv-kpi-bar" t-if="state.expenses">
+                            <div class="anx-inv-kpi-pill anx-inv-kpi-total">
+                                <span class="anx-inv-kpi-pill-label">Total Bills</span>
+                                <span class="anx-inv-kpi-pill-val"><t t-esc="state.expenses.total_count"/></span>
+                            </div>
+                            <div class="anx-inv-kpi-pill anx-inv-kpi-amount">
+                                <span class="anx-inv-kpi-pill-label">Total Amount</span>
+                                <span class="anx-inv-kpi-pill-val"><t t-esc="state.expenses.currency_sym"/>&#160;<t t-esc="formatShort(state.expenses.total_amount)"/></span>
+                            </div>
+                            <div class="anx-inv-kpi-pill anx-inv-kpi-paid">
+                                <span class="anx-inv-kpi-pill-label">Paid</span>
+                                <span class="anx-inv-kpi-pill-val"><t t-esc="state.expenses.currency_sym"/>&#160;<t t-esc="formatShort(state.expenses.paid_amount)"/></span>
+                            </div>
+                            <div class="anx-inv-kpi-pill anx-inv-kpi-unpaid">
+                                <span class="anx-inv-kpi-pill-label">Outstanding</span>
+                                <span class="anx-inv-kpi-pill-val"><t t-esc="state.expenses.currency_sym"/>&#160;<t t-esc="formatShort(state.expenses.unpaid_amount)"/></span>
+                            </div>
+                            <!-- Company legend -->
+                            <div class="anx-inv-company-legend" t-if="state.expenses.companies.length > 1">
+                                <t t-foreach="state.expenses.companies" t-as="comp" t-key="comp.id">
+                                    <span t-attf-class="anx-inv-co-legend-item {{ state.expCompanyFilter == comp.id ? 'active' : '' }}"
+                                          t-attf-style="color:{{ comp.color.text }};"
+                                          t-att-data-company="comp.id" t-on-click="onExpCompanyFilter">
+                                        <span class="anx-inv-co-dot" t-attf-style="background:{{ comp.color.dot }};"></span>
+                                        <t t-esc="comp.name"/>
+                                    </span>
+                                </t>
+                                <span t-if="state.expCompanyFilter !== 'all'" class="anx-inv-co-legend-item anx-inv-co-clear" data-company="all" t-on-click="onExpCompanyFilter">✕ All</span>
+                            </div>
+                        </div>
+                        <!-- Toolbar -->
+                        <div class="anx-inv-toolbar">
+                            <div class="anx-exp-label-badge"><i class="fa fa-credit-card"/> Vendor Bills &#8212; All Companies</div>
+                            <div class="anx-inv-status-pills">
+                                <span t-attf-class="anx-inv-spill {{ state.expStatusFilter === 'all'      ? 'active' : '' }}" data-status="all"      t-on-click="onExpStatusFilter">All</span>
+                                <span t-attf-class="anx-inv-spill anx-spill-paid    {{ state.expStatusFilter === 'paid'     ? 'active' : '' }}" data-status="paid"     t-on-click="onExpStatusFilter">Paid</span>
+                                <span t-attf-class="anx-inv-spill anx-spill-partial {{ state.expStatusFilter === 'partial'  ? 'active' : '' }}" data-status="partial"  t-on-click="onExpStatusFilter">Partial</span>
+                                <span t-attf-class="anx-inv-spill anx-spill-unpaid  {{ state.expStatusFilter === 'not_paid' ? 'active' : '' }}" data-status="not_paid" t-on-click="onExpStatusFilter">Unpaid</span>
+                                <span t-attf-class="anx-inv-spill anx-spill-draft   {{ state.expStatusFilter === 'draft'    ? 'active' : '' }}" data-status="draft"    t-on-click="onExpStatusFilter">Draft</span>
+                            </div>
+                            <div class="anx-inv-search-wrap">
+                                <i class="fa fa-search anx-inv-search-icon"/>
+                                <input class="anx-inv-search" type="text" placeholder="Search bill, vendor, journal…" t-on-input="onExpSearch"/>
+                            </div>
+                        </div>
+                        <!-- Table -->
+                        <div class="anx-inv-table-wrap anx-panel">
+                            <table class="anx-inv-table">
+                                <thead>
+                                    <tr>
+                                        <th class="anx-inv-th anx-inv-th-sort" data-col="name"         t-on-click="onExpSort">Bill # <i t-attf-class="fa {{ state.expSortCol==='name'?(state.expSortDir==='asc'?'fa-sort-asc':'fa-sort-desc'):'fa-sort' }} anx-inv-sort-icon"/></th>
+                                        <th class="anx-inv-th anx-inv-th-sort" data-col="partner"      t-on-click="onExpSort">Vendor <i t-attf-class="fa {{ state.expSortCol==='partner'?(state.expSortDir==='asc'?'fa-sort-asc':'fa-sort-desc'):'fa-sort' }} anx-inv-sort-icon"/></th>
+                                        <th class="anx-inv-th">Company</th>
+                                        <th class="anx-inv-th">Journal</th>
+                                        <th class="anx-inv-th anx-inv-th-sort" data-col="invoice_date" t-on-click="onExpSort">Bill Date <i t-attf-class="fa {{ state.expSortCol==='invoice_date'?(state.expSortDir==='asc'?'fa-sort-asc':'fa-sort-desc'):'fa-sort' }} anx-inv-sort-icon"/></th>
+                                        <th class="anx-inv-th anx-inv-th-sort" data-col="due_date"     t-on-click="onExpSort">Due Date <i t-attf-class="fa {{ state.expSortCol==='due_date'?(state.expSortDir==='asc'?'fa-sort-asc':'fa-sort-desc'):'fa-sort' }} anx-inv-sort-icon"/></th>
+                                        <th class="anx-inv-th anx-inv-th-right anx-inv-th-sort" data-col="amount" t-on-click="onExpSort">Amount <i t-attf-class="fa {{ state.expSortCol==='amount'?(state.expSortDir==='asc'?'fa-sort-asc':'fa-sort-desc'):'fa-sort' }} anx-inv-sort-icon"/></th>
+                                        <th class="anx-inv-th anx-inv-th-center">Status</th>
+                                        <th class="anx-inv-th anx-inv-th-center"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-if="filteredExpenses.length === 0">
+                                        <tr><td colspan="9" class="anx-inv-empty"><i class="fa fa-inbox fa-2x" style="color:#c8cdd8;display:block;margin-bottom:10px;"/>No vendor bills found.</td></tr>
+                                    </t>
+                                    <t t-foreach="filteredExpenses" t-as="exp" t-key="exp.id">
+                                        <tr t-attf-class="anx-inv-row anx-exp-row {{ exp.is_overdue ? 'anx-inv-row-overdue' : '' }}" t-att-data-id="exp.id" t-on-click="openExpense">
+                                            <td class="anx-inv-td anx-inv-td-name">
+                                                <span class="anx-inv-num"><i class="fa fa-file-text" style="color:#e53935;"/>&#160;<t t-esc="exp.name"/></span>
+                                                <span t-if="exp.partner_ref" class="anx-inv-ref"><t t-esc="exp.partner_ref"/></span>
+                                            </td>
+                                            <td class="anx-inv-td">
+                                                <div class="anx-inv-partner">
+                                                    <span class="anx-inv-partner-avatar" t-attf-style="background:#fce4ec;color:#e53935;"><t t-esc="exp.partner.charAt(0).toUpperCase()"/></span>
+                                                    <span class="anx-inv-partner-name"><t t-esc="exp.partner"/></span>
+                                                </div>
+                                            </td>
+                                            <td class="anx-inv-td"><span class="anx-inv-company-badge" t-attf-style="background:{{ exp.company_color.bg }};color:{{ exp.company_color.text }};"><span class="anx-inv-co-dot-sm" t-attf-style="background:{{ exp.company_color.dot }};"></span><t t-esc="exp.company_name"/></span></td>
+                                            <td class="anx-inv-td"><span class="anx-exp-journal"><t t-esc="exp.journal"/></span></td>
+                                            <td class="anx-inv-td anx-inv-td-date"><t t-esc="exp.invoice_date"/></td>
+                                            <td class="anx-inv-td anx-inv-td-date"><span t-attf-class="{{ exp.is_overdue ? 'anx-inv-due-overdue' : '' }}"><i t-if="exp.is_overdue" class="fa fa-exclamation-circle" style="font-size:10px;margin-right:3px;"/><t t-esc="exp.due_date or '—'"/></span></td>
+                                            <td class="anx-inv-td anx-inv-td-amount"><t t-esc="exp.amount_display"/></td>
+                                            <td class="anx-inv-td anx-inv-td-center"><span class="anx-inv-status-pill" t-attf-style="background:{{ exp.status_bg }};color:{{ exp.status_text }};"><span class="anx-inv-status-dot" t-attf-style="background:{{ exp.status_dot }};"></span><t t-esc="exp.status_label"/></span></td>
+                                            <td class="anx-inv-td anx-inv-td-center"><button class="anx-inv-open-btn" t-att-data-id="exp.id" t-on-click.stop="openExpense"><i class="fa fa-external-link"/></button></td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+                            <div class="anx-inv-table-footer" t-if="state.expenses">
+                                <span>Showing <strong><t t-esc="filteredExpenses.length"/></strong> of <strong><t t-esc="state.expenses.total_count"/></strong> bills</span>
+                                <span class="anx-inv-footer-range">Period: <t t-esc="state.expenses.date_range.start"/> → <t t-esc="state.expenses.date_range.end"/></span>
+                            </div>
+                        </div>
+                    </t>
+                </t>
+
+                <!-- VAT TAB -->
+                <t t-if="state.data and state.activeTab === 'vat'">
+                    <div t-if="state.vatLoading" class="anx-inv-loading">
+                        <div class="anx-inv-spinner"></div><span>Loading VAT data…</span>
+                    </div>
+                    <t t-if="!state.vatLoading">
+                        
+                        <!-- VAT Custom Date Filter -->
+                        <div class="anx-vat-modal-filters" style="margin-bottom: 20px; padding: 12px 20px; background: #fff; border-radius: 8px; border: 1px solid #e0e4eb; display: flex; align-items: center; gap: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+                            <span style="font-weight: 600; color: #495057; font-size: 13px;">Custom Date Range:</span>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <label style="font-size: 12px; color: #6c757d; margin: 0;">From</label>
+                                <input type="date" class="anx-inv-search" style="max-width: 140px; padding: 6px 10px; font-size: 13px; height: auto;" data-field="from" t-att-value="state.vatFilterFrom" t-on-change="onVatFilterDateChange" />
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <label style="font-size: 12px; color: #6c757d; margin: 0;">To</label>
+                                <input type="date" class="anx-inv-search" style="max-width: 140px; padding: 6px 10px; font-size: 13px; height: auto;" data-field="to" t-att-value="state.vatFilterTo" t-on-change="onVatFilterDateChange" />
+                            </div>
+                            <button class="anx-pl-print-btn" style="padding: 6px 16px; font-size: 13px; border-radius: 6px; background-color: #1e88e5; color: white; border: none; cursor: pointer; transition: background 0.2s;" t-on-click="applyVatFilter">
+                                <i class="fa fa-filter"/> Filter
+                            </button>
+                        </div>
+
+                        <!-- KPI bar -->
+                        <div class="anx-inv-kpi-bar" t-if="state.vatData">
+                            <div class="anx-inv-kpi-pill anx-vat-kpi-output">
+                                <span class="anx-inv-kpi-pill-label">Output VAT (Sales)</span>
+                                <span class="anx-inv-kpi-pill-val"><t t-esc="state.vatData.currency_sym"/>&#160;<t t-esc="formatShort(state.vatData.output_vat)"/></span>
+                            </div>
+                            <div class="anx-inv-kpi-pill anx-vat-kpi-input">
+                                <span class="anx-inv-kpi-pill-label">Input VAT (Bills)</span>
+                                <span class="anx-inv-kpi-pill-val"><t t-esc="state.vatData.currency_sym"/>&#160;<t t-esc="formatShort(state.vatData.input_vat)"/></span>
+                            </div>
+                            <div class="anx-inv-kpi-pill anx-vat-kpi-net">
+                                <span class="anx-inv-kpi-pill-label">Net VAT Payable</span>
+                                <span class="anx-inv-kpi-pill-val"><t t-esc="state.vatData.currency_sym"/>&#160;<t t-esc="formatShort(state.vatData.net_vat)"/></span>
+                            </div>
+                            <div class="anx-inv-kpi-pill anx-inv-kpi-total">
+                                <span class="anx-inv-kpi-pill-label">Total Tax Lines</span>
+                                <span class="anx-inv-kpi-pill-val"><t t-esc="state.vatData.total_count"/></span>
+                            </div>
+                            <div class="anx-inv-company-legend" t-if="state.vatData.companies.length > 1">
+                                <t t-foreach="state.vatData.companies" t-as="comp" t-key="comp.id">
+                                    <span t-attf-class="anx-inv-co-legend-item {{ state.vatCompanyFilter == comp.id ? 'active' : '' }}"
+                                          t-attf-style="color:{{ comp.color.text }};"
+                                          t-att-data-company="comp.id" t-on-click="onVatCompanyFilter">
+                                        <span class="anx-inv-co-dot" t-attf-style="background:{{ comp.color.dot }};"></span>
+                                        <t t-esc="comp.name"/>
+                                    </span>
+                                </t>
+                                <span t-if="state.vatCompanyFilter !== 'all'" class="anx-inv-co-legend-item anx-inv-co-clear" data-company="all" t-on-click="onVatCompanyFilter">✕ All</span>
+                            </div>
+                        </div>
+                        <!-- Toolbar: search only (type is now separated by panel) -->
+                        <div class="anx-inv-toolbar" style="margin-bottom:14px;">
+                            <div class="anx-inv-search-wrap" style="max-width:380px;">
+                                <i class="fa fa-search anx-inv-search-icon"/>
+                                <input class="anx-inv-search" type="text" placeholder="Search document, partner, tax name…" t-on-input="onVatSearch"/>
+                            </div>
+                        </div>
+                        <!-- OUTPUT VAT PANEL -->
+                        <div class="anx-section-label" style="margin-top:4px;">
+                            <i class="fa fa-arrow-up" style="color:#1e88e5;"/> OUTPUT VAT — CUSTOMER INVOICES
+                        </div>
+                        <div class="anx-inv-table-wrap anx-panel" style="margin-bottom:20px;">
+                            <table class="anx-inv-table">
+                                <thead>
+                                    <tr>
+                                        <th class="anx-inv-th anx-inv-th-sort" data-col="move_name"    t-on-click="onVatSort">Document <i t-attf-class="fa {{ state.vatSortCol==='move_name'?(state.vatSortDir==='asc'?'fa-sort-asc':'fa-sort-desc'):'fa-sort' }} anx-inv-sort-icon"/></th>
+                                        <th class="anx-inv-th anx-inv-th-sort" data-col="partner"      t-on-click="onVatSort">Customer <i t-attf-class="fa {{ state.vatSortCol==='partner'?(state.vatSortDir==='asc'?'fa-sort-asc':'fa-sort-desc'):'fa-sort' }} anx-inv-sort-icon"/></th>
+                                        <th class="anx-inv-th anx-inv-th-sort" data-col="tax_name"     t-on-click="onVatSort">Tax <i t-attf-class="fa {{ state.vatSortCol==='tax_name'?(state.vatSortDir==='asc'?'fa-sort-asc':'fa-sort-desc'):'fa-sort' }} anx-inv-sort-icon"/></th>
+                                        <th class="anx-inv-th">Company</th>
+                                        <th class="anx-inv-th anx-inv-th-sort" data-col="invoice_date" t-on-click="onVatSort">Date <i t-attf-class="fa {{ state.vatSortCol==='invoice_date'?(state.vatSortDir==='asc'?'fa-sort-asc':'fa-sort-desc'):'fa-sort' }} anx-inv-sort-icon"/></th>
+                                        <th class="anx-inv-th anx-inv-th-right anx-inv-th-sort" data-col="tax_amount" t-on-click="onVatSort">VAT Amount <i t-attf-class="fa {{ state.vatSortCol==='tax_amount'?(state.vatSortDir==='asc'?'fa-sort-asc':'fa-sort-desc'):'fa-sort' }} anx-inv-sort-icon"/></th>
+                                        <th class="anx-inv-th anx-inv-th-center"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-if="filteredOutputVat.length === 0">
+                                        <tr><td colspan="7" class="anx-inv-empty">No output VAT lines found.</td></tr>
+                                    </t>
+                                    <t t-foreach="filteredOutputVat" t-as="vl" t-key="vl_index">
+                                        <tr class="anx-inv-row anx-vat-row-output" t-att-data-id="vl.id" t-on-click="openVatDoc">
+                                            <td class="anx-inv-td anx-inv-td-name"><span class="anx-inv-num"><i class="fa fa-file-text-o" style="color:#1e88e5;"/>&#160;<t t-esc="vl.move_name"/></span></td>
+                                            <td class="anx-inv-td"><div class="anx-inv-partner"><span class="anx-inv-partner-avatar" style="background:#e3f2fd;color:#1e88e5;"><t t-esc="vl.partner.charAt(0).toUpperCase()"/></span><span class="anx-inv-partner-name"><t t-esc="vl.partner"/></span></div></td>
+                                            <td class="anx-inv-td"><span class="anx-vat-tax-badge"><t t-esc="vl.tax_name"/></span></td>
+                                            <td class="anx-inv-td"><span class="anx-inv-company-badge" t-attf-style="background:{{ vl.company_color.bg }};color:{{ vl.company_color.text }};"><span class="anx-inv-co-dot-sm" t-attf-style="background:{{ vl.company_color.dot }};"></span><t t-esc="vl.company_name"/></span></td>
+                                            <td class="anx-inv-td anx-inv-td-date"><t t-esc="vl.invoice_date"/></td>
+                                            <td class="anx-inv-td anx-inv-td-amount"><t t-esc="vl.tax_display"/></td>
+                                            <td class="anx-inv-td anx-inv-td-center"><button class="anx-inv-open-btn" t-att-data-id="vl.id" t-on-click.stop="openVatDoc"><i class="fa fa-external-link"/></button></td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+                            <div class="anx-inv-table-footer" t-if="state.vatData">
+                                <span>Showing <strong><t t-esc="filteredOutputVat.length"/></strong> of <strong><t t-esc="state.vatData.output_count"/></strong> output VAT lines</span>
+                                <span class="anx-inv-footer-range">Period: <t t-esc="state.vatData.date_range.start"/> → <t t-esc="state.vatData.date_range.end"/></span>
+                            </div>
+                        </div>
+                        <!-- INPUT VAT PANEL -->
+                        <div class="anx-section-label">
+                            <i class="fa fa-arrow-down" style="color:#e53935;"/> INPUT VAT — VENDOR BILLS
+                        </div>
+                        <div class="anx-inv-table-wrap anx-panel" style="margin-bottom:20px;">
+                            <table class="anx-inv-table">
+                                <thead>
+                                    <tr>
+                                        <th class="anx-inv-th anx-inv-th-sort" data-col="move_name"    t-on-click="onVatSort">Document <i t-attf-class="fa {{ state.vatSortCol==='move_name'?(state.vatSortDir==='asc'?'fa-sort-asc':'fa-sort-desc'):'fa-sort' }} anx-inv-sort-icon"/></th>
+                                        <th class="anx-inv-th anx-inv-th-sort" data-col="partner"      t-on-click="onVatSort">Vendor <i t-attf-class="fa {{ state.vatSortCol==='partner'?(state.vatSortDir==='asc'?'fa-sort-asc':'fa-sort-desc'):'fa-sort' }} anx-inv-sort-icon"/></th>
+                                        <th class="anx-inv-th anx-inv-th-sort" data-col="tax_name"     t-on-click="onVatSort">Tax <i t-attf-class="fa {{ state.vatSortCol==='tax_name'?(state.vatSortDir==='asc'?'fa-sort-asc':'fa-sort-desc'):'fa-sort' }} anx-inv-sort-icon"/></th>
+                                        <th class="anx-inv-th">Company</th>
+                                        <th class="anx-inv-th anx-inv-th-sort" data-col="invoice_date" t-on-click="onVatSort">Date <i t-attf-class="fa {{ state.vatSortCol==='invoice_date'?(state.vatSortDir==='asc'?'fa-sort-asc':'fa-sort-desc'):'fa-sort' }} anx-inv-sort-icon"/></th>
+                                        <th class="anx-inv-th anx-inv-th-right anx-inv-th-sort" data-col="tax_amount" t-on-click="onVatSort">VAT Amount <i t-attf-class="fa {{ state.vatSortCol==='tax_amount'?(state.vatSortDir==='asc'?'fa-sort-asc':'fa-sort-desc'):'fa-sort' }} anx-inv-sort-icon"/></th>
+                                        <th class="anx-inv-th anx-inv-th-center"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-if="filteredInputVat.length === 0">
+                                        <tr><td colspan="7" class="anx-inv-empty">No input VAT lines found for this period.</td></tr>
+                                    </t>
+                                    <t t-foreach="filteredInputVat" t-as="vl" t-key="vl_index">
+                                        <tr class="anx-inv-row anx-vat-row-input" t-att-data-id="vl.id" t-on-click="openVatDoc">
+                                            <td class="anx-inv-td anx-inv-td-name"><span class="anx-inv-num"><i class="fa fa-file-text" style="color:#e53935;"/>&#160;<t t-esc="vl.move_name"/></span></td>
+                                            <td class="anx-inv-td"><div class="anx-inv-partner"><span class="anx-inv-partner-avatar" style="background:#fce4ec;color:#e53935;"><t t-esc="vl.partner.charAt(0).toUpperCase()"/></span><span class="anx-inv-partner-name"><t t-esc="vl.partner"/></span></div></td>
+                                            <td class="anx-inv-td"><span class="anx-vat-tax-badge anx-vat-tax-input"><t t-esc="vl.tax_name"/></span></td>
+                                            <td class="anx-inv-td"><span class="anx-inv-company-badge" t-attf-style="background:{{ vl.company_color.bg }};color:{{ vl.company_color.text }};"><span class="anx-inv-co-dot-sm" t-attf-style="background:{{ vl.company_color.dot }};"></span><t t-esc="vl.company_name"/></span></td>
+                                            <td class="anx-inv-td anx-inv-td-date"><t t-esc="vl.invoice_date"/></td>
+                                            <td class="anx-inv-td anx-inv-td-amount"><t t-esc="vl.tax_display"/></td>
+                                            <td class="anx-inv-td anx-inv-td-center"><button class="anx-inv-open-btn" t-att-data-id="vl.id" t-on-click.stop="openVatDoc"><i class="fa fa-external-link"/></button></td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+                            <div class="anx-inv-table-footer" t-if="state.vatData">
+                                <span>Showing <strong><t t-esc="filteredInputVat.length"/></strong> of <strong><t t-esc="state.vatData.input_count"/></strong> input VAT lines</span>
+                                <span class="anx-inv-footer-range">Period: <t t-esc="state.vatData.date_range.start"/> → <t t-esc="state.vatData.date_range.end"/></span>
+                            </div>
+                        </div>
+                    </t>
+                </t>
+
+                <!-- JOURNALS TAB -->
+                <t t-if="state.data and state.activeTab === 'journals'">
+                    <div t-if="state.jrnLoading" class="anx-inv-loading">
+                        <div class="anx-inv-spinner"></div><span>Loading journals…</span>
+                    </div>
+                    <t t-if="!state.jrnLoading">
+                        <!-- KPI bar -->
+                        <div class="anx-inv-kpi-bar" t-if="state.jrnData">
+                            <div class="anx-inv-kpi-pill anx-inv-kpi-total">
+                                <span class="anx-inv-kpi-pill-label">Total Journals</span>
+                                <span class="anx-inv-kpi-pill-val"><t t-esc="state.jrnData.total_count"/></span>
+                            </div>
+                            <div class="anx-inv-kpi-pill anx-inv-kpi-amount">
+                                <span class="anx-inv-kpi-pill-label">Period Volume</span>
+                                <span class="anx-inv-kpi-pill-val"><t t-esc="state.jrnData.currency_sym"/>&#160;<t t-esc="formatShort(state.jrnData.total_amount)"/></span>
+                            </div>
+                            <div class="anx-inv-company-legend" t-if="state.jrnData.companies.length > 1">
+                                <t t-foreach="state.jrnData.companies" t-as="comp" t-key="comp.id">
+                                    <span t-attf-class="anx-inv-co-legend-item {{ state.jrnCompanyFilter == comp.id ? 'active' : '' }}"
+                                          t-attf-style="color:{{ comp.color.text }};"
+                                          t-att-data-company="comp.id" t-on-click="onJrnCompanyFilter">
+                                        <span class="anx-inv-co-dot" t-attf-style="background:{{ comp.color.dot }};"></span>
+                                        <t t-esc="comp.name"/>
+                                    </span>
+                                </t>
+                                <span t-if="state.jrnCompanyFilter !== 'all'" class="anx-inv-co-legend-item anx-inv-co-clear" data-company="all" t-on-click="onJrnCompanyFilter">✕ All</span>
+                            </div>
+                        </div>
+                        <!-- Toolbar -->
+                        <div class="anx-inv-toolbar">
+                            <div class="anx-inv-chips">
+                                <button t-attf-class="anx-inv-chip {{ state.jrnTypeFilter === 'all'      ? 'active' : '' }}" data-jtype="all"      t-on-click="onJrnTypeFilter">All</button>
+                                <button t-attf-class="anx-inv-chip anx-chip-blue   {{ state.jrnTypeFilter === 'sale'     ? 'active' : '' }}" data-jtype="sale"     t-on-click="onJrnTypeFilter"><i class="fa fa-file-text-o"/> Sales</button>
+                                <button t-attf-class="anx-inv-chip anx-chip-red    {{ state.jrnTypeFilter === 'purchase' ? 'active' : '' }}" data-jtype="purchase" t-on-click="onJrnTypeFilter"><i class="fa fa-file-text"/> Purchase</button>
+                                <button t-attf-class="anx-inv-chip anx-chip-green  {{ state.jrnTypeFilter === 'cash'     ? 'active' : '' }}" data-jtype="cash"     t-on-click="onJrnTypeFilter"><i class="fa fa-money"/> Cash</button>
+                                <button t-attf-class="anx-inv-chip anx-chip-teal   {{ state.jrnTypeFilter === 'bank'     ? 'active' : '' }}" data-jtype="bank"     t-on-click="onJrnTypeFilter"><i class="fa fa-university"/> Bank</button>
+                                <button t-attf-class="anx-inv-chip anx-chip-purple {{ state.jrnTypeFilter === 'general'  ? 'active' : '' }}" data-jtype="general"  t-on-click="onJrnTypeFilter"><i class="fa fa-pencil"/> Misc</button>
+                            </div>
+                            <div class="anx-inv-search-wrap">
+                                <i class="fa fa-search anx-inv-search-icon"/>
+                                <input class="anx-inv-search" type="text" placeholder="Search journal name or code…" t-on-input="onJrnSearch"/>
+                            </div>
+                        </div>
+                        <!-- Journal list table -->
+                        <div class="anx-inv-table-wrap anx-panel">
+                            <table class="anx-inv-table">
+                                <thead>
+                                    <tr>
+                                        <th class="anx-inv-th anx-inv-th-sort" data-col="name"        t-on-click="onJrnSort">Journal Name <i t-attf-class="fa {{ state.jrnSortCol==='name'?(state.jrnSortDir==='asc'?'fa-sort-asc':'fa-sort-desc'):'fa-sort' }} anx-inv-sort-icon"/></th>
+                                        <th class="anx-inv-th anx-inv-th-sort" data-col="code"        t-on-click="onJrnSort">Code <i t-attf-class="fa {{ state.jrnSortCol==='code'?(state.jrnSortDir==='asc'?'fa-sort-asc':'fa-sort-desc'):'fa-sort' }} anx-inv-sort-icon"/></th>
+                                        <th class="anx-inv-th anx-inv-th-sort" data-col="type_label"  t-on-click="onJrnSort">Type <i t-attf-class="fa {{ state.jrnSortCol==='type_label'?(state.jrnSortDir==='asc'?'fa-sort-asc':'fa-sort-desc'):'fa-sort' }} anx-inv-sort-icon"/></th>
+                                        <th class="anx-inv-th">Company</th>
+                                        <th class="anx-inv-th">Default Account</th>
+                                        <th class="anx-inv-th anx-inv-th-sort anx-inv-th-center" data-col="entry_count" t-on-click="onJrnSort">Entries <i t-attf-class="fa {{ state.jrnSortCol==='entry_count'?(state.jrnSortDir==='asc'?'fa-sort-asc':'fa-sort-desc'):'fa-sort' }} anx-inv-sort-icon"/></th>
+                                        <th class="anx-inv-th anx-inv-th-right anx-inv-th-sort" data-col="total_amount" t-on-click="onJrnSort">Period Volume <i t-attf-class="fa {{ state.jrnSortCol==='total_amount'?(state.jrnSortDir==='asc'?'fa-sort-asc':'fa-sort-desc'):'fa-sort' }} anx-inv-sort-icon"/></th>
+                                        <th class="anx-inv-th anx-inv-th-center"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-if="filteredJournals.length === 0">
+                                        <tr><td colspan="8" class="anx-inv-empty"><i class="fa fa-book fa-2x" style="color:#c8cdd8;display:block;margin-bottom:10px;"/>No journals found.</td></tr>
+                                    </t>
+                                    <t t-foreach="filteredJournals" t-as="jrn" t-key="jrn.id">
+                                        <tr class="anx-inv-row anx-jrn-list-row" t-att-data-id="jrn.id" t-on-click="openJournal"
+                                            t-attf-style="border-left:3px solid {{ jrn.type_dot }};">
+                                            <td class="anx-inv-td anx-inv-td-name">
+                                                <div class="anx-inv-partner">
+                                                    <span class="anx-jrn-list-icon" t-attf-style="background:{{ jrn.type_bg }};color:{{ jrn.type_dot }};"><i t-attf-class="fa {{ jrn.type_icon }}"/></span>
+                                                    <span class="anx-jrn-list-name"><t t-esc="jrn.name"/></span>
+                                                </div>
+                                            </td>
+                                            <td class="anx-inv-td">
+                                                <span class="anx-jrn-code-badge"><t t-esc="jrn.code"/></span>
+                                            </td>
+                                            <td class="anx-inv-td">
+                                                <span class="anx-jrn-type-badge" t-attf-style="background:{{ jrn.type_bg }};color:{{ jrn.type_text }};"><t t-esc="jrn.type_label"/></span>
+                                            </td>
+                                            <td class="anx-inv-td">
+                                                <span class="anx-inv-company-badge" t-attf-style="background:{{ jrn.company_color.bg }};color:{{ jrn.company_color.text }};"><span class="anx-inv-co-dot-sm" t-attf-style="background:{{ jrn.company_color.dot }};"></span><t t-esc="jrn.company_name"/></span>
+                                            </td>
+                                            <td class="anx-inv-td anx-inv-td-date" style="font-size:11.5px;color:#6b7280;"><t t-esc="jrn.default_account or '—'"/></td>
+                                            <td class="anx-inv-td anx-inv-td-center">
+                                                <span t-attf-class="anx-jrn-count-badge {{ jrn.entry_count > 0 ? 'anx-jrn-count-active' : 'anx-jrn-count-zero' }}"><t t-esc="jrn.entry_count"/></span>
+                                            </td>
+                                            <td class="anx-inv-td anx-inv-td-amount"><t t-esc="jrn.amount_display"/></td>
+                                            <td class="anx-inv-td anx-inv-td-center">
+                                                <button class="anx-jrn-entries-btn" t-att-data-id="jrn.id" t-on-click="openJournalEntries" t-if="jrn.entry_count > 0" title="View entries">
+                                                    <i class="fa fa-list"/>
+                                                </button>
+                                                <button class="anx-inv-open-btn" t-att-data-id="jrn.id" t-on-click.stop="openJournal" title="Open journal">
+                                                    <i class="fa fa-external-link"/>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+                        <div class="anx-inv-table-footer" t-if="state.jrnData" style="margin-top:8px;background:transparent;border:none;">
+                            <span>Showing <strong><t t-esc="filteredJournals.length"/></strong> of <strong><t t-esc="state.jrnData.total_count"/></strong> journals</span>
+                            <span class="anx-inv-footer-range">Period: <t t-esc="state.jrnData.date_range.start"/> → <t t-esc="state.jrnData.date_range.end"/></span>
+                        </div>
+                        </div>
+                    </t>
+                </t>
+<!-- TRIAL BALANCE TAB -->
+                <t t-if="state.data and state.activeTab === 'trial_balance'">
+                    <div t-if="state.tbLoading" class="anx-inv-loading">
+                        <div class="anx-inv-spinner"></div><span>Loading trial balance…</span>
+                    </div>
+                    <t t-if="!state.tbLoading and state.tbData">
+                        <div class="anx-tb-fullpage">
+
+                            <!-- Report Title Bar -->
+                            <div class="anx-tb-title-bar">
+                                <div class="anx-tb-report-title">
+                                    Trial Balance - <t t-esc="state.tbData.company"/> - <t t-esc="state.tbData.currency_sym"/>
+                                </div>
+                                <button class="anx-pl-print-btn" t-on-click="printTbReport">
+                                    <i class="fa fa-print"/> Print Report
+                                </button>
+                            </div>
+
+                            <!-- Filter bar -->
+                            <div class="anx-tb-filter-bar">
+                                <div class="anx-tb-filter-cell">
+                                    <div class="anx-tb-filter-label">Date range filter</div>
+                                    <div class="anx-tb-filter-val">From: <t t-esc="state.tbData.date_range.start"/> To <t t-esc="state.tbData.date_range.end"/></div>
+                                </div>
+                                <div class="anx-tb-filter-cell">
+                                    <div class="anx-tb-filter-label">Target moves filter</div>
+                                    <div class="anx-tb-filter-val">All posted entries</div>
+                                </div>
+                                <div class="anx-tb-filter-cell">
+                                    <div class="anx-tb-filter-label">Account at 0 filter</div>
+                                    <div class="anx-tb-filter-val">Hide</div>
+                                </div>
+                                <div class="anx-tb-filter-cell">
+                                    <div class="anx-tb-filter-label">Limit hierarchy levels</div>
+                                    <div class="anx-tb-filter-val">No limit</div>
+                                </div>
+                            </div>
+
+                            <!-- Data Table -->
+                            <table class="anx-tb-report-table">
+                                <thead>
+                                    <tr>
+                                        <th class="anx-tb-rth anx-tb-rth-code">Code</th>
+                                        <th class="anx-tb-rth anx-tb-rth-name">Account</th>
+                                        <th class="anx-tb-rth anx-tb-rth-num">Initial balance</th>
+                                        <th class="anx-tb-rth anx-tb-rth-num">Debit</th>
+                                        <th class="anx-tb-rth anx-tb-rth-num">Credit</th>
+                                        <th class="anx-tb-rth anx-tb-rth-num">Period balance</th>
+                                        <th class="anx-tb-rth anx-tb-rth-num">Ending balance</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-if="state.tbData.records.length === 0">
+                                        <tr><td colspan="7" class="anx-inv-empty">No accounts found for this period.</td></tr>
+                                    </t>
+                                    <t t-foreach="state.tbData.records" t-as="acc" t-key="acc.id">
+                                        <tr class="anx-tb-rtd-row">
+                                            <td class="anx-tb-rtd anx-tb-rtd-code"><t t-esc="acc.code"/></td>
+                                            <td class="anx-tb-rtd anx-tb-rtd-name">
+                                                <a class="anx-tb-acc-link" t-att-data-id="acc.id" t-on-click="openTrialBalanceAccount"><t t-esc="acc.name"/></a>
+                                            </td>
+                                            <td t-attf-class="anx-tb-rtd anx-tb-rtd-num {{ acc.initial_balance &lt; 0 ? 'anx-tb-rneg' : '' }}"><t t-esc="acc.initial_display"/></td>
+                                            <td class="anx-tb-rtd anx-tb-rtd-num anx-tb-rdebit"><t t-esc="acc.debit_display"/></td>
+                                            <td class="anx-tb-rtd anx-tb-rtd-num anx-tb-rcredit"><t t-esc="acc.credit_display"/></td>
+                                            <td t-attf-class="anx-tb-rtd anx-tb-rtd-num {{ acc.period_balance &lt; 0 ? 'anx-tb-rneg' : '' }}"><t t-esc="acc.period_display"/></td>
+                                            <td t-attf-class="anx-tb-rtd anx-tb-rtd-num {{ acc.ending_balance &lt; 0 ? 'anx-tb-rneg' : '' }}"><t t-esc="acc.ending_display"/></td>
+                                        </tr>
+                                    </t>
+                                    <t t-if="state.tbData.records.length > 0">
+                                        <tr class="anx-tb-rtd-row anx-tb-total-row" style="font-weight: bold; background-color: #f8f9fa;">
+                                            <td class="anx-tb-rtd" colspan="2" style="text-align: right; padding-right: 12px;">Total</td>
+                                            <td t-attf-class="anx-tb-rtd anx-tb-rtd-num {{ state.tbData.total_initial &lt; 0 ? 'anx-tb-rneg' : '' }}"><t t-esc="state.tbData.total_initial_display"/></td>
+                                            <td class="anx-tb-rtd anx-tb-rtd-num anx-tb-rdebit"><t t-esc="state.tbData.total_debit_display"/></td>
+                                            <td class="anx-tb-rtd anx-tb-rtd-num anx-tb-rcredit"><t t-esc="state.tbData.total_credit_display"/></td>
+                                            <td t-attf-class="anx-tb-rtd anx-tb-rtd-num {{ state.tbData.total_period &lt; 0 ? 'anx-tb-rneg' : '' }}"><t t-esc="state.tbData.total_period_display"/></td>
+                                            <td t-attf-class="anx-tb-rtd anx-tb-rtd-num {{ state.tbData.total_ending &lt; 0 ? 'anx-tb-rneg' : '' }}"><t t-esc="state.tbData.total_ending_display"/></td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+
+                            <!-- Timestamp -->
+                            <div class="anx-tb-report-ts">Generated: <t t-esc="state.tbData.date_range.start"/></div>
+
+                        </div>
+                    </t>
+                </t>
+
+
+
+<!-- DOCUMENTS TAB -->
+                <t t-if="state.data and state.activeTab === 'documents'">
+                    <div t-if="state.docLoading" class="anx-inv-loading">
+                        <div class="anx-inv-spinner"></div><span>Loading documents…</span>
+                    </div>
+                    <t t-if="!state.docLoading">
+
+                        <!-- Upload + KPI bar -->
+                        <div class="anx-doc-header-row">
+                            <!-- KPI pill -->
+                            <div class="anx-doc-kpi-strip">
+                                <div class="anx-doc-kpi-pill">
+                                    <span class="anx-doc-kpi-label">Total Documents</span>
+                                    <span class="anx-doc-kpi-val"><t t-esc="state.docList ? state.docList.total_count : 0"/></span>
+                                </div>
+                            </div>
+                            <!-- Upload zone -->
+                            <div class="anx-doc-upload-zone"
+                                 t-on-dragover="onDocDragOver"
+                                 t-on-dragleave="onDocDragLeave"
+                                 t-on-drop="onDocDrop"
+                                 t-attf-class="anx-doc-upload-zone {{ state.docDragOver ? 'drag-over' : '' }} {{ state.docUploadFile ? 'has-file' : '' }}">
+                                <input type="file" id="anx-doc-file-input" class="anx-upload-file-input"
+                                       accept=".pdf,.png,.jpg,.jpeg,.gif,.bmp,.tiff,.xlsx,.xls,.csv,.docx,.doc,.txt"
+                                       t-on-change="onDocFileSelected"/>
+                                <t t-if="!state.docUploadFile">
+                                    <div class="anx-doc-dz-inner" t-on-click="triggerDocFileInput">
+                                        <div class="anx-doc-dz-icon"><i class="fa fa-cloud-upload"></i></div>
+                                        <div class="anx-doc-dz-text">
+                                            <span class="anx-doc-dz-title">Upload Document</span>
+                                            <span class="anx-doc-dz-sub">Drag &amp; drop or click to upload any file</span>
+                                        </div>
+                                    </div>
+                                </t>
+                                <t t-if="state.docUploadFile and !state.docUploading">
+                                    <!-- Expanded form card -->
+                                    <div class="anx-doc-upload-form">
+                                        <!-- File preview bar -->
+                                        <div class="anx-doc-form-filebar">
+                                            <i t-attf-class="fa {{ docFileIcon(state.docUploadFile.type) }} anx-doc-form-file-icon"/>
+                                            <div class="anx-doc-form-file-info">
+                                                <span class="anx-doc-form-file-name" t-att-title="state.docUploadFile.name">
+                                                    <t t-esc="state.docUploadFile.name"/>
+                                                </span>
+                                                <span class="anx-doc-form-file-size">
+                                                    <t t-esc="formatFileSize(state.docUploadFile.size)"/>
+                                                </span>
+                                            </div>
+                                            <button class="anx-doc-form-remove" t-on-click="clearDocUpload" title="Remove file">
+                                                <i class="fa fa-times"/>
+                                            </button>
+                                        </div>
+                                        <!-- Input fields -->
+                                        <div class="anx-doc-form-fields">
+                                            <div class="anx-doc-form-field">
+                                                <label class="anx-doc-form-label" for="anx-doc-name-input">
+                                                    Document Name
+                                                </label>
+                                                <input id="anx-doc-name-input"
+                                                       class="anx-doc-form-input"
+                                                       type="text"
+                                                       placeholder="Enter document name…"
+                                                       t-att-value="state.docDocName"
+                                                       t-on-input="onDocNameInput"/>
+                                            </div>
+                                            <div class="anx-doc-form-field">
+                                                <label class="anx-doc-form-label anx-doc-form-label-req" for="anx-doc-desc-input">
+                                                    Description <span class="anx-doc-req-star">*</span>
+                                                </label>
+                                                <input id="anx-doc-desc-input"
+                                                       t-attf-class="anx-doc-form-input {{ state.docDescError ? 'anx-doc-input-error' : '' }}"
+                                                       type="text"
+                                                       placeholder="Enter a description (required)…"
+                                                       t-att-value="state.docDescription"
+                                                       t-on-input="onDocDescInput"/>
+                                                <span class="anx-doc-field-error" t-if="state.docDescError">
+                                                    <i class="fa fa-exclamation-circle"/> Description is required
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <!-- Document Type selector -->
+                                        <div class="anx-doc-form-type-row">
+                                            <span class="anx-doc-form-label anx-doc-form-label-req">
+                                                Document Type <span class="anx-doc-req-star">*</span>
+                                            </span>
+                                            <div t-attf-class="anx-doc-type-pills {{ state.docTypeError ? 'anx-doc-type-pills-error' : '' }}">
+                                                <button t-attf-class="anx-doc-type-pill {{ state.docType === 'invoice' ? 'active invoice' : '' }}"
+                                                        data-dtype="invoice" t-on-click="onDocTypeSelect">
+                                                    <i class="fa fa-file-text-o"/> Invoice
+                                                </button>
+                                                <button t-attf-class="anx-doc-type-pill {{ state.docType === 'bill' ? 'active bill' : '' }}"
+                                                        data-dtype="bill" t-on-click="onDocTypeSelect">
+                                                    <i class="fa fa-file-text"/> Bills
+                                                </button>
+                                                <button t-attf-class="anx-doc-type-pill {{ state.docType === 'bank_statement' ? 'active bank_statement' : '' }}"
+                                                        data-dtype="bank_statement" t-on-click="onDocTypeSelect">
+                                                    <i class="fa fa-university"/> Bank Statement
+                                                </button>
+                                                <button t-attf-class="anx-doc-type-pill {{ state.docType === 'receipt_voucher' ? 'active receipt_voucher' : '' }}"
+                                                        data-dtype="receipt_voucher" t-on-click="onDocTypeSelect">
+                                                    <i class="fa fa-arrow-down"/> Receipt Voucher
+                                                </button>
+                                                <button t-attf-class="anx-doc-type-pill {{ state.docType === 'payment_voucher' ? 'active payment_voucher' : '' }}"
+                                                        data-dtype="payment_voucher" t-on-click="onDocTypeSelect">
+                                                    <i class="fa fa-arrow-up"/> Payment Voucher
+                                                </button>
+                                                <button t-attf-class="anx-doc-type-pill {{ state.docType === 'debit_note' ? 'active debit_note' : '' }}"
+                                                        data-dtype="debit_note" t-on-click="onDocTypeSelect">
+                                                    <i class="fa fa-minus-circle"/> Debit Note
+                                                </button>
+                                                <button t-attf-class="anx-doc-type-pill {{ state.docType === 'credit_note' ? 'active credit_note' : '' }}"
+                                                        data-dtype="credit_note" t-on-click="onDocTypeSelect">
+                                                    <i class="fa fa-plus-circle"/> Credit Note
+                                                </button>
+                                                <button t-attf-class="anx-doc-type-pill {{ state.docType === 'other' ? 'active other' : '' }}"
+                                                        data-dtype="other" t-on-click="onDocTypeSelect">
+                                                    <i class="fa fa-folder-o"/> Other Documents
+                                                </button>
+                                            </div>
+                                            <span class="anx-doc-field-error" t-if="state.docTypeError">
+                                                <i class="fa fa-exclamation-circle"/> Please select a document type
+                                            </span>
+                                        </div>
+                                        <!-- Action row -->
+                                        <div class="anx-doc-form-actions">
+                                            <button class="anx-doc-btn-cancel" t-on-click="clearDocUpload">
+                                                <i class="fa fa-times"/> Cancel
+                                            </button>
+                                            <button class="anx-doc-btn-upload" t-on-click="submitDocUpload">
+                                                <i class="fa fa-cloud-upload"/> Save Document
+                                            </button>
+                                        </div>
+                                    </div>
+                                </t>
+                                <t t-if="state.docUploading">
+                                    <div class="anx-doc-dz-uploading">
+                                        <i class="fa fa-spinner fa-spin"/>
+                                        <span>Saving document…</span>
+                                    </div>
+                                </t>
+                            </div>
+                        </div>
+
+                        <!-- Search + filter toolbar -->
+                        <div class="anx-inv-toolbar" style="margin-top:14px;margin-bottom:12px;">
+                            <div class="anx-inv-search-wrap" style="max-width:420px;">
+                                <i class="fa fa-search anx-inv-search-icon"/>
+                                <input class="anx-inv-search" type="text"
+                                       placeholder="Search by name, description, file type…"
+                                       t-on-input="onDocSearch"/>
+                            </div>
+                        </div>
+
+                        <!-- Document list table -->
+                        <div class="anx-inv-table-wrap anx-panel">
+                            <table class="anx-inv-table anx-doc-table">
+                                <thead>
+                                    <tr>
+                                        <th class="anx-inv-th" style="width:40px;"></th>
+                                        <th class="anx-inv-th">Document Name</th>
+                                        <th class="anx-inv-th">Description</th>
+                                        <th class="anx-inv-th">Doc Type</th>
+                                        <th class="anx-inv-th">File Type</th>
+                                        <th class="anx-inv-th" style="width:100px;">Preview</th>
+                                        <th class="anx-inv-th">Size</th>
+                                        <th class="anx-inv-th">Upload Date</th>
+                                        <th class="anx-inv-th">Uploaded By</th>
+                                        <th class="anx-inv-th anx-doc-review-th">Review <i class="fa fa-lock" style="font-size:10px;opacity:0.5;" title="Only backend users can edit"/></th>
+                                        <th class="anx-inv-th" style="width:110px;">Status</th>
+                                        <t t-if="state.docList and state.docList.is_validator">
+                                            <th class="anx-inv-th anx-inv-th-center" style="width:160px;">Validation</th>
+                                        </t>
+                                        <t t-if="state.docList and state.docList.is_validator">
+                                            <th class="anx-inv-th anx-inv-th-center" style="width:110px;">AI Action</th>
+                                        </t>
+                                        <th class="anx-inv-th anx-inv-th-center" style="width:90px;">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-if="filteredDocuments.length === 0">
+                                        <tr>
+                                            <td t-att-colspan="state.docList and state.docList.is_validator ? 14 : 12" class="anx-inv-empty">
+                                                <i class="fa fa-folder-open-o fa-2x" style="color:#c8cdd8;display:block;margin-bottom:10px;"/>
+                                                No documents uploaded yet. Use the upload zone above to add files.
+                                            </td>
+                                        </tr>
+                                    </t>
+                                    <t t-foreach="filteredDocuments" t-as="doc" t-key="doc.id">
+                                        <tr class="anx-inv-row anx-doc-row">
+                                            <td class="anx-inv-td anx-inv-td-center">
+                                                <span class="anx-doc-type-icon">
+                                                    <i t-attf-class="fa {{ docFileIconByName(doc.file_name) }}"/>
+                                                </span>
+                                            </td>
+                                            <td class="anx-inv-td anx-inv-td-name">
+                                                <span class="anx-inv-num" t-att-title="doc.file_name">
+                                                    <t t-esc="doc.name"/>
+                                                </span>
+                                            </td>
+                                            <!-- Description (inline-editable) -->
+                                            <td class="anx-inv-td anx-doc-desc-cell">
+                                                <t t-if="state.docEditId !== doc.id">
+                                                    <span class="anx-doc-desc-text">
+                                                        <t t-esc="doc.description or '—'"/>
+                                                    </span>
+                                                    <button class="anx-doc-desc-edit-btn"
+                                                            t-att-data-id="doc.id"
+                                                            t-att-data-desc="doc.description"
+                                                            t-on-click="startEditDesc"
+                                                            title="Edit description">
+                                                        <i class="fa fa-pencil"/>
+                                                    </button>
+                                                </t>
+                                                <t t-if="state.docEditId === doc.id">
+                                                    <div class="anx-doc-desc-edit-wrap">
+                                                        <input class="anx-doc-desc-edit-input"
+                                                               type="text"
+                                                               t-att-id="'anx-desc-edit-' + doc.id"
+                                                               placeholder="Enter description…"
+                                                               t-att-value="state.docEditDesc"
+                                                               t-on-input="onDescEditInput"
+                                                               t-on-keydown="onDescEditKeydown"/>
+                                                        <button class="anx-doc-desc-save-btn"
+                                                                t-att-data-id="doc.id"
+                                                                t-on-click="saveDescEdit"
+                                                                title="Save">
+                                                            <i class="fa fa-check"/>
+                                                        </button>
+                                                        <button class="anx-doc-desc-cancel-btn"
+                                                                t-on-click="cancelDescEdit"
+                                                                title="Cancel">
+                                                            <i class="fa fa-times"/>
+                                                        </button>
+                                                    </div>
+                                                </t>
+                                            </td>
+                                            <!-- Document Type badge -->
+                                            <td class="anx-inv-td">
+                                                <span class="anx-doc-doctype-badge"
+                                                      t-attf-style="background:{{ doc.doc_type_bg }};color:{{ doc.doc_type_text }};">
+                                                    <t t-esc="doc.doc_type_label"/>
+                                                </span>
+                                            </td>
+                                            <!-- File type badge -->
+                                            <td class="anx-inv-td">
+                                                <span class="anx-doc-mime-badge">
+                                                    <t t-esc="docExtLabel(doc.file_name)"/>
+                                                </span>
+                                            </td>
+                                            <!-- Preview button -->
+                                            <td class="anx-inv-td">
+                                                <button class="anx-doc-preview-badge-btn"
+                                                        t-att-data-id="doc.id"
+                                                        t-on-click="previewDocument"
+                                                        title="Preview Document">
+                                                    <i class="fa fa-eye"/> Preview
+                                                </button>
+                                            </td>
+                                            <td class="anx-inv-td" style="color:#6b7280;font-size:12px;white-space:nowrap;">
+                                                <t t-esc="formatFileSize(doc.file_size)"/>
+                                            </td>
+                                            <td class="anx-inv-td anx-inv-td-date">
+                                                <t t-esc="doc.upload_date"/>
+                                            </td>
+                                            <td class="anx-inv-td" style="font-size:12px;color:#6b7280;">
+                                                <t t-esc="doc.user_name"/>
+                                            </td>
+                                            <!-- Review (backend inline-editable) -->
+                                            <td class="anx-inv-td anx-doc-review-cell">
+                                                <t t-if="state.docReviewEditId !== doc.id">
+                                                    <span class="anx-doc-review-text" t-att-title="doc.review">
+                                                        <t t-esc="doc.review or '—'"/>
+                                                    </span>
+                                                    <button class="anx-doc-desc-edit-btn"
+                                                            t-att-data-id="doc.id"
+                                                            t-att-data-review="doc.review"
+                                                            t-on-click="startEditReview"
+                                                            title="Add/Edit review">
+                                                        <i class="fa fa-pencil"/>
+                                                    </button>
+                                                </t>
+                                                <t t-if="state.docReviewEditId === doc.id">
+                                                    <div class="anx-doc-review-edit-wrap">
+                                                        <textarea class="anx-doc-review-edit-input"
+                                                                  t-att-id="'anx-review-edit-' + doc.id"
+                                                                  placeholder="Add review notes…"
+                                                                  rows="3"
+                                                                  t-on-input="onReviewEditInput"
+                                                                  t-on-keydown="onReviewEditKeydown"><t t-esc="state.docReviewEditVal"/></textarea>
+                                                        <div class="anx-doc-review-edit-btns">
+                                                            <button class="anx-doc-desc-save-btn"
+                                                                    t-att-data-id="doc.id"
+                                                                    t-on-click="saveReviewEdit"
+                                                                    title="Save">
+                                                                <i class="fa fa-check"/>
+                                                            </button>
+                                                            <button class="anx-doc-desc-cancel-btn"
+                                                                    t-on-click="cancelReviewEdit"
+                                                                    title="Cancel">
+                                                                <i class="fa fa-times"/>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </t>
+                                            </td>
+                                            <!-- Status field -->
+                                            <td class="anx-inv-td">
+                                                <span t-attf-class="anx-doc-status-badge status-{{ doc.status }}"
+                                                      t-attf-style="background: {{ doc.status === 'approved' ? '#e8f5e9' : (doc.status === 'rejected' ? '#ffebee' : '#f3f4f6') }};
+                                                                    color: {{ doc.status === 'approved' ? '#2e7d32' : (doc.status === 'rejected' ? '#c62828' : '#4b5563') }};
+                                                                    padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; text-transform: uppercase; display: inline-block;">
+                                                    <t t-esc="doc.status_label"/>
+                                                </span>
+                                            </td>
+                                            <!-- Validation buttons (Approve / Reject) -->
+                                            <t t-if="state.docList and state.docList.is_validator">
+                                                <td class="anx-inv-td anx-inv-td-center">
+                                                    <div class="anx-doc-validation-btns" style="display: inline-flex; gap: 4px; align-items: center;">
+                                                        <button class="anx-doc-btn-approve" 
+                                                                t-att-data-id="doc.id" 
+                                                                t-on-click="approveDocument" 
+                                                                t-att-disabled="doc.status === 'approved'"
+                                                                t-attf-style="background:#2e7d32; color:#fff; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; opacity: {{ doc.status === 'approved' ? '0.5' : '1' }}; pointer-events: {{ doc.status === 'approved' ? 'none' : 'auto' }};"
+                                                                title="Approve Document">
+                                                            <i class="fa fa-check"/> Approve
+                                                        </button>
+                                                        <button class="anx-doc-btn-reject" 
+                                                                t-att-data-id="doc.id" 
+                                                                t-on-click="rejectDocument" 
+                                                                t-att-disabled="doc.status === 'rejected'"
+                                                                t-attf-style="background:#c62828; color:#fff; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; opacity: {{ doc.status === 'rejected' ? '0.5' : '1' }}; pointer-events: {{ doc.status === 'rejected' ? 'none' : 'auto' }};"
+                                                                title="Reject Document">
+                                                              <i class="fa fa-times"/> Reject
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </t>
+                                            <t t-if="state.docList and state.docList.is_validator">
+                                                <td class="anx-inv-td anx-inv-td-center">
+                                                    <t t-if="doc.created_move_id">
+                                                        <button class="anx-doc-btn-preview" style="background:#2e7d32; color:#fff; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;" t-att-data-move-id="doc.created_move_id" t-on-click="openCreatedMove" title="Entry Created - View accounting record">
+                                                            <i class="fa fa-file-text-o"/> View Entry
+                                                        </button>
+                                                    </t>
+                                                    <t t-else="">
+                                                        <button class="anx-doc-btn-preview" style="background:#1565c0; color:#fff; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;" t-att-data-id="doc.id" t-on-click="analyzeAndCreateDocument" t-att-disabled="state.analyzingDocId === doc.id" title="Process with Groq AI to create draft Invoice/Bill">
+                                                            <t t-if="state.analyzingDocId === doc.id">
+                                                                 <i class="fa fa-spinner fa-spin"/> Processing...
+                                                            </t>
+                                                            <t t-else="">
+                                                                 <i class="fa fa-magic"/> AI Create
+                                                            </t>
+                                                        </button>
+                                                    </t>
+                                                </td>
+                                            </t>
+                                            <td class="anx-inv-td anx-inv-td-center">
+                                                <div class="anx-doc-action-btns">
+                                                    <button class="anx-doc-btn-dl" t-att-data-id="doc.id"
+                                                            t-att-data-name="doc.file_name"
+                                                            t-on-click="downloadDocument"
+                                                            title="Download">
+                                                        <i class="fa fa-download"/>
+                                                    </button>
+                                                    <button class="anx-doc-btn-del" t-att-data-id="doc.id"
+                                                            t-on-click="deleteDocument"
+                                                            title="Delete">
+                                                        <i class="fa fa-trash-o"/>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+                            <div class="anx-inv-table-footer" t-if="state.docList">
+                                <span>Showing <strong><t t-esc="filteredDocuments.length"/></strong>
+                                    of <strong><t t-esc="state.docList.total_count"/></strong> documents</span>
+                            </div>
+                        </div>
+
+                    </t>
+                </t>
+
+<!-- OTHER TABS PLACEHOLDER -->
+                <t t-if="state.data and state.activeTab !== 'overview' and state.activeTab !== 'invoices' and state.activeTab !== 'expenses' and state.activeTab !== 'vat' and state.activeTab !== 'journals' and state.activeTab !== 'trial_balance' and state.activeTab !== 'documents' and state.activeTab !== 'chat'">
+                    <div class="anx-tab-placeholder">
+                        <i class="fa fa-wrench fa-2x" style="color:#c8cdd8; margin-bottom:12px;"></i>
+                        <p style="color:#8a93a4;"><strong><t t-esc="state.activeTab"/></strong> detailed view coming soon.</p>
+                        <button class="btn btn-sm btn-outline-secondary" data-tab="overview" t-on-click="onTabClick">← Back to Overview</button>
+                    </div>
+                </t>
+
+<!-- CHAT TAB CONTENT -->
+                <t t-if="state.activeTab === 'chat'">
+                    <div class="anx-chat-container">
+                        <Discuss />
+                    </div>
+                </t>
+
+<!-- DOCUMENT PREVIEW MODAL -->
+            <div t-if="state.showDocPreview" class="anx-pl-overlay" t-on-click.self="closeDocPreview">
+                <div class="anx-pl-modal" style="max-width: 960px; height: 85vh; display: flex; flex-direction: column; padding: 0;">
+                    <!-- Modal header -->
+                    <div class="anx-pl-mhdr" style="border-bottom: 1px solid #e5e7eb; padding: 16px 24px;">
+                        <div class="anx-pl-mhdr-left">
+                            <i class="fa fa-eye anx-pl-mhdr-icon" style="color: #2b7b9b; background: #e8f4fd; width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; font-size: 16px; margin-right: 12px;"/>
+                            <div>
+                                <div class="anx-pl-mhdr-title" style="font-size: 16px; font-weight: 700; color: #111827; max-width: 600px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"><t t-esc="state.previewDocName"/></div>
+                                <div class="anx-pl-mhdr-sub" style="font-size: 12px; color: #6b7280; font-family: monospace;"><t t-esc="state.previewDocType"/></div>
+                            </div>
+                        </div>
+                        <div class="anx-pl-mhdr-right" style="display: flex; gap: 8px;">
+                            <button class="anx-pl-print-btn" t-on-click="downloadDocFromPreview">
+                                <i class="fa fa-download"/> Download
+                            </button>
+                            <button class="anx-pl-close-btn" t-on-click="closeDocPreview">
+                                <i class="fa fa-times"/>
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Modal Body -->
+                    <div class="anx-pl-body" style="flex: 1; overflow: auto; padding: 20px; display: flex; justify-content: center; align-items: center; background: #f3f4f6;">
+                        <!-- If Image -->
+                        <t t-if="isImagePreview(state.previewDocType)">
+                            <img t-att-src="state.previewDocUrl" style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); background: white; padding: 10px;" />
+                        </t>
+                        <!-- If PDF -->
+                        <t t-elif="isPdfPreview(state.previewDocType)">
+                            <iframe t-att-src="state.previewDocUrl" style="width: 100%; height: 100%; border: none; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); background: white;" />
+                        </t>
+                        <!-- Else (Unsupported type) -->
+                        <t t-else="">
+                            <div style="text-align: center; background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); max-width: 480px; width: 100%;">
+                                <div style="width: 64px; height: 64px; background: #f3f4f6; color: #9ca3af; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 20px; font-size: 28px;">
+                                    <i class="fa fa-file-o"/>
+                                </div>
+                                <h3 style="font-size: 18px; font-weight: 700; color: #111827; margin-bottom: 8px;">Preview not available</h3>
+                                <p style="color: #6b7280; font-size: 14px; margin-bottom: 24px; line-height: 1.5;">Preview is not supported for this file format (<t t-esc="docExtLabel(state.previewDocName)"/>). You can download and open it on your device.</p>
+                                <button class="anx-pl-print-btn" t-on-click="downloadDocFromPreview" style="display: inline-flex; width: auto; padding: 10px 20px; font-size: 14px;">
+                                    <i class="fa fa-download" style="margin-right: 8px;"/> Download Document
+                                </button>
+                            </div>
+                        </t>
+                    </div>
+                </div>
+            </div>
+
+<!-- P&L STATEMENT MODAL -->
+            <div t-if="state.showPlModal" class="anx-pl-overlay" t-on-click.self="closePlModal">
+                <div class="anx-pl-modal">
+
+                    <!-- Modal header -->
+                    <div class="anx-pl-mhdr">
+                        <div class="anx-pl-mhdr-left">
+                            <i class="fa fa-line-chart anx-pl-mhdr-icon"/>
+                            <div>
+                                <div class="anx-pl-mhdr-title">Profit &amp; Loss Statement</div>
+                                <div class="anx-pl-mhdr-sub" t-if="state.plData">
+                                    <t t-esc="state.plData.company"/> &#8212;
+                                    <t t-esc="state.plData.period_label"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="anx-pl-mhdr-right">
+                            <button class="anx-pl-print-btn" t-on-click="printPlReport" t-if="state.plData">
+                                <i class="fa fa-print"/> Print Report
+                            </button>
+                            <button class="anx-pl-close-btn" t-on-click="closePlModal">
+                                <i class="fa fa-times"/>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Loading -->
+                    <div t-if="state.plLoading" class="anx-pl-loading">
+                        <div class="anx-inv-spinner"/>
+                        <span>Loading P&amp;L data…</span>
+                    </div>
+
+                    <!-- P&L Report body -->
+                    <div t-if="!state.plLoading and state.plData" class="anx-pl-body">
+                        <table class="anx-pl-table">
+                            <thead>
+                                <tr>
+                                    <th class="anx-pl-th"/>
+                                    <th class="anx-pl-th anx-pl-th-bal">Balance</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- INCOME -->
+                                <tr class="anx-pl-sec">
+                                    <td class="anx-pl-sec-lbl">Income</td>
+                                    <td t-attf-class="anx-pl-sec-val {{ state.plData.income.total &lt; 0 ? 'anx-pl-neg' : '' }}">
+                                        <t t-esc="formatPlVal(state.plData.income.total)"/>
+                                    </td>
+                                </tr>
+                                <t t-foreach="state.plData.income.accounts" t-as="acc" t-key="acc.id">
+                                    <tr class="anx-pl-acc">
+                                        <td class="anx-pl-acc-name"><t t-esc="acc.name"/></td>
+                                        <td t-attf-class="anx-pl-acc-val {{ acc.balance &lt; 0 ? 'anx-pl-neg' : '' }}">
+                                            <t t-esc="formatPlVal(acc.balance)"/>
+                                        </td>
+                                    </tr>
+                                </t>
+                                <!-- COGS -->
+                                <tr class="anx-pl-sec">
+                                    <td class="anx-pl-sec-lbl">Cost of Sales</td>
+                                    <td t-attf-class="anx-pl-sec-val {{ state.plData.cogs.total &lt; 0 ? 'anx-pl-neg' : '' }}">
+                                        <t t-esc="formatPlVal(state.plData.cogs.total)"/>
+                                    </td>
+                                </tr>
+                                <t t-foreach="state.plData.cogs.accounts" t-as="acc" t-key="acc.id">
+                                    <tr class="anx-pl-acc">
+                                        <td class="anx-pl-acc-name"><t t-esc="acc.name"/></td>
+                                        <td t-attf-class="anx-pl-acc-val {{ acc.balance &lt; 0 ? 'anx-pl-neg' : '' }}">
+                                            <t t-esc="formatPlVal(acc.balance)"/>
+                                        </td>
+                                    </tr>
+                                </t>
+                                <!-- GROSS PROFIT -->
+                                <tr class="anx-pl-sub">
+                                    <td class="anx-pl-sub-lbl">Gross Profit</td>
+                                    <td t-attf-class="anx-pl-sub-val {{ state.plData.gross_profit &lt; 0 ? 'anx-pl-neg' : '' }}">
+                                        <t t-esc="formatPlVal(state.plData.gross_profit)"/>
+                                    </td>
+                                </tr>
+                                <tr class="anx-pl-spacer"><td colspan="2"/></tr>
+
+                                <!-- EXPENSE -->
+                                <tr class="anx-pl-sec">
+                                    <td class="anx-pl-sec-lbl">Expense</td>
+                                    <td t-attf-class="anx-pl-sec-val {{ state.plData.expense.total &lt; 0 ? 'anx-pl-neg' : '' }}">
+                                        <t t-esc="formatPlVal(state.plData.expense.total)"/>
+                                    </td>
+                                </tr>
+                                <t t-foreach="state.plData.expense.accounts" t-as="acc" t-key="acc.id">
+                                    <tr class="anx-pl-acc">
+                                        <td class="anx-pl-acc-name"><t t-esc="acc.name"/></td>
+                                        <td t-attf-class="anx-pl-acc-val {{ acc.balance &lt; 0 ? 'anx-pl-neg' : '' }}">
+                                            <t t-esc="formatPlVal(acc.balance)"/>
+                                        </td>
+                                    </tr>
+                                </t>
+                                <!-- NET OPERATING INCOME -->
+                                <tr class="anx-pl-sub">
+                                    <td class="anx-pl-sub-lbl">Net Operating Income</td>
+                                    <td t-attf-class="anx-pl-sub-val {{ state.plData.net_operating_income &lt; 0 ? 'anx-pl-neg' : '' }}">
+                                        <t t-esc="formatPlVal(state.plData.net_operating_income)"/>
+                                    </td>
+                                </tr>
+                                <tr class="anx-pl-spacer"><td colspan="2"/></tr>
+
+                                <!-- OTHER INCOME -->
+                                <tr class="anx-pl-sec">
+                                    <td class="anx-pl-sec-lbl">Other Income</td>
+                                    <td t-attf-class="anx-pl-sec-val {{ state.plData.other_income.total &lt; 0 ? 'anx-pl-neg' : '' }}">
+                                        <t t-esc="formatPlVal(state.plData.other_income.total)"/>
+                                    </td>
+                                </tr>
+                                <t t-foreach="state.plData.other_income.accounts" t-as="acc" t-key="acc.id">
+                                    <tr class="anx-pl-acc">
+                                        <td class="anx-pl-acc-name"><t t-esc="acc.name"/></td>
+                                        <td t-attf-class="anx-pl-acc-val {{ acc.balance &lt; 0 ? 'anx-pl-neg' : '' }}">
+                                            <t t-esc="formatPlVal(acc.balance)"/>
+                                        </td>
+                                    </tr>
+                                </t>
+                                <!-- NET OTHER INCOME -->
+                                <tr class="anx-pl-sub">
+                                    <td class="anx-pl-sub-lbl">Net Other Income</td>
+                                    <td t-attf-class="anx-pl-sub-val {{ state.plData.net_other_income &lt; 0 ? 'anx-pl-neg' : '' }}">
+                                        <t t-esc="formatPlVal(state.plData.net_other_income)"/>
+                                    </td>
+                                </tr>
+                                <tr class="anx-pl-spacer"><td colspan="2"/></tr>
+
+                                <!-- NET INCOME TOTAL -->
+                                <tr class="anx-pl-total">
+                                    <td class="anx-pl-total-lbl">Net Income</td>
+                                    <td t-attf-class="anx-pl-total-val {{ state.plData.net_income &lt; 0 ? 'anx-pl-neg' : '' }}">
+                                        <t t-esc="formatPlVal(state.plData.net_income)"/>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+<!-- BALANCE SHEET MODAL -->
+            <div t-if="state.showBsModal" class="anx-pl-overlay anx-bs-overlay" t-on-click.self="closeBsModal">
+                <div class="anx-pl-modal anx-bs-modal">
+
+                    <!-- Modal header -->
+                    <div class="anx-pl-mhdr anx-bs-mhdr">
+                        <div class="anx-pl-mhdr-left">
+                            <i class="fa fa-balance-scale anx-pl-mhdr-icon anx-bs-mhdr-icon"/>
+                            <div>
+                                <div class="anx-pl-mhdr-title">Balance Sheet</div>
+                                <div class="anx-pl-mhdr-sub" t-if="state.bsData">
+                                    <t t-esc="state.bsData.company"/> &#8212;
+                                    As of <t t-esc="state.bsData.as_of_date"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="anx-pl-mhdr-right">
+                            <button class="anx-pl-print-btn anx-bs-print-btn" t-on-click="printBsReport" t-if="state.bsData">
+                                <i class="fa fa-print"/> Print Report
+                            </button>
+                            <button class="anx-pl-close-btn" t-on-click="closeBsModal">
+                                <i class="fa fa-times"/>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Loading -->
+                    <div t-if="state.bsLoading" class="anx-pl-loading">
+                        <div class="anx-inv-spinner"/>
+                        <span>Loading Balance Sheet…</span>
+                    </div>
+
+                    <!-- ── Date Picker Toolbar ── -->
+                    <div t-if="!state.bsLoading and state.bsData" class="anx-bs-toolbar">
+
+                        <!-- "As of [date]" dropdown -->
+                        <div class="anx-bs-datepicker-wrap">
+                            <button class="anx-bs-datepicker-btn" t-on-click="toggleBsDateDrop">
+                                <i class="fa fa-calendar-o"/> As of <t t-esc="state.bsData.as_of_date"/>
+                                <i class="fa fa-caret-down" style="margin-left:6px;font-size:10px;"/>
+                            </button>
+
+                            <!-- Dropdown options -->
+                            <div t-if="state.bsShowDateDrop" class="anx-bs-date-drop">
+                                <t t-foreach="getBsDateOptions()" t-as="opt" t-key="opt.key">
+                                    <div t-attf-class="anx-bs-date-opt {{ state.bsDateOption === opt.key ? 'active' : '' }}"
+                                         t-att-data-key="opt.key"
+                                         t-on-click="onBsDateOptClick">
+                                        <span class="anx-bs-date-opt-label"><t t-esc="opt.label"/></span>
+                                        <span class="anx-bs-date-opt-sub" t-if="opt.sub"><t t-esc="opt.sub"/></span>
+                                    </div>
+                                </t>
+                                <!-- Specific Date input -->
+                                <div t-if="state.bsDateOption === 'specific'" class="anx-bs-specific-wrap">
+                                    <input type="date" class="anx-bs-specific-input"
+                                           t-att-value="state.bsSpecificDate"
+                                           t-on-change="applyBsSpecificDate"/>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Comparison toggle -->
+                        <button t-attf-class="anx-bs-compare-btn {{ state.bsCompareMode ? 'active' : '' }}"
+                                t-on-click="toggleBsComparison">
+                            <i class="fa fa-percent"/> Comparison
+                        </button>
+                    </div>
+
+                    <!-- Balance Sheet body -->
+                    <div t-if="!state.bsLoading and state.bsData" class="anx-pl-body">
+
+                        <!-- Column header row -->
+                        <div class="anx-bs-date-row">
+                            <span class="anx-bs-date-box" t-att-class="state.bsCompareMode ? 'has-compare' : ''">
+                                As of <t t-esc="state.bsData.as_of_date"/>
+                            </span>
+                            <span t-if="state.bsCompareMode and state.bsData.compare_date" class="anx-bs-date-box anx-bs-date-box-cmp">
+                                As of <t t-esc="state.bsData.compare_date"/>
+                            </span>
+                        </div>
+
+                        <table class="anx-pl-table anx-bs-table">
+                            <tbody>
+
+                                <!-- ═════════════ ASSETS ═════════════ -->
+                                <tr class="anx-bs-section-hdr">
+                                    <td t-att-colspan="state.bsCompareMode ? 3 : 2" class="anx-bs-section-hdr-lbl">Assets</td>
+                                </tr>
+
+
+                                <!-- Current Assets -->
+                                <tr class="anx-bs-subsec">
+                                    <td class="anx-bs-subsec-lbl">Current Assets</td>
+                                    <td/>
+                                </tr>
+
+                                <!-- Bank and Cash -->
+                                <tr class="anx-bs-group">
+                                    <td class="anx-bs-group-lbl">
+                                        <i class="fa fa-caret-right anx-bs-caret" t-if="state.bsData.bank_cash.accounts.length"/>
+                                        Bank and Cash
+                                    </td>
+                                    <td t-attf-class="anx-bs-group-val {{ state.bsData.bank_cash.total &lt; 0 ? 'anx-pl-neg' : '' }}">
+                                        <t t-esc="formatBsVal(state.bsData.bank_cash.total)"/>
+                                    </td>
+                                </tr>
+                                <t t-foreach="state.bsData.bank_cash.accounts" t-as="acc" t-key="acc.id">
+                                    <tr class="anx-pl-acc">
+                                        <td class="anx-pl-acc-name"><t t-esc="acc.name"/></td>
+                                        <td t-attf-class="anx-pl-acc-val {{ acc.balance &lt; 0 ? 'anx-pl-neg' : '' }}">
+                                            <t t-esc="formatBsVal(acc.balance)"/>
+                                        </td>
+                                    </tr>
+                                </t>
+
+                                <!-- Accounts Receivable -->
+                                <tr class="anx-bs-group">
+                                    <td class="anx-bs-group-lbl">
+                                        <i class="fa fa-caret-right anx-bs-caret" t-if="state.bsData.receivable.accounts.length"/>
+                                        Accounts Receivable
+                                    </td>
+                                    <td t-attf-class="anx-bs-group-val {{ state.bsData.receivable.total &lt; 0 ? 'anx-pl-neg' : '' }}">
+                                        <t t-esc="formatBsVal(state.bsData.receivable.total)"/>
+                                    </td>
+                                </tr>
+                                <t t-foreach="state.bsData.receivable.accounts" t-as="acc" t-key="acc.id">
+                                    <tr class="anx-pl-acc">
+                                        <td class="anx-pl-acc-name"><t t-esc="acc.name"/></td>
+                                        <td t-attf-class="anx-pl-acc-val {{ acc.balance &lt; 0 ? 'anx-pl-neg' : '' }}">
+                                            <t t-esc="formatBsVal(acc.balance)"/>
+                                        </td>
+                                    </tr>
+                                </t>
+
+                                <!-- Other Current Assets -->
+                                <tr class="anx-bs-group">
+                                    <td class="anx-bs-group-lbl">
+                                        <i class="fa fa-caret-right anx-bs-caret" t-if="state.bsData.current_assets.accounts.length"/>
+                                        Other Current Assets
+                                    </td>
+                                    <td t-attf-class="anx-bs-group-val {{ state.bsData.current_assets.total &lt; 0 ? 'anx-pl-neg' : '' }}">
+                                        <t t-esc="formatBsVal(state.bsData.current_assets.total)"/>
+                                    </td>
+                                </tr>
+                                <t t-foreach="state.bsData.current_assets.accounts" t-as="acc" t-key="acc.id">
+                                    <tr class="anx-pl-acc">
+                                        <td class="anx-pl-acc-name"><t t-esc="acc.name"/></td>
+                                        <td t-attf-class="anx-pl-acc-val {{ acc.balance &lt; 0 ? 'anx-pl-neg' : '' }}">
+                                            <t t-esc="formatBsVal(acc.balance)"/>
+                                        </td>
+                                    </tr>
+                                </t>
+
+                                <!-- Total Current Assets -->
+                                <tr class="anx-pl-sub">
+                                    <td class="anx-pl-sub-lbl anx-bs-bold">Total Current Assets</td>
+                                    <td t-attf-class="anx-pl-sub-val {{ state.bsData.total_current_assets &lt; 0 ? 'anx-pl-neg' : '' }}">
+                                        <t t-esc="formatBsVal(state.bsData.total_current_assets)"/>
+                                    </td>
+                                </tr>
+
+                                <!-- Fixed Assets -->
+                                <tr class="anx-bs-group">
+                                    <td class="anx-bs-group-lbl">Fixed Assets</td>
+                                    <td t-attf-class="anx-bs-group-val {{ state.bsData.fixed_assets.total &lt; 0 ? 'anx-pl-neg' : '' }}">
+                                        <t t-esc="formatBsVal(state.bsData.fixed_assets.total)"/>
+                                    </td>
+                                </tr>
+                                <t t-foreach="state.bsData.fixed_assets.accounts" t-as="acc" t-key="acc.id">
+                                    <tr class="anx-pl-acc">
+                                        <td class="anx-pl-acc-name"><t t-esc="acc.name"/></td>
+                                        <td t-attf-class="anx-pl-acc-val {{ acc.balance &lt; 0 ? 'anx-pl-neg' : '' }}">
+                                            <t t-esc="formatBsVal(acc.balance)"/>
+                                        </td>
+                                    </tr>
+                                </t>
+
+                                <!-- Other Assets -->
+                                <tr class="anx-bs-group">
+                                    <td class="anx-bs-group-lbl">Other Assets</td>
+                                    <td t-attf-class="anx-bs-group-val {{ state.bsData.other_assets.total &lt; 0 ? 'anx-pl-neg' : '' }}">
+                                        <t t-esc="formatBsVal(state.bsData.other_assets.total)"/>
+                                    </td>
+                                </tr>
+                                <t t-foreach="state.bsData.other_assets.accounts" t-as="acc" t-key="acc.id">
+                                    <tr class="anx-pl-acc">
+                                        <td class="anx-pl-acc-name"><t t-esc="acc.name"/></td>
+                                        <td t-attf-class="anx-pl-acc-val {{ acc.balance &lt; 0 ? 'anx-pl-neg' : '' }}">
+                                            <t t-esc="formatBsVal(acc.balance)"/>
+                                        </td>
+                                    </tr>
+                                </t>
+
+                                <!-- Total Assets -->
+                                <tr class="anx-pl-total anx-bs-total-row">
+                                    <td class="anx-pl-total-lbl">Total Assets</td>
+                                    <td t-attf-class="anx-pl-total-val {{ state.bsData.total_assets &lt; 0 ? 'anx-pl-neg' : '' }}">
+                                        <t t-esc="formatBsVal(state.bsData.total_assets)"/>
+                                    </td>
+                                </tr>
+
+                                <tr class="anx-pl-spacer"><td colspan="2"/></tr>
+
+                                <!-- ═════════════ LIABILITIES & EQUITY ═════════════ -->
+                                <tr class="anx-bs-section-hdr">
+                                    <td colspan="2" class="anx-bs-section-hdr-lbl">Liabilities &amp; Equity</td>
+                                </tr>
+
+                                <!-- Liabilities subsection -->
+                                <tr class="anx-bs-subsec">
+                                    <td class="anx-bs-subsec-lbl">Liabilities</td>
+                                    <td/>
+                                </tr>
+
+                                <!-- Current Liabilities -->
+                                <tr class="anx-bs-subsec anx-bs-subsec-indent">
+                                    <td class="anx-bs-subsec-lbl">Current Liabilities</td>
+                                    <td/>
+                                </tr>
+
+                                <!-- Accounts Payable -->
+                                <tr class="anx-bs-group">
+                                    <td class="anx-bs-group-lbl anx-bs-group-lbl-l2">
+                                        <i class="fa fa-caret-right anx-bs-caret" t-if="state.bsData.payable.accounts.length"/>
+                                        Accounts Payable
+                                    </td>
+                                    <td t-attf-class="anx-bs-group-val {{ state.bsData.payable.total &lt; 0 ? 'anx-pl-neg' : '' }}">
+                                        <t t-esc="formatBsVal(state.bsData.payable.total)"/>
+                                    </td>
+                                </tr>
+                                <t t-foreach="state.bsData.payable.accounts" t-as="acc" t-key="acc.id">
+                                    <tr class="anx-pl-acc">
+                                        <td class="anx-pl-acc-name"><t t-esc="acc.name"/></td>
+                                        <td t-attf-class="anx-pl-acc-val {{ acc.balance &lt; 0 ? 'anx-pl-neg' : '' }}">
+                                            <t t-esc="formatBsVal(acc.balance)"/>
+                                        </td>
+                                    </tr>
+                                </t>
+
+                                <!-- Credit Cards -->
+                                <tr class="anx-bs-group">
+                                    <td class="anx-bs-group-lbl anx-bs-group-lbl-l2">Credit Cards</td>
+                                    <td t-attf-class="anx-bs-group-val {{ state.bsData.credit_cards.total &lt; 0 ? 'anx-pl-neg' : '' }}">
+                                        <t t-esc="formatBsVal(state.bsData.credit_cards.total)"/>
+                                    </td>
+                                </tr>
+                                <t t-foreach="state.bsData.credit_cards.accounts" t-as="acc" t-key="acc.id">
+                                    <tr class="anx-pl-acc">
+                                        <td class="anx-pl-acc-name"><t t-esc="acc.name"/></td>
+                                        <td t-attf-class="anx-pl-acc-val {{ acc.balance &lt; 0 ? 'anx-pl-neg' : '' }}">
+                                            <t t-esc="formatBsVal(acc.balance)"/>
+                                        </td>
+                                    </tr>
+                                </t>
+
+                                <!-- Other Current Liabilities -->
+                                <tr class="anx-bs-group">
+                                    <td class="anx-bs-group-lbl anx-bs-group-lbl-l2">
+                                        <i class="fa fa-caret-right anx-bs-caret" t-if="state.bsData.current_liabilities.accounts.length"/>
+                                        Other Current Liabilities
+                                    </td>
+                                    <td t-attf-class="anx-bs-group-val {{ state.bsData.current_liabilities.total &lt; 0 ? 'anx-pl-neg' : '' }}">
+                                        <t t-esc="formatBsVal(state.bsData.current_liabilities.total)"/>
+                                    </td>
+                                </tr>
+                                <t t-foreach="state.bsData.current_liabilities.accounts" t-as="acc" t-key="acc.id">
+                                    <tr class="anx-pl-acc">
+                                        <td class="anx-pl-acc-name"><t t-esc="acc.name"/></td>
+                                        <td t-attf-class="anx-pl-acc-val {{ acc.balance &lt; 0 ? 'anx-pl-neg' : '' }}">
+                                            <t t-esc="formatBsVal(acc.balance)"/>
+                                        </td>
+                                    </tr>
+                                </t>
+
+                                <!-- Total Current Liabilities -->
+                                <tr class="anx-pl-sub">
+                                    <td class="anx-pl-sub-lbl anx-bs-bold">Total Current Liabilities</td>
+                                    <td t-attf-class="anx-pl-sub-val {{ state.bsData.total_current_liabilities &lt; 0 ? 'anx-pl-neg' : '' }}">
+                                        <t t-esc="formatBsVal(state.bsData.total_current_liabilities)"/>
+                                    </td>
+                                </tr>
+
+                                <!-- Long-term Liabilities -->
+                                <tr class="anx-bs-group">
+                                    <td class="anx-bs-group-lbl">Long-term Liabilities</td>
+                                    <td t-attf-class="anx-bs-group-val {{ state.bsData.noncurrent_liabilities.total &lt; 0 ? 'anx-pl-neg' : '' }}">
+                                        <t t-esc="formatBsVal(state.bsData.noncurrent_liabilities.total)"/>
+                                    </td>
+                                </tr>
+                                <t t-foreach="state.bsData.noncurrent_liabilities.accounts" t-as="acc" t-key="acc.id">
+                                    <tr class="anx-pl-acc">
+                                        <td class="anx-pl-acc-name"><t t-esc="acc.name"/></td>
+                                        <td t-attf-class="anx-pl-acc-val {{ acc.balance &lt; 0 ? 'anx-pl-neg' : '' }}">
+                                            <t t-esc="formatBsVal(acc.balance)"/>
+                                        </td>
+                                    </tr>
+                                </t>
+
+                                <!-- Total Liabilities -->
+                                <tr class="anx-pl-total anx-bs-total-row">
+                                    <td class="anx-pl-total-lbl">Total Liabilities</td>
+                                    <td t-attf-class="anx-pl-total-val {{ state.bsData.total_liabilities &lt; 0 ? 'anx-pl-neg' : '' }}">
+                                        <t t-esc="formatBsVal(state.bsData.total_liabilities)"/>
+                                    </td>
+                                </tr>
+
+                                <tr class="anx-pl-spacer"><td colspan="2"/></tr>
+
+                                <!-- Equity subsection -->
+                                <tr class="anx-bs-subsec">
+                                    <td class="anx-bs-subsec-lbl">Equity (&amp; Earnings)</td>
+                                    <td/>
+                                </tr>
+
+                                <!-- Equity accounts -->
+                                <tr class="anx-bs-group">
+                                    <td class="anx-bs-group-lbl">Equity</td>
+                                    <td t-attf-class="anx-bs-group-val {{ state.bsData.equity.total &lt; 0 ? 'anx-pl-neg' : '' }}">
+                                        <t t-esc="formatBsVal(state.bsData.equity.total)"/>
+                                    </td>
+                                </tr>
+                                <t t-foreach="state.bsData.equity.accounts" t-as="acc" t-key="acc.id">
+                                    <tr class="anx-pl-acc">
+                                        <td class="anx-pl-acc-name"><t t-esc="acc.name"/></td>
+                                        <td t-attf-class="anx-pl-acc-val {{ acc.balance &lt; 0 ? 'anx-pl-neg' : '' }}">
+                                            <t t-esc="formatBsVal(acc.balance)"/>
+                                        </td>
+                                    </tr>
+                                </t>
+
+                                <!-- Earnings group -->
+                                <tr class="anx-bs-group">
+                                    <td class="anx-bs-group-lbl">Earnings</td>
+                                    <td/>
+                                </tr>
+                                <tr class="anx-pl-acc">
+                                    <td class="anx-pl-acc-name">Current Year Unallocated Earnings</td>
+                                    <td t-attf-class="anx-pl-acc-val {{ state.bsData.current_year_earnings &lt; 0 ? 'anx-pl-neg' : '' }}">
+                                        <t t-esc="formatBsVal(state.bsData.current_year_earnings)"/>
+                                    </td>
+                                </tr>
+                                <tr class="anx-pl-acc">
+                                    <td class="anx-pl-acc-name">Previous Year Earnings</td>
+                                    <td t-attf-class="anx-pl-acc-val {{ state.bsData.prev_year_earnings &lt; 0 ? 'anx-pl-neg' : '' }}">
+                                        <t t-esc="formatBsVal(state.bsData.prev_year_earnings)"/>
+                                    </td>
+                                </tr>
+
+                                <!-- Total Equity -->
+                                <tr class="anx-pl-sub">
+                                    <td class="anx-pl-sub-lbl anx-bs-bold">Total Equity (&amp; Earnings)</td>
+                                    <td t-attf-class="anx-pl-sub-val {{ state.bsData.total_equity &lt; 0 ? 'anx-pl-neg' : '' }}">
+                                        <t t-esc="formatBsVal(state.bsData.total_equity)"/>
+                                    </td>
+                                </tr>
+
+                                <!-- Total Liabilities & Equity -->
+                                <tr class="anx-pl-total anx-bs-total-row">
+                                    <td class="anx-pl-total-lbl">Total Liabilities &amp; Equity</td>
+                                    <td t-attf-class="anx-pl-total-val {{ state.bsData.total_liabilities_equity &lt; 0 ? 'anx-pl-neg' : '' }}">
+                                        <t t-esc="formatBsVal(state.bsData.total_liabilities_equity)"/>
+                                    </td>
+                                </tr>
+
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VAT SUMMARY MODAL -->
+            <div t-if="state.showVatModal" class="anx-pl-overlay anx-tb-overlay" t-on-click.self="closeVatModal">
+                <div class="anx-pl-modal anx-tb-modal-pl" style="max-width: 1400px; width: 95%;">
+                    <!-- Modal header -->
+                    <div class="anx-pl-mhdr anx-tb-mhdr">
+                        <div class="anx-pl-mhdr-left">
+                            <i class="fa fa-percent anx-pl-mhdr-icon anx-tb-mhdr-icon"/>
+                            <div>
+                                <div class="anx-pl-mhdr-title">VAT Summary</div>
+                                <div class="anx-pl-mhdr-sub" t-if="state.vatData">
+                                    <t t-esc="state.vatData.date_range.start"/> → <t t-esc="state.vatData.date_range.end"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="anx-pl-mhdr-right">
+                            <button class="anx-pl-close-btn" t-on-click="closeVatModal">
+                                <i class="fa fa-times"/>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Loading -->
+                    <div t-if="state.vatLoading" class="anx-pl-loading">
+                        <div class="anx-inv-spinner"/>
+                        <span>Loading VAT Data…</span>
+                    </div>
+
+                    <!-- VAT body -->
+                    <div t-if="!state.vatLoading and state.vatData" class="anx-pl-body" style="padding: 24px; background-color: #f4f7fb; overflow-y: auto;">
+                        
+                        <!-- VAT Custom Date Filter -->
+                        <div class="anx-vat-modal-filters" style="margin-bottom: 20px; padding: 12px 20px; background: #fff; border-radius: 8px; border: 1px solid #e0e4eb; display: flex; align-items: center; gap: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+                            <span style="font-weight: 600; color: #495057; font-size: 13px;">Custom Date Range:</span>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <label style="font-size: 12px; color: #6c757d; margin: 0;">From</label>
+                                <input type="date" class="anx-inv-search" style="max-width: 140px; padding: 6px 10px; font-size: 13px; height: auto;" data-field="from" t-att-value="state.vatFilterFrom" t-on-change="onVatFilterDateChange" />
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <label style="font-size: 12px; color: #6c757d; margin: 0;">To</label>
+                                <input type="date" class="anx-inv-search" style="max-width: 140px; padding: 6px 10px; font-size: 13px; height: auto;" data-field="to" t-att-value="state.vatFilterTo" t-on-change="onVatFilterDateChange" />
+                            </div>
+                            <button class="anx-pl-print-btn" style="padding: 6px 16px; font-size: 13px; border-radius: 6px; background-color: #1e88e5; color: white; border: none; cursor: pointer; transition: background 0.2s;" t-on-click="applyVatFilter">
+                                <i class="fa fa-filter"/> Filter
+                            </button>
+                        </div>
+
+                        <!-- KPI bar -->
+                        <div class="anx-inv-kpi-bar" t-if="state.vatData">
+                            <div class="anx-inv-kpi-pill anx-vat-kpi-output">
+                                <span class="anx-inv-kpi-pill-label">Output VAT (Sales)</span>
+                                <span class="anx-inv-kpi-pill-val"><t t-esc="state.vatData.currency_sym"/>&#160;<t t-esc="formatShort(state.vatData.output_vat)"/></span>
+                            </div>
+                            <div class="anx-inv-kpi-pill anx-vat-kpi-input">
+                                <span class="anx-inv-kpi-pill-label">Input VAT (Bills)</span>
+                                <span class="anx-inv-kpi-pill-val"><t t-esc="state.vatData.currency_sym"/>&#160;<t t-esc="formatShort(state.vatData.input_vat)"/></span>
+                            </div>
+                            <div class="anx-inv-kpi-pill anx-vat-kpi-net">
+                                <span class="anx-inv-kpi-pill-label">Net VAT Payable</span>
+                                <span class="anx-inv-kpi-pill-val"><t t-esc="state.vatData.currency_sym"/>&#160;<t t-esc="formatShort(state.vatData.net_vat)"/></span>
+                            </div>
+                            <div class="anx-inv-kpi-pill anx-inv-kpi-total">
+                                <span class="anx-inv-kpi-pill-label">Total Tax Lines</span>
+                                <span class="anx-inv-kpi-pill-val"><t t-esc="state.vatData.total_count"/></span>
+                            </div>
+                            <div class="anx-inv-company-legend" t-if="state.vatData.companies.length > 1">
+                                <t t-foreach="state.vatData.companies" t-as="comp" t-key="comp.id">
+                                    <span t-attf-class="anx-inv-co-legend-item {{ state.vatCompanyFilter == comp.id ? 'active' : '' }}"
+                                          t-attf-style="color:{{ comp.color.text }};"
+                                          t-att-data-company="comp.id" t-on-click="onVatCompanyFilter">
+                                        <span class="anx-inv-co-dot" t-attf-style="background:{{ comp.color.dot }};"></span>
+                                        <t t-esc="comp.name"/>
+                                    </span>
+                                </t>
+                                <span t-if="state.vatCompanyFilter !== 'all'" class="anx-inv-co-legend-item anx-inv-co-clear" data-company="all" t-on-click="onVatCompanyFilter">✕ All</span>
+                            </div>
+                        </div>
+                        <!-- Toolbar: search only (type is now separated by panel) -->
+                        <div class="anx-inv-toolbar" style="margin-bottom:14px;">
+                            <div class="anx-inv-search-wrap" style="max-width:380px;">
+                                <i class="fa fa-search anx-inv-search-icon"/>
+                                <input class="anx-inv-search" type="text" placeholder="Search document, partner, tax name…" t-on-input="onVatSearch"/>
+                            </div>
+                        </div>
+                        <!-- OUTPUT VAT PANEL -->
+                        <div class="anx-section-label" style="margin-top:4px;">
+                            <i class="fa fa-arrow-up" style="color:#1e88e5;"/> OUTPUT VAT — CUSTOMER INVOICES
+                        </div>
+                        <div class="anx-inv-table-wrap anx-panel" style="margin-bottom:20px;">
+                            <table class="anx-inv-table">
+                                <thead>
+                                    <tr>
+                                        <th class="anx-inv-th anx-inv-th-sort" data-col="move_name"    t-on-click="onVatSort">Document <i t-attf-class="fa {{ state.vatSortCol==='move_name'?(state.vatSortDir==='asc'?'fa-sort-asc':'fa-sort-desc'):'fa-sort' }} anx-inv-sort-icon"/></th>
+                                        <th class="anx-inv-th anx-inv-th-sort" data-col="partner"      t-on-click="onVatSort">Customer <i t-attf-class="fa {{ state.vatSortCol==='partner'?(state.vatSortDir==='asc'?'fa-sort-asc':'fa-sort-desc'):'fa-sort' }} anx-inv-sort-icon"/></th>
+                                        <th class="anx-inv-th anx-inv-th-sort" data-col="tax_name"     t-on-click="onVatSort">Tax <i t-attf-class="fa {{ state.vatSortCol==='tax_name'?(state.vatSortDir==='asc'?'fa-sort-asc':'fa-sort-desc'):'fa-sort' }} anx-inv-sort-icon"/></th>
+                                        <th class="anx-inv-th">Company</th>
+                                        <th class="anx-inv-th anx-inv-th-sort" data-col="invoice_date" t-on-click="onVatSort">Date <i t-attf-class="fa {{ state.vatSortCol==='invoice_date'?(state.vatSortDir==='asc'?'fa-sort-asc':'fa-sort-desc'):'fa-sort' }} anx-inv-sort-icon"/></th>
+                                        <th class="anx-inv-th anx-inv-th-right anx-inv-th-sort" data-col="tax_amount" t-on-click="onVatSort">VAT Amount <i t-attf-class="fa {{ state.vatSortCol==='tax_amount'?(state.vatSortDir==='asc'?'fa-sort-asc':'fa-sort-desc'):'fa-sort' }} anx-inv-sort-icon"/></th>
+                                        <th class="anx-inv-th anx-inv-th-center"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-if="filteredOutputVat.length === 0">
+                                        <tr><td colspan="7" class="anx-inv-empty">No output VAT lines found.</td></tr>
+                                    </t>
+                                    <t t-foreach="filteredOutputVat" t-as="vl" t-key="vl_index">
+                                        <tr class="anx-inv-row anx-vat-row-output" t-att-data-id="vl.id" t-on-click="openVatDoc">
+                                            <td class="anx-inv-td anx-inv-td-name"><span class="anx-inv-num"><i class="fa fa-file-text-o" style="color:#1e88e5;"/>&#160;<t t-esc="vl.move_name"/></span></td>
+                                            <td class="anx-inv-td"><div class="anx-inv-partner"><span class="anx-inv-partner-avatar" style="background:#e3f2fd;color:#1e88e5;"><t t-esc="vl.partner.charAt(0).toUpperCase()"/></span><span class="anx-inv-partner-name"><t t-esc="vl.partner"/></span></div></td>
+                                            <td class="anx-inv-td"><span class="anx-vat-tax-badge"><t t-esc="vl.tax_name"/></span></td>
+                                            <td class="anx-inv-td"><span class="anx-inv-company-badge" t-attf-style="background:{{ vl.company_color.bg }};color:{{ vl.company_color.text }};"><span class="anx-inv-co-dot-sm" t-attf-style="background:{{ vl.company_color.dot }};"></span><t t-esc="vl.company_name"/></span></td>
+                                            <td class="anx-inv-td anx-inv-td-date"><t t-esc="vl.invoice_date"/></td>
+                                            <td class="anx-inv-td anx-inv-td-amount"><t t-esc="vl.tax_display"/></td>
+                                            <td class="anx-inv-td anx-inv-td-center"><button class="anx-inv-open-btn" t-att-data-id="vl.id" t-on-click.stop="openVatDoc"><i class="fa fa-external-link"/></button></td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+                            <div class="anx-inv-table-footer" t-if="state.vatData">
+                                <span>Showing <strong><t t-esc="filteredOutputVat.length"/></strong> of <strong><t t-esc="state.vatData.output_count"/></strong> output VAT lines</span>
+                                <span class="anx-inv-footer-range">Period: <t t-esc="state.vatData.date_range.start"/> → <t t-esc="state.vatData.date_range.end"/></span>
+                            </div>
+                        </div>
+                        <!-- INPUT VAT PANEL -->
+                        <div class="anx-section-label">
+                            <i class="fa fa-arrow-down" style="color:#e53935;"/> INPUT VAT — VENDOR BILLS
+                        </div>
+                        <div class="anx-inv-table-wrap anx-panel" style="margin-bottom:20px;">
+                            <table class="anx-inv-table">
+                                <thead>
+                                    <tr>
+                                        <th class="anx-inv-th anx-inv-th-sort" data-col="move_name"    t-on-click="onVatSort">Document <i t-attf-class="fa {{ state.vatSortCol==='move_name'?(state.vatSortDir==='asc'?'fa-sort-asc':'fa-sort-desc'):'fa-sort' }} anx-inv-sort-icon"/></th>
+                                        <th class="anx-inv-th anx-inv-th-sort" data-col="partner"      t-on-click="onVatSort">Vendor <i t-attf-class="fa {{ state.vatSortCol==='partner'?(state.vatSortDir==='asc'?'fa-sort-asc':'fa-sort-desc'):'fa-sort' }} anx-inv-sort-icon"/></th>
+                                        <th class="anx-inv-th anx-inv-th-sort" data-col="tax_name"     t-on-click="onVatSort">Tax <i t-attf-class="fa {{ state.vatSortCol==='tax_name'?(state.vatSortDir==='asc'?'fa-sort-asc':'fa-sort-desc'):'fa-sort' }} anx-inv-sort-icon"/></th>
+                                        <th class="anx-inv-th">Company</th>
+                                        <th class="anx-inv-th anx-inv-th-sort" data-col="invoice_date" t-on-click="onVatSort">Date <i t-attf-class="fa {{ state.vatSortCol==='invoice_date'?(state.vatSortDir==='asc'?'fa-sort-asc':'fa-sort-desc'):'fa-sort' }} anx-inv-sort-icon"/></th>
+                                        <th class="anx-inv-th anx-inv-th-right anx-inv-th-sort" data-col="tax_amount" t-on-click="onVatSort">VAT Amount <i t-attf-class="fa {{ state.vatSortCol==='tax_amount'?(state.vatSortDir==='asc'?'fa-sort-asc':'fa-sort-desc'):'fa-sort' }} anx-inv-sort-icon"/></th>
+                                        <th class="anx-inv-th anx-inv-th-center"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-if="filteredInputVat.length === 0">
+                                        <tr><td colspan="7" class="anx-inv-empty">No input VAT lines found for this period.</td></tr>
+                                    </t>
+                                    <t t-foreach="filteredInputVat" t-as="vl" t-key="vl_index">
+                                        <tr class="anx-inv-row anx-vat-row-input" t-att-data-id="vl.id" t-on-click="openVatDoc">
+                                            <td class="anx-inv-td anx-inv-td-name"><span class="anx-inv-num"><i class="fa fa-file-text" style="color:#e53935;"/>&#160;<t t-esc="vl.move_name"/></span></td>
+                                            <td class="anx-inv-td"><div class="anx-inv-partner"><span class="anx-inv-partner-avatar" style="background:#fce4ec;color:#e53935;"><t t-esc="vl.partner.charAt(0).toUpperCase()"/></span><span class="anx-inv-partner-name"><t t-esc="vl.partner"/></span></div></td>
+                                            <td class="anx-inv-td"><span class="anx-vat-tax-badge anx-vat-tax-input"><t t-esc="vl.tax_name"/></span></td>
+                                            <td class="anx-inv-td"><span class="anx-inv-company-badge" t-attf-style="background:{{ vl.company_color.bg }};color:{{ vl.company_color.text }};"><span class="anx-inv-co-dot-sm" t-attf-style="background:{{ vl.company_color.dot }};"></span><t t-esc="vl.company_name"/></span></td>
+                                            <td class="anx-inv-td anx-inv-td-date"><t t-esc="vl.invoice_date"/></td>
+                                            <td class="anx-inv-td anx-inv-td-amount"><t t-esc="vl.tax_display"/></td>
+                                            <td class="anx-inv-td anx-inv-td-center"><button class="anx-inv-open-btn" t-att-data-id="vl.id" t-on-click.stop="openVatDoc"><i class="fa fa-external-link"/></button></td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+                            <div class="anx-inv-table-footer" t-if="state.vatData">
+                                <span>Showing <strong><t t-esc="filteredInputVat.length"/></strong> of <strong><t t-esc="state.vatData.input_count"/></strong> input VAT lines</span>
+                                <span class="anx-inv-footer-range">Period: <t t-esc="state.vatData.date_range.start"/> → <t t-esc="state.vatData.date_range.end"/></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TRIAL BALANCE MODAL -->
+            <div t-if="state.showTbModal" class="anx-pl-overlay anx-tb-overlay" t-on-click.self="closeTbModal">
+                <div class="anx-pl-modal anx-tb-modal-pl">
+                    <!-- Modal header -->
+                    <div class="anx-pl-mhdr anx-tb-mhdr">
+                        <div class="anx-pl-mhdr-left">
+                            <i class="fa fa-balance-scale anx-pl-mhdr-icon anx-tb-mhdr-icon"/>
+                            <div>
+                                <div class="anx-pl-mhdr-title">Trial Balance</div>
+                                <div class="anx-pl-mhdr-sub" t-if="state.tbModalData">
+                                    <t t-esc="state.tbModalData.company"/> &#8212;
+                                    <t t-esc="state.tbModalData.date_range.start"/> → <t t-esc="state.tbModalData.date_range.end"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="anx-pl-mhdr-right">
+                            <button class="anx-pl-print-btn anx-tb-print-btn" t-on-click="printTbReport" t-if="state.tbModalData">
+                                <i class="fa fa-print"/> Print Report
+                            </button>
+                            <button class="anx-pl-close-btn" t-on-click="closeTbModal">
+                                <i class="fa fa-times"/>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Loading -->
+                    <div t-if="state.tbModalLoading" class="anx-pl-loading">
+                        <div class="anx-inv-spinner"/>
+                        <span>Loading Trial Balance…</span>
+                    </div>
+
+                    <!-- Trial Balance body — report style -->
+                    <div t-if="!state.tbModalLoading and state.tbModalData" class="anx-pl-body anx-tb-report-body">
+
+                        <!-- Report Title -->
+                        <div class="anx-tb-report-title">
+                            Trial Balance - <t t-esc="state.tbModalData.company"/> - <t t-esc="state.tbModalData.currency_sym"/>
+                        </div>
+
+                        <!-- Filter metadata bar -->
+                        <div class="anx-tb-filter-bar">
+                            <div class="anx-tb-filter-cell">
+                                <div class="anx-tb-filter-label">Date range filter</div>
+                                <div class="anx-tb-filter-val">
+                                    From: <t t-esc="state.tbModalData.date_range.start"/> To <t t-esc="state.tbModalData.date_range.end"/>
+                                </div>
+                            </div>
+                            <div class="anx-tb-filter-cell">
+                                <div class="anx-tb-filter-label">Target moves filter</div>
+                                <div class="anx-tb-filter-val">All posted entries</div>
+                            </div>
+                            <div class="anx-tb-filter-cell">
+                                <div class="anx-tb-filter-label">Account at 0 filter</div>
+                                <div class="anx-tb-filter-val">Hide</div>
+                            </div>
+                            <div class="anx-tb-filter-cell">
+                                <div class="anx-tb-filter-label">Limit hierarchy levels</div>
+                                <div class="anx-tb-filter-val">No limit</div>
+                            </div>
+                        </div>
+
+                        <!-- Data table -->
+                        <table class="anx-tb-report-table">
+                            <thead>
+                                <tr>
+                                    <th class="anx-tb-rth anx-tb-rth-code">Code</th>
+                                    <th class="anx-tb-rth anx-tb-rth-name">Account</th>
+                                    <th class="anx-tb-rth anx-tb-rth-num">Initial balance</th>
+                                    <th class="anx-tb-rth anx-tb-rth-num">Debit</th>
+                                    <th class="anx-tb-rth anx-tb-rth-num">Credit</th>
+                                    <th class="anx-tb-rth anx-tb-rth-num">Period balance</th>
+                                    <th class="anx-tb-rth anx-tb-rth-num">Ending balance</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="state.tbModalData.records" t-as="acc" t-key="acc.id">
+                                    <tr class="anx-tb-rtd-row">
+                                        <td class="anx-tb-rtd anx-tb-rtd-code"><t t-esc="acc.code"/></td>
+                                        <td class="anx-tb-rtd anx-tb-rtd-name"><a class="anx-tb-acc-link"><t t-esc="acc.name"/></a></td>
+                                        <td t-attf-class="anx-tb-rtd anx-tb-rtd-num {{ acc.initial_balance &lt; 0 ? 'anx-tb-rneg' : '' }}"><t t-esc="acc.initial_display"/></td>
+                                        <td class="anx-tb-rtd anx-tb-rtd-num anx-tb-rdebit"><t t-esc="acc.debit_display"/></td>
+                                        <td class="anx-tb-rtd anx-tb-rtd-num anx-tb-rcredit"><t t-esc="acc.credit_display"/></td>
+                                        <td t-attf-class="anx-tb-rtd anx-tb-rtd-num {{ acc.period_balance &lt; 0 ? 'anx-tb-rneg' : '' }}"><t t-esc="acc.period_display"/></td>
+                                        <td t-attf-class="anx-tb-rtd anx-tb-rtd-num {{ acc.ending_balance &lt; 0 ? 'anx-tb-rneg' : '' }}"><t t-esc="acc.ending_display"/></td>
+                                    </tr>
+                                </t>
+                                <t t-if="state.tbModalData.records.length > 0">
+                                    <tr class="anx-tb-rtd-row anx-tb-total-row" style="font-weight: bold; background-color: #f8f9fa;">
+                                        <td class="anx-tb-rtd" colspan="2" style="text-align: right; padding-right: 12px;">Total</td>
+                                        <td t-attf-class="anx-tb-rtd anx-tb-rtd-num {{ state.tbModalData.total_initial &lt; 0 ? 'anx-tb-rneg' : '' }}"><t t-esc="state.tbModalData.total_initial_display"/></td>
+                                        <td class="anx-tb-rtd anx-tb-rtd-num anx-tb-rdebit"><t t-esc="state.tbModalData.total_debit_display"/></td>
+                                        <td class="anx-tb-rtd anx-tb-rtd-num anx-tb-rcredit"><t t-esc="state.tbModalData.total_credit_display"/></td>
+                                        <td t-attf-class="anx-tb-rtd anx-tb-rtd-num {{ state.tbModalData.total_period &lt; 0 ? 'anx-tb-rneg' : '' }}"><t t-esc="state.tbModalData.total_period_display"/></td>
+                                        <td t-attf-class="anx-tb-rtd anx-tb-rtd-num {{ state.tbModalData.total_ending &lt; 0 ? 'anx-tb-rneg' : '' }}"><t t-esc="state.tbModalData.total_ending_display"/></td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+
+                        <!-- Timestamp footer -->
+                        <div class="anx-tb-report-ts">
+                            Generated: <t t-esc="state.tbModalData.date_range.start"/>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- FLOATING DRAGGABLE CHAT BUTTON -->
+            <div class="anx-floating-chat-wrapper" 
+                 t-attf-style="position: fixed; left: {{ state.chatPos.x }}px; top: {{ state.chatPos.y }}px; z-index: 9999; cursor: move; touch-action: none;"
+                 t-on-mousedown="startDragChat"
+                 t-on-touchstart="startTouchDragChat">
+                <button class="anx-floating-chat-btn" 
+                        t-on-click="toggleChatPopup"
+                        style="width: 56px; height: 56px; border-radius: 50%; background: #1e3a8a; border: 2px solid #ffffff; box-shadow: 0 4px 15px rgba(30, 58, 138, 0.4); display: flex; align-items: center; justify-content: center; color: #ffffff; font-size: 20px; position: relative;">
+                    <i class="fa fa-comment-o" style="margin-top: -2px;"/>
+                    
+                    <!-- Notification Badge -->
+                    <span t-if="discussUnreadCount > 0" 
+                          class="anx-chat-badge" 
+                          style="position: absolute; top: -4px; right: -4px; background: #ef4444; color: #ffffff; font-size: 10px; font-weight: 700; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 1.5px solid #ffffff; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+                        <t t-esc="discussUnreadCount"/>
+                    </span>
+                </button>
+            </div>
+
+            <!-- CHAT POPUP WINDOW -->
+            <div t-if="state.showChatPopup" class="anx-chat-popup-window" t-att-style="getChatPopupStyle()">
+                <!-- IF LIST VIEW -->
+                <t t-if="!state.activeThreadId">
+                    <!-- Header -->
+                    <div class="anx-chat-popup-header">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <i class="fa fa-comments" style="font-size: 16px;"/>
+                            <span style="font-weight: 600; font-size: 14px;">Odoo Chat</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <button class="anx-chat-close-btn" t-on-click="openFullDiscuss" title="Open Discuss App" style="margin-right: 4px; background: rgba(255, 255, 255, 0.1); border: none; color: #ffffff; opacity: 0.8; cursor: pointer; padding: 5px 8px; border-radius: 6px; font-size: 12px; transition: all 0.2s;">
+                                <i class="fa fa-external-link"/>
+                            </button>
+                            <button class="anx-chat-close-btn" t-on-click="closeChatPopup" title="Close">
+                                <i class="fa fa-times"/>
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Body -->
+                    <div class="anx-chat-popup-body" style="padding: 12px; display: flex; flex-direction: column; gap: 10px; flex: 1; overflow: hidden; height: calc(100% - 50px);">
+
+                        <!-- Search Bar -->
+                        <div style="position: relative;">
+                            <div style="display: flex; align-items: center; background: #f1f5f9; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 8px 12px; gap: 8px; transition: border-color 0.2s;">
+                                <i class="fa fa-search" style="color: #94a3b8; font-size: 13px; flex-shrink: 0;"/>
+                                <input
+                                    type="text"
+                                    t-att-value="state.chatSearch"
+                                    t-on-input="onChatSearchInput"
+                                    placeholder="Search people or channels..."
+                                    style="border: none; background: transparent; outline: none; flex: 1; font-size: 12.5px; color: #1e293b; min-width: 0;"
+                                />
+                                <i t-if="state.chatSearchLoading" class="fa fa-spinner fa-spin" style="color: #94a3b8; font-size: 12px; flex-shrink: 0;"/>
+                                <button t-if="state.chatSearch and !state.chatSearchLoading" t-on-click="clearChatSearch"
+                                    style="border: none; background: none; padding: 0; cursor: pointer; color: #94a3b8; font-size: 12px; line-height: 1; display: flex; align-items: center;">
+                                    <i class="fa fa-times"/>
+                                </button>
+                            </div>
+
+                            <!-- Search Results Dropdown -->
+                            <div t-if="state.chatSearchResults.length > 0"
+                                 style="position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.12); z-index: 100; overflow: hidden; max-height: 220px; overflow-y: auto;">
+                                <div style="padding: 6px 10px; font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #f1f5f9;">Results</div>
+                                <t t-foreach="state.chatSearchResults" t-as="result" t-key="result.type + '_' + result.id">
+                                    <div t-on-click="onClickSearchResult"
+                                         t-att-data-result-index="result_index"
+                                         style="display: flex; align-items: center; gap: 10px; padding: 9px 12px; cursor: pointer; transition: background 0.15s;"
+                                         class="anx-search-result-item">
+                                        <!-- Avatar -->
+                                        <div style="position: relative; width: 34px; height: 34px; flex-shrink: 0;">
+                                            <img t-if="result.avatarUrl"
+                                                 t-att-src="result.avatarUrl"
+                                                 style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 1px solid #e2e8f0;"/>
+                                            <div t-else=""
+                                                 t-attf-style="width: 100%; height: 100%; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; background: {{ result.type === 'user' ? '#dbeafe' : '#fce7f3' }}; color: {{ result.type === 'user' ? '#2563eb' : '#be185d' }};">
+                                                <t t-esc="result.name ? result.name.charAt(0).toUpperCase() : '?'"/>
+                                            </div>
+                                        </div>
+                                        <!-- Info -->
+                                        <div style="flex: 1; min-width: 0;">
+                                            <div style="font-weight: 600; font-size: 12.5px; color: #1e293b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                                <t t-esc="result.name"/>
+                                            </div>
+                                            <div style="font-size: 10.5px; color: #94a3b8;">
+                                                <t t-if="result.type === 'user'">Direct Message</t>
+                                                <t t-else="">
+                                                    <t t-if="result.channelType === 'channel'"># Channel</t>
+                                                    <t t-else="">Group</t>
+                                                </t>
+                                            </div>
+                                        </div>
+                                        <!-- Start chat icon -->
+                                        <i class="fa fa-paper-plane" style="color: #cbd5e1; font-size: 12px; flex-shrink: 0;"/>
+                                    </div>
+                                </t>
+                            </div>
+
+                            <!-- No results found -->
+                            <div t-if="state.chatSearch and !state.chatSearchLoading and state.chatSearchResults.length === 0 and state.chatSearch.trim().length > 0"
+                                 style="position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.12); z-index: 100; padding: 16px; text-align: center; color: #94a3b8; font-size: 12px;">
+                                <i class="fa fa-search" style="display: block; font-size: 18px; margin-bottom: 6px; opacity: 0.4;"/>
+                                No results for "<t t-esc="state.chatSearch"/>"
+                            </div>
+                        </div>
+
+                        <!-- Quick action to open full app -->
+                        <button class="anx-chat-action-btn" t-on-click="openFullDiscuss" style="width: 100%; border: 1.5px dashed #2b7b9b; background: #f0f7fa; color: #2b7b9b; border-radius: 8px; padding: 7px; font-size: 11.5px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s; box-sizing: border-box;">
+                            <i class="fa fa-comments-o"/> Open Full Discuss Workspace
+                        </button>
+                        
+                        <!-- Conversations List -->
+                        <div class="anx-chat-list" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px;">
+                            <t t-if="activeChats.length === 0">
+                                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: #8a93a4; gap: 8px; text-align: center; padding: 20px;">
+                                    <i class="fa fa-commenting-o fa-2x" style="opacity: 0.5;"/>
+                                    <span style="font-size: 12px;"><t t-if="state.chatSearch">No conversations match "<t t-esc="state.chatSearch"/>"</t><t t-else="">No active conversations found.</t></span>
+                                </div>
+                            </t>
+                            <t t-else="">
+                                <t t-foreach="activeChats" t-as="thread" t-key="thread.localId">
+                                    <div class="anx-chat-item" 
+                                         t-att-data-thread-id="thread.id"
+                                         t-att-data-thread-model="thread.model"
+                                         t-on-click="onClickChatThread"
+                                         style="display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 8px; background: #ffffff; border: 1px solid #f1f5f9; cursor: pointer; transition: all 0.2s; position: relative;">
+                                        
+                                        <!-- Avatar / Icon -->
+                                        <div style="position: relative; width: 38px; height: 38px; flex-shrink: 0;">
+                                            <img t-if="thread.avatarUrl" 
+                                                 t-att-src="thread.avatarUrl" 
+                                                 style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 1px solid #e2e8f0;"/>
+                                            <div t-else="" 
+                                                 style="width: 100%; height: 100%; border-radius: 50%; background: #e0e7ff; color: #4f46e5; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px;">
+                                                <t t-esc="thread.displayName ? thread.displayName.charAt(0).toUpperCase() : '?'"/>
+                                            </div>
+                                            <!-- Online status indicator -->
+                                            <span t-if="thread.correspondent and thread.correspondent.im_status" 
+                                                  t-attf-style="position: absolute; bottom: 0; right: 0; width: 10px; height: 10px; border-radius: 50%; border: 2px solid #ffffff; background: {{ thread.correspondent.im_status === 'online' ? '#10b981' : (thread.correspondent.im_status === 'away' ? '#f59e0b' : '#9ca3af') }};"/>
+                                        </div>
+                                        
+                                        <!-- Info -->
+                                        <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px;">
+                                            <div style="display: flex; align-items: center; justify-content: space-between;">
+                                                <span style="font-weight: 700; font-size: 13px; color: #1e293b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                                    <t t-esc="thread.prefix"/><t t-esc="thread.displayName"/>
+                                                </span>
+                                            </div>
+                                            <div style="font-size: 11.5px; color: #64748b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                                <t t-if="thread.lastMessage">
+                                                    <t t-esc="thread.lastMessage.body ? stripHtml(thread.lastMessage.body) : 'Sent an attachment'"/>
+                                                </t>
+                                                <t t-else="">
+                                                    No messages yet
+                                                </t>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Unread Badge -->
+                                        <span t-if="thread.self_member_id and thread.self_member_id.message_unread_counter > 0" 
+                                              style="background: #ef4444; color: #ffffff; font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 10px; min-width: 14px; text-align: center;">
+                                            <t t-esc="thread.self_member_id.message_unread_counter"/>
+                                        </span>
+                                    </div>
+                                </t>
+                            </t>
+                        </div>
+                    </div>
+                </t>
+                
+                <!-- IF CONVERSATION VIEW -->
+                <t t-else="">
+                    <!-- Header -->
+                    <div class="anx-chat-popup-header" style="background: #1e3a8a; color: #ffffff; padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #1e40af; height: 50px; box-sizing: border-box; flex-shrink: 0;">
+                        <div style="display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1;">
+                            <button t-on-click="goBackToChatList" title="Back" style="background: none; border: none; color: #ffffff; font-size: 14px; cursor: pointer; padding: 4px 6px; display: flex; align-items: center; justify-content: center; border-radius: 50%; width: 28px; height: 28px; transition: all 0.2s; flex-shrink: 0;" class="anx-chat-back-btn">
+                                <i class="fa fa-chevron-left"/>
+                            </button>
+                            <div style="position: relative; width: 30px; height: 30px; flex-shrink: 0;">
+                                <img t-if="activeThread.avatarUrl" 
+                                     t-att-src="activeThread.avatarUrl" 
+                                     style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 1px solid rgba(255, 255, 255, 0.2);"/>
+                                <div t-else="" 
+                                     style="width: 100%; height: 100%; border-radius: 50%; background: rgba(255, 255, 255, 0.2); color: #ffffff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px;">
+                                    <t t-esc="activeThread.displayName ? activeThread.displayName.charAt(0).toUpperCase() : '?'"/>
+                                </div>
+                            </div>
+                            <span style="font-weight: 700; font-size: 13.5px; color: #ffffff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1;">
+                                <t t-esc="activeThread.displayName"/>
+                            </span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <button class="anx-chat-close-btn" t-on-click="openFullDiscuss" title="Open Full Discuss" style="background: rgba(255, 255, 255, 0.1); border: none; color: #ffffff; opacity: 0.8; cursor: pointer; padding: 5px 8px; border-radius: 6px; font-size: 12px; transition: all 0.2s;">
+                                <i class="fa fa-external-link"/>
+                            </button>
+                            <button class="anx-chat-close-btn" t-on-click="closeChatPopup" title="Close" style="background: none; border: none; color: #ffffff; opacity: 0.8; cursor: pointer; font-size: 14px;">
+                                <i class="fa fa-times"/>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Message Feed -->
+                    <div t-ref="messageFeed" class="anx-chat-messages-container" style="flex: 1; overflow-y: auto; background: #f8fafc; padding: 12px; display: flex; flex-direction: column; gap: 10px; height: calc(100% - 104px);">
+                        <t t-if="activeThreadMessages.length === 0">
+                            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: #94a3b8; font-size: 12px;">
+                                <i class="fa fa-comments-o fa-2x" style="opacity: 0.3; margin-bottom: 8px;"/>
+                                No messages in this conversation.
+                            </div>
+                        </t>
+                        <t t-else="">
+                            <t t-foreach="activeThreadMessages" t-as="message" t-key="message.id">
+                                <div t-attf-style="display: flex; align-items: flex-end; gap: 8px; max-width: 85%; width: fit-content; margin-bottom: 2px; {{ message.isSelfAuthored ? 'margin-left: auto; flex-direction: row-reverse;' : 'margin-right: auto;' }}">
+                                    <!-- Correspondent Avatar (Others only) -->
+                                    <div t-if="!message.isSelfAuthored" style="width: 26px; height: 26px; flex-shrink: 0; margin-bottom: 2px;">
+                                        <img t-if="message.author and message.author.avatarUrl" 
+                                             t-att-src="message.author.avatarUrl" 
+                                             style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 1px solid #e2e8f0;"/>
+                                        <div t-else="" 
+                                             style="width: 100%; height: 100%; border-radius: 50%; background: #e2e8f0; color: #475569; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 10px;">
+                                            <t t-esc="message.author ? message.author.displayName.charAt(0).toUpperCase() : '?'"/>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Message Bubble -->
+                                    <div style="display: flex; flex-direction: column; gap: 2px;">
+                                        <!-- Sender Name (Others in channel only) -->
+                                        <span t-if="!message.isSelfAuthored and activeThread.channel_type !== 'chat'" 
+                                              style="font-size: 10px; font-weight: 600; color: #64748b; margin-left: 4px;">
+                                            <t t-esc="message.author ? message.author.displayName : 'Unknown'"/>
+                                        </span>
+                                        
+                                        <div t-attf-style="padding: 8px 12px; border-radius: 12px; font-size: 12.5px; line-height: 1.4; word-break: break-word; box-shadow: 0 1px 2px rgba(0,0,0,0.05); {{ message.isSelfAuthored ? 'background: #2b7b9b; color: #ffffff; border-bottom-right-radius: 2px;' : 'background: #ffffff; color: #1e293b; border-bottom-left-radius: 2px; border: 1px solid #e2e8f0;' }}">
+                                            <!-- Message content -->
+                                            <t t-out="message.body"/>
+                                        </div>
+                                        
+                                        <!-- Time -->
+                                        <span t-attf-style="font-size: 9px; color: #94a3b8; padding: 0 4px; {{ message.isSelfAuthored ? 'text-align: right;' : 'text-align: left;' }}">
+                                            <t t-esc="formatMessageTime(message)"/>
+                                        </span>
+                                    </div>
+                                </div>
+                            </t>
+                        </t>
+                    </div>
+                    
+                    <!-- Composer Footer -->
+                    <div style="background: #ffffff; border-top: 1px solid #e2e8f0; padding: 10px 12px; display: flex; align-items: center; gap: 8px; height: 54px; box-sizing: border-box; flex-shrink: 0;">
+                        <input type="text" 
+                               t-model="state.messageText"
+                               t-on-keydown="onMessageInputKeydown"
+                               placeholder="Type a message..." 
+                               style="flex: 1; border: 1px solid #cbd5e1; border-radius: 20px; padding: 6px 14px; font-size: 12.5px; outline: none; transition: border-color 0.15s; background: #f8fafc;"
+                               class="anx-chat-input"/>
+                        <button t-on-click="sendMessage" 
+                                style="background: #2b7b9b; color: #ffffff; border: none; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; flex-shrink: 0;"
+                                class="anx-chat-send-btn"
+                                title="Send">
+                            <i class="fa fa-paper-plane" style="font-size: 12px; margin-left: -1px;"/>
+                        </button>
+                    </div>
+                </t>
+            </div>
+
+            </div>
+        </div>
+    </t>
+</templates>
