@@ -376,6 +376,23 @@ export class AnalytixFinanceDashboard extends Component {
         });
     }
 
+    // ── Create new Invoice (Customer) or Bill (Vendor) ───────────────
+    createNewInvoice() {
+        const isVendor = this.state.invTypeFilter === 'vendor';
+        const moveType = isVendor ? 'in_invoice' : 'out_invoice';
+        this.action.doAction({
+            type: 'ir.actions.act_window',
+            name: isVendor ? 'New Vendor Bill' : 'New Customer Invoice',
+            res_model: 'account.move',
+            views: [[false, 'form']],
+            target: 'current',
+            context: {
+                default_move_type: moveType,
+                move_type: moveType,
+            },
+        });
+    }
+
 
     // ── Expense data fetch ────────────────────────────────────────────
     async fetchExpenseData() {
@@ -522,9 +539,16 @@ export class AnalytixFinanceDashboard extends Component {
         }
         if (this.state.jrnSearch.trim()) {
             const q = this.state.jrnSearch.trim().toLowerCase();
-            rows = rows.filter(r => r.name.toLowerCase().includes(q) || r.code.toLowerCase().includes(q) || r.type_label.toLowerCase().includes(q));
+            rows = rows.filter(r =>
+                (r.name && r.name.toLowerCase().includes(q)) ||
+                (r.journal_name && r.journal_name.toLowerCase().includes(q)) ||
+                (r.journal_code && r.journal_code.toLowerCase().includes(q)) ||
+                (r.partner && r.partner.toLowerCase().includes(q)) ||
+                (r.ref && r.ref.toLowerCase().includes(q)) ||
+                (r.type_label && r.type_label.toLowerCase().includes(q))
+            );
         }
-        const col = this.state.jrnSortCol;
+        const col = this.state.jrnSortCol || 'date';
         const dir = this.state.jrnSortDir === 'asc' ? 1 : -1;
         return [...rows].sort((a, b) => {
             let av = a[col] ?? '', bv = b[col] ?? '';
@@ -535,7 +559,7 @@ export class AnalytixFinanceDashboard extends Component {
     openJournal(ev) {
         const id = parseInt(ev.currentTarget.dataset.id, 10);
         if (!id) return;
-        this.action.doAction({ type: 'ir.actions.act_window', res_model: 'account.journal', res_id: id, views: [[false, 'form']], target: 'current' });
+        this.action.doAction({ type: 'ir.actions.act_window', res_model: 'account.move', res_id: id, views: [[false, 'form']], target: 'current' });
     }
     // ── Trial Balance data fetch ──────────────────────────────────────
     async fetchTrialBalanceData() {

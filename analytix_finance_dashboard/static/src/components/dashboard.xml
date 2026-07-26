@@ -444,6 +444,17 @@
                                 <button t-attf-class="anx-inv-chip anx-chip-red {{ state.invTypeFilter === 'vendor' ? 'active' : '' }}" data-type="vendor" t-on-click="onInvTypeFilter"><i class="fa fa-file-text"/> Vendor</button>
                                 <button t-attf-class="anx-inv-chip anx-chip-purple {{ state.invTypeFilter === 'credit_note' ? 'active' : '' }}" data-type="credit_note" t-on-click="onInvTypeFilter"><i class="fa fa-undo"/> Credit Notes</button>
                             </div>
+                            <!-- Contextual New button: Customer → Invoice, Vendor → Bill -->
+                            <t t-if="state.invTypeFilter === 'customer'">
+                                <button class="anx-inv-new-btn anx-inv-new-invoice" t-on-click="createNewInvoice" title="Create a new Customer Invoice">
+                                    <i class="fa fa-plus"/> New Invoice
+                                </button>
+                            </t>
+                            <t t-if="state.invTypeFilter === 'vendor'">
+                                <button class="anx-inv-new-btn anx-inv-new-bill" t-on-click="createNewInvoice" title="Create a new Vendor Bill">
+                                    <i class="fa fa-plus"/> New Bill
+                                </button>
+                            </t>
                             <div class="anx-inv-status-pills">
                                 <span t-attf-class="anx-inv-spill {{ state.invStatusFilter === 'all' ? 'active' : '' }}" data-status="all" t-on-click="onInvStatusFilter">All</span>
                                 <span t-attf-class="anx-inv-spill anx-spill-paid {{ state.invStatusFilter === 'paid' ? 'active' : '' }}" data-status="paid" t-on-click="onInvStatusFilter">Paid</span>
@@ -750,16 +761,16 @@
                     </t>
                 </t>
 
-                <!-- JOURNALS TAB -->
+                <!-- JOURNALS TAB (JOURNAL ENTRIES) -->
                 <t t-if="state.data and state.activeTab === 'journals'">
                     <div t-if="state.jrnLoading" class="anx-inv-loading">
-                        <div class="anx-inv-spinner"></div><span>Loading journals…</span>
+                        <div class="anx-inv-spinner"></div><span>Loading journal entries…</span>
                     </div>
                     <t t-if="!state.jrnLoading">
                         <!-- KPI bar -->
                         <div class="anx-inv-kpi-bar" t-if="state.jrnData">
                             <div class="anx-inv-kpi-pill anx-inv-kpi-total">
-                                <span class="anx-inv-kpi-pill-label">Total Journals</span>
+                                <span class="anx-inv-kpi-pill-label">Total Entries</span>
                                 <span class="anx-inv-kpi-pill-val"><t t-esc="state.jrnData.total_count"/></span>
                             </div>
                             <div class="anx-inv-kpi-pill anx-inv-kpi-amount">
@@ -790,27 +801,28 @@
                             </div>
                             <div class="anx-inv-search-wrap">
                                 <i class="fa fa-search anx-inv-search-icon"/>
-                                <input class="anx-inv-search" type="text" placeholder="Search journal name or code…" t-on-input="onJrnSearch"/>
+                                <input class="anx-inv-search" type="text" placeholder="Search entry #, partner, reference, journal…" t-on-input="onJrnSearch"/>
                             </div>
                         </div>
-                        <!-- Journal list table -->
+                        <!-- Journal Entries list table -->
                         <div class="anx-inv-table-wrap anx-panel">
                             <table class="anx-inv-table">
                                 <thead>
                                     <tr>
-                                        <th class="anx-inv-th anx-inv-th-sort" data-col="name"        t-on-click="onJrnSort">Journal Name <i t-attf-class="fa {{ state.jrnSortCol==='name'?(state.jrnSortDir==='asc'?'fa-sort-asc':'fa-sort-desc'):'fa-sort' }} anx-inv-sort-icon"/></th>
-                                        <th class="anx-inv-th anx-inv-th-sort" data-col="code"        t-on-click="onJrnSort">Code <i t-attf-class="fa {{ state.jrnSortCol==='code'?(state.jrnSortDir==='asc'?'fa-sort-asc':'fa-sort-desc'):'fa-sort' }} anx-inv-sort-icon"/></th>
-                                        <th class="anx-inv-th anx-inv-th-sort" data-col="type_label"  t-on-click="onJrnSort">Type <i t-attf-class="fa {{ state.jrnSortCol==='type_label'?(state.jrnSortDir==='asc'?'fa-sort-asc':'fa-sort-desc'):'fa-sort' }} anx-inv-sort-icon"/></th>
+                                        <th class="anx-inv-th anx-inv-th-sort" data-col="name" t-on-click="onJrnSort">Entry Number <i t-attf-class="fa {{ state.jrnSortCol==='name'?(state.jrnSortDir==='asc'?'fa-sort-asc':'fa-sort-desc'):'fa-sort' }} anx-inv-sort-icon"/></th>
+                                        <th class="anx-inv-th anx-inv-th-sort" data-col="date" t-on-click="onJrnSort">Date <i t-attf-class="fa {{ state.jrnSortCol==='date'?(state.jrnSortDir==='asc'?'fa-sort-asc':'fa-sort-desc'):'fa-sort' }} anx-inv-sort-icon"/></th>
+                                        <th class="anx-inv-th anx-inv-th-sort" data-col="journal_name" t-on-click="onJrnSort">Journal <i t-attf-class="fa {{ state.jrnSortCol==='journal_name'?(state.jrnSortDir==='asc'?'fa-sort-asc':'fa-sort-desc'):'fa-sort' }} anx-inv-sort-icon"/></th>
+                                        <th class="anx-inv-th anx-inv-th-sort" data-col="partner" t-on-click="onJrnSort">Partner <i t-attf-class="fa {{ state.jrnSortCol==='partner'?(state.jrnSortDir==='asc'?'fa-sort-asc':'fa-sort-desc'):'fa-sort' }} anx-inv-sort-icon"/></th>
+                                        <th class="anx-inv-th">Reference</th>
                                         <th class="anx-inv-th">Company</th>
-                                        <th class="anx-inv-th">Default Account</th>
-                                        <th class="anx-inv-th anx-inv-th-sort anx-inv-th-center" data-col="entry_count" t-on-click="onJrnSort">Entries <i t-attf-class="fa {{ state.jrnSortCol==='entry_count'?(state.jrnSortDir==='asc'?'fa-sort-asc':'fa-sort-desc'):'fa-sort' }} anx-inv-sort-icon"/></th>
-                                        <th class="anx-inv-th anx-inv-th-right anx-inv-th-sort" data-col="total_amount" t-on-click="onJrnSort">Period Volume <i t-attf-class="fa {{ state.jrnSortCol==='total_amount'?(state.jrnSortDir==='asc'?'fa-sort-asc':'fa-sort-desc'):'fa-sort' }} anx-inv-sort-icon"/></th>
+                                        <th class="anx-inv-th anx-inv-th-center">Status</th>
+                                        <th class="anx-inv-th anx-inv-th-right anx-inv-th-sort" data-col="amount" t-on-click="onJrnSort">Amount <i t-attf-class="fa {{ state.jrnSortCol==='amount'?(state.jrnSortDir==='asc'?'fa-sort-asc':'fa-sort-desc'):'fa-sort' }} anx-inv-sort-icon"/></th>
                                         <th class="anx-inv-th anx-inv-th-center"></th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <t t-if="filteredJournals.length === 0">
-                                        <tr><td colspan="8" class="anx-inv-empty"><i class="fa fa-book fa-2x" style="color:#c8cdd8;display:block;margin-bottom:10px;"/>No journals found.</td></tr>
+                                        <tr><td colspan="9" class="anx-inv-empty"><i class="fa fa-book fa-2x" style="color:#c8cdd8;display:block;margin-bottom:10px;"/>No journal entries found.</td></tr>
                                     </t>
                                     <t t-foreach="filteredJournals" t-as="jrn" t-key="jrn.id">
                                         <tr class="anx-inv-row anx-jrn-list-row" t-att-data-id="jrn.id" t-on-click="openJournal"
@@ -818,28 +830,33 @@
                                             <td class="anx-inv-td anx-inv-td-name">
                                                 <div class="anx-inv-partner">
                                                     <span class="anx-jrn-list-icon" t-attf-style="background:{{ jrn.type_bg }};color:{{ jrn.type_dot }};"><i t-attf-class="fa {{ jrn.type_icon }}"/></span>
-                                                    <span class="anx-jrn-list-name"><t t-esc="jrn.name"/></span>
+                                                    <span class="anx-jrn-list-name" style="font-weight:600;"><t t-esc="jrn.name"/></span>
                                                 </div>
                                             </td>
-                                            <td class="anx-inv-td">
-                                                <span class="anx-jrn-code-badge"><t t-esc="jrn.code"/></span>
+                                            <td class="anx-inv-td anx-inv-td-date">
+                                                <t t-esc="jrn.date"/>
                                             </td>
                                             <td class="anx-inv-td">
-                                                <span class="anx-jrn-type-badge" t-attf-style="background:{{ jrn.type_bg }};color:{{ jrn.type_text }};"><t t-esc="jrn.type_label"/></span>
+                                                <span class="anx-jrn-type-badge" t-attf-style="background:{{ jrn.type_bg }};color:{{ jrn.type_text }};"><t t-esc="jrn.journal_name"/> (<t t-esc="jrn.journal_code"/>)</span>
+                                            </td>
+                                            <td class="anx-inv-td" style="font-size:12px;color:#374151;">
+                                                <t t-esc="jrn.partner"/>
+                                            </td>
+                                            <td class="anx-inv-td" style="font-size:11.5px;color:#6b7280;">
+                                                <t t-esc="jrn.ref or '—'"/>
                                             </td>
                                             <td class="anx-inv-td">
                                                 <span class="anx-inv-company-badge" t-attf-style="background:{{ jrn.company_color.bg }};color:{{ jrn.company_color.text }};"><span class="anx-inv-co-dot-sm" t-attf-style="background:{{ jrn.company_color.dot }};"></span><t t-esc="jrn.company_name"/></span>
                                             </td>
-                                            <td class="anx-inv-td anx-inv-td-date" style="font-size:11.5px;color:#6b7280;"><t t-esc="jrn.default_account or '—'"/></td>
                                             <td class="anx-inv-td anx-inv-td-center">
-                                                <span t-attf-class="anx-jrn-count-badge {{ jrn.entry_count > 0 ? 'anx-jrn-count-active' : 'anx-jrn-count-zero' }}"><t t-esc="jrn.entry_count"/></span>
+                                                <span class="anx-inv-status-badge" t-attf-style="background:{{ jrn.state_bg }};color:{{ jrn.state_text }};">
+                                                    <span class="anx-inv-status-dot" t-attf-style="background:{{ jrn.state_dot }};"/>
+                                                    <t t-esc="jrn.state_label"/>
+                                                </span>
                                             </td>
                                             <td class="anx-inv-td anx-inv-td-amount"><t t-esc="jrn.amount_display"/></td>
                                             <td class="anx-inv-td anx-inv-td-center">
-                                                <button class="anx-jrn-entries-btn" t-att-data-id="jrn.id" t-on-click="openJournalEntries" t-if="jrn.entry_count > 0" title="View entries">
-                                                    <i class="fa fa-list"/>
-                                                </button>
-                                                <button class="anx-inv-open-btn" t-att-data-id="jrn.id" t-on-click.stop="openJournal" title="Open journal">
+                                                <button class="anx-inv-open-btn" t-att-data-id="jrn.id" t-on-click.stop="openJournal" title="Open entry">
                                                     <i class="fa fa-external-link"/>
                                                 </button>
                                             </td>
@@ -847,10 +864,10 @@
                                     </t>
                                 </tbody>
                             </table>
-                        <div class="anx-inv-table-footer" t-if="state.jrnData" style="margin-top:8px;background:transparent;border:none;">
-                            <span>Showing <strong><t t-esc="filteredJournals.length"/></strong> of <strong><t t-esc="state.jrnData.total_count"/></strong> journals</span>
-                            <span class="anx-inv-footer-range">Period: <t t-esc="state.jrnData.date_range.start"/> → <t t-esc="state.jrnData.date_range.end"/></span>
-                        </div>
+                            <div class="anx-inv-table-footer" t-if="state.jrnData" style="margin-top:8px;background:transparent;border:none;">
+                                <span>Showing <strong><t t-esc="filteredJournals.length"/></strong> of <strong><t t-esc="state.jrnData.total_count"/></strong> journal entries</span>
+                                <span class="anx-inv-footer-range">Period: <t t-esc="state.jrnData.date_range.start"/> → <t t-esc="state.jrnData.date_range.end"/></span>
+                            </div>
                         </div>
                     </t>
                 </t>
@@ -1443,7 +1460,7 @@
                                 </tr>
                                 <t t-foreach="state.plData.income.accounts" t-as="acc" t-key="acc.id">
                                     <tr class="anx-pl-acc">
-                                        <td class="anx-pl-acc-name"><t t-esc="acc.name"/></td>
+                                        <td class="anx-pl-acc-name"><a class="anx-tb-acc-link" t-att-data-id="acc.id" t-on-click="openTrialBalanceAccount"><t t-esc="acc.name"/></a></td>
                                         <td t-attf-class="anx-pl-acc-val {{ acc.balance &lt; 0 ? 'anx-pl-neg' : '' }}">
                                             <t t-esc="formatPlVal(acc.balance)"/>
                                         </td>
@@ -1458,7 +1475,7 @@
                                 </tr>
                                 <t t-foreach="state.plData.cogs.accounts" t-as="acc" t-key="acc.id">
                                     <tr class="anx-pl-acc">
-                                        <td class="anx-pl-acc-name"><t t-esc="acc.name"/></td>
+                                        <td class="anx-pl-acc-name"><a class="anx-tb-acc-link" t-att-data-id="acc.id" t-on-click="openTrialBalanceAccount"><t t-esc="acc.name"/></a></td>
                                         <td t-attf-class="anx-pl-acc-val {{ acc.balance &lt; 0 ? 'anx-pl-neg' : '' }}">
                                             <t t-esc="formatPlVal(acc.balance)"/>
                                         </td>
@@ -1482,7 +1499,7 @@
                                 </tr>
                                 <t t-foreach="state.plData.expense.accounts" t-as="acc" t-key="acc.id">
                                     <tr class="anx-pl-acc">
-                                        <td class="anx-pl-acc-name"><t t-esc="acc.name"/></td>
+                                        <td class="anx-pl-acc-name"><a class="anx-tb-acc-link" t-att-data-id="acc.id" t-on-click="openTrialBalanceAccount"><t t-esc="acc.name"/></a></td>
                                         <td t-attf-class="anx-pl-acc-val {{ acc.balance &lt; 0 ? 'anx-pl-neg' : '' }}">
                                             <t t-esc="formatPlVal(acc.balance)"/>
                                         </td>
@@ -1506,7 +1523,7 @@
                                 </tr>
                                 <t t-foreach="state.plData.other_income.accounts" t-as="acc" t-key="acc.id">
                                     <tr class="anx-pl-acc">
-                                        <td class="anx-pl-acc-name"><t t-esc="acc.name"/></td>
+                                        <td class="anx-pl-acc-name"><a class="anx-tb-acc-link" t-att-data-id="acc.id" t-on-click="openTrialBalanceAccount"><t t-esc="acc.name"/></a></td>
                                         <td t-attf-class="anx-pl-acc-val {{ acc.balance &lt; 0 ? 'anx-pl-neg' : '' }}">
                                             <t t-esc="formatPlVal(acc.balance)"/>
                                         </td>
@@ -1642,7 +1659,7 @@
                                 </tr>
                                 <t t-foreach="state.bsData.bank_cash.accounts" t-as="acc" t-key="acc.id">
                                     <tr class="anx-pl-acc">
-                                        <td class="anx-pl-acc-name"><t t-esc="acc.name"/></td>
+                                        <td class="anx-pl-acc-name"><a class="anx-tb-acc-link" t-att-data-id="acc.id" t-on-click="openTrialBalanceAccount"><t t-esc="acc.name"/></a></td>
                                         <td t-attf-class="anx-pl-acc-val {{ acc.balance &lt; 0 ? 'anx-pl-neg' : '' }}">
                                             <t t-esc="formatBsVal(acc.balance)"/>
                                         </td>
@@ -1661,7 +1678,7 @@
                                 </tr>
                                 <t t-foreach="state.bsData.receivable.accounts" t-as="acc" t-key="acc.id">
                                     <tr class="anx-pl-acc">
-                                        <td class="anx-pl-acc-name"><t t-esc="acc.name"/></td>
+                                        <td class="anx-pl-acc-name"><a class="anx-tb-acc-link" t-att-data-id="acc.id" t-on-click="openTrialBalanceAccount"><t t-esc="acc.name"/></a></td>
                                         <td t-attf-class="anx-pl-acc-val {{ acc.balance &lt; 0 ? 'anx-pl-neg' : '' }}">
                                             <t t-esc="formatBsVal(acc.balance)"/>
                                         </td>
@@ -1680,7 +1697,7 @@
                                 </tr>
                                 <t t-foreach="state.bsData.current_assets.accounts" t-as="acc" t-key="acc.id">
                                     <tr class="anx-pl-acc">
-                                        <td class="anx-pl-acc-name"><t t-esc="acc.name"/></td>
+                                        <td class="anx-pl-acc-name"><a class="anx-tb-acc-link" t-att-data-id="acc.id" t-on-click="openTrialBalanceAccount"><t t-esc="acc.name"/></a></td>
                                         <td t-attf-class="anx-pl-acc-val {{ acc.balance &lt; 0 ? 'anx-pl-neg' : '' }}">
                                             <t t-esc="formatBsVal(acc.balance)"/>
                                         </td>
@@ -1704,7 +1721,7 @@
                                 </tr>
                                 <t t-foreach="state.bsData.fixed_assets.accounts" t-as="acc" t-key="acc.id">
                                     <tr class="anx-pl-acc">
-                                        <td class="anx-pl-acc-name"><t t-esc="acc.name"/></td>
+                                        <td class="anx-pl-acc-name"><a class="anx-tb-acc-link" t-att-data-id="acc.id" t-on-click="openTrialBalanceAccount"><t t-esc="acc.name"/></a></td>
                                         <td t-attf-class="anx-pl-acc-val {{ acc.balance &lt; 0 ? 'anx-pl-neg' : '' }}">
                                             <t t-esc="formatBsVal(acc.balance)"/>
                                         </td>
@@ -1720,7 +1737,7 @@
                                 </tr>
                                 <t t-foreach="state.bsData.other_assets.accounts" t-as="acc" t-key="acc.id">
                                     <tr class="anx-pl-acc">
-                                        <td class="anx-pl-acc-name"><t t-esc="acc.name"/></td>
+                                        <td class="anx-pl-acc-name"><a class="anx-tb-acc-link" t-att-data-id="acc.id" t-on-click="openTrialBalanceAccount"><t t-esc="acc.name"/></a></td>
                                         <td t-attf-class="anx-pl-acc-val {{ acc.balance &lt; 0 ? 'anx-pl-neg' : '' }}">
                                             <t t-esc="formatBsVal(acc.balance)"/>
                                         </td>
@@ -1766,7 +1783,7 @@
                                 </tr>
                                 <t t-foreach="state.bsData.payable.accounts" t-as="acc" t-key="acc.id">
                                     <tr class="anx-pl-acc">
-                                        <td class="anx-pl-acc-name"><t t-esc="acc.name"/></td>
+                                        <td class="anx-pl-acc-name"><a class="anx-tb-acc-link" t-att-data-id="acc.id" t-on-click="openTrialBalanceAccount"><t t-esc="acc.name"/></a></td>
                                         <td t-attf-class="anx-pl-acc-val {{ acc.balance &lt; 0 ? 'anx-pl-neg' : '' }}">
                                             <t t-esc="formatBsVal(acc.balance)"/>
                                         </td>
@@ -1782,7 +1799,7 @@
                                 </tr>
                                 <t t-foreach="state.bsData.credit_cards.accounts" t-as="acc" t-key="acc.id">
                                     <tr class="anx-pl-acc">
-                                        <td class="anx-pl-acc-name"><t t-esc="acc.name"/></td>
+                                        <td class="anx-pl-acc-name"><a class="anx-tb-acc-link" t-att-data-id="acc.id" t-on-click="openTrialBalanceAccount"><t t-esc="acc.name"/></a></td>
                                         <td t-attf-class="anx-pl-acc-val {{ acc.balance &lt; 0 ? 'anx-pl-neg' : '' }}">
                                             <t t-esc="formatBsVal(acc.balance)"/>
                                         </td>
@@ -1801,7 +1818,7 @@
                                 </tr>
                                 <t t-foreach="state.bsData.current_liabilities.accounts" t-as="acc" t-key="acc.id">
                                     <tr class="anx-pl-acc">
-                                        <td class="anx-pl-acc-name"><t t-esc="acc.name"/></td>
+                                        <td class="anx-pl-acc-name"><a class="anx-tb-acc-link" t-att-data-id="acc.id" t-on-click="openTrialBalanceAccount"><t t-esc="acc.name"/></a></td>
                                         <td t-attf-class="anx-pl-acc-val {{ acc.balance &lt; 0 ? 'anx-pl-neg' : '' }}">
                                             <t t-esc="formatBsVal(acc.balance)"/>
                                         </td>
@@ -1825,7 +1842,7 @@
                                 </tr>
                                 <t t-foreach="state.bsData.noncurrent_liabilities.accounts" t-as="acc" t-key="acc.id">
                                     <tr class="anx-pl-acc">
-                                        <td class="anx-pl-acc-name"><t t-esc="acc.name"/></td>
+                                        <td class="anx-pl-acc-name"><a class="anx-tb-acc-link" t-att-data-id="acc.id" t-on-click="openTrialBalanceAccount"><t t-esc="acc.name"/></a></td>
                                         <td t-attf-class="anx-pl-acc-val {{ acc.balance &lt; 0 ? 'anx-pl-neg' : '' }}">
                                             <t t-esc="formatBsVal(acc.balance)"/>
                                         </td>
@@ -1857,7 +1874,7 @@
                                 </tr>
                                 <t t-foreach="state.bsData.equity.accounts" t-as="acc" t-key="acc.id">
                                     <tr class="anx-pl-acc">
-                                        <td class="anx-pl-acc-name"><t t-esc="acc.name"/></td>
+                                        <td class="anx-pl-acc-name"><a class="anx-tb-acc-link" t-att-data-id="acc.id" t-on-click="openTrialBalanceAccount"><t t-esc="acc.name"/></a></td>
                                         <td t-attf-class="anx-pl-acc-val {{ acc.balance &lt; 0 ? 'anx-pl-neg' : '' }}">
                                             <t t-esc="formatBsVal(acc.balance)"/>
                                         </td>

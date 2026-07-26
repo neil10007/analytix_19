@@ -677,6 +677,39 @@
 .anx-chip-red.active     { background: #e53935; border-color: #e53935; }
 .anx-chip-purple.active  { background: #7e57c2; border-color: #7e57c2; }
 
+/* New Invoice / Bill action buttons */
+.anx-inv-new-btn {
+    border-radius: 20px;
+    padding: 5px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: none;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+}
+.anx-inv-new-invoice {
+    background: #1565c0;
+    color: #ffffff;
+}
+.anx-inv-new-invoice:hover {
+    background: #0d47a1;
+    color: #ffffff;
+    box-shadow: 0 2px 6px rgba(21,101,192,0.3);
+}
+.anx-inv-new-bill {
+    background: #c62828;
+    color: #ffffff;
+}
+.anx-inv-new-bill:hover {
+    background: #b71c1c;
+    color: #ffffff;
+    box-shadow: 0 2px 6px rgba(198,40,40,0.3);
+}
+
 .anx-inv-status-pills { display: flex; gap: 5px; flex-wrap: wrap; }
 .anx-inv-spill {
     padding: 4px 12px; border-radius: 20px; font-size: 11.5px; font-weight: 600;
@@ -732,7 +765,7 @@
 .anx-inv-row-overdue:hover { background: #fff0f0; }
 
 .anx-inv-td { padding: 11px 14px; color: #374151; vertical-align: middle; }
-.anx-inv-td-name  { min-width: 140px; }
+.anx-inv-td-name  { min-width: 100px; max-width: 220px; overflow: hidden; }
 .anx-inv-td-date  { color: #6b7280; font-size: 12px; white-space: nowrap; }
 .anx-inv-td-amount { text-align: right; font-weight: 600; color: #1a2235; white-space: nowrap; }
 .anx-inv-td-center { text-align: center; }
@@ -740,6 +773,65 @@
 /* Invoice number cell */
 .anx-inv-num  { display: flex; align-items: center; font-weight: 600; color: #1a2235; white-space: nowrap; }
 .anx-inv-ref  { display: block; font-size: 11px; color: #9ca3af; margin-top: 1px; }
+
+/* Documents table — truncate long filenames */
+.anx-doc-table {
+    table-layout: fixed;
+    width: 100%;
+
+    /* icon col */
+    th:nth-child(1), td:nth-child(1) { width: 46px; }
+    /* Document Name */
+    th:nth-child(2), td:nth-child(2) { width: 18%; }
+    /* Description */
+    th:nth-child(3), td:nth-child(3) { width: 14%; }
+    /* Doc Type */
+    th:nth-child(4), td:nth-child(4) { width: 90px; }
+    /* File Type */
+    th:nth-child(5), td:nth-child(5) { width: 70px; }
+    /* Preview */
+    th:nth-child(6), td:nth-child(6) { width: 90px; }
+    /* Size */
+    th:nth-child(7), td:nth-child(7) { width: 60px; }
+    /* Upload Date */
+    th:nth-child(8), td:nth-child(8) { width: 88px; }
+    /* Uploaded By */
+    th:nth-child(9), td:nth-child(9) { width: 90px; }
+    /* Review */
+    th:nth-child(10), td:nth-child(10) { width: 10%; }
+    /* Status */
+    th:nth-child(11), td:nth-child(11) { width: 80px; }
+
+    /* Truncate all text cells inside the doc table */
+    td { overflow: hidden; }
+
+    /* Name cell — hard clamp + tooltip via title attr */
+    td:nth-child(2) .anx-inv-num {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: block;          /* switch from flex so ellipsis works */
+        max-width: 100%;
+    }
+
+    /* Description cell — ellipsis */
+    td:nth-child(3) .anx-doc-desc-text {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: block;
+        max-width: 100%;
+    }
+
+    /* Review cell — ellipsis */
+    td:nth-child(10) .anx-doc-review-text {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: block;
+        max-width: 100%;
+    }
+}
 
 /* Partner avatar */
 .anx-inv-partner { display: flex; align-items: center; gap: 8px; }
@@ -1312,11 +1404,21 @@
 }
 .anx-pl-acc-name {
     padding: 9px 24px 9px 40px !important;
-    color: #1e7ea1;
+    color: #1e88e5;
     font-size: 13px;
-    font-weight: 400;
+    font-weight: 500;
     text-align: left;
-    cursor: default;
+    cursor: pointer;
+    .anx-tb-acc-link, a {
+        color: #1e88e5;
+        cursor: pointer;
+        font-weight: 500;
+        text-decoration: none;
+        &:hover {
+            text-decoration: underline;
+            color: #0d47a1;
+        }
+    }
 }
 .anx-pl-acc-val {
     padding: 9px 24px !important;
@@ -2081,6 +2183,8 @@
 }
 .anx-doc-btn-del:hover { background: #e53935; color: #fff; transform: translateY(-1px); }
 .anx-doc-row { cursor: default !important; }
+/* Ensure the name span inside doc rows never overflows */
+.anx-doc-row td:nth-child(2) { max-width: 0; overflow: hidden; }
 
 /* ── Upload form card (shown when file is selected) ── */
 .anx-doc-upload-form {

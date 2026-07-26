@@ -843,6 +843,7 @@ function openSubmenuPopover(button, menuService, activeMenuId) {
         popover.style.position = "fixed";
         popover.style.top = `${rect.bottom + 8}px`;
         popover.style.left = `${Math.max(8, rect.left)}px`;
+        popover.style.maxHeight = `calc(100vh - ${rect.bottom + 24}px)`;
         popover.style.zIndex = "2200";
     };
 
@@ -856,7 +857,12 @@ function openSubmenuPopover(button, menuService, activeMenuId) {
             closeSubmenuPopover();
         }
     };
-    const onWindowChange = () => closeSubmenuPopover();
+    const onWindowChange = (ev) => {
+        if (ev && ev.target && (popover.contains(ev.target) || ev.target === popover)) {
+            return;
+        }
+        closeSubmenuPopover();
+    };
 
     positionPopover();
     window.addEventListener("pointerdown", onPointerDown, true);

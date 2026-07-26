@@ -203,13 +203,15 @@ body.kr_sp_theme_dark,
 }
 
 .kr_sp_submenu_popover_wrap,
-.kr_sp_submenu_popover .popover-body {
+.kr_sp_submenu_popover_wrap .popover-body,
+.kr_sp_submenu_popover {
     border-color: #2b3647;
     background: #18212f;
     color: #e5e7eb;
 }
 
 .kr_sp_submenu_group_title,
+.kr_sp_submenu_popover_wrap .dropdown-item,
 .kr_sp_submenu_popover .dropdown-item {
     color: #e5e7eb;
 }

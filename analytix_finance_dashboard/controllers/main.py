@@ -707,29 +707,9 @@ class AccountMove(models.Model):
 
     @api.model
     def get_analytix_journals_data(self, filter_name='this_month', date_from=None, date_to=None):
-        """Return list of journals (account.journal) with entry stats for the period."""
+        """Return list of journal entries (account.move) for the selected period across multi-company setup."""
         self = self.sudo()
         today = date.today()
-        if filter_name == 'this_month':
-            start_date = today.replace(day=1)
-            end_date = start_date + relativedelta(months=1, days=-1)
-        elif filter_name == 'last_3_months':
-            start_date = today.replace(day=1) - relativedelta(months=2)
-            end_date = start_date + relativedelta(months=3, days=-1)
-        elif filter_name == 'this_year':
-            start_date = today.replace(month=1, day=1)
-            end_date = today.replace(month=12, day=31)
-        elif filter_name == 'custom' and date_from and date_to:
-            try:
-                start_date = datetime.strptime(date_from, '%Y-%m-%d').date()
-                end_date   = datetime.strptime(date_to,   '%Y-%m-%d').date()
-            except Exception:
-                start_date = today.replace(day=1)
-                end_date   = start_date + relativedelta(months=1, days=-1)
-        else:
-            start_date = today.replace(day=1)
-            end_date = start_date + relativedelta(months=1, days=-1)
-
         company_ids = self.env.companies.ids
         company_currency = self.env.company.currency_id
 
@@ -747,26 +727,54 @@ class AccountMove(models.Model):
             'bank':     {'label': 'Bank',      'bg': '#e8f5e9', 'text': '#1b5e20', 'dot': '#388e3c', 'icon': 'fa-university'},
             'general':  {'label': 'Misc',      'bg': '#f3e5f5', 'text': '#6a1b9a', 'dot': '#8e24aa', 'icon': 'fa-pencil'},
         }
+        STATUS_CFG = {
+            'posted': {'label': 'Posted', 'bg': '#e8f5e9', 'text': '#2e7d32', 'dot': '#43a047'},
+            'draft':  {'label': 'Draft',  'bg': '#f5f5f5', 'text': '#607d8b', 'dot': '#90a4ae'},
+            'cancel': {'label': 'Cancelled', 'bg': '#f5f5f5', 'text': '#757575', 'dot': '#9e9e9e'},
+        }
+
+        domain = [
+            ('company_id', 'in', company_ids),
+            ('state', '=', 'posted'),
+        ]
+        start_date = None
+        end_date = None
+
+        if filter_name == 'this_month':
+            start_date = today.replace(day=1)
+            end_date = start_date + relativedelta(months=1, days=-1)
+            domain.extend([('date', '>=', start_date), ('date', '<=', end_date)])
+        elif filter_name == 'last_3_months':
+            start_date = today.replace(day=1) - relativedelta(months=2)
+            end_date = start_date + relativedelta(months=3, days=-1)
+            domain.extend([('date', '>=', start_date), ('date', '<=', end_date)])
+        elif filter_name == 'this_year':
+            start_date = today.replace(month=1, day=1)
+            end_date = today.replace(month=12, day=31)
+            domain.extend([('date', '>=', start_date), ('date', '<=', end_date)])
+        elif filter_name == 'custom' and date_from and date_to:
+            try:
+                start_date = datetime.strptime(date_from, '%Y-%m-%d').date()
+                end_date   = datetime.strptime(date_to,   '%Y-%m-%d').date()
+                domain.extend([('date', '>=', start_date), ('date', '<=', end_date)])
+            except Exception:
+                pass
 
         companies = self.env['res.company'].browse(company_ids)
         company_color_map = {c.id: COMPANY_COLORS[i % len(COMPANY_COLORS)] for i, c in enumerate(companies)}
 
-        journals = self.env['account.journal'].search(
-            [('company_id', 'in', company_ids)],
-            order='company_id, type, name'
-        )
+        moves = self.env['account.move'].search(domain, order='date desc, id desc', limit=1000)
 
-        # Pre-fetch posted move stats per journal in the date range
-        moves = self.env['account.move'].search([
-            ('journal_id', 'in', journals.ids),
-            ('state', '=', 'posted'),
-            ('date', '>=', start_date),
-            ('date', '<=', end_date),
-        ])
-        # Build stats dict: journal_id -> {count, amount}
-        stats = {}
+        records = []
+        total_amount = 0.0
+
         for move in moves:
-            jid = move.journal_id.id
+            j = move.journal_id
+            jtype = j.type or 'general'
+            jcfg = JOURNAL_TYPE_CFG.get(jtype, JOURNAL_TYPE_CFG['general'])
+            stcfg = STATUS_CFG.get(move.state, STATUS_CFG['draft'])
+            co_color = company_color_map.get(move.company_id.id, COMPANY_COLORS[0])
+
             amt = move.amount_total
             if move.company_id.currency_id != company_currency:
                 try:
@@ -774,54 +782,44 @@ class AccountMove(models.Model):
                         amt, company_currency, move.company_id, move.date or today)
                 except Exception:
                     pass
-            if jid not in stats:
-                stats[jid] = {'count': 0, 'amount': 0.0}
-            stats[jid]['count'] += 1
-            stats[jid]['amount'] += amt
 
-        records = []
-        for j in journals:
-            jtype = j.type or 'general'
-            jcfg = JOURNAL_TYPE_CFG.get(jtype, JOURNAL_TYPE_CFG['general'])
-            co_color = company_color_map.get(j.company_id.id, COMPANY_COLORS[0])
-            st = stats.get(j.id, {'count': 0, 'amount': 0.0})
-            sym = company_currency.symbol or company_currency.name
+            if move.state == 'posted':
+                total_amount += amt
+
             records.append({
-                'id':              j.id,
-                'name':            j.name,
-                'code':            j.code or '',
-                'type':            jtype,
-                'type_label':      jcfg['label'],
-                'type_bg':         jcfg['bg'],
-                'type_text':       jcfg['text'],
-                'type_dot':        jcfg['dot'],
-                'type_icon':       jcfg['icon'],
-                'company_id':      j.company_id.id,
-                'company_name':    j.company_id.name,
-                'company_color':   co_color,
-                'entry_count':     st['count'],
-                'total_amount':    st['amount'],
-                'amount_display':  '{} {:,.2f}'.format(sym, st['amount']),
-                'currency_sym':    sym,
-                'default_account': j.default_account_id.name if j.default_account_id else '',
+                'id':             move.id,
+                'name':           move.name or '/',
+                'date':           move.date.strftime('%Y-%m-%d') if move.date else '',
+                'journal_id':     j.id if j else False,
+                'journal_name':   j.name if j else '—',
+                'journal_code':   j.code if j else '',
+                'type':           jtype,
+                'type_label':     jcfg['label'],
+                'type_bg':        jcfg['bg'],
+                'type_text':      jcfg['text'],
+                'type_dot':       jcfg['dot'],
+                'type_icon':      jcfg['icon'],
+                'partner':        move.partner_id.name if move.partner_id else '—',
+                'ref':            move.ref or '',
+                'state':          move.state,
+                'state_label':    stcfg['label'],
+                'state_bg':       stcfg['bg'],
+                'state_text':     stcfg['text'],
+                'state_dot':      stcfg['dot'],
+                'amount':         amt,
+                'amount_display': '{} {:,.2f}'.format(company_currency.symbol or company_currency.name, amt),
+                'company_id':     move.company_id.id,
+                'company_name':   move.company_id.name,
+                'company_color':  co_color,
             })
-
-        total_journals = len(records)
-        total_amount = sum(r['total_amount'] for r in records)
-        type_counts = {}
-        for r in records:
-            tl = r['type_label']
-            if tl not in type_counts:
-                type_counts[tl] = 0
-            type_counts[tl] += 1
 
         return {
             'records':      records,
-            'total_count':  total_journals,
+            'total_count':  len(records),
             'total_amount': total_amount,
             'currency_sym': company_currency.symbol or company_currency.name,
             'companies':    [{'id': c.id, 'name': c.name, 'color': company_color_map.get(c.id, COMPANY_COLORS[0])} for c in companies],
-            'date_range':   {'start': start_date.strftime('%Y-%m-%d'), 'end': end_date.strftime('%Y-%m-%d')},
+            'date_range':   {'start': start_date.strftime('%Y-%m-%d') if start_date else 'All Time', 'end': end_date.strftime('%Y-%m-%d') if end_date else 'All Time'},
         }
 
     @api.model
