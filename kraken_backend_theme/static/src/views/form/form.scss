@@ -163,8 +163,22 @@
 
 .o_form_view .o_form_button_cancel,
 .o_form_view .o_form_button_save {
-    background: transparent !important;
     box-shadow: none !important;
+}
+
+.o_form_view .o_form_button_save {
+    background: var(--kr-color-primary, #875A7B) !important;
+    border-color: var(--kr-color-primary, #875A7B) !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+    border-radius: 10px !important;
+    padding: 6px 14px !important;
+}
+
+.o_form_view .o_form_button_save:hover:not(:disabled) {
+    background: var(--kr-color-primary-hover, #6d4a64) !important;
+    border-color: var(--kr-color-primary-hover, #6d4a64) !important;
+    color: #ffffff !important;
 }
 
 .o_base_settings_view.o_form_view .o_form_button_save,

@@ -52,6 +52,11 @@ body.kr_sp_global_mode.modal-open {
     .o_control_panel_main_buttons > :not(:empty),
     .o_control_panel_actions > :not(:empty),
     .o_control_panel_navigation > :not(:empty),
+    .o_form_status_indicator,
+    .o_form_status_indicator_buttons,
+    .o_form_button_save,
+    .o_form_button_cancel,
+    .o_cp_buttons > :not(:empty),
     .o_searchview,
     .o_cp_switch_buttons,
     .o_cp_pager

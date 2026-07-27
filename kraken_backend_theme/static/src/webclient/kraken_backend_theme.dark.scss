@@ -1,4 +1,6 @@
-.o_web_client {
+body.kr_sp_theme_dark,
+.o_web_client.kr_sp_theme_dark,
+body.kr_sp_theme_dark .o_web_client {
     --my-theme-bg: #111827;
     --my-theme-text: #e5e7eb;
     --tt-form-surface: #18212f;
@@ -515,15 +517,23 @@ body:has(.o_web_client) .o_notification_close:hover {
 }
 
 body:has(.o_web_client) .modal :is(.form-control, .form-select, .o_input, input, textarea, select),
-body:has(.o_web_client) .o_dialog :is(.form-control, .form-select, .o_input, input, textarea, select) {
-    border-color: #2b3647;
-    background-color: #111827;
-    color: #e5e7eb;
+body:has(.o_web_client) .o_dialog :is(.form-control, .form-select, .o_input, input, textarea, select),
+.o_web_client :is(.form-control, .form-select, .o_input, input, textarea, select, .o_field_monetary, .o_field_number, .o_field_float) {
+    --o-input-text-color: #f8fafc !important;
+    --o-input-bg: #111827 !important;
+    --o-input-border-color: #2b3647 !important;
+    border-color: #2b3647 !important;
+    background-color: #111827 !important;
+    color: #f8fafc !important;
+}
+
+.o_web_client :is(.o_field_monetary, .o_field_number, .o_field_float) :is(input, .o_input, span, .o_monetary_currency, .input-group-text) {
+    color: #f8fafc !important;
 }
 
 body:has(.o_web_client) .modal :is(.form-control, .form-select, .o_input, input, textarea, select)::placeholder,
 body:has(.o_web_client) .o_dialog :is(.form-control, .form-select, .o_input, input, textarea, select)::placeholder {
-    color: #9ca3af;
+    color: #9ca3af !important;
 }
 
 body:has(.o_web_client) .modal .btn:not(.btn-primary):not(.btn-link):not(.btn-danger):not(.btn-success),

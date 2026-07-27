@@ -910,47 +910,49 @@
                             </div>
 
                             <!-- Data Table -->
-                            <table class="anx-tb-report-table">
-                                <thead>
-                                    <tr>
-                                        <th class="anx-tb-rth anx-tb-rth-code">Code</th>
-                                        <th class="anx-tb-rth anx-tb-rth-name">Account</th>
-                                        <th class="anx-tb-rth anx-tb-rth-num">Initial balance</th>
-                                        <th class="anx-tb-rth anx-tb-rth-num">Debit</th>
-                                        <th class="anx-tb-rth anx-tb-rth-num">Credit</th>
-                                        <th class="anx-tb-rth anx-tb-rth-num">Period balance</th>
-                                        <th class="anx-tb-rth anx-tb-rth-num">Ending balance</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <t t-if="state.tbData.records.length === 0">
-                                        <tr><td colspan="7" class="anx-inv-empty">No accounts found for this period.</td></tr>
-                                    </t>
-                                    <t t-foreach="state.tbData.records" t-as="acc" t-key="acc.id">
-                                        <tr class="anx-tb-rtd-row">
-                                            <td class="anx-tb-rtd anx-tb-rtd-code"><t t-esc="acc.code"/></td>
-                                            <td class="anx-tb-rtd anx-tb-rtd-name">
-                                                <a class="anx-tb-acc-link" t-att-data-id="acc.id" t-on-click="openTrialBalanceAccount"><t t-esc="acc.name"/></a>
-                                            </td>
-                                            <td t-attf-class="anx-tb-rtd anx-tb-rtd-num {{ acc.initial_balance &lt; 0 ? 'anx-tb-rneg' : '' }}"><t t-esc="acc.initial_display"/></td>
-                                            <td class="anx-tb-rtd anx-tb-rtd-num anx-tb-rdebit"><t t-esc="acc.debit_display"/></td>
-                                            <td class="anx-tb-rtd anx-tb-rtd-num anx-tb-rcredit"><t t-esc="acc.credit_display"/></td>
-                                            <td t-attf-class="anx-tb-rtd anx-tb-rtd-num {{ acc.period_balance &lt; 0 ? 'anx-tb-rneg' : '' }}"><t t-esc="acc.period_display"/></td>
-                                            <td t-attf-class="anx-tb-rtd anx-tb-rtd-num {{ acc.ending_balance &lt; 0 ? 'anx-tb-rneg' : '' }}"><t t-esc="acc.ending_display"/></td>
+                            <div class="anx-inv-table-wrap">
+                                <table class="anx-tb-report-table">
+                                    <thead>
+                                        <tr>
+                                            <th class="anx-tb-rth anx-tb-rth-code">Code</th>
+                                            <th class="anx-tb-rth anx-tb-rth-name">Account</th>
+                                            <th class="anx-tb-rth anx-tb-rth-num">Initial balance</th>
+                                            <th class="anx-tb-rth anx-tb-rth-num">Debit</th>
+                                            <th class="anx-tb-rth anx-tb-rth-num">Credit</th>
+                                            <th class="anx-tb-rth anx-tb-rth-num">Period balance</th>
+                                            <th class="anx-tb-rth anx-tb-rth-num">Ending balance</th>
                                         </tr>
-                                    </t>
-                                    <t t-if="state.tbData.records.length > 0">
-                                        <tr class="anx-tb-rtd-row anx-tb-total-row" style="font-weight: bold; background-color: #f8f9fa;">
-                                            <td class="anx-tb-rtd" colspan="2" style="text-align: right; padding-right: 12px;">Total</td>
-                                            <td t-attf-class="anx-tb-rtd anx-tb-rtd-num {{ state.tbData.total_initial &lt; 0 ? 'anx-tb-rneg' : '' }}"><t t-esc="state.tbData.total_initial_display"/></td>
-                                            <td class="anx-tb-rtd anx-tb-rtd-num anx-tb-rdebit"><t t-esc="state.tbData.total_debit_display"/></td>
-                                            <td class="anx-tb-rtd anx-tb-rtd-num anx-tb-rcredit"><t t-esc="state.tbData.total_credit_display"/></td>
-                                            <td t-attf-class="anx-tb-rtd anx-tb-rtd-num {{ state.tbData.total_period &lt; 0 ? 'anx-tb-rneg' : '' }}"><t t-esc="state.tbData.total_period_display"/></td>
-                                            <td t-attf-class="anx-tb-rtd anx-tb-rtd-num {{ state.tbData.total_ending &lt; 0 ? 'anx-tb-rneg' : '' }}"><t t-esc="state.tbData.total_ending_display"/></td>
-                                        </tr>
-                                    </t>
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody>
+                                        <t t-if="state.tbData.records.length === 0">
+                                            <tr><td colspan="7" class="anx-inv-empty">No accounts found for this period.</td></tr>
+                                        </t>
+                                        <t t-foreach="state.tbData.records" t-as="acc" t-key="acc.id">
+                                            <tr class="anx-tb-rtd-row">
+                                                <td class="anx-tb-rtd anx-tb-rtd-code"><t t-esc="acc.code"/></td>
+                                                <td class="anx-tb-rtd anx-tb-rtd-name">
+                                                    <a class="anx-tb-acc-link" t-att-data-id="acc.id" t-on-click="openTrialBalanceAccount"><t t-esc="acc.name"/></a>
+                                                </td>
+                                                <td t-attf-class="anx-tb-rtd anx-tb-rtd-num {{ acc.initial_balance &lt; 0 ? 'anx-tb-rneg' : '' }}"><t t-esc="acc.initial_display"/></td>
+                                                <td class="anx-tb-rtd anx-tb-rtd-num anx-tb-rdebit"><t t-esc="acc.debit_display"/></td>
+                                                <td class="anx-tb-rtd anx-tb-rtd-num anx-tb-rcredit"><t t-esc="acc.credit_display"/></td>
+                                                <td t-attf-class="anx-tb-rtd anx-tb-rtd-num {{ acc.period_balance &lt; 0 ? 'anx-tb-rneg' : '' }}"><t t-esc="acc.period_display"/></td>
+                                                <td t-attf-class="anx-tb-rtd anx-tb-rtd-num {{ acc.ending_balance &lt; 0 ? 'anx-tb-rneg' : '' }}"><t t-esc="acc.ending_display"/></td>
+                                            </tr>
+                                        </t>
+                                        <t t-if="state.tbData.records.length > 0">
+                                            <tr class="anx-tb-rtd-row anx-tb-total-row" style="font-weight: bold; background-color: #f8f9fa;">
+                                                <td class="anx-tb-rtd" colspan="2" style="text-align: right; padding-right: 12px;">Total</td>
+                                                <td t-attf-class="anx-tb-rtd anx-tb-rtd-num {{ state.tbData.total_initial &lt; 0 ? 'anx-tb-rneg' : '' }}"><t t-esc="state.tbData.total_initial_display"/></td>
+                                                <td class="anx-tb-rtd anx-tb-rtd-num anx-tb-rdebit"><t t-esc="state.tbData.total_debit_display"/></td>
+                                                <td class="anx-tb-rtd anx-tb-rtd-num anx-tb-rcredit"><t t-esc="state.tbData.total_credit_display"/></td>
+                                                <td t-attf-class="anx-tb-rtd anx-tb-rtd-num {{ state.tbData.total_period &lt; 0 ? 'anx-tb-rneg' : '' }}"><t t-esc="state.tbData.total_period_display"/></td>
+                                                <td t-attf-class="anx-tb-rtd anx-tb-rtd-num {{ state.tbData.total_ending &lt; 0 ? 'anx-tb-rneg' : '' }}"><t t-esc="state.tbData.total_ending_display"/></td>
+                                            </tr>
+                                        </t>
+                                    </tbody>
+                                </table>
+                            </div>
 
                             <!-- Timestamp -->
                             <div class="anx-tb-report-ts">Generated: <t t-esc="state.tbData.date_range.start"/></div>

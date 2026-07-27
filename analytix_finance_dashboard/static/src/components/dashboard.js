@@ -158,7 +158,13 @@ export class AnalytixFinanceDashboard extends Component {
             }
         });
 
-        onMounted(() => this.renderCharts());
+        onMounted(() => {
+            this.renderCharts();
+            const activeTabEl = document.querySelector('.anx-tabs .anx-tab.active');
+            if (activeTabEl) {
+                activeTabEl.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+            }
+        });
         useEffect(() => this.renderCharts(), () => [this.state.data]);
         useEffect(() => {
             if (this.messageFeedRef.el) {
@@ -232,6 +238,9 @@ export class AnalytixFinanceDashboard extends Component {
     async onTabClick(ev) {
         const tab = ev.currentTarget.dataset.tab;
         if (!tab) return;
+        if (ev.currentTarget && ev.currentTarget.scrollIntoView) {
+            ev.currentTarget.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+        }
         this.state.activeTab = tab;
         sessionStorage.setItem('anx_active_tab', tab); // persist tab across refresh
         if (tab === 'invoices') {

@@ -275,6 +275,45 @@
     color: #334155;
 }
 
+.o_web_client .o_form_status_indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.o_web_client .o_control_panel .o_form_button_save,
+.o_web_client .o_form_status_indicator .o_form_button_save {
+    border-color: transparent !important;
+    background: var(--kr-color-primary, #875A7B) !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+    border-radius: 12px !important;
+    padding: 6px 16px !important;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12) !important;
+}
+
+.o_web_client .o_control_panel .o_form_button_save:hover:not(:disabled),
+.o_web_client .o_form_status_indicator .o_form_button_save:hover:not(:disabled) {
+    background: var(--kr-color-primary-hover, #6d4a64) !important;
+    color: #ffffff !important;
+}
+
+.o_web_client .o_control_panel .o_form_button_cancel,
+.o_web_client .o_form_status_indicator .o_form_button_cancel {
+    border-color: #d8e0e8 !important;
+    background: #ffffff !important;
+    color: #334155 !important;
+    font-weight: 600 !important;
+    border-radius: 12px !important;
+    padding: 6px 14px !important;
+}
+
+.o_web_client .o_control_panel .o_form_button_cancel:hover:not(:disabled),
+.o_web_client .o_form_status_indicator .o_form_button_cancel:hover:not(:disabled) {
+    background: #f1f5f9 !important;
+    color: #0f172a !important;
+}
+
 .o_web_client .o_content {
     background: transparent;
 }

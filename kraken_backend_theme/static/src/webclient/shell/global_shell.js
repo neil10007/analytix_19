@@ -349,6 +349,20 @@ select:focus {
 .o_form_editable .o_field_widget:focus-within {
     --o-field-border-focus: ${p} !important;
 }
+.kr_sp_theme_dark .o_input,
+.kr_sp_theme_dark input,
+.kr_sp_theme_dark select,
+.kr_sp_theme_dark textarea,
+.kr_sp_theme_dark .o_field_monetary input,
+.kr_sp_theme_dark .o_field_monetary .o_input,
+.kr_sp_theme_dark .o_field_monetary span,
+.kr_sp_theme_dark .o_field_number input,
+.kr_sp_theme_dark .o_field_number .o_input,
+.kr_sp_theme_dark .o_field_float input,
+.kr_sp_theme_dark .o_field_float .o_input {
+    color: #f8fafc !important;
+    background-color: #111827 !important;
+}
 
 /* -- Priority star ---------------------------------------- */
 .o_priority .o_priority_star.fa-star {
