@@ -19,15 +19,15 @@
 .o_modules_kanban .o_kanban_record footer button[name="button_immediate_install"],
 .o_modules_kanban .o_kanban_record footer button[name="button_immediate_install_app"] {
     border-color: transparent;
-    background: #ff8744;
-    color: #111827;
+    background: #00d4c8;
+    color: #080d18;
 }
 
 .o_modules_kanban .o_kanban_record footer .btn-primary:hover,
 .o_modules_kanban .o_kanban_record footer button[name="button_immediate_install"]:hover,
 .o_modules_kanban .o_kanban_record footer button[name="button_immediate_install_app"]:hover {
-    background: #ff9a62;
-    color: #111827;
+    background: #00bfb3;
+    color: #080d18;
 }
 
 .o_modules_kanban .o_kanban_record footer .btn-secondary,
@@ -38,7 +38,7 @@
 
 .o_modules_kanban .o_kanban_record footer .btn-secondary:hover,
 .o_modules_kanban .o_kanban_record footer a.btn:not(.btn-primary):not(.btn-info):hover {
-    border-color: rgba(255, 135, 68, 0.46);
+    border-color: rgba(0, 212, 200, 0.46);
     background: #fff7ed;
 }
 

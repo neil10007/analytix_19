@@ -1,0 +1,387 @@
+/* ============================================================================
+   ANALYTIX 360 FINANCE DASHBOARD — WHITE / LIGHT THEME OVERRIDE
+   Automatically activates when White/Light Mode is selected in Odoo/Kraken UI
+   ============================================================================ */
+
+body:not(.kr_sp_theme_dark):not(.o_dark),
+html:not([data-color-scheme="dark"]):not(.o_dark) body:not(.kr_sp_theme_dark) {
+
+    /* ── Root Layout & Containers ── */
+    .anx-wrap,
+    .anx-body,
+    .anx-tb-fullpage {
+        background: #f4f6f9 !important;
+        color: #1e293b !important;
+    }
+
+    /* ── Top Navigation Bar ── */
+    .anx-topbar {
+        background: #ffffff !important;
+        color: #0f172a !important;
+        border-bottom: 1px solid #e2e8f0 !important;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+    }
+    .anx-logo-text { color: #0f172a !important; }
+    .anx-company-name { color: #64748b !important; }
+    .anx-topbar-sep { color: #cbd5e1 !important; }
+    .anx-date-badge {
+        background: #f1f5f9 !important;
+        border: 1px solid #cbd5e1 !important;
+        color: #334155 !important;
+    }
+    .anx-filter-select {
+        background-color: #f1f5f9 !important;
+        border: 1px solid #cbd5e1 !important;
+        color: #0f172a !important;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23334155' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e") !important;
+    }
+    .anx-filter-select option { background: #ffffff !important; color: #0f172a !important; }
+
+    /* ── Custom Date Range Picker Bar ── */
+    .anx-custom-date-bar {
+        background: #ffffff !important;
+        border-bottom: 1px solid #e2e8f0 !important;
+    }
+    .anx-custom-date-label,
+    .anx-custom-date-lbl { color: #475569 !important; }
+    .anx-custom-date-input {
+        background: #f8fafc !important;
+        border: 1px solid #cbd5e1 !important;
+        color: #0f172a !important;
+        &::-webkit-calendar-picker-indicator { filter: none !important; opacity: 0.7; }
+        &:focus { border-color: #00b4a8 !important; background: #ffffff !important; }
+    }
+    .anx-custom-apply-btn {
+        background: #00b4a8 !important;
+        color: #ffffff !important;
+        &:hover { background: #00968b !important; }
+    }
+
+    /* ── VAT Custom Date Filter Section ── */
+    .anx-vat-modal-filters {
+        background: #ffffff !important;
+        border: 1px solid #cbd5e1 !important;
+        box-shadow: 0 2px 10px rgba(15, 23, 42, 0.05) !important;
+
+        .anx-vat-filter-title {
+            color: #0f172a !important;
+            i { color: #00b4a8 !important; }
+        }
+
+        .anx-vat-filter-group label {
+            color: #475569 !important;
+        }
+
+        .anx-vat-date-input {
+            background: #f8fafc !important;
+            border: 1px solid #cbd5e1 !important;
+            color: #0f172a !important;
+            color-scheme: light !important;
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+            &::-webkit-calendar-picker-indicator { filter: none !important; opacity: 0.75; }
+            &:hover { background: #ffffff !important; border-color: #00b4a8 !important; }
+            &:focus { border-color: #00b4a8 !important; box-shadow: 0 0 0 3px rgba(0, 180, 168, 0.2) !important; }
+        }
+
+        .anx-vat-filter-btn {
+            background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%) !important;
+            color: #ffffff !important;
+            &:hover { background: linear-gradient(135deg, #0369a1 0%, #1d4ed8 100%) !important; }
+        }
+    }
+
+    /* ── Tab Bar ── */
+    .anx-tabs {
+        background: #ffffff !important;
+        border-bottom: 1px solid #e2e8f0 !important;
+    }
+    .anx-tab {
+        color: #64748b !important;
+        &:hover {
+            color: #0f172a !important;
+            border-bottom-color: #cbd5e1 !important;
+        }
+        &.active {
+            color: #00b4a8 !important;
+            border-bottom-color: #00b4a8 !important;
+            font-weight: 600;
+        }
+    }
+
+    /* ── Section Labels & Shared Panels ── */
+    .anx-section-label { color: #64748b !important; }
+
+    .anx-panel,
+    .anx-kpi-card,
+    .anx-chart-main,
+    .anx-chart-side,
+    .anx-action-card,
+    .anx-report-card,
+    .anx-alerts-panel,
+    .anx-jrn-card,
+    .anx-upload-panel {
+        background: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
+        box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04) !important;
+        &:hover {
+            border-color: #cbd5e1 !important;
+            box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08) !important;
+        }
+    }
+
+    /* ── Typography & Text Colors inside Cards ── */
+    .anx-kpi-value,
+    .anx-panel-title,
+    .anx-action-title,
+    .anx-report-title,
+    .anx-alert-title,
+    .anx-inv-num,
+    .anx-inv-td-amount,
+    .anx-jrn-card-title,
+    .anx-tb-totals-row,
+    .anx-upload-title,
+    .anx-upload-file-name,
+    .anx-inv-kpi-pill-val,
+    .anx-inv-kpi-total .anx-inv-kpi-pill-val {
+        color: #0f172a !important;
+    }
+    .anx-inv-kpi-amount .anx-inv-kpi-pill-val { color: #00b4a8 !important; }
+    .anx-inv-kpi-paid .anx-inv-kpi-pill-val   { color: #16a34a !important; }
+    .anx-inv-kpi-unpaid .anx-inv-kpi-pill-val { color: #dc2626 !important; }
+
+    .anx-kpi-label,
+    .anx-kpi-sub,
+    .anx-action-sub,
+    .anx-report-sub,
+    .anx-alert-detail,
+    .anx-inv-td-date,
+    .anx-inv-ref,
+    .anx-inv-kpi-pill-label,
+    .anx-jrn-pill-count,
+    .anx-upload-subtitle,
+    .anx-upload-file-size,
+    .anx-tb-totals-label,
+    .anx-legend-label {
+        color: #64748b !important;
+    }
+    .anx-kpi-sub { border-top: 1px solid #f1f5f9 !important; }
+    .anx-period-badge {
+        background: #f8fafc !important;
+        border: 1px solid #cbd5e1 !important;
+        color: #475569 !important;
+    }
+
+    /* ── Customer Bar & Charts ── */
+    .anx-customer-name { color: #334155 !important; }
+    .anx-customer-rank,
+    .anx-customer-amt { color: #64748b !important; }
+    .anx-customer-bar-wrap { background: #f1f5f9 !important; }
+    .anx-customer-bar { background: #00b4a8 !important; }
+
+    /* ── Alerts Row & Dividers ── */
+    .anx-alert-row:hover { background: #f8fafc !important; }
+    .anx-alert-divider { border-top: 1px solid #f1f5f9 !important; }
+
+    /* ── Invoices / Expenses / Journals / Trial Balance / Documents Toolbars ── */
+    .anx-inv-kpi-pill,
+    .anx-jrn-summary-pill {
+        background: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
+        box-shadow: 0 2px 8px rgba(15, 23, 42, 0.03) !important;
+    }
+    .anx-inv-chip,
+    .anx-inv-spill,
+    .anx-inv-co-legend-item {
+        background: #f8fafc !important;
+        border: 1px solid #cbd5e1 !important;
+        color: #475569 !important;
+        &:hover { background: #e2e8f0 !important; color: #0f172a !important; }
+    }
+    .anx-inv-chip.active,
+    .anx-inv-spill.active,
+    .anx-inv-co-legend-item.active {
+        background: #0f172a !important;
+        border-color: #0f172a !important;
+        color: #ffffff !important;
+    }
+    .anx-spill-paid.active    { background: #dcfce7 !important; border-color: #22c55e !important; color: #15803d !important; }
+    .anx-spill-partial.active { background: #fef3c7 !important; border-color: #f59e0b !important; color: #b45309 !important; }
+    .anx-spill-unpaid.active  { background: #fee2e2 !important; border-color: #ef4444 !important; color: #b91c1c !important; }
+    .anx-spill-draft.active   { background: #f1f5f9 !important; border-color: #94a3b8 !important; color: #475569 !important; }
+
+    .anx-inv-search-wrap {
+        background: #ffffff !important;
+        border: 1px solid #cbd5e1 !important;
+    }
+    .anx-inv-search-icon { color: #64748b !important; }
+    .anx-inv-search {
+        color: #0f172a !important;
+        &::placeholder { color: #94a3b8 !important; }
+    }
+
+    /* ── Tables across All Tabs & Trial Balance ── */
+    .anx-inv-th,
+    .anx-th,
+    .anx-tb-th,
+    .anx-tb-rth,
+    .anx-doc-th,
+    .anx-inv-table thead th,
+    .anx-doc-table thead th,
+    .anx-tb-report-table thead th {
+        background: #e2e8f0 !important;
+        color: #0f172a !important;
+        font-weight: 700 !important;
+        border: 1px solid #cbd5e1 !important;
+        border-bottom: 2px solid #94a3b8 !important;
+    }
+    .anx-tb-report-table {
+        background: #ffffff !important;
+        border: 1px solid #cbd5e1 !important;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.04) !important;
+    }
+    .anx-inv-row,
+    .anx-row,
+    .anx-jrn-row,
+    .anx-tb-row,
+    .anx-tb-rtd-row,
+    .anx-doc-row,
+    .anx-inv-table tbody tr,
+    .anx-tb-report-table tbody tr {
+        background: #ffffff !important;
+        border-bottom: 1px solid #e2e8f0 !important;
+        &:hover { background: #f8fafc !important; }
+    }
+    .anx-inv-td,
+    .anx-td,
+    .anx-tb-td,
+    .anx-tb-rtd,
+    .anx-doc-td,
+    .anx-inv-table tbody td,
+    .anx-tb-report-table tbody td {
+        color: #0f172a !important;
+        border-right: 1px solid #e2e8f0 !important;
+        &:last-child { border-right: none !important; }
+    }
+    .anx-tb-rtd-code {
+        color: #334155 !important;
+        font-weight: 600 !important;
+    }
+    .anx-tb-rtd-num {
+        color: #0f172a !important;
+    }
+    .anx-tb-rdebit {
+        color: #0284c7 !important;
+        font-weight: 600 !important;
+    }
+    .anx-tb-rcredit {
+        color: #dc2626 !important;
+        font-weight: 600 !important;
+    }
+    .anx-tb-rneg {
+        color: #dc2626 !important;
+        font-weight: 700 !important;
+    }
+    .anx-tb-rtd-name,
+    .anx-tb-report-table tbody tr td.anx-tb-rtd-name,
+    table.anx-tb-report-table tbody tr.anx-tb-rtd-row td.anx-tb-rtd-name {
+        color: #008077 !important;
+        font-weight: 600 !important;
+    }
+    .anx-tb-report-table tbody tr td.anx-tb-rtd-name a,
+    .anx-tb-report-table tbody tr td.anx-tb-rtd-name a.anx-tb-acc-link,
+    .anx-tb-report-table tbody tr td a:not([href]),
+    .anx-tb-rtd-name a,
+    .anx-tb-rtd-name a:not([href]),
+    .anx-tb-acc-link,
+    a.anx-tb-acc-link,
+    .anx-pl-acc-name a,
+    .anx-pl-acc-name a.anx-tb-acc-link {
+        color: #008077 !important;
+        font-weight: 600 !important;
+        text-decoration: none !important;
+        background: transparent !important;
+        &:hover, &:focus, &:active {
+            text-decoration: underline !important;
+            color: #00524c !important;
+        }
+    }
+    .anx-tb-report-title {
+        color: #0f172a !important;
+        font-weight: 700 !important;
+    }
+    .anx-tb-filter-bar {
+        background: #ffffff !important;
+        border: 1px solid #cbd5e1 !important;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.02) !important;
+    }
+    .anx-tb-filter-cell {
+        border-right: 1px solid #cbd5e1 !important;
+        &:last-child { border-right: none !important; }
+    }
+    .anx-tb-filter-label {
+        color: #475569 !important;
+        font-weight: 700 !important;
+    }
+    .anx-tb-filter-val {
+        color: #008077 !important;
+        font-weight: 600 !important;
+    }
+    .anx-inv-row-overdue { background: #fff5f5 !important; }
+    .anx-inv-row-overdue:hover { background: #fee2e2 !important; }
+
+    /* ── Trial Balance Totals Row ── */
+    .anx-tb-totals-row,
+    .anx-tb-total-row {
+        background: #f1f5f9 !important;
+        border-top: 2px solid #008077 !important;
+        font-weight: 700 !important;
+        td { color: #0f172a !important; font-weight: 700 !important; }
+    }
+
+    /* ── Upload Document Section ── */
+    .anx-upload-dropzone {
+        background: #f8fafc !important;
+        border: 2px dashed #cbd5e1 !important;
+        &:hover,
+        &.anx-upload-drag-over {
+            border-color: #00b4a8 !important;
+            background: #f0fdfa !important;
+        }
+    }
+    .anx-upload-file-bar {
+        background: #f0fdfa !important;
+        border: 1px solid #99f6e4 !important;
+    }
+
+    /* ── Modals (P&L, Balance Sheet, AI Chat, etc.) ── */
+    .anx-pl-overlay,
+    .anx-bs-overlay {
+        background: rgba(15, 23, 42, 0.50) !important;
+    }
+    .anx-pl-modal,
+    .anx-bs-modal {
+        background: #ffffff !important;
+        border: 1px solid #cbd5e1 !important;
+        box-shadow: 0 25px 70px rgba(15, 23, 42, 0.20) !important;
+    }
+    .anx-pl-mhdr,
+    .anx-bs-mhdr {
+        background: #f8fafc !important;
+        border-bottom: 1px solid #e2e8f0 !important;
+        color: #0f172a !important;
+    }
+    .anx-pl-mhdr-title { color: #0f172a !important; }
+    .anx-pl-mhdr-sub   { color: #64748b !important; }
+    .anx-pl-mbody,
+    .anx-bs-mbody {
+        background: #ffffff !important;
+        color: #1e293b !important;
+    }
+
+    /* Empty states / loading */
+    .anx-empty-state,
+    .anx-inv-loading,
+    .anx-loading {
+        color: #64748b !important;
+    }
+}

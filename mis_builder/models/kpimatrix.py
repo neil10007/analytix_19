@@ -4,6 +4,7 @@
 import logging
 from collections import OrderedDict, defaultdict
 
+from odoo import _
 from odoo.exceptions import UserError
 
 from .accounting_none import AccountingNone
@@ -238,9 +239,10 @@ class KpiMatrix:
                     self.lang, row.style_props, kpi.type, val
                 )
                 if row.kpi.multi and subcol.subkpi:
-                    val_comment = (
-                        f"{row.kpi.name}.{subcol.subkpi.name} = "
-                        f"{row.kpi._get_expression_str_for_subkpi(subcol.subkpi)}"
+                    val_comment = "{}.{} = {}".format(
+                        row.kpi.name,
+                        subcol.subkpi.name,
+                        row.kpi._get_expression_str_for_subkpi(subcol.subkpi),
                     )
                 else:
                     val_comment = f"{row.kpi.name} = {row.kpi.expression}"
@@ -301,7 +303,7 @@ class KpiMatrix:
             common_subkpis = self._common_subkpis([col, base_col])
             if (col.subkpis or base_col.subkpis) and not common_subkpis:
                 raise UserError(
-                    self.env._(
+                    _(
                         "Columns %(descr)s and %(base_descr)s are not comparable",
                         descr=col.description,
                         base_descr=base_col.description,
@@ -387,12 +389,11 @@ class KpiMatrix:
             common_subkpis = self._common_subkpis(sumcols)
             if any(c.subkpis for c in sumcols) and not common_subkpis:
                 raise UserError(
-                    self.env._(
-                        "Sum cannot be computed in column %s "
+                    _(
+                        "Sum cannot be computed in column {} "
                         "because the columns to sum have no "
-                        "common subkpis",
-                        label,
-                    )
+                        "common subkpis"
+                    ).format(label)
                 )
             sum_col = KpiMatrixCol(
                 sumcol_key,

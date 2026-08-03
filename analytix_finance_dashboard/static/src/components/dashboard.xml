@@ -27,7 +27,7 @@
                         <option value="this_year">This Year</option>
                         <option value="custom">Custom Range</option>
                     </select>
-                    <div class="anx-avatar">DW</div>
+<!--                    <div class="anx-avatar">DW</div>-->
                 </div>
             </div>
 
@@ -628,17 +628,17 @@
                     <t t-if="!state.vatLoading">
                         
                         <!-- VAT Custom Date Filter -->
-                        <div class="anx-vat-modal-filters" style="margin-bottom: 20px; padding: 12px 20px; background: #fff; border-radius: 8px; border: 1px solid #e0e4eb; display: flex; align-items: center; gap: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
-                            <span style="font-weight: 600; color: #495057; font-size: 13px;">Custom Date Range:</span>
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                                <label style="font-size: 12px; color: #6c757d; margin: 0;">From</label>
-                                <input type="date" class="anx-inv-search" style="max-width: 140px; padding: 6px 10px; font-size: 13px; height: auto;" data-field="from" t-att-value="state.vatFilterFrom" t-on-change="onVatFilterDateChange" />
+                        <div class="anx-vat-modal-filters">
+                            <span class="anx-vat-filter-title"><i class="fa fa-calendar"/> Custom Date Range:</span>
+                            <div class="anx-vat-filter-group">
+                                <label class="anx-vat-filter-lbl">From</label>
+                                <input type="date" class="anx-vat-date-input" data-field="from" t-att-value="state.vatFilterFrom" t-on-change="onVatFilterDateChange" />
                             </div>
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                                <label style="font-size: 12px; color: #6c757d; margin: 0;">To</label>
-                                <input type="date" class="anx-inv-search" style="max-width: 140px; padding: 6px 10px; font-size: 13px; height: auto;" data-field="to" t-att-value="state.vatFilterTo" t-on-change="onVatFilterDateChange" />
+                            <div class="anx-vat-filter-group">
+                                <label class="anx-vat-filter-lbl">To</label>
+                                <input type="date" class="anx-vat-date-input" data-field="to" t-att-value="state.vatFilterTo" t-on-change="onVatFilterDateChange" />
                             </div>
-                            <button class="anx-pl-print-btn" style="padding: 6px 16px; font-size: 13px; border-radius: 6px; background-color: #1e88e5; color: white; border: none; cursor: pointer; transition: background 0.2s;" t-on-click="applyVatFilter">
+                            <button class="anx-vat-filter-btn" t-on-click="applyVatFilter">
                                 <i class="fa fa-filter"/> Filter
                             </button>
                         </div>
@@ -930,8 +930,8 @@
                                         <t t-foreach="state.tbData.records" t-as="acc" t-key="acc.id">
                                             <tr class="anx-tb-rtd-row">
                                                 <td class="anx-tb-rtd anx-tb-rtd-code"><t t-esc="acc.code"/></td>
-                                                <td class="anx-tb-rtd anx-tb-rtd-name">
-                                                    <a class="anx-tb-acc-link" t-att-data-id="acc.id" t-on-click="openTrialBalanceAccount"><t t-esc="acc.name"/></a>
+                                                <td class="anx-tb-rtd anx-tb-rtd-name" style="color: #00d4c8 !important; font-weight: 700 !important;">
+                                                    <span class="anx-tb-acc-link" style="color: #00d4c8 !important; font-weight: 700 !important; cursor: pointer; display: inline;" t-att-data-id="acc.id" t-on-click="openTrialBalanceAccount"><t t-esc="acc.name"/></span>
                                                 </td>
                                                 <td t-attf-class="anx-tb-rtd anx-tb-rtd-num {{ acc.initial_balance &lt; 0 ? 'anx-tb-rneg' : '' }}"><t t-esc="acc.initial_display"/></td>
                                                 <td class="anx-tb-rtd anx-tb-rtd-num anx-tb-rdebit"><t t-esc="acc.debit_display"/></td>
@@ -941,8 +941,8 @@
                                             </tr>
                                         </t>
                                         <t t-if="state.tbData.records.length > 0">
-                                            <tr class="anx-tb-rtd-row anx-tb-total-row" style="font-weight: bold; background-color: #f8f9fa;">
-                                                <td class="anx-tb-rtd" colspan="2" style="text-align: right; padding-right: 12px;">Total</td>
+                                            <tr class="anx-tb-rtd-row anx-tb-total-row">
+                                                <td class="anx-tb-rtd" colspan="2" style="text-align: right; padding-right: 12px; font-weight: bold;">Total</td>
                                                 <td t-attf-class="anx-tb-rtd anx-tb-rtd-num {{ state.tbData.total_initial &lt; 0 ? 'anx-tb-rneg' : '' }}"><t t-esc="state.tbData.total_initial_display"/></td>
                                                 <td class="anx-tb-rtd anx-tb-rtd-num anx-tb-rdebit"><t t-esc="state.tbData.total_debit_display"/></td>
                                                 <td class="anx-tb-rtd anx-tb-rtd-num anx-tb-rcredit"><t t-esc="state.tbData.total_credit_display"/></td>
@@ -1121,24 +1121,24 @@
                             <table class="anx-inv-table anx-doc-table">
                                 <thead>
                                     <tr>
-                                        <th class="anx-inv-th" style="width:40px;"></th>
-                                        <th class="anx-inv-th">Document Name</th>
-                                        <th class="anx-inv-th">Description</th>
-                                        <th class="anx-inv-th">Doc Type</th>
-                                        <th class="anx-inv-th">File Type</th>
-                                        <th class="anx-inv-th" style="width:100px;">Preview</th>
-                                        <th class="anx-inv-th">Size</th>
-                                        <th class="anx-inv-th">Upload Date</th>
-                                        <th class="anx-inv-th">Uploaded By</th>
-                                        <th class="anx-inv-th anx-doc-review-th">Review <i class="fa fa-lock" style="font-size:10px;opacity:0.5;" title="Only backend users can edit"/></th>
-                                        <th class="anx-inv-th" style="width:110px;">Status</th>
+                                        <th class="anx-inv-th anx-doc-th-icon" style="width:44px;"></th>
+                                        <th class="anx-inv-th anx-doc-th-name" style="width:200px;">Document Name</th>
+                                        <th class="anx-inv-th anx-doc-th-desc" style="width:170px;">Description</th>
+                                        <th class="anx-inv-th anx-doc-th-type" style="width:125px;">Doc Type</th>
+                                        <th class="anx-inv-th anx-doc-th-file" style="width:80px;">File Type</th>
+                                        <th class="anx-inv-th anx-doc-th-preview" style="width:95px;">Preview</th>
+                                        <th class="anx-inv-th anx-doc-th-size" style="width:75px;">Size</th>
+                                        <th class="anx-inv-th anx-doc-th-date" style="width:125px;">Upload Date</th>
+                                        <th class="anx-inv-th anx-doc-th-user" style="width:115px;">Uploaded By</th>
+                                        <th class="anx-inv-th anx-doc-review-th" style="width:160px;">Review <i class="fa fa-lock" style="font-size:10px;opacity:0.5;" title="Only backend users can edit"/></th>
+                                        <th class="anx-inv-th anx-doc-th-status" style="width:100px;">Status</th>
                                         <t t-if="state.docList and state.docList.is_validator">
-                                            <th class="anx-inv-th anx-inv-th-center" style="width:160px;">Validation</th>
+                                            <th class="anx-inv-th anx-inv-th-center anx-doc-th-val" style="width:165px;">Validation</th>
                                         </t>
                                         <t t-if="state.docList and state.docList.is_validator">
-                                            <th class="anx-inv-th anx-inv-th-center" style="width:110px;">AI Action</th>
+                                            <th class="anx-inv-th anx-inv-th-center anx-doc-th-ai" style="width:120px;">AI Action</th>
                                         </t>
-                                        <th class="anx-inv-th anx-inv-th-center" style="width:90px;">Actions</th>
+                                        <th class="anx-inv-th anx-inv-th-center anx-doc-th-actions" style="width:90px;">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -1158,23 +1158,25 @@
                                                 </span>
                                             </td>
                                             <td class="anx-inv-td anx-inv-td-name">
-                                                <span class="anx-inv-num" t-att-title="doc.file_name">
+                                                <span class="anx-inv-num" t-att-title="doc.name || doc.file_name">
                                                     <t t-esc="doc.name"/>
                                                 </span>
                                             </td>
                                             <!-- Description (inline-editable) -->
                                             <td class="anx-inv-td anx-doc-desc-cell">
                                                 <t t-if="state.docEditId !== doc.id">
-                                                    <span class="anx-doc-desc-text">
-                                                        <t t-esc="doc.description or '—'"/>
-                                                    </span>
-                                                    <button class="anx-doc-desc-edit-btn"
-                                                            t-att-data-id="doc.id"
-                                                            t-att-data-desc="doc.description"
-                                                            t-on-click="startEditDesc"
-                                                            title="Edit description">
-                                                        <i class="fa fa-pencil"/>
-                                                    </button>
+                                                    <div class="anx-doc-inline-content">
+                                                        <span class="anx-doc-desc-text" t-att-title="doc.description">
+                                                            <t t-esc="doc.description or '—'"/>
+                                                        </span>
+                                                        <button class="anx-doc-desc-edit-btn"
+                                                                t-att-data-id="doc.id"
+                                                                t-att-data-desc="doc.description"
+                                                                t-on-click="startEditDesc"
+                                                                title="Edit description">
+                                                            <i class="fa fa-pencil"/>
+                                                        </button>
+                                                    </div>
                                                 </t>
                                                 <t t-if="state.docEditId === doc.id">
                                                     <div class="anx-doc-desc-edit-wrap">
@@ -1202,6 +1204,7 @@
                                             <!-- Document Type badge -->
                                             <td class="anx-inv-td">
                                                 <span class="anx-doc-doctype-badge"
+                                                      t-att-title="doc.doc_type_label"
                                                       t-attf-style="background:{{ doc.doc_type_bg }};color:{{ doc.doc_type_text }};">
                                                     <t t-esc="doc.doc_type_label"/>
                                                 </span>
@@ -1224,25 +1227,29 @@
                                             <td class="anx-inv-td" style="color:#6b7280;font-size:12px;white-space:nowrap;">
                                                 <t t-esc="formatFileSize(doc.file_size)"/>
                                             </td>
-                                            <td class="anx-inv-td anx-inv-td-date">
+                                            <td class="anx-inv-td anx-inv-td-date" t-att-title="doc.upload_date">
                                                 <t t-esc="doc.upload_date"/>
                                             </td>
-                                            <td class="anx-inv-td" style="font-size:12px;color:#6b7280;">
-                                                <t t-esc="doc.user_name"/>
+                                            <td class="anx-inv-td anx-doc-user-cell">
+                                                <span class="anx-doc-user-text" t-att-title="doc.user_name">
+                                                    <t t-esc="doc.user_name"/>
+                                                </span>
                                             </td>
                                             <!-- Review (backend inline-editable) -->
                                             <td class="anx-inv-td anx-doc-review-cell">
                                                 <t t-if="state.docReviewEditId !== doc.id">
-                                                    <span class="anx-doc-review-text" t-att-title="doc.review">
-                                                        <t t-esc="doc.review or '—'"/>
-                                                    </span>
-                                                    <button class="anx-doc-desc-edit-btn"
-                                                            t-att-data-id="doc.id"
-                                                            t-att-data-review="doc.review"
-                                                            t-on-click="startEditReview"
-                                                            title="Add/Edit review">
-                                                        <i class="fa fa-pencil"/>
-                                                    </button>
+                                                    <div class="anx-doc-inline-content">
+                                                        <span class="anx-doc-review-text" t-att-title="doc.review">
+                                                            <t t-esc="doc.review or '—'"/>
+                                                        </span>
+                                                        <button class="anx-doc-desc-edit-btn"
+                                                                t-att-data-id="doc.id"
+                                                                t-att-data-review="doc.review"
+                                                                t-on-click="startEditReview"
+                                                                title="Add/Edit review">
+                                                            <i class="fa fa-pencil"/>
+                                                        </button>
+                                                    </div>
                                                 </t>
                                                 <t t-if="state.docReviewEditId === doc.id">
                                                     <div class="anx-doc-review-edit-wrap">
@@ -1271,6 +1278,7 @@
                                             <!-- Status field -->
                                             <td class="anx-inv-td">
                                                 <span t-attf-class="anx-doc-status-badge status-{{ doc.status }}"
+                                                      t-att-title="doc.status_label"
                                                       t-attf-style="background: {{ doc.status === 'approved' ? '#e8f5e9' : (doc.status === 'rejected' ? '#ffebee' : '#f3f4f6') }};
                                                                     color: {{ doc.status === 'approved' ? '#2e7d32' : (doc.status === 'rejected' ? '#c62828' : '#4b5563') }};
                                                                     padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; text-transform: uppercase; display: inline-block;">
@@ -1280,7 +1288,7 @@
                                             <!-- Validation buttons (Approve / Reject) -->
                                             <t t-if="state.docList and state.docList.is_validator">
                                                 <td class="anx-inv-td anx-inv-td-center">
-                                                    <div class="anx-doc-validation-btns" style="display: inline-flex; gap: 4px; align-items: center;">
+                                                    <div class="anx-doc-validation-btns" style="display: inline-flex; gap: 4px; align-items: center; white-space: nowrap;">
                                                         <button class="anx-doc-btn-approve" 
                                                                 t-att-data-id="doc.id" 
                                                                 t-on-click="approveDocument" 
@@ -1303,12 +1311,12 @@
                                             <t t-if="state.docList and state.docList.is_validator">
                                                 <td class="anx-inv-td anx-inv-td-center">
                                                     <t t-if="doc.created_move_id">
-                                                        <button class="anx-doc-btn-preview" style="background:#2e7d32; color:#fff; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;" t-att-data-move-id="doc.created_move_id" t-on-click="openCreatedMove" title="Entry Created - View accounting record">
+                                                        <button class="anx-doc-btn-preview" style="background:#2e7d32; color:#fff; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;" t-att-data-move-id="doc.created_move_id" t-on-click="openCreatedMove" title="Entry Created - View accounting record">
                                                             <i class="fa fa-file-text-o"/> View Entry
                                                         </button>
                                                     </t>
                                                     <t t-else="">
-                                                        <button class="anx-doc-btn-preview" style="background:#1565c0; color:#fff; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;" t-att-data-id="doc.id" t-on-click="analyzeAndCreateDocument" t-att-disabled="state.analyzingDocId === doc.id" title="Process with Groq AI to create draft Invoice/Bill">
+                                                        <button class="anx-doc-btn-preview" style="background:#1565c0; color:#fff; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;" t-att-data-id="doc.id" t-on-click="analyzeAndCreateDocument" t-att-disabled="state.analyzingDocId === doc.id" title="Process with OpenRouter / Groq AI to create draft Invoice/Bill">
                                                             <t t-if="state.analyzingDocId === doc.id">
                                                                  <i class="fa fa-spinner fa-spin"/> Processing...
                                                             </t>
@@ -1433,6 +1441,62 @@
                             </button>
                             <button class="anx-pl-close-btn" t-on-click="closePlModal">
                                 <i class="fa fa-times"/>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- ── Date Picker Toolbar ── -->
+                    <div t-if="!state.plLoading and state.plData" class="anx-pl-toolbar">
+                        <div class="anx-pl-datepicker-wrap">
+                            <button class="anx-pl-datepicker-btn" t-on-click="togglePlDateDrop">
+                                <i class="fa fa-calendar"/> Date Filter: <t t-esc="state.plData.period_label"/>
+                                <i class="fa fa-caret-down" style="margin-left:6px;font-size:10px;"/>
+                            </button>
+
+                            <!-- Dropdown options -->
+                            <div t-if="state.plShowDateDrop" class="anx-pl-date-drop">
+                                <t t-foreach="getPlDateOptions()" t-as="opt" t-key="opt.key">
+                                    <div t-attf-class="anx-pl-date-opt {{ state.plDateOption === opt.key ? 'active' : '' }}"
+                                         t-att-data-key="opt.key"
+                                         t-on-click="onPlDateOptClick">
+                                        <span class="anx-pl-date-opt-label"><t t-esc="opt.label"/></span>
+                                        <span class="anx-pl-date-opt-sub" t-if="opt.sub"><t t-esc="opt.sub"/></span>
+                                    </div>
+                                </t>
+                                <!-- Custom Date Range inputs -->
+                                <div t-if="state.plDateOption === 'custom'" class="anx-pl-custom-wrap">
+                                    <div class="anx-pl-custom-field">
+                                        <label>From:</label>
+                                        <input type="date" class="anx-pl-custom-input"
+                                               t-att-value="state.plCustomFrom"
+                                               t-on-change="onPlCustomFromChange"/>
+                                    </div>
+                                    <div class="anx-pl-custom-field">
+                                        <label>To:</label>
+                                        <input type="date" class="anx-pl-custom-input"
+                                               t-att-value="state.plCustomTo"
+                                               t-on-change="onPlCustomToChange"/>
+                                    </div>
+                                    <button class="anx-pl-apply-btn" t-on-click="applyPlCustomDate">
+                                        Apply Filter
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Quick date filter options -->
+                        <div class="anx-pl-quick-filters">
+                            <button t-attf-class="anx-pl-qbtn {{ state.plDateOption === 'this_month' ? 'active' : '' }}"
+                                    data-key="this_month" t-on-click="onPlDateOptClick">
+                                This Month
+                            </button>
+                            <button t-attf-class="anx-pl-qbtn {{ state.plDateOption === 'last_3_months' ? 'active' : '' }}"
+                                    data-key="last_3_months" t-on-click="onPlDateOptClick">
+                                Last 3 Months
+                            </button>
+                            <button t-attf-class="anx-pl-qbtn {{ state.plDateOption === 'this_year' ? 'active' : '' }}"
+                                    data-key="this_year" t-on-click="onPlDateOptClick">
+                                This Year
                             </button>
                         </div>
                     </div>
@@ -1951,20 +2015,20 @@
                     </div>
 
                     <!-- VAT body -->
-                    <div t-if="!state.vatLoading and state.vatData" class="anx-pl-body" style="padding: 24px; background-color: #f4f7fb; overflow-y: auto;">
+                    <div t-if="!state.vatLoading and state.vatData" class="anx-pl-body" style="padding: 24px; background-color: #0d1117; overflow-y: auto;">
                         
                         <!-- VAT Custom Date Filter -->
-                        <div class="anx-vat-modal-filters" style="margin-bottom: 20px; padding: 12px 20px; background: #fff; border-radius: 8px; border: 1px solid #e0e4eb; display: flex; align-items: center; gap: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
-                            <span style="font-weight: 600; color: #495057; font-size: 13px;">Custom Date Range:</span>
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                                <label style="font-size: 12px; color: #6c757d; margin: 0;">From</label>
-                                <input type="date" class="anx-inv-search" style="max-width: 140px; padding: 6px 10px; font-size: 13px; height: auto;" data-field="from" t-att-value="state.vatFilterFrom" t-on-change="onVatFilterDateChange" />
+                        <div class="anx-vat-modal-filters">
+                            <span class="anx-vat-filter-title"><i class="fa fa-calendar"/> Custom Date Range:</span>
+                            <div class="anx-vat-filter-group">
+                                <label class="anx-vat-filter-lbl">From</label>
+                                <input type="date" class="anx-vat-date-input" data-field="from" t-att-value="state.vatFilterFrom" t-on-change="onVatFilterDateChange" />
                             </div>
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                                <label style="font-size: 12px; color: #6c757d; margin: 0;">To</label>
-                                <input type="date" class="anx-inv-search" style="max-width: 140px; padding: 6px 10px; font-size: 13px; height: auto;" data-field="to" t-att-value="state.vatFilterTo" t-on-change="onVatFilterDateChange" />
+                            <div class="anx-vat-filter-group">
+                                <label class="anx-vat-filter-lbl">To</label>
+                                <input type="date" class="anx-vat-date-input" data-field="to" t-att-value="state.vatFilterTo" t-on-change="onVatFilterDateChange" />
                             </div>
-                            <button class="anx-pl-print-btn" style="padding: 6px 16px; font-size: 13px; border-radius: 6px; background-color: #1e88e5; color: white; border: none; cursor: pointer; transition: background 0.2s;" t-on-click="applyVatFilter">
+                            <button class="anx-vat-filter-btn" t-on-click="applyVatFilter">
                                 <i class="fa fa-filter"/> Filter
                             </button>
                         </div>
@@ -2166,7 +2230,7 @@
                                 <t t-foreach="state.tbModalData.records" t-as="acc" t-key="acc.id">
                                     <tr class="anx-tb-rtd-row">
                                         <td class="anx-tb-rtd anx-tb-rtd-code"><t t-esc="acc.code"/></td>
-                                        <td class="anx-tb-rtd anx-tb-rtd-name"><a class="anx-tb-acc-link"><t t-esc="acc.name"/></a></td>
+                                        <td class="anx-tb-rtd anx-tb-rtd-name" style="color: #00d4c8 !important; font-weight: 700 !important;"><span class="anx-tb-acc-link" style="color: #00d4c8 !important; font-weight: 700 !important;"><t t-esc="acc.name"/></span></td>
                                         <td t-attf-class="anx-tb-rtd anx-tb-rtd-num {{ acc.initial_balance &lt; 0 ? 'anx-tb-rneg' : '' }}"><t t-esc="acc.initial_display"/></td>
                                         <td class="anx-tb-rtd anx-tb-rtd-num anx-tb-rdebit"><t t-esc="acc.debit_display"/></td>
                                         <td class="anx-tb-rtd anx-tb-rtd-num anx-tb-rcredit"><t t-esc="acc.credit_display"/></td>
@@ -2198,268 +2262,23 @@
 
             <!-- FLOATING DRAGGABLE CHAT BUTTON -->
             <div class="anx-floating-chat-wrapper" 
-                 t-attf-style="position: fixed; left: {{ state.chatPos.x }}px; top: {{ state.chatPos.y }}px; z-index: 9999; cursor: move; touch-action: none;"
+                 t-attf-style="position: fixed; left: {{ state.chatPos.x }}px; top: {{ state.chatPos.y }}px; z-index: 99999; cursor: move; touch-action: none;"
                  t-on-mousedown="startDragChat"
                  t-on-touchstart="startTouchDragChat">
                 <button class="anx-floating-chat-btn" 
                         t-on-click="toggleChatPopup"
-                        style="width: 56px; height: 56px; border-radius: 50%; background: #1e3a8a; border: 2px solid #ffffff; box-shadow: 0 4px 15px rgba(30, 58, 138, 0.4); display: flex; align-items: center; justify-content: center; color: #ffffff; font-size: 20px; position: relative;">
-                    <i class="fa fa-comment-o" style="margin-top: -2px;"/>
+                        style="width: 58px; height: 58px; border-radius: 50%; background: #1e3a8a; border: 2.5px solid #ffffff; box-shadow: 0 8px 24px rgba(30, 58, 138, 0.4); display: flex; align-items: center; justify-content: center; color: #ffffff; font-size: 24px; position: relative; cursor: pointer; transition: transform 0.15s ease;">
+                    <i class="fa fa-comments" style="color: #ffffff; font-size: 24px;"/>
                     
                     <!-- Notification Badge -->
                     <span t-if="discussUnreadCount > 0" 
                           class="anx-chat-badge" 
-                          style="position: absolute; top: -4px; right: -4px; background: #ef4444; color: #ffffff; font-size: 10px; font-weight: 700; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 1.5px solid #ffffff; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+                          style="position: absolute; top: -4px; right: -4px; background: #ef4444; color: #ffffff; font-size: 11px; font-weight: 700; padding: 2px 6px; border-radius: 10px; display: flex; align-items: center; justify-content: center; border: 1.5px solid #ffffff; box-shadow: 0 2px 6px rgba(0,0,0,0.3); min-width: 20px; height: 20px; box-sizing: border-box;">
                         <t t-esc="discussUnreadCount"/>
                     </span>
                 </button>
             </div>
-
-            <!-- CHAT POPUP WINDOW -->
-            <div t-if="state.showChatPopup" class="anx-chat-popup-window" t-att-style="getChatPopupStyle()">
-                <!-- IF LIST VIEW -->
-                <t t-if="!state.activeThreadId">
-                    <!-- Header -->
-                    <div class="anx-chat-popup-header">
-                        <div style="display: flex; align-items: center; gap: 8px;">
-                            <i class="fa fa-comments" style="font-size: 16px;"/>
-                            <span style="font-weight: 600; font-size: 14px;">Odoo Chat</span>
-                        </div>
-                        <div style="display: flex; align-items: center; gap: 8px;">
-                            <button class="anx-chat-close-btn" t-on-click="openFullDiscuss" title="Open Discuss App" style="margin-right: 4px; background: rgba(255, 255, 255, 0.1); border: none; color: #ffffff; opacity: 0.8; cursor: pointer; padding: 5px 8px; border-radius: 6px; font-size: 12px; transition: all 0.2s;">
-                                <i class="fa fa-external-link"/>
-                            </button>
-                            <button class="anx-chat-close-btn" t-on-click="closeChatPopup" title="Close">
-                                <i class="fa fa-times"/>
-                            </button>
-                        </div>
-                    </div>
-                    <!-- Body -->
-                    <div class="anx-chat-popup-body" style="padding: 12px; display: flex; flex-direction: column; gap: 10px; flex: 1; overflow: hidden; height: calc(100% - 50px);">
-
-                        <!-- Search Bar -->
-                        <div style="position: relative;">
-                            <div style="display: flex; align-items: center; background: #f1f5f9; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 8px 12px; gap: 8px; transition: border-color 0.2s;">
-                                <i class="fa fa-search" style="color: #94a3b8; font-size: 13px; flex-shrink: 0;"/>
-                                <input
-                                    type="text"
-                                    t-att-value="state.chatSearch"
-                                    t-on-input="onChatSearchInput"
-                                    placeholder="Search people or channels..."
-                                    style="border: none; background: transparent; outline: none; flex: 1; font-size: 12.5px; color: #1e293b; min-width: 0;"
-                                />
-                                <i t-if="state.chatSearchLoading" class="fa fa-spinner fa-spin" style="color: #94a3b8; font-size: 12px; flex-shrink: 0;"/>
-                                <button t-if="state.chatSearch and !state.chatSearchLoading" t-on-click="clearChatSearch"
-                                    style="border: none; background: none; padding: 0; cursor: pointer; color: #94a3b8; font-size: 12px; line-height: 1; display: flex; align-items: center;">
-                                    <i class="fa fa-times"/>
-                                </button>
-                            </div>
-
-                            <!-- Search Results Dropdown -->
-                            <div t-if="state.chatSearchResults.length > 0"
-                                 style="position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.12); z-index: 100; overflow: hidden; max-height: 220px; overflow-y: auto;">
-                                <div style="padding: 6px 10px; font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #f1f5f9;">Results</div>
-                                <t t-foreach="state.chatSearchResults" t-as="result" t-key="result.type + '_' + result.id">
-                                    <div t-on-click="onClickSearchResult"
-                                         t-att-data-result-index="result_index"
-                                         style="display: flex; align-items: center; gap: 10px; padding: 9px 12px; cursor: pointer; transition: background 0.15s;"
-                                         class="anx-search-result-item">
-                                        <!-- Avatar -->
-                                        <div style="position: relative; width: 34px; height: 34px; flex-shrink: 0;">
-                                            <img t-if="result.avatarUrl"
-                                                 t-att-src="result.avatarUrl"
-                                                 style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 1px solid #e2e8f0;"/>
-                                            <div t-else=""
-                                                 t-attf-style="width: 100%; height: 100%; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; background: {{ result.type === 'user' ? '#dbeafe' : '#fce7f3' }}; color: {{ result.type === 'user' ? '#2563eb' : '#be185d' }};">
-                                                <t t-esc="result.name ? result.name.charAt(0).toUpperCase() : '?'"/>
-                                            </div>
-                                        </div>
-                                        <!-- Info -->
-                                        <div style="flex: 1; min-width: 0;">
-                                            <div style="font-weight: 600; font-size: 12.5px; color: #1e293b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                                                <t t-esc="result.name"/>
-                                            </div>
-                                            <div style="font-size: 10.5px; color: #94a3b8;">
-                                                <t t-if="result.type === 'user'">Direct Message</t>
-                                                <t t-else="">
-                                                    <t t-if="result.channelType === 'channel'"># Channel</t>
-                                                    <t t-else="">Group</t>
-                                                </t>
-                                            </div>
-                                        </div>
-                                        <!-- Start chat icon -->
-                                        <i class="fa fa-paper-plane" style="color: #cbd5e1; font-size: 12px; flex-shrink: 0;"/>
-                                    </div>
-                                </t>
-                            </div>
-
-                            <!-- No results found -->
-                            <div t-if="state.chatSearch and !state.chatSearchLoading and state.chatSearchResults.length === 0 and state.chatSearch.trim().length > 0"
-                                 style="position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.12); z-index: 100; padding: 16px; text-align: center; color: #94a3b8; font-size: 12px;">
-                                <i class="fa fa-search" style="display: block; font-size: 18px; margin-bottom: 6px; opacity: 0.4;"/>
-                                No results for "<t t-esc="state.chatSearch"/>"
-                            </div>
-                        </div>
-
-                        <!-- Quick action to open full app -->
-                        <button class="anx-chat-action-btn" t-on-click="openFullDiscuss" style="width: 100%; border: 1.5px dashed #2b7b9b; background: #f0f7fa; color: #2b7b9b; border-radius: 8px; padding: 7px; font-size: 11.5px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s; box-sizing: border-box;">
-                            <i class="fa fa-comments-o"/> Open Full Discuss Workspace
-                        </button>
-                        
-                        <!-- Conversations List -->
-                        <div class="anx-chat-list" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px;">
-                            <t t-if="activeChats.length === 0">
-                                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: #8a93a4; gap: 8px; text-align: center; padding: 20px;">
-                                    <i class="fa fa-commenting-o fa-2x" style="opacity: 0.5;"/>
-                                    <span style="font-size: 12px;"><t t-if="state.chatSearch">No conversations match "<t t-esc="state.chatSearch"/>"</t><t t-else="">No active conversations found.</t></span>
-                                </div>
-                            </t>
-                            <t t-else="">
-                                <t t-foreach="activeChats" t-as="thread" t-key="thread.localId">
-                                    <div class="anx-chat-item" 
-                                         t-att-data-thread-id="thread.id"
-                                         t-att-data-thread-model="thread.model"
-                                         t-on-click="onClickChatThread"
-                                         style="display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 8px; background: #ffffff; border: 1px solid #f1f5f9; cursor: pointer; transition: all 0.2s; position: relative;">
-                                        
-                                        <!-- Avatar / Icon -->
-                                        <div style="position: relative; width: 38px; height: 38px; flex-shrink: 0;">
-                                            <img t-if="thread.avatarUrl" 
-                                                 t-att-src="thread.avatarUrl" 
-                                                 style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 1px solid #e2e8f0;"/>
-                                            <div t-else="" 
-                                                 style="width: 100%; height: 100%; border-radius: 50%; background: #e0e7ff; color: #4f46e5; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px;">
-                                                <t t-esc="thread.displayName ? thread.displayName.charAt(0).toUpperCase() : '?'"/>
-                                            </div>
-                                            <!-- Online status indicator -->
-                                            <span t-if="thread.correspondent and thread.correspondent.im_status" 
-                                                  t-attf-style="position: absolute; bottom: 0; right: 0; width: 10px; height: 10px; border-radius: 50%; border: 2px solid #ffffff; background: {{ thread.correspondent.im_status === 'online' ? '#10b981' : (thread.correspondent.im_status === 'away' ? '#f59e0b' : '#9ca3af') }};"/>
-                                        </div>
-                                        
-                                        <!-- Info -->
-                                        <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px;">
-                                            <div style="display: flex; align-items: center; justify-content: space-between;">
-                                                <span style="font-weight: 700; font-size: 13px; color: #1e293b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                                                    <t t-esc="thread.prefix"/><t t-esc="thread.displayName"/>
-                                                </span>
-                                            </div>
-                                            <div style="font-size: 11.5px; color: #64748b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                                                <t t-if="thread.lastMessage">
-                                                    <t t-esc="thread.lastMessage.body ? stripHtml(thread.lastMessage.body) : 'Sent an attachment'"/>
-                                                </t>
-                                                <t t-else="">
-                                                    No messages yet
-                                                </t>
-                                            </div>
-                                        </div>
-                                        
-                                        <!-- Unread Badge -->
-                                        <span t-if="thread.self_member_id and thread.self_member_id.message_unread_counter > 0" 
-                                              style="background: #ef4444; color: #ffffff; font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 10px; min-width: 14px; text-align: center;">
-                                            <t t-esc="thread.self_member_id.message_unread_counter"/>
-                                        </span>
-                                    </div>
-                                </t>
-                            </t>
-                        </div>
-                    </div>
-                </t>
-                
-                <!-- IF CONVERSATION VIEW -->
-                <t t-else="">
-                    <!-- Header -->
-                    <div class="anx-chat-popup-header" style="background: #1e3a8a; color: #ffffff; padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #1e40af; height: 50px; box-sizing: border-box; flex-shrink: 0;">
-                        <div style="display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1;">
-                            <button t-on-click="goBackToChatList" title="Back" style="background: none; border: none; color: #ffffff; font-size: 14px; cursor: pointer; padding: 4px 6px; display: flex; align-items: center; justify-content: center; border-radius: 50%; width: 28px; height: 28px; transition: all 0.2s; flex-shrink: 0;" class="anx-chat-back-btn">
-                                <i class="fa fa-chevron-left"/>
-                            </button>
-                            <div style="position: relative; width: 30px; height: 30px; flex-shrink: 0;">
-                                <img t-if="activeThread.avatarUrl" 
-                                     t-att-src="activeThread.avatarUrl" 
-                                     style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 1px solid rgba(255, 255, 255, 0.2);"/>
-                                <div t-else="" 
-                                     style="width: 100%; height: 100%; border-radius: 50%; background: rgba(255, 255, 255, 0.2); color: #ffffff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px;">
-                                    <t t-esc="activeThread.displayName ? activeThread.displayName.charAt(0).toUpperCase() : '?'"/>
-                                </div>
-                            </div>
-                            <span style="font-weight: 700; font-size: 13.5px; color: #ffffff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1;">
-                                <t t-esc="activeThread.displayName"/>
-                            </span>
-                        </div>
-                        <div style="display: flex; align-items: center; gap: 8px;">
-                            <button class="anx-chat-close-btn" t-on-click="openFullDiscuss" title="Open Full Discuss" style="background: rgba(255, 255, 255, 0.1); border: none; color: #ffffff; opacity: 0.8; cursor: pointer; padding: 5px 8px; border-radius: 6px; font-size: 12px; transition: all 0.2s;">
-                                <i class="fa fa-external-link"/>
-                            </button>
-                            <button class="anx-chat-close-btn" t-on-click="closeChatPopup" title="Close" style="background: none; border: none; color: #ffffff; opacity: 0.8; cursor: pointer; font-size: 14px;">
-                                <i class="fa fa-times"/>
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <!-- Message Feed -->
-                    <div t-ref="messageFeed" class="anx-chat-messages-container" style="flex: 1; overflow-y: auto; background: #f8fafc; padding: 12px; display: flex; flex-direction: column; gap: 10px; height: calc(100% - 104px);">
-                        <t t-if="activeThreadMessages.length === 0">
-                            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: #94a3b8; font-size: 12px;">
-                                <i class="fa fa-comments-o fa-2x" style="opacity: 0.3; margin-bottom: 8px;"/>
-                                No messages in this conversation.
-                            </div>
-                        </t>
-                        <t t-else="">
-                            <t t-foreach="activeThreadMessages" t-as="message" t-key="message.id">
-                                <div t-attf-style="display: flex; align-items: flex-end; gap: 8px; max-width: 85%; width: fit-content; margin-bottom: 2px; {{ message.isSelfAuthored ? 'margin-left: auto; flex-direction: row-reverse;' : 'margin-right: auto;' }}">
-                                    <!-- Correspondent Avatar (Others only) -->
-                                    <div t-if="!message.isSelfAuthored" style="width: 26px; height: 26px; flex-shrink: 0; margin-bottom: 2px;">
-                                        <img t-if="message.author and message.author.avatarUrl" 
-                                             t-att-src="message.author.avatarUrl" 
-                                             style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 1px solid #e2e8f0;"/>
-                                        <div t-else="" 
-                                             style="width: 100%; height: 100%; border-radius: 50%; background: #e2e8f0; color: #475569; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 10px;">
-                                            <t t-esc="message.author ? message.author.displayName.charAt(0).toUpperCase() : '?'"/>
-                                        </div>
-                                    </div>
-                                    
-                                    <!-- Message Bubble -->
-                                    <div style="display: flex; flex-direction: column; gap: 2px;">
-                                        <!-- Sender Name (Others in channel only) -->
-                                        <span t-if="!message.isSelfAuthored and activeThread.channel_type !== 'chat'" 
-                                              style="font-size: 10px; font-weight: 600; color: #64748b; margin-left: 4px;">
-                                            <t t-esc="message.author ? message.author.displayName : 'Unknown'"/>
-                                        </span>
-                                        
-                                        <div t-attf-style="padding: 8px 12px; border-radius: 12px; font-size: 12.5px; line-height: 1.4; word-break: break-word; box-shadow: 0 1px 2px rgba(0,0,0,0.05); {{ message.isSelfAuthored ? 'background: #2b7b9b; color: #ffffff; border-bottom-right-radius: 2px;' : 'background: #ffffff; color: #1e293b; border-bottom-left-radius: 2px; border: 1px solid #e2e8f0;' }}">
-                                            <!-- Message content -->
-                                            <t t-out="message.body"/>
-                                        </div>
-                                        
-                                        <!-- Time -->
-                                        <span t-attf-style="font-size: 9px; color: #94a3b8; padding: 0 4px; {{ message.isSelfAuthored ? 'text-align: right;' : 'text-align: left;' }}">
-                                            <t t-esc="formatMessageTime(message)"/>
-                                        </span>
-                                    </div>
-                                </div>
-                            </t>
-                        </t>
-                    </div>
-                    
-                    <!-- Composer Footer -->
-                    <div style="background: #ffffff; border-top: 1px solid #e2e8f0; padding: 10px 12px; display: flex; align-items: center; gap: 8px; height: 54px; box-sizing: border-box; flex-shrink: 0;">
-                        <input type="text" 
-                               t-model="state.messageText"
-                               t-on-keydown="onMessageInputKeydown"
-                               placeholder="Type a message..." 
-                               style="flex: 1; border: 1px solid #cbd5e1; border-radius: 20px; padding: 6px 14px; font-size: 12.5px; outline: none; transition: border-color 0.15s; background: #f8fafc;"
-                               class="anx-chat-input"/>
-                        <button t-on-click="sendMessage" 
-                                style="background: #2b7b9b; color: #ffffff; border: none; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; flex-shrink: 0;"
-                                class="anx-chat-send-btn"
-                                title="Send">
-                            <i class="fa fa-paper-plane" style="font-size: 12px; margin-left: -1px;"/>
-                        </button>
-                    </div>
-                </t>
-            </div>
-
-            </div>
         </div>
-    </t>
+    </div>
+</t>
 </templates>

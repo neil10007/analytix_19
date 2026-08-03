@@ -279,6 +279,70 @@ Rules:
         image.save(buffer, format="PNG")
         return base64.b64encode(buffer.getvalue()).decode("utf-8")
 
+    def _call_openrouter(self, client, image_b64):
+        """
+        Send a single page/image to OpenRouter (Gemini model) and return the
+        parsed JSON dict describing the document (invoice/bill/receipt/etc).
+
+        `client` is an openai.OpenAI instance already pointed at OpenRouter.
+        `image_b64` is a base64-encoded PNG/JPEG string (no data: prefix),
+        as produced by self._image_to_base64().
+        """
+        system_prompt = (
+            "You are a document-extraction engine for an accounting system. "
+            "Given an image of an invoice, bill, receipt or credit note, extract "
+            "the data and respond with ONLY a valid JSON object (no markdown, no "
+            "commentary) using this shape:\n"
+            "{\n"
+            '  "document_type": "invoice|bill|credit_note|debit_note|receipt|other",\n'
+            '  "vendor_name": "string or null",\n'
+            '  "customer_name": "string or null",\n'
+            '  "invoice_date": "YYYY-MM-DD or null",\n'
+            '  "currency": "3-letter ISO code or null",\n'
+            '  "subtotal": number,\n'
+            '  "tax": number,\n'
+            '  "total": number,\n'
+            '  "items": [\n'
+            '    {"description": "string", "quantity": number, "unit_price": number, "tax_rate": number}\n'
+            "  ]\n"
+            "}"
+        )
+
+        model_name = getattr(self.env.user, 'openrouter_model', False) or getattr(self.env.company, 'openrouter_model', False) or "google/gemini-2.5-flash"
+
+        response = client.chat.completions.create(
+            model=model_name,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": "Extract the document data as JSON."},
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:image/png;base64,{image_b64}"
+                            },
+                        },
+                    ],
+                },
+            ],
+            response_format={"type": "json_object"},
+            temperature=0,
+        )
+
+        content = response.choices[0].message.content
+
+        try:
+            return json.loads(content)
+        except (json.JSONDecodeError, TypeError):
+            cleaned = content.strip()
+            if cleaned.startswith("```"):
+                cleaned = cleaned.strip("`")
+                if cleaned.lower().startswith("json"):
+                    cleaned = cleaned[4:]
+            return json.loads(cleaned.strip())
+
     def _call_groq(self, client, image_b64):
         """Call Groq API with the given base64 image."""
         completion = client.chat.completions.create(
@@ -310,24 +374,14 @@ Rules:
         return json.loads(completion.choices[0].message.content)
 
     def _resolve_tax(self, move_type, tax_rate):
-        """Find an account.tax record matching the given percentage.
-
-        Args:
-            move_type (str): Odoo move_type ('out_invoice', 'in_invoice', etc.)
-            tax_rate  (float): Tax percentage, e.g. 5.0 for 5 %
-
-        Returns:
-            account.tax recordset (may be empty if nothing matched)
-        """
+        """Find an account.tax record matching the given percentage."""
         if not tax_rate:
             return self.env['account.tax']
 
-        # Odoo stores tax type as 'sale' or 'purchase'
         tax_type = 'sale' if move_type in ('out_invoice', 'out_refund') else 'purchase'
         rate = round(float(tax_rate), 2)
         company = self.env.company
 
-        # 1. Try exact match on type + amount
         tax = self.env['account.tax'].search([
             ('type_tax_use', '=', tax_type),
             ('amount', '=', rate),
@@ -336,7 +390,6 @@ Rules:
             ('active', '=', True),
         ], limit=1)
 
-        # 2. Fallback: any active tax at that rate regardless of type
         if not tax:
             tax = self.env['account.tax'].search([
                 ('amount', '=', rate),
@@ -361,13 +414,11 @@ Rules:
 
         last_val = None
         if last_move:
-            # Check name first, then ref
             last_val = last_move.name or last_move.ref
 
         if not last_val or last_val == '/':
             return f"{prefix}{default_number}"
 
-        # Extract the last sequence of digits
         match = re.search(r'(\d+)(?!.*\d)', last_val)
         if match:
             num_str = match.group(1)
@@ -381,46 +432,48 @@ Rules:
             return f"{last_val}-1000"
 
     def action_analyze_and_create_entry(self):
-        """Process the document file with Groq AI and create corresponding accounting entry."""
+        """Process the document file with OpenRouter (Gemini) and create corresponding accounting entry."""
         self.ensure_one()
         if not self.file_data:
             raise UserError("No file uploaded for this document record.")
 
-        # Determine the Groq API key (check user first, then company)
-        api_key = self.env.user.groq_api_key or self.env.company.groq_api_key
+        # Determine OpenRouter API key (check user first, then company)
+        api_key = self.env.user.open_router_key or getattr(self.env.user, 'openrouter_api_key', False) or self.env.company.open_router_key or getattr(self.env.company, 'openrouter_api_key', False)
+
         if not api_key:
-            raise UserError("Please configure a Groq API Key on your User profile or Company settings.")
+            raise UserError("Please configure an OpenRouter API Key on your User profile or Company settings.")
 
         # Print the API key in the logs as requested
         print("--------------------------------------------------")
-        print("GROQ API KEY IS:", api_key)
+        print("OPENROUTER API KEY IS:", api_key)
         print("--------------------------------------------------")
-        _logger.info("GROQ API KEY IS: %s", api_key)
+        _logger.info("OPENROUTER API KEY IS: %s", api_key)
 
         try:
             import fitz          # PyMuPDF
             from PIL import Image
-            from groq import Groq
+            from openai import OpenAI
         except ImportError as e:
             raise UserError(
                 f"Missing dependency: {e}\n"
-                "Please run: pip install pymupdf groq pillow"
+                "Please run: pip install pymupdf openai pillow"
             )
 
-        client = Groq(api_key=api_key.strip())
-        
+        client = OpenAI(
+            base_url="https://openrouter.ai/api/v1",
+            api_key=api_key.strip(),
+        )
+
         raw_data = self.file_data
         if not raw_data:
             raise UserError("No file data found.")
-            
+
         if isinstance(raw_data, str):
             raw_data = raw_data.encode('utf-8')
-            
+
         if b'base64,' in raw_data[:100]:
             raw_data = raw_data.split(b'base64,')[1]
 
-        # We need to figure out if raw_data is base64 encoded or raw binary.
-        # We will decode it, and let PyMuPDF tell us which one is a valid image/document!
         decoded_data = None
         try:
             decoded_data = base64.b64decode(raw_data)
@@ -428,27 +481,24 @@ Rules:
             pass
 
         doc = None
-        # Try PyMuPDF on the decoded data first (this is the most common case in Odoo)
         if decoded_data:
             try:
                 doc = fitz.open(stream=decoded_data)
             except Exception:
                 pass
-                
-        # If decoded data didn't work, try PyMuPDF on the raw data
+
         if not doc:
             try:
                 doc = fitz.open(stream=raw_data)
             except Exception as e_fitz_raw:
-                # If neither worked with PyMuPDF, try Pillow as an absolute last resort
                 try:
                     if decoded_data:
                         image = Image.open(BytesIO(decoded_data)).convert("RGB")
                     else:
                         image = Image.open(BytesIO(raw_data)).convert("RGB")
-                        
+
                     image_b64 = self._image_to_base64(image)
-                    output = self._call_groq(client, image_b64)
+                    output = self._call_openrouter(client, image_b64)
                 except Exception as e_pil:
                     raise UserError(f"Could not parse file format.\nPyMuPDF error: {e_fitz_raw}\nPillow error: {e_pil}")
 
@@ -459,7 +509,7 @@ Rules:
                 pix = page.get_pixmap(dpi=250, alpha=False)
                 image = Image.open(BytesIO(pix.tobytes("png"))).convert("RGB")
                 image_b64 = self._image_to_base64(image)
-                result = self._call_groq(client, image_b64)
+                result = self._call_openrouter(client, image_b64)
                 results.append(result)
             doc.close()
             output = results[0] if len(results) == 1 else results
@@ -484,16 +534,25 @@ Rules:
         if not isinstance(data, dict):
             raise UserError("Unexpected JSON structure — expected a JSON object.")
 
+        SUPPORTED_TYPES = {'invoice', 'bill', 'receipt', 'credit_note', 'debit_note'}
+        raw_doc_type = (data.get('document_type') or '').strip().lower()
+
+        if not raw_doc_type or raw_doc_type not in SUPPORTED_TYPES:
+            display_type = data.get('document_type') or 'Other/Unknown'
+            raise UserError(
+                f"Unsupported Document Type: '{display_type}'.\n\n"
+                "The AI analyzed this document and detected that it is not a valid Invoice or Bill. "
+                "Only Invoices and Bills (or Receipts/Credit Notes) are supported for automatic entry creation."
+            )
+
         DOC_TYPE_MAP = {
             'invoice':     'out_invoice',   # Customer Invoice
             'bill':        'in_invoice',    # Vendor Bill
             'credit_note': 'out_refund',    # Customer Credit Note
             'debit_note':  'in_invoice',    # Treated as vendor bill variant
             'receipt':     'in_invoice',    # Treat receipt as vendor bill
-            'other':       'in_invoice',    # Fallback
         }
-        raw_doc_type = (data.get('document_type') or '').strip().lower()
-        move_type = DOC_TYPE_MAP.get(raw_doc_type, 'in_invoice') # Default to vendor bill if unknown
+        move_type = DOC_TYPE_MAP[raw_doc_type]
 
         # Resolve / Create Partner
         partner = None

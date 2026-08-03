@@ -167,8 +167,8 @@
 }
 
 .o_form_view .o_form_button_save {
-    background: var(--kr-color-primary, #875A7B) !important;
-    border-color: var(--kr-color-primary, #875A7B) !important;
+    background: var(--kr-color-primary, #0f1729) !important;
+    border-color: var(--kr-color-primary, #0f1729) !important;
     color: #ffffff !important;
     font-weight: 600 !important;
     border-radius: 10px !important;
@@ -176,8 +176,8 @@
 }
 
 .o_form_view .o_form_button_save:hover:not(:disabled) {
-    background: var(--kr-color-primary-hover, #6d4a64) !important;
-    border-color: var(--kr-color-primary-hover, #6d4a64) !important;
+    background: var(--kr-color-primary-hover, #1b283d) !important;
+    border-color: var(--kr-color-primary-hover, #1b283d) !important;
     color: #ffffff !important;
 }
 

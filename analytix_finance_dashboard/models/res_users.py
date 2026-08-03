@@ -5,6 +5,7 @@ class ResUsers(models.Model):
     _inherit = 'res.users'
 
     groq_api_key = fields.Char(string='Groq API Key')
+    open_router_key = fields.Char(string='OpenRouter API Key')
 
 
     @api.model_create_multi

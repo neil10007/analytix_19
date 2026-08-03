@@ -18,8 +18,8 @@
 
 .kr_utility_rail button:hover,
 .kr_header_actions button:hover {
-    background: #ff8744;
-    color: #111827;
+    background: #00d4c8;
+    color: #080d18;
 }
 
 .kr_header h1,
@@ -49,8 +49,9 @@
 }
 
 .kr_metric_hot {
-    background: linear-gradient(135deg, #ff8744, #f04f3e);
-    color: #ffffff;
+    background: linear-gradient(135deg, #0f1729, #1e293b);
+    border: 1px solid rgba(0, 212, 200, 0.4);
+    color: #00d4c8;
 }
 
 .kr_chart {
