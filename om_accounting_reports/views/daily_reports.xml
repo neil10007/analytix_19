@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="account_report_bankbook_view" model="ir.ui.view">
+            <field name="name">account.bankbook.report</field>
+            <field name="model">account.bankbook.report</field>
+            <field name="inherit_id" ref="om_account_daily_reports.account_report_bankbook_view"/>
+            <field name="arch" type="xml">
+                <button name="check_report" position="before">
+                    <button name="get_html_report" string="View"
+                            type="object" default_focus="1"
+                            class="oe_highlight" data-hotkey="v"/>
+                    or
+                </button>
+                <xpath expr="//footer" position="after">
+                    <div>
+                        <field name="report_details"
+                               nolabel="1"
+                               readonly="1"
+                               options='{"reload_on_button": True,"fixed_size": True}'/>
+                    </div>
+                </xpath>
+            </field>
+        </record>
+
+        <record id="account_report_cashbook_view" model="ir.ui.view">
+            <field name="name">account.cashbook.report</field>
+            <field name="model">account.cashbook.report</field>
+            <field name="inherit_id" ref="om_account_daily_reports.account_report_cashbook_view"/>
+            <field name="arch" type="xml">
+                <button name="check_report" position="before">
+                    <button name="get_html_report" string="View"
+                            type="object" default_focus="1"
+                            class="oe_highlight" data-hotkey="v"/>
+                    or
+                </button>
+                <xpath expr="//footer" position="after">
+                    <div>
+                        <field name="report_details"
+                               nolabel="1"
+                               readonly="1"
+                               options='{"reload_on_button": True,"fixed_size": True}'/>
+                    </div>
+                </xpath>
+            </field>
+        </record>
+
+        <record id="account_report_daybook_view" model="ir.ui.view">
+            <field name="name">account.daybook.report</field>
+            <field name="model">account.daybook.report</field>
+            <field name="inherit_id" ref="om_account_daily_reports.account_report_daybook_view"/>
+            <field name="arch" type="xml">
+                <button name="check_report" position="before">
+                    <button name="get_html_report" string="View"
+                            type="object" default_focus="1"
+                            class="oe_highlight" data-hotkey="v"/>
+                    or
+                </button>
+                <xpath expr="//footer" position="after">
+                    <div>
+                        <field name="report_details"
+                               nolabel="1"
+                               readonly="1"
+                               options='{"reload_on_button": True,"fixed_size": True}'/>
+                    </div>
+                </xpath>
+            </field>
+        </record>
+
+    </data>
+</odoo>
+
