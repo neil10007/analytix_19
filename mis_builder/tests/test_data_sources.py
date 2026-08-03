@@ -2,7 +2,6 @@
 # License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl.html).
 
 import odoo.tests.common as common
-from odoo import Command
 
 from ..models.accounting_none import AccountingNone
 from ..models.mis_report import CMP_DIFF
@@ -52,7 +51,7 @@ class TestMisReportInstanceDataSources(common.TransactionCase):
         # create receivable bs account
         self.account_ar = self.account_model.create(
             {
-                "company_ids": [Command.link(self.env.user.company_id.id)],
+                "company_id": self.env.user.company_id.id,
                 "code": "400AR",
                 "name": "Receivable",
                 "account_type": "asset_receivable",
@@ -62,7 +61,7 @@ class TestMisReportInstanceDataSources(common.TransactionCase):
         # create income account
         self.account_in = self.account_model.create(
             {
-                "company_ids": [Command.link(self.env.user.company_id.id)],
+                "company_id": self.env.user.company_id.id,
                 "code": "700IN",
                 "name": "Income",
                 "account_type": "income",
@@ -70,7 +69,7 @@ class TestMisReportInstanceDataSources(common.TransactionCase):
         )
         self.account_in2 = self.account_model.create(
             {
-                "company_ids": [Command.link(self.env.user.company_id.id)],
+                "company_id": self.env.user.company_id.id,
                 "code": "700IN2",
                 "name": "Income",
                 "account_type": "income",

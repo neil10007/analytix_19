@@ -1,14 +1,50 @@
 /** @odoo-module */
-import { Component, useState, onWillStart, onMounted, useRef, useEffect, onWillUnmount } from "@odoo/owl";
+import { Component, useState, onWillStart, onMounted, useRef, useEffect, onWillUnmount, xml, useSubEnv } from "@odoo/owl";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
 import { loadJS } from "@web/core/assets";
 import { Discuss } from "@mail/core/public_web/discuss";
+import { MessagingMenu } from "@mail/core/public_web/messaging_menu";
+import { DROPDOWN_NESTING } from "@web/core/dropdown/_behaviours/dropdown_nesting";
+
+export class DashboardMessagingMenu extends Component {
+    static template = xml`
+        <div class="d-flex flex-column h-100 w-100 overflow-hidden bg-view border rounded-3 shadow-lg" style="min-height: 420px; max-height: 480px;">
+            <MessagingMenu/>
+        </div>
+    `;
+    static components = { MessagingMenu };
+    setup() {
+        const dashboard = this.env.dashboard;
+        const mockDropdown = {
+            children: new Set(),
+            close: () => {
+                if (dashboard && dashboard.state) {
+                    dashboard.state.showChatPopup = false;
+                }
+            },
+            closeChildren: () => {},
+            closeAllParents: () => {},
+            open: () => {},
+            toggle: () => {},
+            isOpen: true,
+        };
+        useSubEnv({ 
+            inDiscussApp: false,
+            [DROPDOWN_NESTING]: mockDropdown,
+            inMessagingMenu: {
+                dropdown: mockDropdown,
+            }
+        });
+    }
+}
 
 export class AnalytixFinanceDashboard extends Component {
     static template = "analytix_finance_dashboard.Dashboard";
-    static components = { Discuss };
+    static components = { Discuss, DashboardMessagingMenu };
+
     setup() {
+        useSubEnv({ dashboard: this });
         this.action       = useService("action");
         this.notification = useService("notification");
         this.orm          = useService("orm");
@@ -72,6 +108,10 @@ export class AnalytixFinanceDashboard extends Component {
             plData:          null,
             plLoading:       false,
             showPlModal:     false,
+            plDateOption:    'this_month',
+            plCustomFrom:    '',
+            plCustomTo:      '',
+            plShowDateDrop:  false,
             // ── Balance Sheet Modal
             bsData:          null,
             bsLoading:       false,
@@ -164,6 +204,20 @@ export class AnalytixFinanceDashboard extends Component {
             if (activeTabEl) {
                 activeTabEl.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
             }
+            // Ensure chat icon is visible inside viewport
+            const btnSize = 56;
+            let cx = parseInt(this.state.chatPos.x);
+            let cy = parseInt(this.state.chatPos.y);
+            const maxX = window.innerWidth - btnSize - 20;
+            const maxY = window.innerHeight - btnSize - 20;
+            if (isNaN(cx) || cx < 20 || cx > maxX) {
+                cx = Math.max(20, window.innerWidth - btnSize - 30);
+            }
+            if (isNaN(cy) || cy < 60 || cy > maxY) {
+                cy = Math.max(60, window.innerHeight - btnSize - 30);
+            }
+            this.state.chatPos.x = cx;
+            this.state.chatPos.y = cy;
         });
         useEffect(() => this.renderCharts(), () => [this.state.data]);
         useEffect(() => {
@@ -686,14 +740,14 @@ export class AnalytixFinanceDashboard extends Component {
                     {
                         label: 'Revenue',
                         data: revData,
-                        backgroundColor: '#2b7b9b',
+                        backgroundColor: '#00d4c8',
                         borderRadius: 4,
                         yAxisID: 'yRev',
                     },
                     {
                         label: 'Expenses',
                         data: expData,
-                        backgroundColor: '#b1d4e0',
+                        backgroundColor: 'rgba(0,212,200,0.30)',
                         borderRadius: 4,
                         yAxisID: 'yExp',
                     },
@@ -917,12 +971,20 @@ export class AnalytixFinanceDashboard extends Component {
 
     // ── P&L Modal ───────────────────────────────────────────────
     async openPlStatement() {
-        this.state.showPlModal = true;
-        this.state.plLoading   = true;
+        this.state.showPlModal    = true;
+        this.state.plDateOption   = this.state.filter || 'this_month';
+        this.state.plCustomFrom   = this.state.customFrom || '';
+        this.state.plCustomTo     = this.state.customTo || '';
+        this.state.plShowDateDrop = false;
+        await this._refreshPlData();
+    }
+
+    async _refreshPlData() {
+        this.state.plLoading = true;
         try {
             this.state.plData = await this.orm.call(
                 'account.move', 'get_analytix_pl_data',
-                [this.state.filter, this.state.customFrom, this.state.customTo]
+                [this.state.plDateOption, this.state.plCustomFrom, this.state.plCustomTo]
             );
         } catch (e) {
             this.notification.add('Failed to load P&L data.', { type: 'danger' });
@@ -933,7 +995,58 @@ export class AnalytixFinanceDashboard extends Component {
     }
 
     closePlModal() {
-        this.state.showPlModal = false;
+        this.state.showPlModal    = false;
+        this.state.plShowDateDrop = false;
+    }
+
+    getPlDateOptions() {
+        const now = new Date();
+        const MN  = ['January','February','March','April','May','June',
+                     'July','August','September','October','November','December'];
+        const q    = Math.floor(now.getMonth() / 3);
+        const qSub = `${MN[q*3].slice(0,3)} - ${MN[Math.min(q*3+2,11)].slice(0,3)} ${now.getFullYear()}`;
+        return [
+            { key: 'this_month',    label: 'This Month',    sub: `${MN[now.getMonth()]} ${now.getFullYear()}` },
+            { key: 'last_3_months', label: 'Last 3 Months', sub: qSub },
+            { key: 'this_year',     label: 'This Year',     sub: String(now.getFullYear()) },
+            { key: 'custom',        label: 'Custom Range',  sub: '' },
+        ];
+    }
+
+    onPlDateOptClick(ev) {
+        const key = ev.currentTarget.dataset.key;
+        if (key) this.selectPlDateOption(key);
+    }
+
+    async selectPlDateOption(key) {
+        this.state.plDateOption = key;
+        if (key === 'custom') {
+            return;
+        }
+        this.state.plShowDateDrop = false;
+        await this._refreshPlData();
+    }
+
+    onPlCustomFromChange(ev) {
+        this.state.plCustomFrom = ev.target.value;
+    }
+
+    onPlCustomToChange(ev) {
+        this.state.plCustomTo = ev.target.value;
+    }
+
+    async applyPlCustomDate() {
+        if (!this.state.plCustomFrom || !this.state.plCustomTo) {
+            this.notification.add('Please select both From and To dates.', { type: 'warning' });
+            return;
+        }
+        this.state.plDateOption   = 'custom';
+        this.state.plShowDateDrop = false;
+        await this._refreshPlData();
+    }
+
+    togglePlDateDrop() {
+        this.state.plShowDateDrop = !this.state.plShowDateDrop;
     }
 
     // ── VAT Modal & Tab Filter ───────────────────────────────────────
@@ -1114,9 +1227,9 @@ export class AnalytixFinanceDashboard extends Component {
             return r + '</tr>';
         };
         const totRow = (label, val, cval) => {
-            let r = `<tr><td style="background:#1a2235;color:#fff;font-weight:800;padding:13px 14px;">${label}</td>`;
-            r += `<td style="background:#1a2235;color:#fff;font-weight:800;padding:13px 14px;text-align:right;white-space:nowrap;">${fmtN(val)}</td>`;
-            if (hasCmp) r += `<td style="background:#1a3050;color:#fff;font-weight:800;padding:13px 14px;text-align:right;white-space:nowrap;">${fmtN(cval)}</td>`;
+            let r = `<tr><td style="background:#0f1729;color:#fff;font-weight:800;padding:13px 14px;">${label}</td>`;
+            r += `<td style="background:#0f1729;color:#fff;font-weight:800;padding:13px 14px;text-align:right;white-space:nowrap;">${fmtN(val)}</td>`;
+            if (hasCmp) r += `<td style="background:#0f2040;color:#fff;font-weight:800;padding:13px 14px;text-align:right;white-space:nowrap;">${fmtN(cval)}</td>`;
             return r + '</tr>';
         };
         const ac = (accs, caccs) => (accs||[]).map((a,i) => {
@@ -1199,8 +1312,8 @@ export class AnalytixFinanceDashboard extends Component {
 
         const totRow = (label, val) => `
             <tr>
-              <td style="background:#1a2235;color:#fff;font-weight:800;padding:13px 14px;">${label}</td>
-              <td style="background:#1a2235;color:#fff;font-weight:800;padding:13px 14px;
+              <td style="background:#0f1729;color:#fff;font-weight:800;padding:13px 14px;">${label}</td>
+              <td style="background:#0f1729;color:#fff;font-weight:800;padding:13px 14px;
                   text-align:right;white-space:nowrap;">${fmtN(val)}</td>
             </tr>`;
 
@@ -1936,7 +2049,7 @@ export class AnalytixFinanceDashboard extends Component {
         if (!docId || this.state.analyzingDocId) return;
         
         this.state.analyzingDocId = docId;
-        this.notification.add("Processing document with Groq AI...", { type: "info", sticky: false });
+        this.notification.add("Processing document with AI...", { type: "info", sticky: false });
         
         try {
             const action = await this.orm.call(
@@ -1967,7 +2080,7 @@ export class AnalytixFinanceDashboard extends Component {
                 errorMsg = String(e) || "Odoo Server Error";
             }
             this.notification.add(
-                "Failed to process document with Groq AI: " + errorMsg,
+                "Failed to process document with AI: " + errorMsg,
                 { type: "danger", sticky: true }
             );
         } finally {
@@ -2067,7 +2180,7 @@ export class AnalytixFinanceDashboard extends Component {
   </thead>
   <tbody>
     ${rows}
-    <tr style="background:#1a2235;color:#fff;font-weight:800;">
+    <tr style="background:#0f1729;color:#fff;font-weight:800;">
       <td style="padding:12px 14px;" colspan="2">Totals</td>
       <td style="padding:12px 14px;text-align:right;">${fmtN(d.total_initial)}</td>
       <td style="padding:12px 14px;text-align:right;">${fmtN(d.total_debit)}</td>
@@ -2087,6 +2200,7 @@ export class AnalytixFinanceDashboard extends Component {
 
     startDragChat(ev) {
         if (ev.button !== 0) return;
+        if (ev.target && ev.target.closest('.anx-chat-close-btn')) return;
         ev.preventDefault();
         
         const initialX = ev.clientX;
@@ -2107,7 +2221,7 @@ export class AnalytixFinanceDashboard extends Component {
             let newX = startX + dx;
             let newY = startY + dy;
             
-            const btnSize = 56;
+            const btnSize = 58;
             newX = Math.max(10, Math.min(window.innerWidth - btnSize - 10, newX));
             newY = Math.max(10, Math.min(window.innerHeight - btnSize - 10, newY));
 
@@ -2126,7 +2240,7 @@ export class AnalytixFinanceDashboard extends Component {
                 this.preventChatClick = true;
                 setTimeout(() => {
                     this.preventChatClick = false;
-                }, 50);
+                }, 100);
             }
         };
 
@@ -2155,7 +2269,7 @@ export class AnalytixFinanceDashboard extends Component {
             let newX = startX + dx;
             let newY = startY + dy;
             
-            const btnSize = 56;
+            const btnSize = 58;
             newX = Math.max(10, Math.min(window.innerWidth - btnSize - 10, newX));
             newY = Math.max(10, Math.min(window.innerHeight - btnSize - 10, newY));
 
@@ -2174,7 +2288,7 @@ export class AnalytixFinanceDashboard extends Component {
                 this.preventChatClick = true;
                 setTimeout(() => {
                     this.preventChatClick = false;
-                }, 50);
+                }, 100);
             }
         };
 
@@ -2184,39 +2298,40 @@ export class AnalytixFinanceDashboard extends Component {
 
     toggleChatPopup(ev) {
         if (this.preventChatClick) return;
-        this.state.showChatPopup = !this.state.showChatPopup;
-        if (this.state.showChatPopup) {
-            this.store.discuss.isActive = true;
-        } else if (this.state.activeTab !== 'chat') {
-            this.store.discuss.isActive = false;
+
+        // Trigger native Odoo Messaging Menu in top navbar
+        const systrayIcon = document.querySelector(
+            '.o_menu_systray .fa-comments, .o_menu_systray .fa-comment, .o_messaging_menu, [title*="Messaging"], [title*="Discuss"]'
+        );
+        if (systrayIcon) {
+            const btn = systrayIcon.closest('button') || systrayIcon;
+            btn.click();
+        } else {
+            this.action.doAction("mail.action_discuss");
         }
     }
 
     closeChatPopup() {
         this.state.showChatPopup = false;
-        this.stopChatPolling();
-        if (this.state.activeTab !== 'chat') {
-            this.store.discuss.isActive = false;
-        }
     }
 
     getChatPopupStyle() {
-        const btnSize = 56;
-        const popupWidth = 380;
-        const popupHeight = 480;
+        const btnSize = 58;
+        const popupWidth = 360;
+        const popupHeight = 440;
         
         let left = this.state.chatPos.x - popupWidth + btnSize;
-        let top = this.state.chatPos.y - popupHeight - 15;
+        let top = this.state.chatPos.y - popupHeight - 12;
         
         // boundary checks
         if (left < 10) {
             left = this.state.chatPos.x;
         }
         if (top < 10) {
-            top = this.state.chatPos.y + btnSize + 15;
+            top = this.state.chatPos.y + btnSize + 12;
         }
         
-        return `left: ${left}px; top: ${top}px; width: ${popupWidth}px; height: ${popupHeight}px;`;
+        return `position: fixed; left: ${left}px; top: ${top}px; width: ${popupWidth}px; height: ${popupHeight}px; z-index: 100000; overflow: hidden; display: flex; flex-direction: column;`;
     }
 
     get discussUnreadCount() {

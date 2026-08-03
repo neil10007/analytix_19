@@ -27,9 +27,22 @@ class FinanceAlert(models.Model):
         ('high', 'High'),
         ('critical', 'Critical'),
     ], string='Priority', required=True, default='medium')
+    state = fields.Selection([
+        ('draft', 'Draft'),
+        ('pending', 'Pending'),
+        ('completed', 'Completed'),
+    ], string='Status', required=True, default='pending')
     company_id = fields.Many2one('res.company', string='Company', required=True, default=lambda self: self.env.company)
     active = fields.Boolean(default=True)
     tag_ids = fields.Many2many('analytix.finance.alert.tag', string='Tags')
+
+    def action_mark_completed(self):
+        for rec in self:
+            rec.state = 'completed'
+
+    def action_mark_pending(self):
+        for rec in self:
+            rec.state = 'pending'
 
     # 2. Trigger Configuration
     trigger_type = fields.Selection([
@@ -52,8 +65,8 @@ class FinanceAlert(models.Model):
     stop_after = fields.Date(string='Stop After')
 
     # 3. Rule Configuration
-    model_id = fields.Many2one('ir.model', string='Model', required=True, ondelete='cascade')
-    domain_condition = fields.Char(string='Domain / Condition', required=True)
+    model_id = fields.Many2one('ir.model', string='Model',  ondelete='cascade')
+    domain_condition = fields.Char(string='Domain / Condition')
     due_date_field_id = fields.Many2one('ir.model.fields', string='Due Date Field', domain="[('model_id', '=', model_id), ('ttype', 'in', ('date', 'datetime'))]", required=True, ondelete='cascade')
     warning_days = fields.Integer(string='Warning Days', required=True, default=30)
     trigger_when = fields.Selection([

@@ -5,8 +5,8 @@
         --KanbanGroup-background: #111827;
         --KanbanRecord-background: #18212f;
         --KanbanRecord-border-color: #2b3647;
-        --KanbanColumn__highlight-background: rgba(255, 135, 68, 0.12);
-        --KanbanColumn__highlight-border: rgba(255, 135, 68, 0.52);
+        --KanbanColumn__highlight-background: rgba(0, 212, 200, 0.12);
+        --KanbanColumn__highlight-border: rgba(0, 212, 200, 0.52);
         background: #111827 !important;
         color: var(--kr-dark-text);
     }
@@ -107,7 +107,7 @@
     .o_kanban_renderer .o_kanban_record .btn:hover,
     .o_kanban_renderer .o_kanban_header .btn:hover,
     .o_kanban_renderer button:not(.o_drag_handle):not(.fa):hover {
-        border-color: rgba(255, 135, 68, 0.48);
+        border-color: rgba(0, 212, 200, 0.48);
         background-color: #263244;
         color: #ffffff;
     }

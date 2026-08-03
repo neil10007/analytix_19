@@ -18,7 +18,7 @@
 .o_web_client.kr_sp_global_mode .o_action_manager {
     min-height: 0;
     box-sizing: border-box;
-    padding-left: 82px;
+    padding-left: 92px;
     padding-top: 0;
 }
 
@@ -41,9 +41,9 @@ body.kr_sp_global_mode.modal-open {
 }
 
 .o_web_client.kr_sp_global_mode .o_action_manager > .o_control_panel {
-    margin-left: 96px;
+    margin-left: 104px;
     margin-right: 14px;
-    max-width: calc(100% - 110px);
+    max-width: calc(100% - 118px);
     box-sizing: border-box;
 }
 
@@ -68,7 +68,7 @@ body.kr_sp_global_mode.modal-open {
     display: flex;
     flex-direction: column;
     gap: 16px;
-    margin: 10px 24px 0 96px;
+    margin: 10px 24px 0 104px;
     pointer-events: none;
 }
 
@@ -774,18 +774,18 @@ body.kr_sp_global_mode.modal-open {
 }
 .kr_sp_rail_group {
     position: fixed;
-    left: 12px;
-    width: 58px;
+    left: 8px;
+    width: 72px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 6px;
-    border-radius: 999px;
-    border: 1px solid #e3e8ee;
+    gap: 4px;
+    border-radius: 20px;
+    border: 1px solid rgba(227, 232, 238, 0.6);
     background: #ffffff;
-    padding: 8px 0;
+    padding: 10px 0;
     z-index: 20;
-    box-shadow: 0 2px 7px rgba(31, 40, 51, 0.06);
+    box-shadow: 0 4px 18px rgba(31, 40, 51, 0.08);
 }
 
 .kr_sp_rail_group_top {
@@ -795,56 +795,106 @@ body.kr_sp_global_mode.modal-open {
 .kr_sp_rail_group_main {
     top: 215px;
     margin-top: 135px;
-    padding: 10px 0;
-    gap: 7px;
+    /* Fill all remaining space to bottom of viewport */
+    bottom: 18px;
+    padding: 8px 0;
+    gap: 0;
+    /* Allow internal scroll for apps list */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* Scrollable wrapper that takes remaining height inside .kr_sp_rail_group_main */
+.kr_sp_rail_apps_scroll {
+    flex: 1 1 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    /* Hide scrollbar by default, show on hover */
+    scrollbar-width: none;
+}
+
+.kr_sp_rail_apps_scroll:hover {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(100, 120, 150, 0.35) transparent;
+}
+
+.kr_sp_rail_apps_scroll::-webkit-scrollbar {
+    width: 3px;
+}
+
+.kr_sp_rail_apps_scroll::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.kr_sp_rail_apps_scroll::-webkit-scrollbar-thumb {
+    background: rgba(100, 120, 150, 0.0);
+    border-radius: 10px;
+    transition: background 0.2s ease;
+}
+
+.kr_sp_rail_apps_scroll:hover::-webkit-scrollbar-thumb {
+    background: rgba(100, 120, 150, 0.35);
 }
 
 .kr_sp_rail_apps {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 7px;
+    gap: 2px;
     width: 100%;
-}
-
-.kr_sp_rail_group_bottom {
-    bottom: 18px;
+    padding: 0 4px;
 }
 
 .kr_sp_rail_group button {
-    width: 34px;
-    height: 34px;
-    border-radius: 999px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    width: 60px;
+    min-height: 58px;
+    padding: 8px 4px;
+    border-radius: 14px;
     border: 0;
     background: transparent;
-    color: #8f98a5;
-    font-size: 15px;
+    color: #7a8899;
+    font-size: 11px;
+    font-weight: 600;
     line-height: 1;
-    transition: background-color 0.16s ease, color 0.16s ease, transform 0.16s ease;
+    cursor: pointer;
+    transition: background-color 0.18s ease, color 0.18s ease, transform 0.18s ease;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .kr_sp_rail_group button:hover {
-    background: #e8edf3;
-    color: #5c6774;
+    background: #eef2f7;
+    color: #3d4a58;
     transform: translateY(-1px);
 }
 
 .kr_sp_rail_group button.is-active {
-    background: #151a1f;
-    color: #ffffff;
-    box-shadow: 0 8px 14px rgba(17, 24, 33, 0.28);
+    background: #00d4c8 !important;
+    color: #000000 !important;
+    box-shadow: 0 6px 16px rgba(0, 212, 200, 0.35) !important;
 }
 
 /* ── Color theme: CSS variable wiring ─────────────────────── */
 
 :root {
-    --kr-color-primary: #875A7B;
-    --kr-color-primary-hover: #6d4a64;
+    --kr-color-primary: #0f1729;
+    --kr-color-primary-hover: #1b283d;
     --kr-color-primary-text: #ffffff;
-    --kr-color-accent: #875A7B;
-    --kr-color-accent-soft: rgba(135, 90, 123, 0.12);
-    --kr-color-tab-active: #151a1f;
-    --kr-color-tab-active-text: #ffffff;
+    --kr-color-accent: #00d4c8;
+    --kr-color-accent-soft: rgba(0, 212, 200, 0.16);
+    --kr-color-tab-active: #00d4c8;
+    --kr-color-tab-active-text: #000000;
 }
 
 /* Wire theme to Odoo brand variables */
@@ -932,23 +982,93 @@ body {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 100%;
-    height: 100%;
-    font-size: 11px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(145deg, #1e4a7a, #0d2a4e);
+    color: #ffffff;
+    font-size: 13px;
     font-weight: 700;
 }
 
+/* Icon wrap — the circular frame around app image/icon */
+.kr_sp_rail_icon_wrap {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(145deg, rgba(240,244,248,1), rgba(220,228,236,1));
+    border: 1px solid rgba(200,210,220,0.6);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    overflow: hidden;
+    flex-shrink: 0;
+    transition: box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+.kr_sp_rail_btn:hover .kr_sp_rail_icon_wrap {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.14);
+    transform: translateY(-1px);
+}
+
+.kr_sp_rail_btn.is-active .kr_sp_rail_icon_wrap {
+    background: linear-gradient(145deg, #1a4a7a, #0c2a50);
+    border-color: rgba(100,160,230,0.3);
+    box-shadow: 0 4px 14px rgba(20,80,160,0.3), 0 0 0 2px rgba(60,140,220,0.2);
+}
+
+.kr_sp_rail_icon_wrap .fa {
+    font-size: 16px;
+    color: #4a6a8a;
+}
+
+.kr_sp_rail_btn.is-active .kr_sp_rail_icon_wrap .fa {
+    color: #a8d4ff;
+}
+
+.kr_sp_rail_icon_wrap img {
+    width: 26px;
+    height: 26px;
+    object-fit: contain;
+    border-radius: 4px;
+}
+
+/* Label text below each icon */
+.kr_sp_rail_label {
+    display: block;
+    font-size: 9.5px;
+    font-weight: 600;
+    color: #6a7a8c;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 62px;
+    line-height: 1.2;
+    margin-top: 1px;
+    letter-spacing: 0.01em;
+}
+
+.kr_sp_rail_btn.is-active .kr_sp_rail_label {
+    color: #c8e0ff;
+}
+
+.kr_sp_rail_btn:hover .kr_sp_rail_label {
+    color: #2d4a6a;
+}
+
 .kr_sp_rail_btn .kr_sp_app_icon {
-    width: 18px;
-    height: 18px;
+    width: 26px;
+    height: 26px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
 }
 
 .kr_sp_rail_btn .kr_sp_app_icon img {
-    width: 18px;
-    height: 18px;
+    width: 26px;
+    height: 26px;
     object-fit: contain;
     border-radius: 4px;
 }

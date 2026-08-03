@@ -44,22 +44,23 @@ html .o_web_client > .o_action_manager > .o_action .o_content.kr_sp_dashboard_co
 .kr_sp_card[data-kr-scroll]:hover,
 .kr_sp_metric[data-kr-action]:hover,
 .kr_sp_live_card li[data-kr-action]:hover {
-    border-color: rgba(255, 135, 68, 0.48);
+    border-color: rgba(0, 212, 200, 0.48);
     box-shadow: none;
 }
 
 .kr_sp_metric.is-hot {
-    background: linear-gradient(135deg, #ff8744, #f04f3e);
+    background: linear-gradient(135deg, #0f1729, #1e293b);
+    border: 1px solid rgba(0, 212, 200, 0.4);
 }
 
 .kr_sp_metric.is-hot span,
 .kr_sp_metric.is-hot strong,
 .kr_sp_metric.is-hot small {
-    color: #ffffff;
+    color: #00d4c8;
 }
 
 .kr_sp_balance_card::after {
-    background: rgba(255, 135, 68, 0.12);
+    background: rgba(0, 212, 200, 0.12);
 }
 
 .kr_sp_refresh_btn,
@@ -71,7 +72,7 @@ html .o_web_client > .o_action_manager > .o_action .o_content.kr_sp_dashboard_co
 
 .kr_sp_refresh_btn:hover,
 .kr_sp_footer_action:hover {
-    border-color: rgba(255, 135, 68, 0.48);
+    border-color: rgba(0, 212, 200, 0.48);
     background: #202b3a;
     color: #ffffff;
 }
@@ -101,8 +102,8 @@ html .o_web_client > .o_action_manager > .o_action .o_content.kr_sp_dashboard_co
 }
 
 .kr_sp_recent_table .kr_sp_card_head {
-    border-color: rgba(255, 135, 68, 0.18);
-    background: linear-gradient(90deg, rgba(255, 135, 68, 0.1), rgba(17, 24, 39, 0) 62%);
+    border-color: rgba(0, 212, 200, 0.18);
+    background: linear-gradient(90deg, rgba(0, 212, 200, 0.1), rgba(17, 24, 39, 0) 62%);
 }
 
 .kr_sp_recent_table .kr_sp_card_head h3,
@@ -114,7 +115,7 @@ html .o_web_client > .o_action_manager > .o_action .o_content.kr_sp_dashboard_co
 }
 
 .kr_sp_recent_table tbody tr[data-kr-action]:hover td {
-    background: rgba(255, 135, 68, 0.08);
+    background: rgba(0, 212, 200, 0.08);
     color: #ffffff !important;
 }
 
@@ -206,7 +207,7 @@ html .o_web_client > .o_action_manager > .o_action .o_content.kr_sp_dashboard_co
 .o_web_client .o_spreadsheet_dashboard_action .o_search_panel_category_value.active,
 .o_web_client .o_spreadsheet_dashboard_action .o_search_panel_filter_value.active,
 .o_web_client .o_spreadsheet_dashboard_action .list-group-item.active {
-    background: rgba(255, 135, 68, 0.16) !important;
+    background: rgba(0, 212, 200, 0.16) !important;
     color: #ffffff;
 }
 
@@ -302,7 +303,7 @@ html .o_web_client > .o_action_manager > .o_action .o_content.kr_sp_dashboard_co
 
 .o_web_client .o_spreadsheet_dashboard_action .o-spreadsheet .o-figure button:hover,
 .o_web_client .o_spreadsheet_dashboard_action .o-spreadsheet .o-chart-container button:hover {
-    border-color: rgba(255, 135, 68, 0.48) !important;
+    border-color: rgba(0, 212, 200, 0.48) !important;
     background: #202b3a !important;
     color: #ffffff !important;
 }

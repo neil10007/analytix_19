@@ -7,7 +7,7 @@
         --fc-page-bg-color: #111827;
         --fc-neutral-bg-color: #18212f;
         --fc-border-color: #2b3647;
-        --fc-today-bg-color: rgba(255, 135, 68, 0.12);
+        --fc-today-bg-color: rgba(0, 212, 200, 0.12);
         --fc-now-indicator-color: #f43f5e;
         --fc-list-event-hover-bg-color: #202b3a;
         background: #111827 !important;
@@ -47,7 +47,7 @@
     .o_calendar_view .btn:hover,
     .o_calendar_view .dropdown-toggle:hover,
     .o_calendar_renderer .fc-button:hover {
-        border-color: rgba(255, 135, 68, 0.48) !important;
+        border-color: rgba(0, 212, 200, 0.48) !important;
         background: #263244 !important;
         color: #ffffff !important;
     }
@@ -111,7 +111,7 @@
 
     .o_calendar_renderer .fc-day-today:not(.o_calendar_disabled),
     .o_calendar_renderer .fc-bg .fc-day-today:not(.o_calendar_disabled) {
-        background: rgba(255, 135, 68, 0.12) !important;
+        background: rgba(0, 212, 200, 0.12) !important;
     }
 
     .o_calendar_renderer .fc-non-business,
@@ -122,7 +122,7 @@
 
     .o_calendar_renderer .fc-highlight,
     .o_calendar_renderer .o_cw_custom_highlight {
-        background: rgba(255, 135, 68, 0.18) !important;
+        background: rgba(0, 212, 200, 0.18) !important;
     }
 
     .o_calendar_renderer .fc-timegrid-now-indicator-line,
@@ -152,8 +152,8 @@
     .o_calendar_renderer .fc-event,
     .o_calendar_renderer .fc-h-event,
     .o_calendar_renderer .fc-v-event {
-        border-color: rgba(255, 135, 68, 0.46);
-        background: rgba(255, 135, 68, 0.2);
+        border-color: rgba(0, 212, 200, 0.46);
+        background: rgba(0, 212, 200, 0.2);
         color: #ffffff;
     }
 
@@ -174,7 +174,7 @@
 
     .o_calendar_sidebar .o_datetime_picker .o_date_item_cell:not(.o_out_of_range):hover,
     .o_calendar_sidebar .o_datetime_picker .o_date_item_cell.o_selected {
-        background: rgba(255, 135, 68, 0.16);
+        background: rgba(0, 212, 200, 0.16);
         color: #ffffff;
     }
 

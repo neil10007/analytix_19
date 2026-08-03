@@ -11,8 +11,9 @@ from collections import defaultdict
 import dateutil
 import pytz
 
-from odoo import api, fields, models
+from odoo import _, api, fields, models
 from odoo.exceptions import UserError, ValidationError
+from odoo.osv import expression as osv_expression
 from odoo.tools.safe_eval import (
     datetime as safe_datetime,
 )
@@ -111,9 +112,9 @@ class MisReportKpi(models.Model):
     )
     type = fields.Selection(
         [
-            (TYPE_NUM, "Numeric"),
-            (TYPE_PCT, "Percentage"),
-            (TYPE_STR, "String"),
+            (TYPE_NUM, _("Numeric")),
+            (TYPE_PCT, _("Percentage")),
+            (TYPE_STR, _("String")),
         ],
         required=True,
         string="Value type",
@@ -121,16 +122,16 @@ class MisReportKpi(models.Model):
     )
     compare_method = fields.Selection(
         [
-            (CMP_DIFF, "Difference"),
-            (CMP_PCT, "Percentage"),
-            (CMP_NONE, "None"),
+            (CMP_DIFF, _("Difference")),
+            (CMP_PCT, _("Percentage")),
+            (CMP_NONE, _("None")),
         ],
         required=True,
         string="Comparison Method",
         default=CMP_PCT,
     )
     accumulation_method = fields.Selection(
-        [(ACC_SUM, "Sum"), (ACC_AVG, "Average"), (ACC_NONE, "None")],
+        [(ACC_SUM, _("Sum")), (ACC_AVG, _("Average")), (ACC_NONE, _("None"))],
         required=True,
         default=ACC_SUM,
         help="Determines how values of this kpi spanning over a "
@@ -158,8 +159,8 @@ class MisReportKpi(models.Model):
         for record in self:
             if not _is_valid_python_var(record.name):
                 raise ValidationError(
-                    self.env._(
-                        "KPI name (%s) must be a valid python identifier", record.name
+                    _("KPI name ({}) must be a valid python identifier").format(
+                        record.name
                     )
                 )
 
@@ -264,9 +265,8 @@ class MisReportSubkpi(models.Model):
         for record in self:
             if not _is_valid_python_var(record.name):
                 raise ValidationError(
-                    self.env._(
-                        "Sub-KPI name (%s) must be a valid python identifier",
-                        record.name,
+                    _("Sub-KPI name ({}) must be a valid python identifier").format(
+                        record.name
                     )
                 )
 
@@ -312,35 +312,48 @@ class MisReportKpiExpression(models.Model):
             kpi = rec.kpi_id
             subkpi = rec.subkpi_id
             if subkpi:
-                name = (
-                    f"{kpi.description} / {subkpi.description} "
-                    f"({kpi.name}.{subkpi.name})"
+                name = "{} / {} ({}.{})".format(
+                    kpi.description, subkpi.description, kpi.name, subkpi.name
                 )
             else:
                 name = rec.kpi_id.display_name
             rec.display_name = name
 
     @api.model
-    def _search_display_name(self, operator, value):
-        if "." in value:
-            kpi_name, subkpi_name = value.split(".", 1)
-            name_search_domain = [
-                "|",
-                "|",
-                "&",
-                ("kpi_id.name", "=", kpi_name),
-                ("subkpi_id.name", operator, subkpi_name),
-                ("kpi_id.description", operator, value),
-                ("subkpi_id.description", operator, value),
+    def _name_search(self, name, domain=None, operator="ilike", limit=None, order=None):
+        # TODO maybe implement negative search operators, although
+        #      there is not really a use case for that
+        domain = domain or []
+        splitted_name = name.split(".", 2)
+        name_search_domain = []
+        if "." in name:
+            kpi_name, subkpi_name = splitted_name[0], splitted_name[1]
+            name_search_domain = osv_expression.AND(
+                [
+                    name_search_domain,
+                    [
+                        "|",
+                        "|",
+                        "&",
+                        ("kpi_id.name", "=", kpi_name),
+                        ("subkpi_id.name", operator, subkpi_name),
+                        ("kpi_id.description", operator, name),
+                        ("subkpi_id.description", operator, name),
+                    ],
+                ]
+            )
+        name_search_domain = osv_expression.OR(
+            [
+                name_search_domain,
+                [
+                    "|",
+                    ("kpi_id.name", operator, name),
+                    ("kpi_id.description", operator, name),
+                ],
             ]
-        else:
-            name_search_domain = [
-                "|",
-                ("kpi_id.name", operator, value),
-                ("kpi_id.description", operator, value),
-            ]
-
-        return name_search_domain
+        )
+        domain = osv_expression.AND([domain, name_search_domain])
+        return self._search(domain, limit=limit, order=order)
 
 
 class MisReportQuery(models.Model):
@@ -369,10 +382,10 @@ class MisReportQuery(models.Model):
     )
     aggregate = fields.Selection(
         [
-            ("sum", "Sum"),
-            ("avg", "Average"),
-            ("min", "Min"),
-            ("max", "Max"),
+            ("sum", _("Sum")),
+            ("avg", _("Average")),
+            ("min", _("Min")),
+            ("max", _("Max")),
         ],
     )
     date_field = fields.Many2one(
@@ -400,8 +413,8 @@ class MisReportQuery(models.Model):
         for record in self:
             if not _is_valid_python_var(record.name):
                 raise ValidationError(
-                    self.env._(
-                        "Query name (%s) must be valid python identifier", record.name
+                    _("Query name ({}) must be valid python identifier").format(
+                        record.name
                     )
                 )
 
@@ -522,7 +535,7 @@ class MisReport(models.Model):
     def copy(self, default=None):
         self.ensure_one()
         default = dict(default or [])
-        default["name"] = self.env._("%s (copy)", self.name)
+        default["name"] = _("%s (copy)") % self.name
         new = super().copy(default)
         # after a copy, we have new subkpis, but the expressions
         # subkpi_id fields still point to the original one, so
@@ -611,21 +624,32 @@ class MisReport(models.Model):
                 data = model.search_read(domain, field_names)
                 res[query.name] = [AutoStruct(**d) for d in data]
             elif query.aggregate == "sum" and all_stored:
-                # use read_group to sum stored fields
-                data = model.read_group(domain, field_names, [])
-                s = AutoStruct(count=data[0]["__count"])
-                for field_name in field_names:
-                    try:
-                        v = data[0][field_name]
-                    except KeyError:
-                        _logger.error(
-                            "field %s not found in read_group " "for %s; not summable?",
-                            field_name,
-                            model._name,
-                        )
-                        v = AccountingNone
-                    setattr(s, field_name, v)
-                res[query.name] = s
+                # use _read_group to sum stored fields (Odoo 17+ API)
+                agg_specs = [f"{f}:sum" for f in field_names]
+                groups = model._read_group(domain, groupby=[], aggregates=agg_specs)
+                if groups:
+                    group_vals = groups[0]
+                    total_count = model.search_count(domain)
+                    s = AutoStruct(count=total_count)
+                    for idx, field_name in enumerate(field_names):
+                        try:
+                            v = group_vals[idx]
+                        except (IndexError, KeyError):
+                            _logger.error(
+                                "field %s not found in _read_group "
+                                "for %s; not summable?",
+                                field_name,
+                                model._name,
+                            )
+                            v = AccountingNone
+                        setattr(s, field_name, v)
+                    res[query.name] = s
+                else:
+                    s = AutoStruct(count=0)
+                    for field_name in field_names:
+                        setattr(s, field_name, AccountingNone)
+                    res[query.name] = s
+
             else:
                 data = model.search_read(domain, field_names)
                 s = AutoStruct(count=len(data))
@@ -716,7 +740,7 @@ class MisReport(models.Model):
                         vals = vals[0]
                         if len(vals) != col.colspan:
                             raise SubKPITupleLengthError(
-                                self.env._(
+                                _(
                                     'KPI "%(kpi)s" is valued as a tuple of '
                                     "length %(length)s while a tuple of length"
                                     "%(expected_length)s is expected.",
@@ -729,7 +753,7 @@ class MisReport(models.Model):
                         vals = (vals[0],) * col.colspan
                     else:
                         raise SubKPIUnknownTypeError(
-                            self.env._(
+                            _(
                                 'KPI "%(kpi)s" has type %(type)s while a tuple was '
                                 "expected.\n\nThis can be fixed by either:\n\t- "
                                 "Changing the KPI value to a tuple of length "
@@ -934,9 +958,7 @@ class MisReport(models.Model):
             # all (in Odoo 13+, there is also the cancel state that we must ignore)
             return [("parent_state", "in", ("posted", "draft"))]
         else:
-            raise UserError(
-                self.env._("Unexpected value %s for target_move.", target_move)
-            )
+            raise UserError(_("Unexpected value %s for target_move.") % (target_move,))
 
     def evaluate(
         self,

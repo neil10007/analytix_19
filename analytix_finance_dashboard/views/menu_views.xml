@@ -12,9 +12,9 @@
               sequence="0"/>
 
     <menuitem id="menu_alert_management"
-              name="ALERT MANAGEMENT"
+              name="Alert Management"
               parent="account.menu_finance"
-              sequence="2"/>
+              sequence="80"/>
 
     <menuitem id="menu_finance_alert"
               name="Alerts"

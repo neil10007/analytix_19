@@ -3,7 +3,7 @@
 
 {
     "name": "MIS Builder",
-    "version": "18.0.1.8.0",
+    "version": "19.0.1.5.0",
     "category": "Reporting",
     "summary": """
         Build 'Management Information System' Reports and Dashboards
@@ -12,7 +12,6 @@
     "website": "https://github.com/OCA/mis-builder",
     "depends": [
         "account",
-        "board",
         "report_xlsx",  # OCA/reporting-engine
         "date_range",  # OCA/server-ux
     ],
@@ -40,8 +39,7 @@
             "mis_builder/static/src/scss/report.scss",
         ],
     },
-    "qweb": ["static/src/xml/mis_report_widget.xml"],
-    "installable": False,
+    "installable": True,
     "application": True,
     "license": "AGPL-3",
     "development_status": "Production/Stable",

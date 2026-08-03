@@ -6,7 +6,7 @@ import numbers
 from collections import defaultdict
 from datetime import datetime
 
-from odoo import api, fields, models
+from odoo import _, api, fields, models
 
 from ..models.accounting_none import AccountingNone
 from ..models.data_error import DataError
@@ -163,7 +163,7 @@ class MisBuilderXlsx(models.AbstractModel):
         # Add date/time footer
         row_pos += 1
         footer_format = workbook.add_format(
-            {"italic": True, "font_color": "#202020", "font_size": 9}
+            {"italic": True, "font_color": "#202020", "size": 9}
         )
         lang_model = self.env["res.lang"]
         lang = lang_model._lang_get(self.env.user.lang)
@@ -171,7 +171,7 @@ class MisBuilderXlsx(models.AbstractModel):
         now_tz = fields.Datetime.context_timestamp(
             self.env["res.users"], datetime.now()
         )
-        create_date = self.env._(
+        create_date = _(
             "Generated on %(gen_date)s at %(gen_time)s",
             gen_date=now_tz.strftime(lang.date_format),
             gen_time=now_tz.strftime(lang.time_format),

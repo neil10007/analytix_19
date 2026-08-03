@@ -5,7 +5,7 @@
     .o_base_settings_view .o_form_renderer.o_form_nosheet,
     .o_base_settings_view .o_setting_container {
         --settings__tab-bg: #111827;
-        --settings__tab-bg--active: rgba(255, 135, 68, 0.16);
+        --settings__tab-bg--active: rgba(0, 212, 200, 0.16);
         --settings__tab-color: #e5e7eb;
         --settings__title-bg: #18212f;
         background: #111827 !important;
@@ -28,7 +28,7 @@
     .o_base_settings_view .o_setting_container .settings_tab .tab:hover,
     .o_base_settings_view .o_setting_container .settings_tab .tab.selected,
     .o_base_settings_view .o_setting_container .settings_tab .selected {
-        background: rgba(255, 135, 68, 0.16) !important;
+        background: rgba(0, 212, 200, 0.16) !important;
         color: #ffffff !important;
         box-shadow: inset 2px 0 0 var(--kr-dark-accent);
     }
@@ -81,7 +81,7 @@
     .o_base_settings_view a,
     .o_base_settings_view .btn-link,
     .o_base_settings_view .oe-link {
-        color: #c4b5fd !important;
+        color: #00d4c8 !important;
     }
 
     .o_base_settings_view a:hover,
@@ -141,7 +141,7 @@
     }
 
     .o_base_settings_view .highlighter {
-        background: rgba(255, 135, 68, 0.28) !important;
+        background: rgba(0, 212, 200, 0.28) !important;
         color: #ffffff !important;
     }
 }

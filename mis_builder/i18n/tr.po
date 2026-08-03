@@ -6,15 +6,15 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 16.0\n"
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: 2025-10-31 09:43+0000\n"
-"Last-Translator: Betül Öğmen <betulo@eska.biz>\n"
+"PO-Revision-Date: 2023-10-09 09:12+0000\n"
+"Last-Translator: Metin GÜLSOY <metin.gulsoy@kitayazilim.com>\n"
 "Language-Team: none\n"
 "Language: tr\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 5.10.4\n"
+"X-Generator: Weblate 4.17\n"
 
 #. module: mis_builder
 #: model:ir.model.fields,help:mis_builder.field_mis_report_instance_annotation__annotation_context
@@ -23,14 +23,12 @@ msgid ""
 "        Context used when adding annotation\n"
 "        "
 msgstr ""
-"\n"
-"        Açıklama eklerken kullanılan bağlam\n"
-"        "
 
 #. module: mis_builder
 #. odoo-python
 #: code:addons/mis_builder/models/mis_report.py:0
 #: code:addons/mis_builder/models/mis_report_instance.py:0
+#, python-format
 msgid "%s (copy)"
 msgstr "%s (Kopya)"
 
@@ -47,15 +45,6 @@ msgid ""
 "receivable accounts over\n"
 "                                        the period."
 msgstr ""
-"<code>\n"
-"                                            balp[('user_type_id', '=',\n"
-"                                            ref('account.\n"
-"                                            data_account_type_receivable')."
-"id)][]\n"
-"                                        </code>\n"
-"                                        :Dönem boyunca tüm alacak "
-"hesaplarının bakiyesinin\n"
-"                                        değişimi."
 
 #. module: mis_builder
 #: model_terms:ir.ui.view,arch_db:mis_builder.mis_report_view_kpi_form
@@ -67,12 +56,6 @@ msgid ""
 "                                        : balance of move lines related to "
 "tax grid 56."
 msgstr ""
-"<code>\n"
-"                                            balp[][('tax_line_id.tag_ids', "
-"'=', ref('l10n_be.tax_tag_56').id)]\n"
-"                                        </code>\n"
-"                                        : Vergi Tablosuna ilişkin hareket "
-"satırı bakiyesi 56."
 
 #. module: mis_builder
 #: model_terms:ir.ui.view,arch_db:mis_builder.mis_report_view_kpi_form
@@ -86,14 +69,6 @@ msgid ""
 "and journal BNK1 during\n"
 "                                        the period."
 msgstr ""
-"<code>\n"
-"                                            debp[55%][('journal_id.code', "
-"'=',\n"
-"                                            'BNK1')]\n"
-"                                        </code>\n"
-"                                        : Dönem içerisinde 55 nolu hesap ve "
-"BNK1 defterindeki\n"
-"                                        tüm borçların toplamı."
 
 #. module: mis_builder
 #: model_terms:ir.ui.view,arch_db:mis_builder.mis_report_view_kpi_form
@@ -101,14 +76,13 @@ msgid ""
 "<code>AccountingNone</code> : a null value that behaves as 0 in\n"
 "                                        arithmetic operations."
 msgstr ""
-"<code>AccountingNone</code> : Aritmetik işlemlerde 0 gibi davranan\n"
-"                                        bir null değeri."
 
 #. module: mis_builder
 #: model_terms:ir.ui.view,arch_db:mis_builder.mis_report_view_kpi_form
 msgid ""
-"<code>bal</code>, <code>crd</code>, <code>deb</code>, <code>pbal</code>, "
-"<code>nbal</code>, <code>fld</code> : balance, debit, credit,\n"
+"<code>bal</code>, <code>crd</code>, <code>deb</code>, <code>\n"
+"                                        pbal</code>, <code>nbal</code>, "
+"<code>fld</code> : balance, debit, credit,\n"
 "                                        positive balance, negative balance,\n"
 "                                        other numerical field."
 msgstr ""
@@ -127,13 +101,11 @@ msgid ""
 "<code>bale[1%]</code> : balance of accounts starting with 1 at\n"
 "                                        end of period."
 msgstr ""
-"<code>bale[1%]</code> : Dönem sonunda 1'den başlayan\n"
-"                                        hesap bakiyesi."
 
 #. module: mis_builder
 #: model_terms:ir.ui.view,arch_db:mis_builder.mis_report_view_kpi_form
 msgid "<code>bali[70,60]</code> : initial balance of accounts 70 and 60."
-msgstr "<code>bali[70,60]</code> : ilk hesap bakiyeleri 70 ve 60."
+msgstr ""
 
 #. module: mis_builder
 #: model_terms:ir.ui.view,arch_db:mis_builder.mis_report_view_kpi_form
@@ -151,8 +123,6 @@ msgid ""
 "<code>crdp[40%]</code> : sum of all credits on accounts starting\n"
 "                                        with 40 during the period."
 msgstr ""
-"<code>crdp[40%]</code> : Dönem içinde 40 ile başlayan hesaplardaki\n"
-"                                        tüm alacakların toplamı."
 
 #. module: mis_builder
 #: model_terms:ir.ui.view,arch_db:mis_builder.mis_report_view_kpi_form
@@ -161,8 +131,6 @@ msgid ""
 "the\n"
 "                                        period."
 msgstr ""
-"<code>date_from</code>, <code>date_to</code> : Dönemin başlangıç ve bitiş\n"
-"                                        tarihi."
 
 #. module: mis_builder
 #: model_terms:ir.ui.view,arch_db:mis_builder.mis_report_view_kpi_form
@@ -178,9 +146,6 @@ msgid ""
 "the period,\n"
 "                                        initial balance, ending balance"
 msgstr ""
-"<code>p</code>, <code>i</code>, <code>e</code> : sırasıyla dönem içindeki "
-"değişim,\n"
-"                                        başlangıç bakiyesi, bitiş bakiyesi"
 
 #. module: mis_builder
 #: model_terms:ir.ui.view,arch_db:mis_builder.mis_report_view_kpi_form
@@ -189,8 +154,6 @@ msgid ""
 "                                        starting with 55 whose ending "
 "balance is positive."
 msgstr ""
-"<code>pbale[55%]</code> : 55 ile başlayan ve bakiyesi pozitif olan\n"
-"                                        tüm hesapların bakiyelerinin toplamı."
 
 #. module: mis_builder
 #: model_terms:ir.ui.view,arch_db:mis_builder.mis_report_view_kpi_form
@@ -201,11 +164,6 @@ msgid ""
 "expected, very\n"
 "                                        similar to the python builtins."
 msgstr ""
-"<code>sum</code>, <code>min</code>,\n"
-"                                        <code>max</code>, <code>len</code>,\n"
-"                                        <code>avg</code> : beklendiği "
-"gibidavranır,\n"
-"                                        python yerleşiklerine çok benzer."
 
 #. module: mis_builder
 #: model_terms:ir.ui.view,arch_db:mis_builder.report_mis_report_instance
@@ -218,8 +176,6 @@ msgid ""
 "A 'move line like' model, ie having at least debit, credit, date, account_id "
 "and company_id fields."
 msgstr ""
-"'move line like' modeli, yani en azından debit, credit, date, account_id ve "
-"company_id olması."
 
 #. module: mis_builder
 #: model:ir.model.fields,help:mis_builder.field_mis_report__move_lines_source
@@ -232,15 +188,14 @@ msgstr ""
 #. module: mis_builder
 #. odoo-python
 #: code:addons/mis_builder/models/mis_report_instance.py:0
+#, python-format
 msgid "A date filter is mandatory for this source in column %s."
-msgstr "Bu kaynak için %s sütununda bir tarih filtresi zorunludur."
+msgstr ""
 
 #. module: mis_builder
 #: model:ir.model.fields,help:mis_builder.field_mis_report_instance_period__analytic_domain
 msgid "A domain to additionally filter move lines considered in this column."
 msgstr ""
-"Bu sütunda dikkate alınan hareket satırlarını ek olarak filtrelemek için bir "
-"alan adı."
 
 #. module: mis_builder
 #: model:ir.model.fields,help:mis_builder.field_mis_report_instance__analytic_domain
@@ -250,15 +205,11 @@ msgid ""
 "as budgets by account, make sure to use only fields that are available in "
 "all move line sources."
 msgstr ""
-"Bu raporda dikkate alınan hareket satırlarını ek olarak filtrelemek için bir "
-"alan. Dikkat: Hesap bazında bütçeler gibi farklı sütunlarda farklı hareket "
-"satırı kaynakları kullanırken, yalnızca tüm hareket satırı kaynaklarında "
-"bulunan alanları kullandığınızdan emin olun."
 
 #. module: mis_builder
 #: model:ir.model.fields,field_description:mis_builder.field_mis_report__account_model
 msgid "Account Model"
-msgstr "Hesap Modeli"
+msgstr ""
 
 #. module: mis_builder
 #: model:ir.model.fields,field_description:mis_builder.field_mis_report_kpi__accumulation_method
@@ -268,13 +219,11 @@ msgstr "Birikim Yöntemi"
 #. module: mis_builder
 #. odoo-python
 #: code:addons/mis_builder/models/mis_report_instance.py:0
+#, python-format
 msgid ""
 "Actual (alternative) models used in columns must have the same account model "
 "in the Account field and must be the same defined in the report template: %s"
 msgstr ""
-"Sütunlarda kullanılan gerçek (alternatif) modeller, Hesap alanında aynı "
-"hesap modeline sahip olmalı ve rapor şablonunda tanımlananla aynı olmalıdır: "
-"%s"
 
 #. module: mis_builder
 #: model:ir.model.fields.selection,name:mis_builder.selection__mis_report_instance_period__source__actuals
@@ -295,11 +244,6 @@ msgid ""
 "Sum columns: summation (+/-) of other columns.\n"
 "Compare to column: compare to other column.\n"
 msgstr ""
-"Gerçek Değerler: muhasebe ve diğer sorgulardan gelen güncel veriler.\n"
-"Gerçek Değerler (alternatif): alternatif bir kaynaktan gelen güncel veriler "
-"(örneğin, benzer hesap hareket satırları sağlayan bir veritabanı görünümü).\n"
-"Toplam sütunlar: diğer sütunların toplamı (+/-).\n"
-"Sütunla karşılaştır: diğer sütunla karşılaştır.\n"
 
 #. module: mis_builder
 #: model:ir.model,name:mis_builder.model_prorata_read_group_mixin
@@ -319,8 +263,6 @@ msgid ""
 "Additionally following variables are available\n"
 "                                    in the evaluation context:"
 msgstr ""
-"Değerlendirme bağlamında ayrıca aşağıdaki\n"
-"                                    değişkenler mevcuttur:"
 
 #. module: mis_builder
 #: model:ir.model.fields,field_description:mis_builder.field_mis_report_query__aggregate
@@ -360,7 +302,7 @@ msgstr "İzin Verilmiş Şirket"
 #. module: mis_builder
 #: model:ir.model.fields,field_description:mis_builder.field_mis_kpi_data__amount
 msgid "Amount"
-msgstr "Miktar"
+msgstr ""
 
 #. module: mis_builder
 #: model:ir.model.fields,help:mis_builder.field_mis_report_kpi__style_expression
@@ -368,8 +310,6 @@ msgid ""
 "An expression that returns a style depending on the KPI value. Such style is "
 "applied on top of the row style."
 msgstr ""
-"KPI değerine bağlı olarak bir stil döndüren bir ifade. Bu stil satır "
-"stilinin üstüne uygulanır."
 
 #. module: mis_builder
 #: model:ir.model.fields,field_description:mis_builder.field_mis_report_instance__analytic_domain
@@ -381,13 +321,14 @@ msgstr "Analitik Etki Alanı(sorgu)"
 #. odoo-javascript
 #: code:addons/mis_builder/static/src/components/mis_report_widget.esm.js:0
 #: code:addons/mis_builder/static/src/components/mis_report_widget.xml:0
+#, python-format
 msgid "Annotate"
-msgstr "Açıklama"
+msgstr ""
 
 #. module: mis_builder
 #: model:ir.model.fields,field_description:mis_builder.field_mis_report_instance_annotation__annotation_context
 msgid "Annotation Context"
-msgstr "Açıklama Bağlamı"
+msgstr ""
 
 #. module: mis_builder
 #: model_terms:ir.ui.view,arch_db:mis_builder.mis_report_view_kpi_form
@@ -395,8 +336,11 @@ msgid "Auto expand"
 msgstr "Otomatik genişlet"
 
 #. module: mis_builder
+#. odoo-python
+#: code:addons/mis_builder/models/mis_report.py:0
 #: model:ir.model.fields.selection,name:mis_builder.selection__mis_report_kpi__accumulation_method__avg
 #: model:ir.model.fields.selection,name:mis_builder.selection__mis_report_query__aggregate__avg
+#, python-format
 msgid "Average"
 msgstr "Ortalama"
 
@@ -430,6 +374,7 @@ msgstr "Kalın"
 #: code:addons/mis_builder/static/src/annotation_dialog/annotation_dialog.xml:0
 #: model_terms:ir.ui.view,arch_db:mis_builder.mis_report_instance_add_to_dashboard_form_view
 #: model_terms:ir.ui.view,arch_db:mis_builder.wizard_mis_report_instance_view_form
+#, python-format
 msgid "Cancel"
 msgstr "iptal"
 
@@ -437,7 +382,6 @@ msgstr "iptal"
 #: model:ir.model.fields,help:mis_builder.field_mis_report_instance__multi_company
 msgid "Check if you wish to specify several companies to be searched for data."
 msgstr ""
-"Birden fazla şirket için veri araması yapmak istiyorsanız işaretleyiniz."
 
 #. module: mis_builder
 #: model_terms:ir.ui.view,arch_db:mis_builder.mis_report_style_view_form
@@ -457,16 +401,16 @@ msgstr "Sütün"
 #. module: mis_builder
 #. odoo-python
 #: code:addons/mis_builder/models/mis_report_instance.py:0
+#, python-format
 msgid "Column %s cannot be compared to itrec."
-msgstr "%s sütunu, itrec ile karşılaştırılamaz."
+msgstr ""
 
 #. module: mis_builder
 #. odoo-python
 #: code:addons/mis_builder/models/mis_report_instance.py:0
+#, python-format
 msgid "Column %s with move lines source must have from/to dates."
 msgstr ""
-"%s sütunu ile hareket satırları kaynağı başlangıç/bitiş tarihlerine sahip "
-"olmalı."
 
 #. module: mis_builder
 #: model_terms:ir.ui.view,arch_db:mis_builder.mis_report_instance_view_form
@@ -476,24 +420,26 @@ msgstr "Sütünlar"
 #. module: mis_builder
 #. odoo-python
 #: code:addons/mis_builder/models/kpimatrix.py:0
+#, python-format
 msgid "Columns %(descr)s and %(base_descr)s are not comparable"
-msgstr "%(descr)s ve %(base_descr)s sütunları karşılaştırılabilir değildir"
+msgstr ""
 
 #. module: mis_builder
 #. odoo-python
 #: code:addons/mis_builder/models/mis_report_instance.py:0
+#, python-format
 msgid "Columns to compare must belong to the same report in %s"
-msgstr "Karşılaştırılacak sütunlar %s 'de aynı rapora ait olmalı"
+msgstr ""
 
 #. module: mis_builder
 #: model:ir.model.fields,field_description:mis_builder.field_mis_report_instance_period__source_sumcol_ids
 msgid "Columns to sum"
-msgstr "Toplanacak sütunlar"
+msgstr ""
 
 #. module: mis_builder
 #: model:ir.model.fields,help:mis_builder.field_mis_report_instance__query_company_ids
 msgid "Companies for which data will be searched."
-msgstr "Verinin aranacağı şirketler."
+msgstr ""
 
 #. module: mis_builder
 #: model:ir.model.fields,field_description:mis_builder.field_mis_report_query__company_field_id
@@ -523,8 +469,9 @@ msgstr "Karşılaştırma Modu"
 #. module: mis_builder
 #. odoo-javascript
 #: code:addons/mis_builder/static/src/annotation_dialog/annotation_dialog.xml:0
+#, python-format
 msgid "Confirm"
-msgstr "Onayla"
+msgstr ""
 
 #. module: mis_builder
 #: model:ir.model.fields,field_description:mis_builder.field_add_mis_report_instance_dashboard_wizard__create_uid
@@ -556,7 +503,7 @@ msgstr "Oluşturan"
 #: model:ir.model.fields,field_description:mis_builder.field_mis_report_subkpi__create_date
 #: model:ir.model.fields,field_description:mis_builder.field_mis_report_subreport__create_date
 msgid "Created on"
-msgstr "Oluşturulma Tarihi"
+msgstr ""
 
 #. module: mis_builder
 #: model:ir.model.fields,field_description:mis_builder.field_mis_report_instance__currency_id
@@ -581,12 +528,15 @@ msgstr "Tarih Alanı"
 #. module: mis_builder
 #: model:ir.model.fields,field_description:mis_builder.field_prorata_read_group_mixin__date_from
 msgid "Date From"
-msgstr "Başlangıç Tarihi"
+msgstr ""
 
 #. module: mis_builder
+#. odoo-python
+#: code:addons/mis_builder/models/mis_report_instance.py:0
 #: model:ir.model.fields,field_description:mis_builder.field_mis_report_instance__date_range_id
 #: model:ir.model.fields,field_description:mis_builder.field_mis_report_instance_period__date_range_id
 #: model:ir.model.fields.selection,name:mis_builder.selection__mis_report_instance_period__type__date_range
+#, python-format
 msgid "Date Range"
 msgstr "Dönem"
 
@@ -606,20 +556,17 @@ msgid "Dates"
 msgstr "Tarihler"
 
 #. module: mis_builder
+#. odoo-python
+#: code:addons/mis_builder/models/mis_report_instance.py:0
 #: model:ir.model.fields.selection,name:mis_builder.selection__mis_report_instance_period__type__d
+#, python-format
 msgid "Day"
-msgstr "Gün"
-
-#. module: mis_builder
-#: model:ir.model.fields,help:mis_builder.field_mis_report_style__description
-msgid "Describe specific values that are not inherited"
-msgstr "Miras alınmayan belirli değerleri tanımlayın"
+msgstr ""
 
 #. module: mis_builder
 #: model:ir.model.fields,field_description:mis_builder.field_mis_report__description
 #: model:ir.model.fields,field_description:mis_builder.field_mis_report_instance__description
 #: model:ir.model.fields,field_description:mis_builder.field_mis_report_kpi__description
-#: model:ir.model.fields,field_description:mis_builder.field_mis_report_style__description
 #: model:ir.model.fields,field_description:mis_builder.field_mis_report_subkpi__description
 msgid "Description"
 msgstr "Açıklama"
@@ -634,15 +581,12 @@ msgid ""
 "Average: values of included period are averaged with a pro-rata temporis "
 "weight."
 msgstr ""
-"Bir zaman aralığına yayılan bu kpi değerlerinin raporlama dönemiyle "
-"eşleşecek şekilde nasıl dönüştürüleceğini belirler. Toplam: Daha kısa "
-"sürenin değerleri eklenir, en uzun veya kısmen örtüşen sürelerin değerleri "
-"orantılı olarak ayarlanır.\n"
-"Ortalama: dahil edilen sürenin değerleri, orantılı bir temporis ağırlığıyla "
-"ortalaması alınır."
 
 #. module: mis_builder
+#. odoo-python
+#: code:addons/mis_builder/models/mis_report.py:0
 #: model:ir.model.fields.selection,name:mis_builder.selection__mis_report_kpi__compare_method__diff
+#, python-format
 msgid "Difference"
 msgstr "Fark"
 
@@ -680,30 +624,28 @@ msgstr "Ayrıntıları hesaba göre göster"
 #. module: mis_builder
 #: model:ir.model.fields,help:mis_builder.field_mis_report_instance__display_columns_description
 msgid "Display the date range details in the column headers."
-msgstr "Hesap detaylarını genişletmeyi devredışı bırak."
+msgstr ""
 
 #. module: mis_builder
 #: model:ir.model.fields,field_description:mis_builder.field_mis_report_style__divider_inherit
 msgid "Divider Inherit"
-msgstr "Bölen Kalıtım"
+msgstr ""
 
 #. module: mis_builder
 #: model:ir.model.fields,field_description:mis_builder.field_mis_report_query__domain
 msgid "Domain"
-msgstr "Alan"
+msgstr ""
 
 #. module: mis_builder
 #: model:ir.model.fields,field_description:mis_builder.field_mis_report_style__dp_inherit
 msgid "Dp Inherit"
-msgstr "Dp Kalıtım"
+msgstr ""
 
 #. module: mis_builder
 #: model:ir.model.fields,help:mis_builder.field_prorata_read_group_mixin__date
 msgid ""
 "Dummy field that adapts searches on date to searches on date_from/date_to."
 msgstr ""
-"Tarihteki aramaları date_from/date_to üzerindeki aramalara uyarlayan boş "
-"alan."
 
 #. module: mis_builder
 #: model:ir.model.fields,field_description:mis_builder.field_mis_report_instance_period__duration
@@ -718,11 +660,12 @@ msgstr "Etkili Şirketler"
 #. module: mis_builder
 #: model_terms:ir.ui.view,arch_db:mis_builder.mis_report_view_kpi_form
 msgid "Enter expression here, for example balp[70%]. See also help tab."
-msgstr "İfadeyi buraya girin, örnek balp[70%].Ayrıca yardım sekmesine bakın."
+msgstr ""
 
 #. module: mis_builder
 #. odoo-python
 #: code:addons/mis_builder/models/aep.py:0
+#, python-format
 msgid ""
 "Error while querying move line source \"%(model_name)s\". This is likely due "
 "to a filter or expression referencing a field that does not exist in the "
@@ -730,22 +673,19 @@ msgid ""
 "\n"
 "The technical error message is: %(exception)s. "
 msgstr ""
-"%(model_name)s satır kaynağını taşıma sorgulanırken hata oluştu. Bunun "
-"nedeni muhtemelen modelde olmayan \n"
-"bir alana başvuran bir filtre veya ifadedir. \n"
-"Teknik hata mesajı: %(exception)s. "
 
 #. module: mis_builder
 #: model_terms:ir.ui.view,arch_db:mis_builder.mis_report_view_kpi_form
 msgid "Examples:"
-msgstr "Örnekler:"
+msgstr ""
 
 #. module: mis_builder
 #. odoo-javascript
 #: code:addons/mis_builder/static/src/components/mis_report_widget.xml:0
 #: model_terms:ir.ui.view,arch_db:mis_builder.mis_report_instance_view_form
-#: model_terms:ir.ui.view,arch_db:mis_builder.mis_report_instance_view_list
+#: model_terms:ir.ui.view,arch_db:mis_builder.mis_report_instance_view_tree
 #: model_terms:ir.ui.view,arch_db:mis_builder.wizard_mis_report_instance_view_form
+#, python-format
 msgid "Export"
 msgstr "Dışarı Aktar"
 
@@ -765,7 +705,7 @@ msgstr "İfadeler"
 #. module: mis_builder
 #: model_terms:ir.ui.view,arch_db:mis_builder.mis_report_view_kpi_form
 msgid "Expressions can be any valid python expressions."
-msgstr "İfadeler, geçerli tüm python ifadeleri olabilir."
+msgstr ""
 
 #. module: mis_builder
 #: model_terms:ir.ui.view,arch_db:mis_builder.mis_report_view_kpi_form
@@ -776,11 +716,6 @@ msgid ""
 "                                    <code>kpi2.subkpi1</code>, <code>query1."
 "field1</code>)."
 msgstr ""
-"İfadeler diğer KPI'ları, alt KPI'ları ve\n"
-"                                    sorgu sonuçlarını isme göre içerebilir "
-"(eg <code>kpi1 + kpi2</code>,\n"
-"                                    <code>kpi2.subkpi1</code>, <code>query1."
-"field1</code>)."
 
 #. module: mis_builder
 #: model:ir.model.fields,field_description:mis_builder.field_mis_report_instance_period__normalize_factor
@@ -797,7 +732,6 @@ msgstr "Faktör devralma"
 #: model:ir.model.fields,help:mis_builder.field_mis_report_instance_period__normalize_factor
 msgid "Factor to use to normalize the period (used in comparison"
 msgstr ""
-"Dönemi normalleştirmek için kullanılacak faktör (karşılaştırmada kullanılır)"
 
 #. module: mis_builder
 #: model:ir.model.fields,field_description:mis_builder.field_mis_report_query__field_names
@@ -870,7 +804,7 @@ msgstr "Yazı Kalınlığı Devralma"
 #. module: mis_builder
 #: model:ir.model.fields,help:mis_builder.field_mis_report_instance_period__is_ytd
 msgid "Forces the start date to Jan 1st of the relevant year"
-msgstr "İlgili yılın başlangıç tarihini 1 Ocak olacak şekilde zorlar"
+msgstr ""
 
 #. module: mis_builder
 #: model:ir.model.fields,field_description:mis_builder.field_mis_kpi_data__date_from
@@ -887,8 +821,9 @@ msgstr "Başlangıç(Hesaplanmış)"
 #. module: mis_builder
 #. odoo-python
 #: code:addons/mis_builder/report/mis_report_instance_xlsx.py:0
+#, python-format
 msgid "Generated on %(gen_date)s at %(gen_time)s"
-msgstr "%(gen_date)s at %(gen_time)s de oluşturuldu"
+msgstr ""
 
 #. module: mis_builder
 #: model_terms:ir.ui.view,arch_db:mis_builder.mis_report_view_kpi_form
@@ -934,11 +869,10 @@ msgstr ""
 #. module: mis_builder
 #. odoo-python
 #: code:addons/mis_builder/models/aep.py:0
+#, python-format
 msgid ""
 "If currency_id is not provided, all companies must have the same currency."
 msgstr ""
-"currency_id belirtilmezse tüm şirketlerin aynı para birimine sahip olması "
-"gerekir."
 
 #. module: mis_builder
 #: model_terms:ir.ui.view,arch_db:mis_builder.mis_report_style_view_form
@@ -958,14 +892,16 @@ msgstr "Girinti Düzeyi Devralma"
 #. module: mis_builder
 #. odoo-python
 #: code:addons/mis_builder/models/mis_report_style.py:0
+#, python-format
 msgid "Indent level must be greater than or equal to 0"
-msgstr "Girinti düzeyi 0'dan büyük veya 0'a eşit olmalıdır"
+msgstr ""
 
 #. module: mis_builder
 #. odoo-javascript
 #: code:addons/mis_builder/static/src/annotation_dialog/annotation_dialog.xml:0
+#, python-format
 msgid "Insert note here"
-msgstr "Buraya not ekleyin"
+msgstr ""
 
 #. module: mis_builder
 #: model:ir.model.fields.selection,name:mis_builder.selection__mis_report_style__font_style__italic
@@ -980,6 +916,7 @@ msgstr ""
 #. module: mis_builder
 #. odoo-python
 #: code:addons/mis_builder/models/mis_report.py:0
+#, python-format
 msgid ""
 "KPI \"%(kpi)s\" has type %(type)s while a tuple was expected.\n"
 "\n"
@@ -989,34 +926,27 @@ msgid ""
 "\t- Changing the KPI to `multi` mode and giving an explicit value for each "
 "sub-KPI."
 msgstr ""
-"KPI \"%(kpi)s\" %(type)s türündeyken bir tuple bekleniyordu.\n"
-"\n"
-"Bu, şu şekilde düzeltilebilir:\n"
-"\t- KPI değerini %(length)s uzunluğundaki bir tuple'a değiştirme\n"
-"veya\n"
-"\t- KPI'ı `çoklu` moda alıp her bir alt-KPI için açık bir değer vermek."
 
 #. module: mis_builder
 #. odoo-python
 #: code:addons/mis_builder/models/mis_report.py:0
+#, python-format
 msgid ""
 "KPI \"%(kpi)s\" is valued as a tuple of length %(length)s while a tuple of "
 "length%(expected_length)s is expected."
 msgstr ""
-"KPI \"%(kpi)s\" , %(length)s uzunluğunda bir ikili olarak "
-"değerlendirilirken, %(expected_length)s uzunluğunda bir ikili beklenen bir "
-"ikili olarak değerlendirilir."
 
 #. module: mis_builder
 #: model:ir.model.fields,field_description:mis_builder.field_mis_kpi_data__seq1
 msgid "KPI Sequence"
-msgstr "KPI Sırası"
+msgstr ""
 
 #. module: mis_builder
 #. odoo-python
 #: code:addons/mis_builder/models/mis_report.py:0
-msgid "KPI name (%s) must be a valid python identifier"
-msgstr "KPI adı (%s) geçerli bir python tanımlayıcısı olmalı"
+#, python-format
+msgid "KPI name ({}) must be a valid python identifier"
+msgstr ""
 
 #. module: mis_builder
 #: model:ir.model.fields,field_description:mis_builder.field_mis_report__kpi_ids
@@ -1027,7 +957,7 @@ msgstr "KPI'lar"
 #. module: mis_builder
 #: model:ir.model.fields,help:mis_builder.field_mis_report__all_kpi_ids
 msgid "KPIs of this report and subreports."
-msgstr "Bu rapor ve alt raporların KPI'ları."
+msgstr ""
 
 #. module: mis_builder
 #: model:ir.model.fields,field_description:mis_builder.field_mis_report_instance_annotation__kpi_id
@@ -1065,7 +995,7 @@ msgstr "Son Oluşturulan Raporlar"
 #: model:ir.model.fields,field_description:mis_builder.field_mis_report_subkpi__write_uid
 #: model:ir.model.fields,field_description:mis_builder.field_mis_report_subreport__write_uid
 msgid "Last Updated by"
-msgstr "En son güncelleyen"
+msgstr ""
 
 #. module: mis_builder
 #: model:ir.model.fields,field_description:mis_builder.field_add_mis_report_instance_dashboard_wizard__write_date
@@ -1081,7 +1011,7 @@ msgstr "En son güncelleyen"
 #: model:ir.model.fields,field_description:mis_builder.field_mis_report_subkpi__write_date
 #: model:ir.model.fields,field_description:mis_builder.field_mis_report_subreport__write_date
 msgid "Last Updated on"
-msgstr "En Son Güncelleme"
+msgstr ""
 
 #. module: mis_builder
 #: model_terms:ir.ui.view,arch_db:mis_builder.mis_report_instance_view_form
@@ -1091,64 +1021,64 @@ msgstr "Düzen"
 #. module: mis_builder
 #: model:ir.model,name:mis_builder.model_report_mis_builder_mis_report_instance_xlsx
 msgid "MIS Builder XLSX report"
-msgstr "MIS Builder XLSX raporu"
+msgstr ""
 
 #. module: mis_builder
 #: model:ir.model,name:mis_builder.model_mis_kpi_data
 msgid "MIS Kpi Data Abtract class"
-msgstr "MIS Kpi Veri Soyut sınıfı"
+msgstr ""
 
 #. module: mis_builder
 #: model_terms:ir.ui.view,arch_db:mis_builder.mis_report_view_form
 msgid "MIS Report"
-msgstr "MIS Raporu"
+msgstr ""
 
 #. module: mis_builder
 #: model:ir.model,name:mis_builder.model_mis_report_subreport
 msgid "MIS Report - Sub Reports Relation"
-msgstr "MIS Raporu - Alt Rapor İlişkisi"
+msgstr ""
 
 #. module: mis_builder
 #: model:ir.model,name:mis_builder.model_add_mis_report_instance_dashboard_wizard
 msgid "MIS Report Add to Dashboard Wizard"
-msgstr "MIS Raporunu Panele Ekle"
+msgstr ""
 
 #. module: mis_builder
 #: model:ir.model,name:mis_builder.model_mis_report_instance
 #: model_terms:ir.ui.view,arch_db:mis_builder.mis_report_instance_view_form
 msgid "MIS Report Instance"
-msgstr "MIS Rapor Örneği"
+msgstr ""
 
 #. module: mis_builder
 #: model:ir.model,name:mis_builder.model_mis_report_instance_period
 msgid "MIS Report Instance Period"
-msgstr "MIS Rapor Örnek Aralığı"
+msgstr ""
 
 #. module: mis_builder
 #: model:ir.model,name:mis_builder.model_mis_report_instance_period_sum
 msgid "MIS Report Instance Period Sum"
-msgstr "MIS Rapor Örnek Aralığı Toplama"
+msgstr ""
 
 #. module: mis_builder
 #: model:ir.model,name:mis_builder.model_mis_report_kpi
 #: model_terms:ir.ui.view,arch_db:mis_builder.mis_report_view_kpi_form
 msgid "MIS Report KPI"
-msgstr "MIS Rapor KPI"
+msgstr ""
 
 #. module: mis_builder
 #: model:ir.model,name:mis_builder.model_mis_report_kpi_expression
 msgid "MIS Report KPI Expression"
-msgstr "MIS Rapor KPI İfadesi"
+msgstr ""
 
 #. module: mis_builder
 #: model_terms:ir.ui.view,arch_db:mis_builder.mis_report_instance_result_view_form
 msgid "MIS Report Preview"
-msgstr "MIS Rapor Önizlemesi"
+msgstr ""
 
 #. module: mis_builder
 #: model:ir.model,name:mis_builder.model_mis_report_query
 msgid "MIS Report Query"
-msgstr "MIS Rapor Sorgusu"
+msgstr ""
 
 #. module: mis_builder
 #: model:ir.model,name:mis_builder.model_mis_report_style
@@ -1165,7 +1095,7 @@ msgstr "Mali Rapor Stilleri"
 #. module: mis_builder
 #: model:ir.model,name:mis_builder.model_mis_report_subkpi
 msgid "MIS Report Sub-KPI"
-msgstr "MIS Rapor Alt-KPI"
+msgstr ""
 
 #. module: mis_builder
 #: model:ir.model,name:mis_builder.model_mis_report
@@ -1181,12 +1111,12 @@ msgstr "Mali Rapor Şablonları"
 #. module: mis_builder
 #: model:res.groups,name:mis_builder.group_edit_annotation
 msgid "MIS Report: add annotations"
-msgstr "MIS Raporu: Açıklamalar ekleyin"
+msgstr ""
 
 #. module: mis_builder
 #: model:res.groups,name:mis_builder.group_read_annotation
 msgid "MIS Report: view annotations"
-msgstr "MIS Raporu: Açıklamaları görüntüleyin"
+msgstr ""
 
 #. module: mis_builder
 #: model:ir.ui.menu,name:mis_builder.mis_report_conf_menu
@@ -1203,27 +1133,33 @@ msgstr "Mali Raporlar"
 #. module: mis_builder
 #: model:ir.actions.report,name:mis_builder.qweb_pdf_export
 msgid "MIS report instance QWEB PDF report"
-msgstr "MIS rapor örneği QWEB PDF raporu"
+msgstr ""
 
 #. module: mis_builder
 #: model:ir.actions.report,name:mis_builder.xls_export
 msgid "MIS report instance XLS report"
-msgstr "MIS rapor örneği XLS raporu"
+msgstr ""
 
 #. module: mis_builder
+#. odoo-python
+#: code:addons/mis_builder/models/mis_report.py:0
 #: model:ir.model.fields.selection,name:mis_builder.selection__mis_report_query__aggregate__max
+#, python-format
 msgid "Max"
-msgstr "Maks"
+msgstr ""
 
 #. module: mis_builder
+#. odoo-python
+#: code:addons/mis_builder/models/mis_report.py:0
 #: model:ir.model.fields.selection,name:mis_builder.selection__mis_report_query__aggregate__min
+#, python-format
 msgid "Min"
 msgstr ""
 
 #. module: mis_builder
 #: model:ir.model,name:mis_builder.model_mis_report_instance_annotation
 msgid "Mis Report Instance Annotation"
-msgstr "Yanlış Rapor Örneği Açıklaması"
+msgstr ""
 
 #. module: mis_builder
 #: model:ir.model.fields,field_description:mis_builder.field_mis_report_instance_period__mode
@@ -1237,9 +1173,12 @@ msgid "Model"
 msgstr ""
 
 #. module: mis_builder
+#. odoo-python
+#: code:addons/mis_builder/models/mis_report_instance.py:0
 #: model:ir.model.fields.selection,name:mis_builder.selection__mis_report_instance_period__type__m
+#, python-format
 msgid "Month"
-msgstr "Ay"
+msgstr ""
 
 #. module: mis_builder
 #: model:ir.model.fields,field_description:mis_builder.field_mis_report__move_lines_source
@@ -1289,14 +1228,18 @@ msgstr "Tarih filtresi yok"
 #. module: mis_builder
 #. odoo-python
 #: code:addons/mis_builder/models/mis_report_instance.py:0
+#, python-format
 msgid "No date filter is allowed for this source in column %s."
-msgstr "%s sütunundaki kaynak için, tarih filtresine izin verilmiyor."
+msgstr ""
 
 #. module: mis_builder
+#. odoo-python
+#: code:addons/mis_builder/models/mis_report.py:0
 #: model:ir.model.fields.selection,name:mis_builder.selection__mis_report_kpi__accumulation_method__none
 #: model:ir.model.fields.selection,name:mis_builder.selection__mis_report_kpi__compare_method__none
+#, python-format
 msgid "None"
-msgstr "Hiçbiri"
+msgstr ""
 
 #. module: mis_builder
 #: model:ir.model.fields.selection,name:mis_builder.selection__mis_report_style__font_style__normal
@@ -1307,7 +1250,7 @@ msgstr ""
 #. module: mis_builder
 #: model:ir.model.fields,field_description:mis_builder.field_mis_report_instance_annotation__note
 msgid "Note"
-msgstr "Not"
+msgstr ""
 
 #. module: mis_builder
 #: model_terms:ir.ui.view,arch_db:mis_builder.mis_report_style_view_form
@@ -1317,48 +1260,49 @@ msgstr "Numara"
 #. module: mis_builder
 #: model:ir.model.fields,help:mis_builder.field_mis_report_instance_period__duration
 msgid "Number of periods"
-msgstr "Periyotların Sayısı"
+msgstr ""
 
 #. module: mis_builder
+#. odoo-python
+#: code:addons/mis_builder/models/mis_report.py:0
 #: model:ir.model.fields.selection,name:mis_builder.selection__mis_report_kpi__type__num
+#, python-format
 msgid "Numeric"
 msgstr "Sayısal"
 
 #. module: mis_builder
 #: model:ir.model.fields,field_description:mis_builder.field_mis_report_instance_period__offset
 msgid "Offset"
-msgstr "Kaydırma"
+msgstr ""
 
 #. module: mis_builder
 #: model:ir.model.fields,help:mis_builder.field_mis_report_instance_period__offset
 msgid "Offset from current period"
-msgstr "Şimdiki aralıktan kaydırılacak"
-
-#. module: mis_builder
-#: model:ir.model.fields,field_description:mis_builder.field_mis_report_instance__wide_display_by_default
-msgid "Open report in wide mode by default"
-msgstr "Raporu varsayılan olarak geniş modda aç"
+msgstr ""
 
 #. module: mis_builder
 #: model:ir.model.fields,field_description:mis_builder.field_mis_report_instance_period_sum__period_id
 msgid "Parent column"
-msgstr "Üst Sütunu"
+msgstr ""
 
 #. module: mis_builder
+#. odoo-python
+#: code:addons/mis_builder/models/mis_report.py:0
 #: model:ir.model.fields.selection,name:mis_builder.selection__mis_report_kpi__compare_method__pct
 #: model:ir.model.fields.selection,name:mis_builder.selection__mis_report_kpi__type__pct
+#, python-format
 msgid "Percentage"
-msgstr "Yüzde"
+msgstr ""
 
 #. module: mis_builder
 #: model:ir.model.fields,field_description:mis_builder.field_mis_report_instance_annotation__period_id
 msgid "Period"
-msgstr "Aralık"
+msgstr ""
 
 #. module: mis_builder
 #: model:ir.model.constraint,message:mis_builder.constraint_mis_report_instance_period_name_unique
 msgid "Period name should be unique by report"
-msgstr "Aralık ismi rapora göre eşsiz olmalıdır"
+msgstr ""
 
 #. module: mis_builder
 #: model:ir.model.fields,field_description:mis_builder.field_mis_report_instance_period__type
@@ -1378,16 +1322,17 @@ msgstr "Pivot Tarih"
 #. module: mis_builder
 #. odoo-python
 #: code:addons/mis_builder/models/mis_report_instance.py:0
+#, python-format
 msgid "Please provide both columns to compare in %s."
-msgstr "Lütfen %s de karşılaştırılacak sütunları belirleyiniz."
+msgstr ""
 
 #. module: mis_builder
 #. odoo-python
 #: code:addons/mis_builder/models/mis_report_instance.py:0
+#, python-format
 msgid ""
 "Please select a report template and/or save the report before adding columns."
 msgstr ""
-"Lütfen bir rapor şablonu seçin ve/veya sütun eklemeden önce raporu kaydedin."
 
 #. module: mis_builder
 #: model:ir.model.fields,field_description:mis_builder.field_mis_report_style__prefix
@@ -1401,7 +1346,7 @@ msgstr "Önek Devralma"
 
 #. module: mis_builder
 #: model_terms:ir.ui.view,arch_db:mis_builder.mis_report_instance_view_form
-#: model_terms:ir.ui.view,arch_db:mis_builder.mis_report_instance_view_list
+#: model_terms:ir.ui.view,arch_db:mis_builder.mis_report_instance_view_tree
 #: model_terms:ir.ui.view,arch_db:mis_builder.wizard_mis_report_instance_view_form
 msgid "Preview"
 msgstr "Önizleme"
@@ -1410,8 +1355,9 @@ msgstr "Önizleme"
 #. odoo-javascript
 #: code:addons/mis_builder/static/src/components/mis_report_widget.xml:0
 #: model_terms:ir.ui.view,arch_db:mis_builder.mis_report_instance_view_form
-#: model_terms:ir.ui.view,arch_db:mis_builder.mis_report_instance_view_list
+#: model_terms:ir.ui.view,arch_db:mis_builder.mis_report_instance_view_tree
 #: model_terms:ir.ui.view,arch_db:mis_builder.wizard_mis_report_instance_view_form
+#, python-format
 msgid "Print"
 msgstr "Yazdır"
 
@@ -1424,25 +1370,28 @@ msgstr "Sorgular"
 #. module: mis_builder
 #. odoo-python
 #: code:addons/mis_builder/models/mis_report.py:0
-msgid "Query name (%s) must be valid python identifier"
-msgstr "Sorgu adı (%s) geçerli bir python tanımlayıcısı olmalıdır"
+#, python-format
+msgid "Query name ({}) must be valid python identifier"
+msgstr ""
 
 #. module: mis_builder
 #. odoo-javascript
 #: code:addons/mis_builder/static/src/components/mis_report_widget.xml:0
+#, python-format
 msgid "Refresh"
-msgstr "Yenile"
+msgstr ""
 
 #. module: mis_builder
 #: model:ir.model.fields.selection,name:mis_builder.selection__mis_report_instance_period__mode__relative
 msgid "Relative to report base date"
-msgstr "Rapor taban tarihi ile ilişkili"
+msgstr ""
 
 #. module: mis_builder
 #. odoo-javascript
 #: code:addons/mis_builder/static/src/annotation_dialog/annotation_dialog.xml:0
+#, python-format
 msgid "Remove"
-msgstr "Kaldır"
+msgstr ""
 
 #. module: mis_builder
 #: model:ir.model.fields,field_description:mis_builder.field_mis_report_instance__report_id
@@ -1462,12 +1411,12 @@ msgstr "Rapor İşlemi"
 #. module: mis_builder
 #: model:ir.model.fields,field_description:mis_builder.field_mis_report_instance_period__report_instance_id
 msgid "Report Instance"
-msgstr "Rapor Örneği"
+msgstr ""
 
 #. module: mis_builder
 #: model:ir.model.fields,help:mis_builder.field_mis_report_instance__date
 msgid "Report base date (leave empty to use current date)"
-msgstr "Rapor taban tarihi (şimdiki tarihi kullanmak için boş bırakın)"
+msgstr ""
 
 #. module: mis_builder
 #: model:ir.model.fields,field_description:mis_builder.field_mis_report_style__dp
@@ -1483,17 +1432,17 @@ msgstr "Yuvarlama Devralma"
 #: model_terms:ir.ui.view,arch_db:mis_builder.mis_report_instance_view_form
 #: model_terms:ir.ui.view,arch_db:mis_builder.wizard_mis_report_instance_view_form
 msgid "Save"
-msgstr "Kaydet"
+msgstr ""
 
 #. module: mis_builder
 #: model:ir.model.fields,help:mis_builder.field_mis_report_instance__widget_search_view_id
 msgid "Search view to customize the filter box in the report widget."
-msgstr "Rapor widget'ındaki filtre kutusunu özelleştirmek için arama görünümü."
+msgstr ""
 
 #. module: mis_builder
 #: model:ir.model.fields,help:mis_builder.field_mis_report_instance__company_ids
 msgid "Select companies for which data will be searched."
-msgstr "Verinin aranacağı şirketleri seçiniz."
+msgstr ""
 
 #. module: mis_builder
 #: model:ir.model.fields,help:mis_builder.field_mis_report_instance__currency_id
@@ -1501,11 +1450,8 @@ msgid ""
 "Select target currency for the report. Required if companies have different "
 "currencies."
 msgstr ""
-"Rapor için hedef para birimini seçiniz. Eğer şirketin farklı para birimleri "
-"varsa bu alan zorunludur."
 
 #. module: mis_builder
-#: model:ir.model.fields,field_description:mis_builder.field_mis_report_instance__sequence
 #: model:ir.model.fields,field_description:mis_builder.field_mis_report_instance_period__sequence
 #: model:ir.model.fields,field_description:mis_builder.field_mis_report_kpi__sequence
 #: model:ir.model.fields,field_description:mis_builder.field_mis_report_kpi_expression__sequence
@@ -1516,6 +1462,7 @@ msgstr "Sıra"
 #. module: mis_builder
 #. odoo-javascript
 #: code:addons/mis_builder/static/src/components/mis_report_widget.xml:0
+#, python-format
 msgid "Settings"
 msgstr "Ayarlar"
 
@@ -1524,7 +1471,7 @@ msgstr "Ayarlar"
 msgid ""
 "Should not include the same report more than once as sub report of a given "
 "report"
-msgstr "Verilen bir rapor birden fazla alt rapor olarak dahil edilmemeli"
+msgstr ""
 
 #. module: mis_builder
 #: model:ir.model.fields,field_description:mis_builder.field_mis_report_instance__widget_show_pivot_date
@@ -1549,12 +1496,12 @@ msgstr "Rapor widgetı filtre çubuğunda pivot tarihini göster"
 #. module: mis_builder
 #: model:ir.model.fields,help:mis_builder.field_mis_report_instance__widget_show_filters
 msgid "Show the filter bar in the report widget."
-msgstr "Rapor bileşeninde filtre çubuğunu gösterin."
+msgstr ""
 
 #. module: mis_builder
 #: model:ir.model.fields,help:mis_builder.field_mis_report_instance__widget_show_settings_button
 msgid "Show the settings button in the report widget."
-msgstr "Rapor bileşeninde ayarlar düğmesini gösterin."
+msgstr ""
 
 #. module: mis_builder
 #: model:ir.model.fields,field_description:mis_builder.field_mis_report_instance_period_sum__sign
@@ -1568,13 +1515,17 @@ msgid "Source"
 msgstr "Kaynak"
 
 #. module: mis_builder
+#. odoo-python
+#: code:addons/mis_builder/models/mis_report.py:0
 #: model:ir.model.fields.selection,name:mis_builder.selection__mis_report_kpi__type__str
+#, python-format
 msgid "String"
 msgstr "Dizi"
 
 #. module: mis_builder
 #: model:ir.model.fields,field_description:mis_builder.field_mis_report__style_id
 #: model:ir.model.fields,field_description:mis_builder.field_mis_report_kpi__style_id
+#: model_terms:ir.ui.view,arch_db:mis_builder.mis_report_style_view_form
 msgid "Style"
 msgstr "Stil"
 
@@ -1596,7 +1547,7 @@ msgstr "Stil adı"
 #. module: mis_builder
 #: model:ir.model.constraint,message:mis_builder.constraint_mis_report_style_style_name_uniq
 msgid "Style name should be unique"
-msgstr "Stil adı benzersiz olmalıdır"
+msgstr ""
 
 #. module: mis_builder
 #: model:ir.model.fields,field_description:mis_builder.field_mis_report__subkpi_ids
@@ -1611,7 +1562,7 @@ msgstr "Alt KPI'lar"
 #. module: mis_builder
 #: model:ir.model.constraint,message:mis_builder.constraint_mis_report_kpi_expression_subkpi_kpi_unique
 msgid "Sub KPI must be used once and only once for each KPI"
-msgstr "Her KPI için Alt KPI sadece ve sadece bir defa kullanılmalı"
+msgstr ""
 
 #. module: mis_builder
 #: model_terms:ir.ui.view,arch_db:mis_builder.mis_report_view_form
@@ -1636,14 +1587,15 @@ msgstr "Alt Raporlar Sırası"
 #. module: mis_builder
 #. odoo-python
 #: code:addons/mis_builder/models/mis_report.py:0
-msgid "Sub-KPI name (%s) must be a valid python identifier"
-msgstr "Alt-KPI adı (%s)geçerli bir python tanımlayıcısı olmalı"
+#, python-format
+msgid "Sub-KPI name ({}) must be a valid python identifier"
+msgstr ""
 
 #. module: mis_builder
 #: model:ir.model.fields,field_description:mis_builder.field_mis_report_instance_annotation__subkpi_id
 #: model:ir.model.fields,field_description:mis_builder.field_mis_report_kpi_expression__subkpi_id
 msgid "Subkpi"
-msgstr "Altkpi"
+msgstr ""
 
 #. module: mis_builder
 #: model:ir.model.fields,field_description:mis_builder.field_mis_report_subreport__subreport_id
@@ -1653,19 +1605,21 @@ msgstr "Alt Rapor"
 #. module: mis_builder
 #. odoo-python
 #: code:addons/mis_builder/models/mis_report_subreport.py:0
+#, python-format
 msgid "Subreport loop detected"
-msgstr "Alt rapor döngüsü tespit edildi"
+msgstr ""
 
 #. module: mis_builder
 #. odoo-python
 #: code:addons/mis_builder/models/mis_report_subreport.py:0
-msgid "Subreport name (%s) must be a valid python identifier"
-msgstr "Alt rapor adı (%s) geçerli bir python tanımlayıcısı olmalı"
+#, python-format
+msgid "Subreport name ({}) must be a valid python identifier"
+msgstr ""
 
 #. module: mis_builder
 #: model:ir.model.constraint,message:mis_builder.constraint_mis_report_subreport_name_unique
 msgid "Subreport name should be unique by report"
-msgstr "Alt rapor adı, rapora göre eşsiz olmalı"
+msgstr ""
 
 #. module: mis_builder
 #: model:ir.model.fields,field_description:mis_builder.field_mis_report_style__suffix
@@ -1678,8 +1632,11 @@ msgid "Suffix Inherit"
 msgstr "Sonek Devralma"
 
 #. module: mis_builder
+#. odoo-python
+#: code:addons/mis_builder/models/mis_report.py:0
 #: model:ir.model.fields.selection,name:mis_builder.selection__mis_report_kpi__accumulation_method__sum
 #: model:ir.model.fields.selection,name:mis_builder.selection__mis_report_query__aggregate__sum
+#, python-format
 msgid "Sum"
 msgstr "Toplam"
 
@@ -1691,12 +1648,11 @@ msgstr "Hesap ayrıntılarını topla"
 #. module: mis_builder
 #. odoo-python
 #: code:addons/mis_builder/models/kpimatrix.py:0
+#, python-format
 msgid ""
-"Sum cannot be computed in column %s because the columns to sum have no "
+"Sum cannot be computed in column {} because the columns to sum have no "
 "common subkpis"
 msgstr ""
-"Toplam, %s sütununda hesaplanamaz çünkü toplanacak sütunların ortak alt "
-"kpi'leri yoktur"
 
 #. module: mis_builder
 #: model:ir.model.fields.selection,name:mis_builder.selection__mis_report_instance_period__source__sumcol
@@ -1710,14 +1666,14 @@ msgstr "Hedef Kayıtlar"
 
 #. module: mis_builder
 #: model_terms:ir.ui.view,arch_db:mis_builder.mis_report_instance_view_form
-#: model_terms:ir.ui.view,arch_db:mis_builder.mis_report_instance_view_list
+#: model_terms:ir.ui.view,arch_db:mis_builder.mis_report_instance_view_tree
 msgid "Template"
 msgstr "Şablon"
 
 #. module: mis_builder
 #: model:ir.model.fields,field_description:mis_builder.field_mis_report_instance__temporary
 msgid "Temporary"
-msgstr "Geçici"
+msgstr ""
 
 #. module: mis_builder
 #: model:ir.model.fields,field_description:mis_builder.field_mis_report_style__color
@@ -1727,7 +1683,7 @@ msgstr "Metin rengi"
 #. module: mis_builder
 #: model:ir.model.fields,help:mis_builder.field_mis_report_style__color
 msgid "Text color in valid RGB code (from #000000 to #FFFFFF)"
-msgstr "RGB kodunda geçerli metin renkleri (from #000000 to #FFFFFF)"
+msgstr ""
 
 #. module: mis_builder
 #: model_terms:ir.ui.view,arch_db:mis_builder.mis_report_view_kpi_form
@@ -1745,8 +1701,6 @@ msgid ""
 "The <b>journal items domain</b> is an Odoo domain filter on\n"
 "                                        journal items."
 msgstr ""
-"<b>journal items domain</b> yevmiye kayıtlarında bir\n"
-"                                        Odoo domain filtresidir."
 
 #. module: mis_builder
 #: model_terms:ir.ui.view,arch_db:mis_builder.mis_report_view_kpi_form
@@ -1772,40 +1726,43 @@ msgstr "Bitiş(hesaplanmış)"
 #. module: mis_builder
 #. odoo-python
 #: code:addons/mis_builder/models/mis_kpi_data.py:0
+#, python-format
 msgid "Unexpected accumulation method %(method)s for %(name)s."
-msgstr "%(name)s beklenmeyen bir birikim methodu %(method)s için."
+msgstr ""
 
 #. module: mis_builder
 #. odoo-python
 #: code:addons/mis_builder/models/mis_report.py:0
+#, python-format
 msgid "Unexpected value %s for target_move."
-msgstr "target_move için beklenmeyen değer %s."
+msgstr ""
 
 #. module: mis_builder
 #. odoo-python
 #: code:addons/mis_builder/models/prorata_read_group_mixin.py:0
+#, python-format
 msgid "Unsupported operator %s for searching on date"
-msgstr "Tarihlerdeki aramalarda %s desteklenmeyen bir operatör"
+msgstr ""
 
 #. module: mis_builder
 #: model:ir.model.fields,field_description:mis_builder.field_mis_report_instance__user_can_edit_annotation
 msgid "User Can Edit Annotation"
-msgstr "Kullanıcı Açıklamayı Düzenleyebilir"
+msgstr ""
 
 #. module: mis_builder
 #: model:ir.model.fields,field_description:mis_builder.field_mis_report_instance__user_can_read_annotation
 msgid "User Can Read Annotation"
-msgstr "Kullanıcı Açıklamayı Okuyabilir"
+msgstr ""
 
 #. module: mis_builder
 #: model:ir.actions.server,name:mis_builder.ir_cron_vacuum_temp_reports_ir_actions_server
 msgid "Vacuum temporary reports"
-msgstr "Geçici raporları vakumla"
+msgstr ""
 
 #. module: mis_builder
 #: model:ir.model.fields,field_description:mis_builder.field_mis_report_instance_period__valid
 msgid "Valid"
-msgstr "Geçerli"
+msgstr ""
 
 #. module: mis_builder
 #: model:ir.model.fields,field_description:mis_builder.field_mis_report_kpi__type
@@ -1818,7 +1775,10 @@ msgid "Visibility"
 msgstr "Görünürlük"
 
 #. module: mis_builder
+#. odoo-python
+#: code:addons/mis_builder/models/mis_report_instance.py:0
 #: model:ir.model.fields.selection,name:mis_builder.selection__mis_report_instance_period__type__w
+#, python-format
 msgid "Week"
 msgstr "Hafta"
 
@@ -1830,59 +1790,67 @@ msgstr ""
 #. module: mis_builder
 #: model:ir.model.constraint,message:mis_builder.constraint_mis_report_instance_period_duration
 msgid "Wrong duration, it must be positive!"
-msgstr "Yanlış süre, süre pozitif olmalıdır!"
+msgstr ""
 
 #. module: mis_builder
 #: model:ir.model.constraint,message:mis_builder.constraint_mis_report_instance_period_normalize_factor
 msgid "Wrong normalize factor, it must be positive!"
 msgstr ""
-"\"Yanlış normelleştirme faktörü, normalleştirme faktörü pozitif olmalıdır!"
 
 #. module: mis_builder
+#. odoo-python
+#: code:addons/mis_builder/models/mis_report_instance.py:0
 #: model:ir.model.fields.selection,name:mis_builder.selection__mis_report_instance_period__type__y
+#, python-format
 msgid "Year"
 msgstr "Yıl"
 
 #. module: mis_builder
 #: model:ir.model.fields,field_description:mis_builder.field_mis_report_instance_period__is_ytd
 msgid "Year to date"
-msgstr "Yıldan tarihe"
+msgstr ""
 
 #. module: mis_builder
 #. odoo-python
 #: code:addons/mis_builder/models/mis_report_instance.py:0
+#, python-format
 msgid "You cannot sum period %s with itself."
-msgstr "%s aralığı kendisiyle toplanamaz."
+msgstr ""
 
 #. module: mis_builder
 #. odoo-python
 #: code:addons/mis_builder/models/mis_report_instance_annotation.py:0
+#, python-format
 msgid "You do not have the rights to edit annotations"
-msgstr "Açıklamaları düzenleme hakkınız yok"
+msgstr ""
 
 #. module: mis_builder
 #. odoo-python
 #: code:addons/mis_builder/models/aep.py:0
+#, python-format
 msgid "`%(field)s` cannot have a field name in expression %(expr)s"
-msgstr "`%(field)s` ifadesi %(expr)s ifadesinde bir alan adına sahip olamaz"
+msgstr ""
 
 #. module: mis_builder
 #. odoo-python
 #: code:addons/mis_builder/models/aep.py:0
+#, python-format
 msgid "`fld` can only be used with mode `p` (variation) in expression %s"
-msgstr "fld` yalnızca %s ifadesinde `p` (değişim) moduyla kullanılabilir"
+msgstr ""
 
 #. module: mis_builder
 #. odoo-python
 #: code:addons/mis_builder/models/aep.py:0
+#, python-format
 msgid "`fld` must have a field name in exression %s"
-msgstr "`fld` ifadesi %s ifadesinde bir alan adına sahip olmalıdır"
+msgstr ""
 
 #. module: mis_builder
 #. odoo-python
 #: code:addons/mis_builder/models/mis_report_instance.py:0
+#, python-format
 msgid "from %(date_from)s to %(date_to)s"
-msgstr "%(date_from)s tarihinden %(date_to)s tarihine kadar"
+msgstr ""
 
 #. module: mis_builder
 #: model:ir.model.fields.selection,name:mis_builder.selection__mis_report_style__font_size__large
@@ -1903,6 +1871,7 @@ msgstr "ve"
 #. module: mis_builder
 #. odoo-python
 #: code:addons/mis_builder/models/mis_report_style.py:0
+#, python-format
 msgid "pp"
 msgstr ""
 
@@ -1923,26 +1892,23 @@ msgid ""
 "                                        must be provided (e.g. <code>fldp."
 "quantity</code>"
 msgstr ""
-"when <code>fld</code> kullanıldığında: bir alan adı\n"
-"                                         belirteci sağlanmalıdır (e.g. "
-"<code>fldp.quantity</code>"
 
 #. module: mis_builder
 #: model:ir.model.fields.selection,name:mis_builder.selection__mis_report_style__font_size__x-large
 msgid "x-large"
-msgstr "ektra geniş"
+msgstr ""
 
 #. module: mis_builder
 #: model:ir.model.fields.selection,name:mis_builder.selection__mis_report_style__font_size__x-small
 msgid "x-small"
-msgstr "ekstra küçük"
+msgstr ""
 
 #. module: mis_builder
 #: model:ir.model.fields.selection,name:mis_builder.selection__mis_report_style__font_size__xx-large
 msgid "xx-large"
-msgstr "en geniş"
+msgstr ""
 
 #. module: mis_builder
 #: model:ir.model.fields.selection,name:mis_builder.selection__mis_report_style__font_size__xx-small
 msgid "xx-small"
-msgstr "en küçük"
+msgstr ""

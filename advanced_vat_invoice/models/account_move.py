@@ -46,6 +46,25 @@ class AccountMove(models.Model):
                                help="Is QR button is enable or not")
     qr_page = fields.Boolean(string="Qr Page", compute="_compute_qr",
                              help="Is QR page is enable or not")
+    company_partner_bank_ids = fields.Many2many(
+        'res.partner.bank',
+        string="Company Bank Accounts",
+        compute='_compute_company_partner_bank_ids',
+        help="Company bank accounts for invoice printout in multi-company scenario"
+    )
+
+    @api.depends('company_id', 'partner_bank_id')
+    def _compute_company_partner_bank_ids(self):
+        for rec in self:
+            if rec.partner_bank_id:
+                rec.company_partner_bank_ids = rec.partner_bank_id
+            elif rec.company_id and rec.company_id.partner_id:
+                banks = rec.company_id.partner_id.bank_ids.filtered(
+                    lambda b: not b.company_id or b.company_id == rec.company_id
+                )
+                rec.company_partner_bank_ids = banks
+            else:
+                rec.company_partner_bank_ids = self.env['res.partner.bank']
 
     @api.depends('qr_button')
     def _compute_qr(self):

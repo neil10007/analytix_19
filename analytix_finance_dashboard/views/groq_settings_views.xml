@@ -9,6 +9,7 @@
             <field name="arch" type="xml">
                 <xpath expr="//field[@name='login']" position="after">
                     <field name="groq_api_key" password="True" string="Groq API Key"/>
+                    <field name="open_router_key" password="True" string="OpenRouter API Key"/>
                 </xpath>
             </field>
         </record>
@@ -23,9 +24,10 @@
                      groups="base.group_no_one" = only visible when Developer Mode is active.
                      The field is additionally restricted to group_groq_super_admin (uid=2 only). -->
                 <xpath expr="//page[@name='access_rights']" position="inside">
-                    <group string="Groq AI Configuration" groups="base.group_no_one">
+                    <group string="AI API Configuration" groups="base.group_no_one">
                         <group groups="analytix_finance_dashboard.group_groq_super_admin">
                             <field name="groq_api_key" password="True" placeholder="Enter Groq API Key..."/>
+                            <field name="open_router_key" password="True" placeholder="Enter OpenRouter API Key..."/>
                         </group>
                     </group>
                 </xpath>
@@ -40,6 +42,7 @@
             <field name="arch" type="xml">
                 <xpath expr="//field[@name='partner_id']" position="after">
                     <field name="groq_api_key" password="True" string="Groq API Key"/>
+                    <field name="open_router_key" password="True" string="OpenRouter API Key"/>
                 </xpath>
             </field>
         </record>
@@ -51,9 +54,10 @@
             <field name="inherit_id" ref="base.view_company_form"/>
             <field name="arch" type="xml">
                 <xpath expr="//notebook" position="inside">
-                    <page string="Groq AI Configuration" name="groq_ai_config">
+                    <page string="AI Configuration" name="groq_ai_config">
                         <group>
                             <field name="groq_api_key" password="True" placeholder="Enter Groq API Key..."/>
+                            <field name="open_router_key" password="True" placeholder="Enter OpenRouter API Key..."/>
                         </group>
                     </page>
                 </xpath>

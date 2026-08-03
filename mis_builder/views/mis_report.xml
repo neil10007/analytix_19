@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <odoo>
-    <record model="ir.ui.view" id="mis_report_view_list">
-        <field name="name">mis.report.view.list</field>
+    <record model="ir.ui.view" id="mis_report_view_tree">
+        <field name="name">mis.report.view.tree</field>
         <field name="model">mis.report</field>
         <field name="arch" type="xml">
             <list>
@@ -35,22 +35,16 @@
                                     <field name="sequence" widget="handle" />
                                     <field name="description" />
                                     <field name="name" />
-                                    <field name="type" optional="show" />
+                                    <field name="type" />
                                     <field
                                         name="compare_method"
                                         invisible="type == 'str'"
-                                        optional="show"
                                     />
                                     <field
                                         name="accumulation_method"
                                         invisible="type == 'str'"
-                                        optional="show"
                                     />
-                                    <field
-                                        name="expression"
-                                        widget="code"
-                                        options="{'mode': 'python'}"
-                                    />
+                                    <field name="expression" />
                                 </list>
                             </field>
                         </page>
@@ -70,13 +64,13 @@
                                         widget="many2many_tags"
                                     />
                                     <field name="field_names" />
-                                    <field name="aggregate" optional="show" />
+                                    <field name="aggregate" />
                                     <field
                                         name="date_field"
                                         domain="[('model_id', '=', model_id), ('ttype', 'in', ('date', 'datetime'))]"
                                     />
                                     <field name="company_field_id" />
-                                    <field name="domain" optional="show" />
+                                    <field name="domain" />
                                 </list>
                             </field>
                         </page>
@@ -144,17 +138,11 @@
                                         name="subkpi_id"
                                         domain="[('report_id', '=', parent.report_id)]"
                                     />
-                                    <field
-                                        name="name"
-                                        widget="code"
-                                        options="{'mode': 'python'}"
-                                    />
+                                    <field name="name" />
                                 </list>
                             </field>
                             <field
                                 name="expression"
-                                widget="code"
-                                options="{'mode': 'python'}"
                                 colspan="2"
                                 nolabel="1"
                                 invisible="multi"
@@ -179,36 +167,36 @@
                                 <p
                                 > The following special elements are recognized in the expressions
                                     to compute accounting data: <code
-                                >{bal|crd|deb|pbal|nbal|fld}{pieu}(.fieldname)[account
+                                    >{bal|crd|deb|pbal|nbal|fld}{pieu}(.fieldname)[account
                                     selector][journal items domain]</code>. </p>
                                 <ul>
                                     <li>
                                         <code>bal</code>, <code>crd</code>, <code
-                                    >deb</code>, <code>pbal</code>, <code
-                                    >nbal</code>, <code
-                                    >fld</code> : balance, debit, credit,
+                                        >deb</code>, <code>
+                                        pbal</code>, <code>nbal</code>, <code
+                                        >fld</code> : balance, debit, credit,
                                         positive balance, negative balance,
                                         other numerical field. </li>
                                     <li>
                                         <code>p</code>, <code>i</code>, <code
-                                    >e</code> : respectively variation over the period,
+                                        >e</code> : respectively variation over the period,
                                         initial balance, ending balance </li>
                                     <li>when <code
-                                    >fld</code> is used : a field name specifier
+                                        >fld</code> is used : a field name specifier
                                         must be provided (e.g. <code
-                                    >fldp.quantity</code></li>
+                                        >fldp.quantity</code></li>
                                     <li> The <b
-                                    >account selector</b> is a like expression on the
+                                        >account selector</b> is a like expression on the
                                         account code (eg <code
-                                    >70%</code>, etc), or a domain over accounts
+                                        >70%</code>, etc), or a domain over accounts
                                         (eg <code
-                                    >[('code', 'like', '60%')]</code>). </li>
+                                        >[('code', 'like', '60%')]</code>). </li>
                                     <li> The <b
-                                    >journal items domain</b> is an Odoo domain filter on
+                                        >journal items domain</b> is an Odoo domain filter on
                                         journal items. </li>
                                     <li>
                                         <code>balu[]</code> : (<code
-                                    >u</code> for unallocated) is a special expression
+                                        >u</code> for unallocated) is a special expression
                                         that shows the unallocated profit/loss of previous fiscal
                                         years. </li>
                                 </ul>
@@ -216,7 +204,7 @@
                                     Expressions can involve other KPI, sub KPI and
                                     query results by name (eg <code>kpi1 + kpi2</code>,
                                     <code>kpi2.subkpi1</code>, <code
-                                >query1.field1</code>).
+                                    >query1.field1</code>).
                                 </p>
                                 <p>
                                     Additionally following variables are available
@@ -230,15 +218,15 @@
                                         similar to the python builtins. </li>
                                     <li>
                                         <code>datetime</code>, <code
-                                    >datetime</code>, <code
-                                    >dateutil</code> : the python modules. </li>
+                                        >datetime</code>, <code
+                                        >dateutil</code> : the python modules. </li>
                                     <li>
                                         <code>date_from</code>, <code
-                                    >date_to</code> : beginning and end date of the
+                                        >date_to</code> : beginning and end date of the
                                         period. </li>
                                     <li>
                                         <code
-                                    >AccountingNone</code> : a null value that behaves as 0 in
+                                        >AccountingNone</code> : a null value that behaves as 0 in
                                         arithmetic operations. </li>
                                 </ul>
                             </div>
@@ -247,19 +235,19 @@
                                 <ul>
                                     <li>
                                         <code
-                                    >bal[70]</code> : variation of the balance of account 70 over
+                                        >bal[70]</code> : variation of the balance of account 70 over
                                         the period (it is the same as <code
-                                    >balp[70]</code>. </li>
+                                        >balp[70]</code>. </li>
                                     <li>
                                         <code
-                                    >bali[70,60]</code> : initial balance of accounts 70 and 60. </li>
+                                        >bali[70,60]</code> : initial balance of accounts 70 and 60. </li>
                                     <li>
                                         <code
-                                    >bale[1%%]</code> : balance of accounts starting with 1 at
+                                        >bale[1%%]</code> : balance of accounts starting with 1 at
                                         end of period. </li>
                                     <li>
                                         <code
-                                    >crdp[40%]</code> : sum of all credits on accounts starting
+                                        >crdp[40%]</code> : sum of all credits on accounts starting
                                         with 40 during the period. </li>
                                     <li>
                                         <code>
@@ -283,7 +271,7 @@
                                         : balance of move lines related to tax grid 56. </li>
                                     <li>
                                         <code
-                                    >pbale[55%]</code> : sum of all ending balances of accounts
+                                        >pbale[55%]</code> : sum of all ending balances of accounts
                                         starting with 55 whose ending balance is positive. </li>
                                 </ul>
                             </div>
@@ -295,10 +283,9 @@
     </record>
     <record model="ir.actions.act_window" id="mis_report_view_action">
         <field name="name">MIS Report Templates</field>
-        <field name="view_id" ref="mis_report_view_list" />
+        <field name="view_id" ref="mis_report_view_tree" />
         <field name="res_model">mis.report</field>
         <field name="view_mode">list,form</field>
-        <field name="path">mis-report-templates</field>
     </record>
     <menuitem
         id="mis_report_conf_menu"
