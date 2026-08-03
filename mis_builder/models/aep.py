@@ -5,9 +5,9 @@ import logging
 import re
 from collections import defaultdict
 
-from odoo import _, fields
+from odoo import fields
 from odoo.exceptions import UserError
-from odoo.osv import expression
+from odoo.models import expression
 from odoo.tools.float_utils import float_is_zero
 from odoo.tools.safe_eval import datetime, dateutil, safe_eval, time
 
@@ -150,7 +150,7 @@ class AccountingExpressionProcessor:
             self.currency = companies.mapped("currency_id")
             if len(self.currency) > 1:
                 raise UserError(
-                    _(
+                    self.env._(
                         "If currency_id is not provided, "
                         "all companies must have the same currency."
                     )
@@ -252,7 +252,7 @@ class AccountingExpressionProcessor:
             if field == "fld":
                 if mode != self.MODE_VARIATION:
                     raise UserError(
-                        _(
+                        self.env._(
                             "`fld` can only be used with mode `p` (variation) "
                             "in expression %s",
                             expr,
@@ -260,13 +260,13 @@ class AccountingExpressionProcessor:
                     )
                 if not fld_name:
                     raise UserError(
-                        _("`fld` must have a field name in exression %s", expr)
+                        self.env._("`fld` must have a field name in exression %s", expr)
                     )
                 self._custom_fields.add(fld_name)
             else:
                 if fld_name:
                     raise UserError(
-                        _(
+                        self.env._(
                             "`%(field)s` cannot have a field name "
                             "in expression %(expr)s",
                             field=field,
@@ -279,10 +279,20 @@ class AccountingExpressionProcessor:
         for key, acc_domains in self._map_account_ids.items():
             all_account_ids = set()
             for acc_domain in acc_domains:
-                acc_domain_with_company = expression.AND(
-                    [acc_domain, [("company_id", "in", self.companies.ids)]]
-                )
-                account_ids = self._account_model.search(acc_domain_with_company).ids
+                # XXX It is apparently not possible to search accounts by code
+                # across multiple companies at once (due to how _search_code is
+                # implemented for instance), so we have to search each company
+                # separately.
+                account_ids = []
+                for company in self.companies:
+                    acc_domain_with_company = expression.AND(
+                        [acc_domain, [("company_ids", "=", company.id)]]
+                    )
+                    account_ids += (
+                        self._account_model.with_company(company)
+                        .search(acc_domain_with_company)
+                        .ids
+                    )
                 self._account_ids_by_acc_domain[acc_domain].update(account_ids)
                 all_account_ids.update(account_ids)
             self._map_account_ids[key] = list(all_account_ids)
@@ -435,50 +445,34 @@ class AccountingExpressionProcessor:
             # fetch sum of debit/credit, grouped by account_id
             _logger.debug("read_group domain: %s", domain)
             try:
-                # Odoo 17+: use _read_group (lazy removed)
-                aggregate_specs = [
-                    "debit:sum",
-                    "credit:sum",
-                ] + [f"{f}:sum" for f in self._custom_fields]
-                groups = aml_model._read_group(
+                accs = aml_model.with_context(
+                    allowed_company_ids=self.companies.ids
+                )._read_group(
                     domain,
-                    groupby=["account_id", "company_id"],
-                    aggregates=aggregate_specs,
+                    groupby=("account_id", "company_id"),
+                    aggregates=(
+                        (
+                            "debit:sum",
+                            "credit:sum",
+                            *(f"{field}:sum" for field in self._custom_fields),
+                        )
+                    ),
                 )
-                accs = []
-                for group_values in groups:
-                    rec = {}
-                    rec["account_id"] = (
-                        group_values[0].id,
-                        group_values[0].display_name,
-                    )
-                    rec["company_id"] = (
-                        group_values[1].id,
-                        group_values[1].display_name,
-                    )
-                    rec["debit"] = group_values[2] or 0.0
-                    rec["credit"] = group_values[3] or 0.0
-                    for idx, field_name in enumerate(self._custom_fields):
-                        rec[field_name] = group_values[4 + idx]
-                    accs.append(rec)
             except ValueError as e:
                 raise UserError(
-                    _(
+                    self.env._(
                         'Error while querying move line source "%(model_name)s". '
                         "This is likely due to a filter or expression referencing "
                         "a field that does not exist in the model.\n\n"
-                        "The technical error message is: %(exception)s. "
-                    )
-                    % dict(
+                        "The technical error message is: %(exception)s. ",
                         model_name=aml_model._description,
                         exception=e,
                     )
                 ) from e
-
-            for acc in accs:
-                rate, dp = company_rates[acc["company_id"][0]]
-                debit = acc["debit"] or 0.0
-                credit = acc["credit"] or 0.0
+            for account_id, company_id, debit, credit, *custom_fields_sums in accs:
+                rate, dp = company_rates[company_id.id]
+                debit = debit or 0.0
+                credit = credit or 0.0
                 if mode in (self.MODE_INITIAL, self.MODE_UNALLOCATED) and float_is_zero(
                     debit - credit, precision_digits=self.dp
                 ):
@@ -487,11 +481,13 @@ class AccountingExpressionProcessor:
                 # due to branches, it's possible to have multiple groups
                 # with the same account_id, because multiple companies can
                 # use the same account
-                account_data = self._data[key][acc["account_id"][0]]
+                account_data = self._data[key][account_id.id]
                 account_data.add_debit_credit(debit * rate, credit * rate)
-                for field_name in self._custom_fields:
+                for custom_field, custom_field_sum in zip(
+                    self._custom_fields, custom_fields_sums, strict=True
+                ):
                     account_data.add_custom_field(
-                        field_name, acc[field_name] or AccountingNone
+                        custom_field, custom_field_sum or AccountingNone
                     )
         # compute ending balances by summing initial and variation
         for key in ends:

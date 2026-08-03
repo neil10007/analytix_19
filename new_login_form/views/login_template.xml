@@ -32,111 +32,96 @@ body > .o_web_client > a:first-child{
 
 html,body,.anlx_body{
   margin:0!important;padding:0!important;
-  background:#0b1a2b!important;
-  color:#e8ecf1!important;
+  background:#faf9f6!important;
+  color:#171a1c!important;
   font-family:'Inter',sans-serif!important;
   min-height:100vh!important;
   overflow-x:hidden!important;
 }
 
-/* Override any Odoo header/footer leaking into login */
-header,nav.navbar,.o_main_navbar,footer{display:none!important}
+
 
 /* ── Stage ───────────────────────────────────────────────── */
 .anlx_stage{
   min-height:100vh;
   display:flex;flex-direction:row;
   align-items:center;justify-content:center;
-  gap:80px;padding:32px 6vw;position:relative;
-  background:#0b1a2b;
+  gap:70px;padding:32px 6vw;position:relative;
 }
 .anlx_stage::before{
   content:'';position:absolute;inset:0;pointer-events:none;
   background:
-    radial-gradient(800px 600px at 20% 40%,rgba(56,189,148,.06),transparent),
-    radial-gradient(600px 500px at 75% 20%,rgba(56,189,148,.03),transparent),
-    radial-gradient(400px 400px at 85% 80%,rgba(56,120,189,.04),transparent);
-}
-.anlx_stage::after{
-  content:'';position:absolute;inset:0;pointer-events:none;
-  background-image:
-    linear-gradient(rgba(56,189,148,.015) 1px,transparent 1px),
-    linear-gradient(90deg,rgba(56,189,148,.015) 1px,transparent 1px);
-  background-size:60px 60px;
+    radial-gradient(700px 500px at 30% 30%,rgba(15,157,110,.06),transparent),
+    radial-gradient(600px 500px at 80% 80%,rgba(193,125,16,.05),transparent);
 }
 
 /* ── Left ────────────────────────────────────────────────── */
 .anlx_left{
-  max-width:480px;width:100%;
+  max-width:460px;width:100%;
   position:relative;z-index:1;
   display:flex;flex-direction:column;
   align-items:flex-start;text-align:left;
 }
-.anlx_hmark{
-  width:68px;height:auto;display:block;margin-bottom:24px;object-fit:contain;
-  filter:drop-shadow(0 0 12px rgba(56,189,148,.3));
-}
+.anlx_hmark{width:64px;height:auto;display:block;margin-bottom:20px;object-fit:contain}
 .anlx_eyebrow{
   display:inline-flex;align-items:center;gap:8px;
   font-family:'IBM Plex Mono',monospace;font-size:11.5px;
   letter-spacing:.14em;text-transform:uppercase;
-  color:#7b8a9a;margin-bottom:22px;
+  color:#6b7178;margin-bottom:22px;
 }
 .anlx_dot{
   width:6px;height:6px;border-radius:50%;
-  background:#38bd94;display:inline-block;
-  box-shadow:0 0 0 3px rgba(56,189,148,.2),0 0 8px rgba(56,189,148,.4);
+  background:#0f9d6e;display:inline-block;
+  box-shadow:0 0 0 3px rgba(15,157,110,.15);
   animation:anlxPulse 2s ease-in-out infinite;
 }
 @keyframes anlxPulse{0%,100%{opacity:1}50%{opacity:.4}}
 
 .anlx_h1{
   font-family:'Space Grotesk',sans-serif;
-  font-weight:700;font-size:clamp(34px,3.6vw,48px);
+  font-weight:700;font-size:clamp(30px,3.4vw,42px);
   line-height:1.08;letter-spacing:-.02em;
-  margin:0 0 18px;color:#ffffff;
+  margin:0 0 14px;color:#171a1c;
 }
-.anlx_accent{color:#5ee8ba}
+.anlx_accent{color:#0f9d6e}
 
 .anlx_lead{
-  color:#7b8a9a;font-size:14.5px;line-height:1.65;
-  max-width:420px;margin:0 0 32px;
+  color:#6b7178;font-size:14.5px;line-height:1.6;
+  max-width:420px;margin:0 0 28px;
 }
 
 /* Chart */
-.anlx_cc{display:flex;flex-direction:column;align-items:flex-start;gap:14px;width:100%;max-width:420px}
+.anlx_cc{display:flex;flex-direction:column;align-items:flex-start;gap:12px;width:100%;max-width:400px}
 .anlx_clr{display:flex;align-items:baseline;justify-content:space-between;width:100%}
-.anlx_cl{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#7b8a9a}
-.anlx_cv{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:600;color:#5ee8ba}
-.anlx_cpath{fill:none;stroke:#38bd94;stroke-width:2.2;stroke-linecap:round;stroke-dasharray:900;stroke-dashoffset:900;animation:anlxDraw 2.1s cubic-bezier(.4,0,.2,1) forwards .3s;filter:drop-shadow(0 0 4px rgba(56,189,148,.3))}
+.anlx_cl{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#9a9fa5}
+.anlx_cv{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:600;color:#0f9d6e}
+.anlx_cpath{fill:none;stroke:#0f9d6e;stroke-width:2.2;stroke-linecap:round;stroke-dasharray:900;stroke-dashoffset:900;animation:anlxDraw 2.1s cubic-bezier(.4,0,.2,1) forwards .3s}
 @keyframes anlxDraw{to{stroke-dashoffset:0}}
 .anlx_cfill{opacity:0;animation:anlxFF 1.2s ease forwards 1.7s}
 @keyframes anlxFF{to{opacity:1}}
 .anlx_cn{opacity:0;animation:anlxPN .4s ease forwards}
 @keyframes anlxPN{from{opacity:0;transform:scale(.3)}to{opacity:1;transform:scale(1)}}
 .anlx_cne{opacity:0;animation:anlxPN .4s ease forwards,anlxGlow 1.8s ease-in-out infinite 2.4s}
-@keyframes anlxGlow{0%,100%{filter:drop-shadow(0 0 0px rgba(56,189,148,0))}50%{filter:drop-shadow(0 0 8px rgba(56,189,148,1))}}
+@keyframes anlxGlow{0%,100%{filter:drop-shadow(0 0 0px rgba(15,157,110,0))}50%{filter:drop-shadow(0 0 6px rgba(15,157,110,.9))}}
 
 /* ── Right card ──────────────────────────────────────────── */
 .anlx_card{
-  width:420px;flex-shrink:0;
-  background:rgba(16,32,50,.85);
-  border:1px solid rgba(56,189,148,.12);
-  border-radius:16px;padding:38px 36px 30px;
+  width:400px;flex-shrink:0;
+  background:#ffffff;border:1px solid #e4e2db;
+  border-radius:14px;padding:34px 32px 26px;
   position:relative;z-index:1;
-  box-shadow:0 25px 60px -20px rgba(0,0,0,.5),0 0 40px -10px rgba(56,189,148,.06),inset 0 1px 0 rgba(255,255,255,.04);
-  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  box-shadow:0 20px 50px -18px rgba(23,26,28,.14);
 }
 .anlx_brow{display:flex;align-items:center;gap:10px;margin-bottom:4px}
-.anlx_bmark{width:34px;height:auto;flex-shrink:0;filter:drop-shadow(0 0 6px rgba(56,189,148,.2))}
+.anlx_bmark{width:32px;height:auto;flex-shrink:0}
 .anlx_bname{
   font-family:'Space Grotesk',sans-serif;
-  font-size:22px;font-weight:700;
-  letter-spacing:.01em;margin:0;color:#ffffff;
+  font-size:21px;font-weight:700;
+  letter-spacing:.01em;margin:0;color:#163456;
 }
 .anlx_bx{color:#e0453b}
-.anlx_sub{color:#7b8a9a;font-size:13.5px;margin-bottom:28px;font-family:'Inter',sans-serif}
-.anlx_sub b{color:#38bd94;font-weight:500}
+.anlx_sub{color:#6b7178;font-size:13.5px;margin-bottom:28px;font-family:'Inter',sans-serif}
+.anlx_sub b{color:#0f9d6e;font-weight:500}
 
 /* Strip Odoo card chrome */
 .anlx_fw .card,.anlx_fw .card-body{border:none!important;background:transparent!important;box-shadow:none!important;padding:0!important;margin:0!important}
@@ -146,112 +131,70 @@ header,nav.navbar,.o_main_navbar,footer{display:none!important}
 .anlx_fw label.form-label,.anlx_fw label.col-form-label{
   font-family:'IBM Plex Mono',monospace!important;
   font-size:10.5px!important;letter-spacing:.1em!important;
-  text-transform:uppercase!important;color:#7b8a9a!important;
+  text-transform:uppercase!important;color:#9a9fa5!important;
   margin-bottom:8px!important;display:block!important;
 }
 
-/* Inputs - ultra-high specificity for dark theme */
-.anlx_fw .form-control,
-.anlx_fw input.form-control,
-.anlx_fw input[type="text"].form-control,
-.anlx_fw input[type="email"].form-control,
-.anlx_fw input[type="password"].form-control,
-body .anlx_fw .form-control,
-body .anlx_fw input,
-.anlx_card .anlx_fw .form-control,
-.anlx_card .anlx_fw input{
-  width:100%!important;
-  background:rgba(11,26,43,.6)!important;
-  background-color:rgba(11,26,43,.6)!important;
-  border:1px solid rgba(255,255,255,.12)!important;border-radius:10px!important;
-  padding:14px 16px!important;color:#ffffff!important;
+/* Inputs */
+.anlx_fw .form-control{
+  width:100%!important;background:#f6f5f1!important;
+  border:1px solid #e4e2db!important;border-radius:8px!important;
+  padding:12px 14px!important;color:#171a1c!important;
   font-size:14px!important;font-family:'Inter',sans-serif!important;
   outline:none!important;box-shadow:none!important;
-  transition:border-color .2s ease,box-shadow .2s ease,background .2s ease!important;
-  -webkit-appearance:none!important;
+  transition:border-color .15s ease,box-shadow .15s ease!important;
 }
-.anlx_fw .form-control::placeholder,.anlx_fw input::placeholder{color:#556171!important}
-.anlx_fw .form-control:focus,.anlx_fw input:focus{
-  border-color:#38bd94!important;
-  box-shadow:0 0 0 3px rgba(56,189,148,.12),0 0 12px rgba(56,189,148,.08)!important;
-  background:rgba(11,26,43,.8)!important;
-  background-color:rgba(11,26,43,.8)!important;
-}
-/* Override browser autofill white background */
-.anlx_fw input:-webkit-autofill,
-.anlx_fw input:-webkit-autofill:hover,
-.anlx_fw input:-webkit-autofill:focus,
-.anlx_fw input:-webkit-autofill:active,
-body .anlx_fw input:-webkit-autofill,
-.anlx_card .anlx_fw input:-webkit-autofill{
-  -webkit-box-shadow:0 0 0 1000px #0d1e30 inset!important;
-  box-shadow:0 0 0 1000px #0d1e30 inset!important;
-  -webkit-text-fill-color:#ffffff!important;
-  border:1px solid rgba(255,255,255,.12)!important;
-  border-radius:10px!important;
-  transition:background-color 5000s ease-in-out 0s!important;
-  caret-color:#ffffff!important;
-  color:#ffffff!important;
-  font-size:14px!important;
+.anlx_fw .form-control::placeholder{color:#9a9fa5!important}
+.anlx_fw .form-control:focus{
+  border-color:#bfe9d9!important;
+  box-shadow:0 0 0 3px rgba(15,157,110,.14)!important;
 }
 
 /* Password group */
-.anlx_fw .input-group{border-radius:10px!important;overflow:hidden!important}
-.anlx_fw .input-group .form-control{border-right:none!important;border-radius:10px 0 0 10px!important}
+.anlx_fw .input-group{border-radius:8px!important;overflow:hidden!important}
+.anlx_fw .input-group .form-control{border-right:none!important;border-radius:8px 0 0 8px!important}
 .anlx_fw .input-group .o_show_password,.anlx_fw .input-group .btn{
-  border:1px solid rgba(255,255,255,.12)!important;border-left:none!important;
-  border-radius:0 10px 10px 0!important;background:rgba(11,26,43,.6)!important;
-  color:#7b8a9a!important;padding:0 14px!important;
+  border:1px solid #e4e2db!important;border-left:none!important;
+  border-radius:0 8px 8px 0!important;background:#f6f5f1!important;
+  color:#6b7178!important;padding:0 13px!important;
 }
 .anlx_fw .input-group:focus-within .form-control,
 .anlx_fw .input-group:focus-within .o_show_password,
-.anlx_fw .input-group:focus-within .btn{border-color:#38bd94!important}
+.anlx_fw .input-group:focus-within .btn{border-color:#bfe9d9!important}
 
 /* Remember/Forgot */
 .anlx_fw .d-flex.justify-content-between{
   display:flex!important;align-items:center!important;
   justify-content:space-between!important;margin:12px 0!important;
 }
-.anlx_fw .form-check-label{font-size:13px!important;color:#7b8a9a!important}
+.anlx_fw .form-check-label{font-size:13px!important;color:#374151!important}
 
 /* Links */
 .anlx_fw a,.anlx_fw a.btn-link{
-  color:#38bd94!important;font-size:12px!important;
+  color:#0f9d6e!important;font-size:12px!important;
   font-weight:500!important;text-decoration:none!important;
 }
-.anlx_fw a:hover{text-decoration:underline!important;color:#5ee8ba!important}
+.anlx_fw a:hover{text-decoration:underline!important}
 
 /* Submit button */
 .anlx_fw button[type="submit"],.anlx_fw button.btn-primary,
 .anlx_fw .oe_login_buttons button.btn-primary{
-  width:100%!important;margin-top:12px!important;
-  background:linear-gradient(135deg,#38bd94,#5ee8ba)!important;
-  color:#06140f!important;
-  border:none!important;border-radius:10px!important;
-  padding:14px 16px!important;font-size:15px!important;
+  width:100%!important;margin-top:8px!important;
+  background:#0f9d6e!important;color:#06140f!important;
+  border:none!important;border-radius:8px!important;
+  padding:13px 16px!important;font-size:14.5px!important;
   font-weight:600!important;font-family:'Inter',sans-serif!important;
   cursor:pointer!important;letter-spacing:.3px!important;
-  box-shadow:0 4px 16px -4px rgba(56,189,148,.35)!important;
-  transition:transform .12s ease,box-shadow .2s ease,background .2s ease!important;
+  transition:transform .12s ease,box-shadow .15s ease,background .15s ease!important;
 }
 .anlx_fw button[type="submit"]:hover,.anlx_fw button.btn-primary:hover{
-  background:linear-gradient(135deg,#45c99e,#6bf0c8)!important;
-  box-shadow:0 8px 24px -6px rgba(56,189,148,.5)!important;
-  transform:translateY(-1px)!important;
+  background:#3fe3a6!important;
+  box-shadow:0 8px 20px -6px rgba(15,157,110,.45)!important;
 }
 .anlx_fw button[type="submit"]:active{transform:scale(.98)!important}
 
-/* Hide "Log in as superuser" link */
-.anlx_fw .oe_login_buttons a.btn,
-.anlx_fw .oe_login_buttons .btn-link,
-.anlx_fw .oe_login_buttons a[href*="superuser"],
-.anlx_fw a[href*="superuser"]{display:none!important}
-
 /* Alerts */
-.anlx_fw .alert{
-  border-radius:10px!important;font-size:13px!important;padding:10px 14px!important;margin-bottom:14px!important;
-  background:rgba(56,189,148,.1)!important;border:1px solid rgba(56,189,148,.2)!important;color:#e8ecf1!important;
-}
+.anlx_fw .alert{border-radius:8px!important;font-size:13px!important;padding:10px 14px!important;margin-bottom:14px!important}
 
 /* Hide Odoo chrome */
 .anlx_fw input[name="db"],.anlx_fw select[name="db"]{display:none!important}
@@ -260,17 +203,17 @@ body .anlx_fw input:-webkit-autofill,
 .o_caps_lock_warning_text{display:none!important}
 .o_login_auth,.o_login_auth em,.o_login_separator{display:none!important}
 button.o_user_switch_btn,.o_user_switch_btn,.o_user_switch{display:none!important}
-input#login,input[name="login"]{border-radius:10px!important;width:100%!important}
+input#login,input[name="login"]{border-radius:8px!important;width:100%!important}
 
 /* Divider + footer */
-.anlx_div{border:none!important;border-top:1px solid rgba(255,255,255,.06)!important;margin:28px 0 18px!important}
-.anlx_foot{font-size:11.5px!important;color:#556171!important;text-align:center!important;font-family:'Inter',sans-serif!important}
+.anlx_div{border:none!important;border-top:1px solid #e4e2db!important;margin:24px 0 16px!important}
+.anlx_foot{font-size:11.5px!important;color:#9a9fa5!important;text-align:center!important;font-family:'Inter',sans-serif!important}
 
 /* Responsive */
 @media(max-width:880px){
   .anlx_stage{flex-direction:column!important;gap:36px!important;padding:40px 24px 60px!important}
   .anlx_left{max-width:100%!important}
-  .anlx_card{width:100%!important;max-width:420px!important}
+  .anlx_card{width:100%!important;max-width:400px!important}
 }
                 </style>
 
@@ -290,22 +233,13 @@ input#login,input[name="login"]{border-radius:10px!important;width:100%!importan
       if(a.href.includes('/web/signup')||a.href.includes('/odoo/signup')||a.href.includes('passkey')||a.textContent.toLowerCase().includes('passkey'))
         a.style.cssText+=';display:none!important';
     });
-    // Hide "Log in as superuser" button
-    f.querySelectorAll('a.btn').forEach(function(a){
-      var t=a.textContent.trim().toLowerCase();
-      if(t.includes('superuser')) a.style.cssText+=';display:none!important';
-    });
     // Separators / user switch
     f.querySelectorAll('.o_login_separator').forEach(function(e){e.style.cssText+=';display:none!important'});
     document.querySelectorAll('.o_user_switch_btn,.o_user_switch').forEach(function(e){e.style.cssText+=';display:none!important'});
     document.querySelectorAll('button').forEach(function(b){if(b.textContent.trim().toLowerCase().includes('choose a user'))b.style.cssText+=';display:none!important'});
     // Email full-width
     var lg=document.querySelector('input#login,input[name="login"]');
-    if(lg){var ig=lg.closest('.input-group');if(ig){ig.style.cssText+=';display:block!important';ig.classList.remove('input-group')}lg.style.cssText+=';border-radius:10px!important;width:100%!important'}
-    // Force dark styling on all visible inputs (fight autofill)
-    f.querySelectorAll('input.form-control').forEach(function(inp){
-      inp.style.cssText+=';background:rgba(11,26,43,.6)!important;background-color:rgba(11,26,43,.6)!important;color:#fff!important;border:1px solid rgba(255,255,255,.12)!important;border-radius:10px!important;-webkit-text-fill-color:#fff!important;';
-    });
+    if(lg){var ig=lg.closest('.input-group');if(ig){ig.style.cssText+=';display:block!important';ig.classList.remove('input-group')}lg.style.cssText+=';border-radius:8px!important;width:100%!important'}
   }
 
   /* Remove "Skip to Content" link by text */
@@ -319,39 +253,10 @@ input#login,input[name="login"]{border-radius:10px!important;width:100%!importan
     });
   }
 
-  /* Force dark on autofilled inputs */
-  function forceDarkInputs(){
-    // Inject dynamic style for autofill if not already injected
-    if(!document.getElementById('anlx_autofill_fix')){
-      var s=document.createElement('style');
-      s.id='anlx_autofill_fix';
-      s.textContent='input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus,input:-webkit-autofill:active{-webkit-box-shadow:0 0 0 1000px #0d1e30 inset!important;box-shadow:0 0 0 1000px #0d1e30 inset!important;-webkit-text-fill-color:#fff!important;border:1px solid rgba(255,255,255,.12)!important;border-radius:10px!important;transition:background-color 5000s ease-in-out 0s!important;caret-color:#fff!important;color:#fff!important;font-size:14px!important;padding:14px 16px!important;}';
-      document.head.appendChild(s);
-    }
-    // Clone-replace inputs to break autofill state
-    var inputs=document.querySelectorAll('.anlx_fw input[name="login"],.anlx_fw input[name="password"]');
-    inputs.forEach(function(inp){
-      var cs=window.getComputedStyle(inp);
-      var bg=cs.backgroundColor;
-      // Detect autofill blue (232,240,254) or any light bg
-      if(bg.indexOf('232')!==-1||bg.indexOf('255')!==-1||bg.indexOf('246')!==-1||bg.indexOf('245')!==-1||bg==='rgb(255, 255, 255)'){
-        var val=inp.value;
-        var clone=inp.cloneNode(true);
-        clone.setAttribute('autocomplete','off');
-        clone.style.cssText='background:rgba(11,26,43,.6)!important;background-color:rgba(11,26,43,.6)!important;color:#fff!important;-webkit-text-fill-color:#fff!important;border:1px solid rgba(255,255,255,.12)!important;border-radius:10px!important;padding:14px 16px!important;font-size:14px!important;width:100%!important;outline:none!important;box-shadow:none!important;font-family:Inter,sans-serif!important;-webkit-appearance:none!important;';
-        inp.parentNode.replaceChild(clone,inp);
-        clone.value=val;
-      }
-    });
-  }
-
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){clean();removeSkip();forceDarkInputs();});
-  else{clean();removeSkip();forceDarkInputs();}
-  setTimeout(function(){clean();removeSkip();forceDarkInputs();},200);
-  setTimeout(function(){clean();removeSkip();forceDarkInputs();},500);
-  setTimeout(function(){clean();removeSkip();forceDarkInputs();},1000);
-  setTimeout(function(){forceDarkInputs();},2000);
-  setTimeout(function(){forceDarkInputs();},3000);
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){clean();removeSkip();});
+  else{clean();removeSkip();}
+  setTimeout(function(){clean();removeSkip();},400);
+  setTimeout(function(){clean();removeSkip();},1000);
 
 
 })();
@@ -385,11 +290,11 @@ input#login,input[name="login"]{border-radius:10px!important;width:100%!importan
                                 <span class="anlx_cl">Revenue · trailing 6mo</span>
                                 <span class="anlx_cv">▲ 214%</span>
                             </div>
-                            <svg viewBox="0 0 440 150" style="display:block;overflow:visible;width:100%;height:auto;max-width:420px;">
+                            <svg viewBox="0 0 440 150" style="display:block;overflow:visible;width:100%;height:auto;max-width:400px;">
                                 <defs>
                                     <linearGradient id="anlxFG" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="0%"   stop-color="#38bd94" stop-opacity="0.2"/>
-                                        <stop offset="100%" stop-color="#38bd94" stop-opacity="0"/>
+                                        <stop offset="0%"   stop-color="#0f9d6e" stop-opacity="0.16"/>
+                                        <stop offset="100%" stop-color="#0f9d6e" stop-opacity="0"/>
                                     </linearGradient>
                                 </defs>
                                 <path class="anlx_cfill"
@@ -397,10 +302,10 @@ input#login,input[name="login"]{border-radius:10px!important;width:100%!importan
                                     fill="url(#anlxFG)"/>
                                 <path class="anlx_cpath"
                                     d="M0,120 C40,124 70,110 100,100 C140,88 160,60 200,50 C240,40 260,60 300,44 C340,28 370,18 440,10"/>
-                                <circle class="anlx_cn" style="animation-delay:.5s"  cx="100" cy="100" r="4" fill="#0b1a2b" stroke="#38bd94" stroke-width="2"/>
-                                <circle class="anlx_cn" style="animation-delay:1.1s" cx="200" cy="50"  r="4" fill="#0b1a2b" stroke="#38bd94" stroke-width="2"/>
-                                <circle class="anlx_cn" style="animation-delay:1.6s" cx="300" cy="44"  r="4" fill="#0b1a2b" stroke="#38bd94" stroke-width="2"/>
-                                <circle class="anlx_cne" style="animation-delay:2.1s" cx="440" cy="10" r="5.5" fill="#38bd94"/>
+                                <circle class="anlx_cn" style="animation-delay:.5s"  cx="100" cy="100" r="4" fill="#faf9f6" stroke="#0f9d6e" stroke-width="2"/>
+                                <circle class="anlx_cn" style="animation-delay:1.1s" cx="200" cy="50"  r="4" fill="#faf9f6" stroke="#0f9d6e" stroke-width="2"/>
+                                <circle class="anlx_cn" style="animation-delay:1.6s" cx="300" cy="44"  r="4" fill="#faf9f6" stroke="#0f9d6e" stroke-width="2"/>
+                                <circle class="anlx_cne" style="animation-delay:2.1s" cx="440" cy="10" r="5.5" fill="#0f9d6e"/>
                             </svg>
                         </div>
                     </div>

@@ -26,6 +26,10 @@
 
 /* style for the control panel (search box and buttons) */
 
+.oe_mis_builder_report_wide_sheet {
+    max-width: 100% !important;
+}
+
 .oe_mis_builder_cp {
     display: flex;
     flex-direction: row;
@@ -64,6 +68,11 @@
             flex-grow: 1;
             justify-content: flex-end;
         }
+    }
+
+    .oe_mis_builder_cp_right_top_right {
+        display: flex;
+        flex-direction: row;
     }
 }
 

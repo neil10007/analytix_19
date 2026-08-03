@@ -3,12 +3,7 @@
 
 import traceback
 
-from odoo.tools.safe_eval import (
-    _BUILTINS,
-    _SAFE_OPCODES,
-    assert_valid_codeobj,
-    compile_codeobj,
-)
+from odoo.tools.safe_eval import _BUILTINS, _SAFE_OPCODES, test_expr
 
 from .data_error import DataError, NameDataError
 
@@ -24,12 +19,10 @@ def mis_safe_eval(expr, locals_dict):
     present in local_dict.
     """
     try:
-        c = compile_codeobj(expr, mode="eval")
-        assert_valid_codeobj(_SAFE_OPCODES, c, expr)
+        c = test_expr(expr, _SAFE_OPCODES, mode="eval")
         globals_dict = {"__builtins__": _BUILTINS}
         # pylint: disable=eval-used,eval-referenced
         val = eval(c, globals_dict, locals_dict)
-
     except NameError:
         val = NameDataError("#NAME", traceback.format_exc())
     except ZeroDivisionError:

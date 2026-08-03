@@ -89,31 +89,31 @@ async function callKw(model, method, args = [], kwargs = {}) {
 
 const COLOR_PALETTES = {
     default: {
-        primary: "#0f1729",
-        primaryHover: "#1b283d",
+        primary: "#875A7B",
+        primaryHover: "#6d4a64",
         primaryText: "#ffffff",
-        accent: "#00d4c8",
-        accentSoft: "rgba(0,212,200,0.16)",
-        tabActive: "#00d4c8",
-        tabActiveText: "#000000",
+        accent: "#875A7B",
+        accentSoft: "rgba(135,90,123,0.12)",
+        tabActive: "#151a1f",
+        tabActiveText: "#ffffff",
     },
     blue: {
         primary: "#1a6fd4",
         primaryHover: "#155bb0",
         primaryText: "#ffffff",
         accent: "#1a6fd4",
-        accentSoft: "rgba(26,111,212,0.16)",
-        tabActive: "#00d4c8",
-        tabActiveText: "#000000",
+        accentSoft: "rgba(26,111,212,0.12)",
+        tabActive: "#1a6fd4",
+        tabActiveText: "#ffffff",
     },
     red: {
-        primary: "#0f1729",
-        primaryHover: "#1b283d",
+        primary: "#d42b1a",
+        primaryHover: "#b02315",
         primaryText: "#ffffff",
-        accent: "#00d4c8",
-        accentSoft: "rgba(0,212,200,0.16)",
-        tabActive: "#00d4c8",
-        tabActiveText: "#000000",
+        accent: "#d42b1a",
+        accentSoft: "rgba(212,43,26,0.12)",
+        tabActive: "#d42b1a",
+        tabActiveText: "#ffffff",
     },
 };
 
@@ -207,24 +207,15 @@ a:not(.btn):not(.nav-link):not(.dropdown-item):not(.kr_sp_rail_btn):hover {
 
 /* -- Odoo horizontal menu active tab (kraken topbar) ------- */
 .kr_sp_tabs .is-active,
-.kr_sp_tabs .is-active:hover,
-.o_main_navbar .o_menu_sections .o_nav_entry.active,
-.o_main_navbar .o_menu_sections .dropdown-toggle.active {
+.kr_sp_tabs .is-active:hover {
     background: ${tabBg} !important;
     color: ${tabTxt} !important;
-    box-shadow: 0 4px 14px rgba(0, 212, 200, 0.35) !important;
+    box-shadow: 0 3px 8px ${soft} !important;
 }
 
 /* -- Active rail buttons ----------------------------------- */
-.kr_sp_rail_group_top .kr_sp_rail_btn.is-active:not(.kr_sp_color_swatch),
-.kr_sp_rail_group button.is-active:not(.kr_sp_color_swatch) {
+.kr_sp_rail_group_top .kr_sp_rail_btn.is-active:not(.kr_sp_color_swatch) {
     background: ${tabBg} !important;
-    color: ${tabTxt} !important;
-    box-shadow: 0 4px 14px rgba(0, 212, 200, 0.35) !important;
-}
-.kr_sp_tabs .is-active .fa,
-.kr_sp_rail_group_top .kr_sp_rail_btn.is-active .fa,
-.kr_sp_rail_group button.is-active .fa {
     color: ${tabTxt} !important;
 }
 
@@ -348,6 +339,10 @@ select:focus {
 .o_search_panel_category_value.active > header,
 .o_search_panel_filter_value .o_search_panel_label_title:has(+ .o_search_panel_filter_value_count) {
     color: ${p} !important;
+}
+.o_searchview_input_container .o_facet_values {
+    background-color: ${p} !important;
+    color: ${pt} !important;
 }
 
 /* -- Odoo form view "Edit" mode active fields ------------- */
@@ -2016,10 +2011,13 @@ function renderGlobalShell() {
             <button type="button" class="kr_sp_rail_btn" data-kr-action="theme-dark" title="Dark mode"><i class="fa fa-moon-o"></i></button>
         </div>
         <div class="kr_sp_rail_group kr_sp_rail_group_main">
-            <button type="button" class="kr_sp_rail_btn" data-kr-action="workspace-modal" title="All Apps"><i class="fa fa-th-large"></i></button>
-            <div class="kr_sp_rail_apps_scroll">
-                <div id="kr_sp_rail_apps" class="kr_sp_rail_apps"></div>
-            </div>
+            <button type="button" class="kr_sp_rail_btn is-active" data-kr-action="workspace-modal" title="Workspace"><i class="fa fa-th-large"></i></button>
+            <div id="kr_sp_rail_apps" class="kr_sp_rail_apps"></div>
+        </div>
+        <div class="kr_sp_rail_group kr_sp_rail_group_bottom">
+            <button type="button" class="kr_sp_rail_btn" data-kr-action="open-apps" title="Apps"><i class="fa fa-th-large"></i></button>
+            <button type="button" class="kr_sp_rail_btn" data-kr-action="open-settings" title="Settings"><i class="fa fa-cog"></i></button>
+            <button type="button" class="kr_sp_rail_btn" data-kr-action="go-home" title="Logout"><i class="fa fa-sign-out"></i></button>
         </div>
         <div id="kr_sp_workspace_modal" class="kr_sp_workspace_modal" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Apps">
             <div class="kr_sp_workspace_inner">
@@ -2140,8 +2138,8 @@ function isDashboardMenuLabel(name) {
 }
 
 function isReservedRailMenuLabel(name) {
-    // No longer filtering out any labels — all apps including Apps & Settings are shown
-    return false;
+    const canonical = normalizeMenuLabel(name).toLowerCase().replace(/[^a-z0-9]/g, "");
+    return canonical === "apps" || canonical === "settings";
 }
 
 function getFavoriteMenuIds() {
@@ -2446,10 +2444,15 @@ function closeWorkspaceModal() {
 }
 
 function getSidebarMenus(menus) {
-    // Show ALL installed apps in the scrollable sidebar — no limit, no favorites-only filter
-    const dashboardMenu = menus.find((menu) => isDashboardMenuLabel(menu.name)) || null;
-    const otherMenus = menus.filter((menu) => !isDashboardMenuLabel(menu.name));
-    return dashboardMenu ? [dashboardMenu, ...otherMenus] : otherMenus;
+    const visibleMenus = menus.filter((menu) => !isReservedRailMenuLabel(menu.name));
+    const dashboardMenu = visibleMenus.find((menu) => isDashboardMenuLabel(menu.name)) || null;
+    const favoriteMenuIds = getFavoriteMenuIds();
+    const favoriteMenus = favoriteMenuIds
+        .map((favoriteId) => visibleMenus.find((menu) => String(menu.id) === favoriteId))
+        .filter(Boolean)
+        .filter((menu) => !isDashboardMenuLabel(menu.name));
+    return (dashboardMenu ? [dashboardMenu, ...favoriteMenus] : favoriteMenus)
+        .slice(0, SIDEBAR_APP_LIMIT);
 }
 
 async function buildSidebarApps({ force = false } = {}) {
@@ -2483,18 +2486,13 @@ async function buildSidebarApps({ force = false } = {}) {
             button.dataset.krMenuId = String(menu.id);
             button.dataset.krActionId = menu.actionID ? String(menu.actionID) : "";
             const iconSrc = menuIconSrc(menu);
-            let iconHtml;
             if (isDashboardMenuLabel(menu.name)) {
-                iconHtml = '<i class="fa fa-th-large"></i>';
+                button.innerHTML = '<i class="fa fa-dashboard"></i>';
             } else if (iconSrc) {
-                iconHtml = `<img src="${iconSrc}" alt="" />`;
+                button.innerHTML = `<span class="kr_sp_app_icon"><img src="${iconSrc}" alt=""/></span>`;
             } else {
-                iconHtml = `<span class="kr_sp_app_initial">${menuInitial(label)}</span>`;
+                button.innerHTML = `<span class="kr_sp_app_initial">${menuInitial(label)}</span>`;
             }
-            button.innerHTML = `
-                <span class="kr_sp_rail_icon_wrap">${iconHtml}</span>
-                <span class="kr_sp_rail_label">${label}</span>
-            `;
             pendingContainers.forEach((container) => {
                 container.appendChild(button.cloneNode(true));
             });

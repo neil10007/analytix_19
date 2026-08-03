@@ -1,6 +1,6 @@
 .o_field_statusbar > .o_statusbar_status {
-    --o-statusbar-background-active: #00d4c8;
-    --o-statusbar-background-hover: rgba(0, 212, 200, 0.14);
+    --o-statusbar-background-active: #ff8744;
+    --o-statusbar-background-hover: rgba(255, 135, 68, 0.14);
     --o-statusbar-border: transparent;
     --o-statusbar-border-active: transparent;
 }
@@ -17,14 +17,14 @@
 
 .o_field_statusbar > .o_statusbar_status .o_arrow_button:hover,
 .o_field_statusbar > .o_statusbar_status .o_arrow_button:hover::before {
-    background-color: rgba(0, 212, 200, 0.16);
+    background-color: rgba(255, 135, 68, 0.16);
     color: #ffffff;
 }
 
 .o_field_statusbar > .o_statusbar_status .o_arrow_button.o_arrow_button_current,
 .o_field_statusbar > .o_statusbar_status .o_arrow_button.o_arrow_button_current::before {
-    background-color: #00d4c8;
-    color: #080d18;
+    background-color: #ff8744;
+    color: #111827;
 }
 
 .o_field_statusbar > .o_statusbar_status .o_arrow_button:disabled:not(.o_arrow_button_current) {

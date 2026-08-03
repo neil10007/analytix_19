@@ -9,9 +9,9 @@
             name="implied_ids"
             eval="[Command.link(ref('mis_builder.group_read_annotation'))]"
         />
-        <!--
-            NOTE: The 'users' field was removed from res.groups in Odoo 19.
-            Group membership is now managed exclusively through res.users.
-        -->
+        <field
+            name="users"
+            eval="[(4, ref('base.user_root')), (4, ref('base.user_admin'))]"
+        />
     </record>
 </odoo>

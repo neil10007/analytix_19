@@ -1,25 +1,20 @@
-/** @odoo-module **/
-
-import {Component, onWillStart, useState, useSubEnv} from "@odoo/owl";
+import {Component, onMounted, onWillStart, useState, useSubEnv} from "@odoo/owl";
 import {useBus, useService} from "@web/core/utils/hooks";
-
-import {AnnotationDialog} from "../annotation_dialog/annotation_dialog.esm";
-
 import {DateTimeInput} from "@web/core/datetime/datetime_input";
 import {SearchBar} from "@web/search/search_bar/search_bar";
 import {SearchModel} from "@web/search/search_model";
-import {_t} from "@web/core/l10n/translation";
 import {parseDate} from "@web/core/l10n/dates";
 import {registry} from "@web/core/registry";
+import {AnnotationDialog} from "../annotation_dialog/annotation_dialog.esm";
+import {_t} from "@web/core/l10n/translation";
 
 export class MisReportWidget extends Component {
     setup() {
         super.setup();
         this.orm = useService("orm");
-        this.user = useService("user");
         this.action = useService("action");
         this.view = useService("view");
-        this.dialogService = useService("dialog");
+        this.dialog = useService("dialog");
         this.JSON = JSON;
         this.state = useState({
             mis_report_data: {header: [], body: [], notes: {}},
@@ -28,9 +23,9 @@ export class MisReportWidget extends Component {
             can_read_annotation: false,
         });
         this.searchModel = new SearchModel(this.env, {
-            user: this.user,
             orm: this.orm,
             view: this.view,
+            dialog: this.dialog,
         });
         useSubEnv({searchModel: this.searchModel});
         useBus(this.env.searchModel, "update", async () => {
@@ -38,6 +33,8 @@ export class MisReportWidget extends Component {
             this.refresh();
         });
         onWillStart(this.willStart);
+
+        onMounted(this._onMounted);
     }
 
     // Lifecycle
@@ -52,18 +49,20 @@ export class MisReportWidget extends Component {
                 "widget_search_view_id",
                 "pivot_date",
                 "widget_show_pivot_date",
+                "wide_display_by_default",
                 "user_can_read_annotation",
                 "user_can_edit_annotation",
             ],
             {context: this.context}
         );
+
         this.source_aml_model_name = result.source_aml_model_name;
         this.widget_show_filters = result.widget_show_filters;
         this.widget_show_settings_button = result.widget_show_settings_button;
-        this.widget_search_view_id =
-            result.widget_search_view_id && result.widget_search_view_id[0];
+        this.widget_search_view_id = result.widget_search_view_id?.[0];
         this.state.pivot_date = parseDate(result.pivot_date);
         this.widget_show_pivot_date = result.widget_show_pivot_date;
+
         if (this.showSearchBar) {
             // Initialize the search model
             await this.searchModel.load({
@@ -72,10 +71,16 @@ export class MisReportWidget extends Component {
             });
         }
 
+        this.wide_display = result.wide_display_by_default;
+
         // Compute the report
         this.refresh();
         this.state.can_edit_annotation = result.user_can_edit_annotation;
         this.state.can_read_annotation = result.user_can_read_annotation;
+    }
+
+    async _onMounted() {
+        this.resize_sheet();
     }
 
     get showSearchBar() {
@@ -107,32 +112,25 @@ export class MisReportWidget extends Component {
          * of Odoo dashboards that are not designed to contain forms but
          * rather tree views or charts.
          */
-        var context = this.props.record.context;
+        const context = this.props.record.context;
         if (context.active_model === "mis.report.instance") {
             return context.active_id;
         }
     }
 
     get context() {
-        // In Odoo 19 / OWL 3, get context from props.record context
-        var ctx = {...(this.props.record && this.props.record.context || {})};
-        if (this.showSearchBar) {
-            ctx = {
-                ...ctx,
+        return {
+            ...super.context,
+            ...(this.showSearchBar && {
                 mis_analytic_domain: this.searchModel.searchDomain,
-            };
-        }
-        if (this.showPivotDate && this.state.pivot_date) {
-            ctx = {
-                ...ctx,
-                mis_pivot_date: this.state.pivot_date,
-            };
-        }
-        return ctx;
+            }),
+            ...(this.showPivotDate &&
+                this.state.pivot_date && {mis_pivot_date: this.state.pivot_date}),
+        };
     }
 
     async drilldown(event) {
-        const drilldown = $(event.target).data("drilldown");
+        const drilldown = JSON.parse(event.target.dataset.drilldown);
         const action = await this.orm.call(
             "mis.report.instance",
             "drilldown",
@@ -214,7 +212,7 @@ export class MisReportWidget extends Component {
         const cell_id = event.target.dataset.cellId;
         const note = this.state.mis_report_data.notes[cell_id];
         const note_text = (note && note.text) || "";
-        this.dialogService.add(AnnotationDialog, {
+        this.dialog.add(AnnotationDialog, {
             title: _t("Annotate"),
             annotationText: note_text,
             confirm: async (text) => {
@@ -235,6 +233,22 @@ export class MisReportWidget extends Component {
     onDateTimeChanged(ev) {
         this.state.pivot_date = ev;
         this.refresh();
+    }
+
+    async toggle_wide_display() {
+        this.wide_display = !this.wide_display;
+        this.resize_sheet();
+    }
+
+    async resize_sheet() {
+        var sheet_element = document.getElementsByClassName("o_form_sheet_bg")[0];
+        sheet_element.classList.toggle(
+            "oe_mis_builder_report_wide_sheet",
+            this.wide_display
+        );
+        var button_resize_element = document.getElementById("icon_resize");
+        button_resize_element.classList.toggle("fa-expand", !this.wide_display);
+        button_resize_element.classList.toggle("fa-compress", this.wide_display);
     }
 }
 

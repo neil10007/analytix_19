@@ -13,7 +13,6 @@ class ResCompany(models.Model):
              "a ZATCA VAT return deadline alert in the Alerts section.",
     )
     groq_api_key = fields.Char(string='Groq API Key')
-    open_router_key = fields.Char(string='OpenRouter API Key')
 
 
 class ResConfigSettings(models.TransientModel):
@@ -30,10 +29,5 @@ class ResConfigSettings(models.TransientModel):
         related='company_id.groq_api_key',
         readonly=False,
         string='Groq API Key',
-    )
-    open_router_key = fields.Char(
-        related='company_id.open_router_key',
-        readonly=False,
-        string='OpenRouter API Key',
     )
 

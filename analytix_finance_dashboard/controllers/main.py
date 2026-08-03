@@ -376,8 +376,7 @@ class AccountMove(models.Model):
         custom_alerts = self.env['analytix.finance.alert'].search([
             ('notify_dashboard', '=', True),
             ('active', '=', True),
-            ('company_id', 'in', company_ids),
-            ('state', '!=', 'completed'),
+            ('company_id', 'in', company_ids)
         ])
         for ca in custom_alerts:
             color_map = {
@@ -837,29 +836,11 @@ class AccountMove(models.Model):
         elif filter_name == 'this_year':
             start_date = today.replace(month=1, day=1)
             end_date   = today.replace(month=12, day=31)
-        elif filter_name == 'custom' or (date_from and date_to):
-            if date_from and date_to:
-                try:
-                    start_date = datetime.strptime(str(date_from), '%Y-%m-%d').date()
-                    end_date   = datetime.strptime(str(date_to),   '%Y-%m-%d').date()
-                except Exception:
-                    start_date = today.replace(day=1)
-                    end_date   = start_date + relativedelta(months=1, days=-1)
-            elif date_from:
-                try:
-                    start_date = datetime.strptime(str(date_from), '%Y-%m-%d').date()
-                    end_date   = today
-                except Exception:
-                    start_date = today.replace(day=1)
-                    end_date   = start_date + relativedelta(months=1, days=-1)
-            elif date_to:
-                try:
-                    end_date   = datetime.strptime(str(date_to), '%Y-%m-%d').date()
-                    start_date = end_date.replace(day=1)
-                except Exception:
-                    start_date = today.replace(day=1)
-                    end_date   = start_date + relativedelta(months=1, days=-1)
-            else:
+        elif filter_name == 'custom' and date_from and date_to:
+            try:
+                start_date = datetime.strptime(date_from, '%Y-%m-%d').date()
+                end_date   = datetime.strptime(date_to,   '%Y-%m-%d').date()
+            except Exception:
                 start_date = today.replace(day=1)
                 end_date   = start_date + relativedelta(months=1, days=-1)
         else:

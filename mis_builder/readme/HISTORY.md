@@ -1,11 +1,11 @@
-## 17.0.1.4.2 (2025-10-29)
+## 18.0.1.7.2 (2025-10-29)
 
 ### Bugfixes
 
 - Fix computation of currency conversion rates ([#737](https://github.com/OCA/mis-builder/issues/737))
 
 
-## 17.0.1.4.0 (2025-10-27)
+## 18.0.1.5.0 (2025-10-27)
 
 ### Features
 

@@ -54,7 +54,7 @@
     .o_pivot_view .o_pivot_buttons .btn:focus,
     .o_pivot_view .o_pivot_buttons .btn.show,
     .o_pivot_view .o_pivot_buttons .dropdown-toggle.show {
-        border-color: rgba(0, 212, 200, 0.48);
+        border-color: rgba(255, 135, 68, 0.48);
         background: #202b3a;
         color: #ffffff;
         box-shadow: none;
@@ -77,8 +77,8 @@
     .o_pivot_view .o_pivot_buttons .btn-primary:focus,
     .o_pivot_view .o_pivot_buttons .btn-primary.show {
         border-color: transparent;
-        background: #00bfb3;
-        color: #080d18;
+        background: #ff9a62;
+        color: #111827;
     }
 
     .o_pivot_view .o_pivot table,

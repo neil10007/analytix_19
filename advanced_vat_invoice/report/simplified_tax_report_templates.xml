@@ -82,28 +82,7 @@
                         <!-- Totals Section -->
                         <div class="row justify-content-end" style="margin-top: 15px; font-size: 10pt; page-break-inside: avoid;">
                             <div class="col-7">
-                                <!-- Bank Details Section (Only for Invoices) -->
-                                <t t-if="doc.move_type in ('out_invoice', 'in_invoice', 'out_refund', 'in_refund') and doc.company_partner_bank_ids">
-                                    <div style="background-color: #F8F9FA; border: 1px solid #E2E8F0; border-radius: 6px; padding: 10px 12px;">
-                                        <div style="border-bottom: 2px solid #1E293B; padding-bottom: 3px; margin-bottom: 8px;">
-                                            <strong style="color: #1E293B; font-size: 10pt; text-transform: uppercase;">Bank Account Details / تفاصيل الحساب البنكي</strong>
-                                        </div>
-                                        <t t-foreach="doc.company_partner_bank_ids" t-as="bank_account">
-                                            <table class="table table-sm table-borderless" style="font-size: 9.5pt; margin-bottom: 4px; color: #1E293B; width: 100%;">
-                                                <tbody>
-                                                    <tr t-if="bank_account.bank_id">
-                                                        <td style="width: 42%; padding: 2px 0; font-weight: bold; color: #64748B;">Bank Name / اسم البنك:</td>
-                                                        <td style="width: 58%; padding: 2px 0; font-weight: bold; color: #1E293B;"><span t-field="bank_account.bank_id.name"/></td>
-                                                    </tr>
-                                                    <tr t-if="bank_account.acc_number">
-                                                        <td style="width: 42%; padding: 2px 0; font-weight: bold; color: #64748B;">Account No / رقم الحساب:</td>
-                                                        <td style="width: 58%; padding: 2px 0; font-weight: bold; color: #1E293B;"><span t-field="bank_account.acc_number"/></td>
-                                                    </tr>
-                                                </tbody>
-                                            </table>
-                                        </t>
-                                    </div>
-                                </t>
+                                <!-- Empty area -->
                             </div>
                             <div class="col-5">
                                 <table class="table table-sm table-borderless" style="width: 100%; color: #1E293B;">

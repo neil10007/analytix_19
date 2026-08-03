@@ -5,8 +5,9 @@
 
 import sys
 
-from odoo import _, api, fields, models
+from odoo import api, fields, models
 from odoo.exceptions import ValidationError
+from odoo.tools import float_round
 
 from .accounting_none import AccountingNone
 from .data_error import DataError
@@ -56,7 +57,7 @@ class MisReportKpiStyle(models.Model):
         for record in self:
             if record.indent_level < 0:
                 raise ValidationError(
-                    _("Indent level must be greater than " "or equal to 0")
+                    self.env._("Indent level must be greater than or equal to 0")
                 )
 
     _font_style_selection = [("normal", "Normal"), ("italic", "Italic")]
@@ -118,11 +119,11 @@ class MisReportKpiStyle(models.Model):
     divider_inherit = fields.Boolean(default=True)
     divider = fields.Selection(
         [
-            ("1e-6", _("µ")),
-            ("1e-3", _("m")),
-            ("1", _("1")),
-            ("1e3", _("k")),
-            ("1e6", _("M")),
+            ("1e-6", "µ"),
+            ("1e-3", "m"),
+            ("1", "1"),
+            ("1e3", "k"),
+            ("1e6", "M"),
         ],
         string="Factor",
         default="1",
@@ -135,6 +136,47 @@ class MisReportKpiStyle(models.Model):
     _sql_constraints = [
         ("style_name_uniq", "unique(name)", "Style name should be unique")
     ]
+
+    description = fields.Html(
+        compute="_compute_description",
+        help="Describe specific values that are not inherited",
+    )
+
+    def _get_depends_compute_description(self):
+        return PROPS + [f"{prop}_inherit" for prop in PROPS]
+
+    @api.depends(lambda x: x._get_depends_compute_description())
+    def _compute_description(self):
+        for style in self:
+            descriptions = {}
+            for prop in PROPS:
+                if getattr(style, f"{prop}_inherit"):
+                    continue
+                else:
+                    value = getattr(style, prop)
+                    if prop in ["color", "background_color"]:
+                        value = (
+                            "<span style='"
+                            f"background-color: {value};"
+                            " width: 15px;"
+                            " height: 15px;"
+                            " display: inline-block;"
+                            " border: 1px black solid;"
+                            " border-radius: 5px;"
+                            "' />"
+                        )
+                    elif prop in ["font_weight", "font_style"]:
+                        value = (
+                            f"<span style='"
+                            f"{prop.replace('_', '-')} : {value};"
+                            f"'>{value}</span>"
+                        )
+                    elif prop in ["prefix", "suffix"]:
+                        value = f"'<code>{value}</code>'"
+                    descriptions[style._fields[prop].string] = value
+
+            description = " ; ".join([f"{k} : {v}" for k, v in descriptions.items()])
+            style.description = f"<div>{description}</div>"
 
     @api.model
     def merge(self, styles):
@@ -180,7 +222,7 @@ class MisReportKpiStyle(models.Model):
         # format number following user language
         if value is None or value is AccountingNone:
             return ""
-        value = round(value / float(divider or 1), dp or 0) or 0
+        value = float_round(value / float(divider or 1), dp or 0) or 0
         r = lang.format("%%%s.%df" % (sign, dp or 0), value, grouping=True)
         r = r.replace("-", "\N{NON-BREAKING HYPHEN}")
         if prefix:
@@ -239,7 +281,7 @@ class MisReportKpiStyle(models.Model):
         if var_type == TYPE_PCT:
             delta = value - base_value
             if delta and round(delta, (style_props.dp or 0) + 2) != 0:
-                delta_style.update(divider=0.01, prefix="", suffix=_("pp"))
+                delta_style.update(divider=0.01, prefix="", suffix=self.env._("pp"))
             else:
                 delta = AccountingNone
         elif var_type == TYPE_NUM:
@@ -272,7 +314,7 @@ class MisReportKpiStyle(models.Model):
         xlsx_attributes = [
             ("italic", props.font_style == "italic"),
             ("bold", props.font_weight == "bold"),
-            ("size", self._font_size_to_xlsx_size.get(props.font_size, 11)),
+            ("font_size", self._font_size_to_xlsx_size.get(props.font_size, 11)),
             ("font_color", props.color),
             ("bg_color", props.background_color),
         ]

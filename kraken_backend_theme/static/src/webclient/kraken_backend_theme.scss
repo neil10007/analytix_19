@@ -284,7 +284,7 @@
 .o_web_client .o_control_panel .o_form_button_save,
 .o_web_client .o_form_status_indicator .o_form_button_save {
     border-color: transparent !important;
-    background: var(--kr-color-primary, #0f1729) !important;
+    background: var(--kr-color-primary, #875A7B) !important;
     color: #ffffff !important;
     font-weight: 600 !important;
     border-radius: 12px !important;
@@ -294,7 +294,7 @@
 
 .o_web_client .o_control_panel .o_form_button_save:hover:not(:disabled),
 .o_web_client .o_form_status_indicator .o_form_button_save:hover:not(:disabled) {
-    background: var(--kr-color-primary-hover, #1b283d) !important;
+    background: var(--kr-color-primary-hover, #6d4a64) !important;
     color: #ffffff !important;
 }
 
@@ -467,10 +467,10 @@
 .o_web_client .o_searchview .o_searchview_facet {
     align-self: center;
     min-height: 30px;
-    border: 1px solid #cbd5e1;
+    border: 1px solid #d7e0ea;
     border-radius: 10px !important;
-    background: #f1f5f9 !important;
-    color: #0f172a !important;
+    background: #f4f7fa;
+    color: #000000;
     box-shadow: none;
 }
 
@@ -482,8 +482,8 @@
     min-height: 30px;
     padding-inline: 8px !important;
     border: 0 !important;
-    background: #e2e8f0 !important;
-    color: #0f172a !important;
+    background: #e8eef5;
+    color: #000000;
     border-radius: 9px 0 0 9px !important;
     font-weight: 600;
     box-shadow: none !important;
@@ -492,15 +492,14 @@
 .o_web_client .o_searchview .o_searchview_facet .o_searchview_facet_label:hover,
 .o_web_client .o_searchview .o_searchview_facet .o_searchview_facet_label:focus,
 .o_web_client .o_searchview .o_searchview_facet .o_searchview_facet_label:active {
-    background: #cbd5e1 !important;
-    color: #0f172a !important;
+    background: #dde6ef;
+    color: #000000;
 }
 
 .o_web_client .o_searchview .o_searchview_facet .o_searchview_facet_label .fa,
 .o_web_client .o_searchview .o_searchview_facet .o_searchview_facet_label .oi,
 .o_web_client .o_searchview .o_searchview_facet .o_searchview_facet_label small {
     line-height: 1;
-    color: #0f172a !important;
 }
 
 .o_web_client .o_searchview .o_searchview_facet .o_searchview_facet_label > span.position-absolute {
@@ -508,24 +507,17 @@
 }
 
 .o_web_client .o_searchview .o_searchview_facet .o_facet_value {
-    background: transparent !important;
-    color: #0f172a !important;
+    color: #000000;
     font-weight: 600;
 }
 
 .o_web_client .o_searchview .o_searchview_facet .o_facet_values {
-    background: transparent !important;
-    color: #0f172a !important;
     min-height: 30px;
     padding-right: 4px;
 }
 
 .o_web_client .o_searchview .o_searchview_facet .o_facet_remove {
-    color: #475569 !important;
-}
-
-.o_web_client .o_searchview .o_searchview_facet .o_facet_remove:hover {
-    color: #0f172a !important;
+    color: #000000 !important;
 }
 
 .o_web_client .o_searchview + .o_searchview_dropdown_toggler,

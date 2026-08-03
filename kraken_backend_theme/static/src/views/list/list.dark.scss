@@ -42,21 +42,14 @@
 .o_list_view .o_list_renderer .o_list_table tbody td {
     background-color: #18212f;
     border-color: #2b3647;
-    color: #ffffff;
-    -webkit-text-fill-color: #ffffff;
-}
-
-.o_list_view .o_list_renderer .o_list_table tbody td :is(input, select, textarea, .o_input, span, div, a, .o_field_widget) {
-    color: #ffffff !important;
-    -webkit-text-fill-color: #ffffff !important;
-    opacity: 1 !important;
+    color: #e5e7eb;
 }
 
 .o_list_view .o_list_renderer .o_list_table tbody,
 .o_list_view .o_list_renderer .o_list_table tbody tr {
     border-color: #2b3647;
     background: #111827;
-    color: #ffffff;
+    color: #e5e7eb;
 }
 
 .o_list_view .o_list_renderer .o_list_table tbody tr.o_data_row > td:first-child,
@@ -70,7 +63,7 @@
 
 .o_list_view .o_list_renderer .o_list_table tbody tr.table-info td,
 .o_list_view .o_list_renderer .o_list_table tbody tr.o_data_row_selected td {
-    background-color: rgba(0, 212, 200, 0.16);
+    background-color: rgba(255, 135, 68, 0.16);
     color: #ffffff;
 }
 
@@ -80,8 +73,8 @@
 }
 
 .o_list_view .o_list_renderer .o_list_table .form-check-input:checked {
-    border-color: #00d4c8;
-    background-color: #00d4c8;
+    border-color: #ff8744;
+    background-color: #ff8744;
 }
 
 .o_list_view .o_list_renderer .o_list_table tfoot td {
@@ -92,17 +85,14 @@
 
 .o_list_view .o_optional_columns_dropdown,
 .o_list_view .o_field_x2many_list_row_add,
-.o_list_view :is(a, button, [role="button"], span.btn, span.btn-link, .btn-link, .o_list_record_add, .o_list_button, .o-listView-add-row *),
+.o_list_view .o_list_button,
 .o_list_view .o_column_sortable,
 .o_list_view .o_column_title {
-    color: #00d4c8 !important;
-    font-weight: 600 !important;
-    opacity: 1 !important;
-    text-decoration: none !important;
+    color: #e5e7eb;
 }
 
 .o_list_view .o_optional_columns_dropdown .dropdown-menu {
-    border-color: #2b3647 !important;
-    background: #18212f !important;
-    color: #ffffff !important;
+    border-color: #2b3647;
+    background: #18212f;
+    color: #e5e7eb;
 }

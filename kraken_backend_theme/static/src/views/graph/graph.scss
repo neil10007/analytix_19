@@ -20,7 +20,7 @@
 
 .o_graph_view .o_graph_renderer .btn:hover,
 .o_graph_view .o_graph_renderer .btn:focus-visible {
-    border-color: rgba(0, 212, 200, 0.46);
+    border-color: rgba(255, 135, 68, 0.46);
     background: #fff7ed;
     color: #111827;
     box-shadow: none;
@@ -35,8 +35,8 @@
 
 .o_graph_view .o_graph_renderer .btn-primary:hover,
 .o_graph_view .o_graph_renderer .btn-primary:focus-visible {
-    background: #00d4c8;
-    color: #080d18;
+    background: #ff8744;
+    color: #111827;
 }
 
 .o_graph_view .o_graph_renderer .o_graph_button {
@@ -54,6 +54,6 @@
 .o_graph_view .o_graph_renderer .o_graph_button.o-active,
 .o_graph_view .o_graph_renderer .o_graph_button[aria-pressed="true"] {
     border-color: transparent;
-    background: #00d4c8;
-    color: #080d18;
+    background: #ff8744;
+    color: #111827;
 }
