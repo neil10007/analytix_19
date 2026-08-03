@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="account_report_daybook_view" model="ir.ui.view">
+        <field name="name">account.daybook.report</field>
+        <field name="model">account.daybook.report</field>
+        <field name="inherit_id" ref="om_account_daily_reports.account_report_daybook_view"/>
+        <field name="arch" type="xml">
+            <button name="check_report" position="after">
+                or
+                <button name="check_report" string="Print Excel"
+                        type="object" class="oe_highlight"
+                        context="{'excel_report':1}"
+                />
+            </button>
+        </field>
+    </record>
+
+</odoo>

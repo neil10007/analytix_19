@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="action_report_bank_book_excel" model="ir.actions.report">
+            <field name="name">Bank Book Excel</field>
+            <field name="model">account.bankbook.report</field>
+            <field name="report_type">xlsx</field>
+            <field name="report_name">om_account_book_excel.report_bankbook_excel</field>
+            <field name="report_file">om_account_book_excel.report_bankbook_excel</field>
+        </record>
+
+        <record id="action_report_day_book_excel" model="ir.actions.report">
+            <field name="name">Day Book Excel</field>
+            <field name="model">account.daybook.report</field>
+            <field name="report_type">xlsx</field>
+            <field name="report_name">om_account_book_excel.report_daybook_excel</field>
+            <field name="report_file">om_account_book_excel.report_daybook_excel</field>
+        </record>
+
+        <record id="action_report_cash_book_excel" model="ir.actions.report">
+            <field name="name">Cash Book Excel</field>
+            <field name="model">account.cashbook.report</field>
+            <field name="report_type">xlsx</field>
+            <field name="report_name">om_account_book_excel.report_cashbook_excel</field>
+            <field name="report_file">om_account_book_excel.report_cashbook_excel</field>
+        </record>
+
+    </data>
+</odoo>
