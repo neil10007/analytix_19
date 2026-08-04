@@ -521,6 +521,21 @@ export class AnalytixFinanceDashboard extends Component {
         this.action.doAction({ type: 'ir.actions.act_window', res_model: 'account.move', res_id: id, views: [[false, 'form']], target: 'current' });
     }
 
+    // ── Create new Vendor Bill ─────────────────────────────────────────
+    createNewBill() {
+        this.action.doAction({
+            type: 'ir.actions.act_window',
+            name: 'New Vendor Bill',
+            res_model: 'account.move',
+            views: [[false, 'form']],
+            target: 'current',
+            context: {
+                default_move_type: 'in_invoice',
+                move_type: 'in_invoice',
+            },
+        });
+    }
+
 
     // ── VAT data fetch ────────────────────────────────────────────────
     async fetchVatData() {

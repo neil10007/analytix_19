@@ -73,7 +73,7 @@
                 </button>
                 <button t-attf-class="anx-tab {{ state.activeTab === 'vat'       ? 'active' : '' }}"
                         data-tab="vat"       t-on-click="onTabClick">
-                    <i class="fa fa-percent"></i> TAX
+                    <i class="fa fa-percent"></i> VAT
                 </button>
                 <button t-attf-class="anx-tab {{ state.activeTab === 'journals'  ? 'active' : '' }}"
                         data-tab="journals"  t-on-click="onTabClick">
@@ -557,6 +557,9 @@
                         <!-- Toolbar -->
                         <div class="anx-inv-toolbar">
                             <div class="anx-exp-label-badge"><i class="fa fa-credit-card"/> Vendor Bills &#8212; All Companies</div>
+                            <button class="anx-inv-new-btn anx-inv-new-bill" t-on-click="createNewBill" title="Create a new Vendor Bill">
+                                <i class="fa fa-plus"/> New
+                            </button>
                             <div class="anx-inv-status-pills">
                                 <span t-attf-class="anx-inv-spill {{ state.expStatusFilter === 'all'      ? 'active' : '' }}" data-status="all"      t-on-click="onExpStatusFilter">All</span>
                                 <span t-attf-class="anx-inv-spill anx-spill-paid    {{ state.expStatusFilter === 'paid'     ? 'active' : '' }}" data-status="paid"     t-on-click="onExpStatusFilter">Paid</span>
