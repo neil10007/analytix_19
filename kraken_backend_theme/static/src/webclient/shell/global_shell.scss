@@ -277,21 +277,29 @@ body.kr_sp_global_mode.modal-open {
 .kr_sp_brand_section {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 0 14px 0 10px;
+    gap: 12px;
+    padding: 0 18px 0 14px;
+    min-width: 180px;
+    max-width: 340px;
+    flex-shrink: 0;
 }
 
 .kr_sp_brand_logo {
-    width: 26px;
-    height: 26px;
-    border-radius: 999px;
+    height: 30px;
+    width: auto;
+    max-width: 110px;
+    object-fit: contain;
+    border-radius: 4px;
+    flex-shrink: 0;
 }
 
 .kr_sp_brand_name {
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 700;
     color: #21272f;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .kr_sp_tabs_section {

@@ -164,7 +164,7 @@ class AnalytixDocument(models.Model):
     @api.model
     def update_analytix_document(self, doc_id, vals):
         """Update writable fields for a document (description, name, review)."""
-        ALLOWED = {'description', 'name', 'review'}
+        ALLOWED = {'description', 'name', 'review', 'doc_type'}
         safe_vals = {k: v for k, v in vals.items() if k in ALLOWED}
         if not safe_vals:
             return False
@@ -329,19 +329,33 @@ Rules:
             ],
             response_format={"type": "json_object"},
             temperature=0,
+            max_tokens=4096,
         )
 
-        content = response.choices[0].message.content
+        content = response.choices[0].message.content or "{}"
+        cleaned = content.strip()
+
+        if "```" in cleaned:
+            import re
+            match = re.search(r"```(?:json)?\s*({[\s\S]*?})\s*```", cleaned, re.IGNORECASE)
+            if match:
+                cleaned = match.group(1)
+            else:
+                cleaned = cleaned.replace("```json", "").replace("```", "").strip()
 
         try:
-            return json.loads(content)
-        except (json.JSONDecodeError, TypeError):
-            cleaned = content.strip()
-            if cleaned.startswith("```"):
-                cleaned = cleaned.strip("`")
-                if cleaned.lower().startswith("json"):
-                    cleaned = cleaned[4:]
-            return json.loads(cleaned.strip())
+            return json.loads(cleaned)
+        except (json.JSONDecodeError, TypeError) as err:
+            _logger.warning("Initial JSON parse failed: %s. Cleaning control chars...", err)
+            import re
+            cleaned_fix = re.sub(r'[\x00-\x1f\x7f-\x9f]', ' ', cleaned)
+            try:
+                return json.loads(cleaned_fix)
+            except Exception:
+                raise UserError(
+                    f"AI response error: {err}\n\n"
+                    f"Raw Response: {content[:300]}"
+                )
 
     def _call_groq(self, client, image_b64):
         """Call Groq API with the given base64 image."""
@@ -515,6 +529,16 @@ Rules:
             output = results[0] if len(results) == 1 else results
 
         self.response_json = json.dumps(output, indent=4)
+
+        # Print the AI JSON response format to terminal log instantly
+        import sys
+        print("\n==================================================")
+        print("AI EXTRACTED JSON FORMAT:")
+        print(self.response_json)
+        print("==================================================\n")
+        sys.stdout.flush()
+        _logger.info("AI EXTRACTED JSON FORMAT:\n%s", self.response_json)
+
         if isinstance(output, dict):
             self.detected_doc_type = output.get('document_type') or ''
         elif isinstance(output, list) and output:
@@ -534,29 +558,47 @@ Rules:
         if not isinstance(data, dict):
             raise UserError("Unexpected JSON structure — expected a JSON object.")
 
-        SUPPORTED_TYPES = {'invoice', 'bill', 'receipt', 'credit_note', 'debit_note'}
-        raw_doc_type = (data.get('document_type') or '').strip().lower()
+        # Determine effective document type: prioritize user-assigned doc_type, fallback to AI detected document_type
+        effective_doc_type = (self.doc_type or '').strip().lower()
+        if not effective_doc_type:
+            effective_doc_type = (data.get('document_type') or '').strip().lower()
 
-        if not raw_doc_type or raw_doc_type not in SUPPORTED_TYPES:
-            display_type = data.get('document_type') or 'Other/Unknown'
+        # Only 'invoice' and 'bill' document types are supported for AI creation; raise UserError for all other document types
+        if effective_doc_type not in ('invoice', 'bill'):
             raise UserError(
-                f"Unsupported Document Type: '{display_type}'.\n\n"
-                "The AI analyzed this document and detected that it is not a valid Invoice or Bill. "
-                "Only Invoices and Bills (or Receipts/Credit Notes) are supported for automatic entry creation."
+                f"AI entry creation is only allowed for 'invoice' or 'bill' document types.\n"
+                f"The current document type is '{effective_doc_type or 'other'}'. Entry creation cannot proceed for this document type."
             )
 
-        DOC_TYPE_MAP = {
-            'invoice':     'out_invoice',   # Customer Invoice
-            'bill':        'in_invoice',    # Vendor Bill
-            'credit_note': 'out_refund',    # Customer Credit Note
-            'debit_note':  'in_invoice',    # Treated as vendor bill variant
-            'receipt':     'in_invoice',    # Treat receipt as vendor bill
-        }
-        move_type = DOC_TYPE_MAP[raw_doc_type]
+        if effective_doc_type == 'invoice':
+            move_type = 'out_invoice'
+        else:
+            move_type = 'in_invoice'
+        _logger.info("Selected move_type '%s' for effective_doc_type '%s'", move_type, effective_doc_type)
 
-        # Resolve / Create Partner
+        # Resolve / Create Partner (Partner_id is assigned to the vendor for bills, customer for invoices)
         partner = None
-        partner_name = (data.get('vendor_name') or data.get('customer_name') or '').strip()
+        my_company_names = {c.name.strip().lower() for c in self.env.companies if c.name}
+        vendor_str = (data.get('vendor_name') or '').strip()
+        customer_str = (data.get('customer_name') or '').strip()
+
+        if move_type in ('out_invoice', 'out_refund'):
+            # For Customer Invoices: partner_id is the Customer
+            if customer_str and customer_str.lower() not in my_company_names:
+                partner_name = customer_str
+            elif vendor_str and vendor_str.lower() not in my_company_names:
+                partner_name = vendor_str
+            else:
+                partner_name = customer_str or vendor_str
+        else:
+            # For Vendor Bills: partner_id is the Vendor
+            if vendor_str and vendor_str.lower() not in my_company_names:
+                partner_name = vendor_str
+            elif customer_str and customer_str.lower() not in my_company_names:
+                partner_name = customer_str
+            else:
+                partner_name = vendor_str or customer_str
+
         if partner_name:
             partner = self.env['res.partner'].search(
                 [('name', 'ilike', partner_name)], limit=1
@@ -584,26 +626,26 @@ Rules:
                 currency_id = currency.id
 
         company = self.env.company
+        journal_type = 'sale' if move_type in ('out_invoice', 'out_refund') else 'purchase'
         journal = self.env['account.journal'].search(
             [
-                ('type', '=', 'sale' if move_type == 'out_invoice' else 'purchase'),
+                ('type', '=', journal_type),
                 ('company_id', '=', company.id),
             ],
             limit=1,
         )
         if not journal:
             raise UserError(
-                "No '%s' journal found. Please configure one in Accounting."
-                % ('Sales' if move_type == 'out_invoice' else 'Purchase')
+                "No '%s' journal found for company '%s'. Please configure one in Accounting."
+                % ('Sales' if journal_type == 'sale' else 'Purchase', company.name)
             )
 
+        account_types = ['income', 'income_other'] if move_type in ('out_invoice', 'out_refund') else ['expense', 'expense_depreciation']
         default_account = (
             journal.default_account_id
             or self.env['account.account'].search(
                 [
-                    ('account_type', 'in',
-                     ['income', 'income_other'] if move_type == 'out_invoice'
-                     else ['expense', 'expense_depreciation']),
+                    ('account_type', 'in', account_types),
                     ('company_ids', 'in', company.id),
                     ('deprecated', '=', False),
                 ],
@@ -612,8 +654,9 @@ Rules:
         )
         if not default_account:
             raise UserError(
-                "Could not determine a default account. "
-                "Please set a Default Account on the journal."
+                "Could not determine a default account for %s. "
+                "Please set a Default Account on the '%s' journal."
+                % ('Invoices' if journal_type == 'sale' else 'Bills', journal.name)
             )
 
         # Build lines
@@ -688,6 +731,15 @@ Rules:
             move_vals['partner_id'] = partner.id
         if currency_id:
             move_vals['currency_id'] = currency_id
+
+        print("==================================================")
+        print("CREATING DRAFT ENTRY WITH VALUES:")
+        print("Target Move Type:", move_type)
+        print("Partner:", partner.name if partner else "None")
+        print("Journal:", journal.name if journal else "None")
+        print("Invoice Date:", invoice_date)
+        print("Reference:", invoice_ref)
+        print("==================================================")
 
         move = self.env['account.move'].create(move_vals)
         self.created_move_id = move.id

@@ -7,6 +7,12 @@ class AccountMove(models.Model):
     _inherit = 'account.move'
 
     @api.model
+    def _get_currency_symbol(self, currency):
+        if not currency:
+            return ''
+        return (currency.symbol or currency.name or '').strip()
+
+    @api.model
     def get_analytix_dashboard_data(self, filter_name='this_month', date_from=None, date_to=None):
         self = self.sudo()
         today = date.today()
@@ -395,7 +401,7 @@ class AccountMove(models.Model):
             })
 
         return {
-            'currency': company_currency.symbol or company_currency.name,
+            'currency': self._get_currency_symbol(company_currency),
             'companies': ', '.join(self.env.companies.mapped('name')),
             'company_ids': company_ids,
             'date_range': {

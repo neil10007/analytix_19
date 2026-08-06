@@ -16,6 +16,7 @@
         'views/menu_views.xml',
         'views/set_home_action.xml',
         'views/account_move_views.xml',
+        'views/res_partner_views.xml',
         # 'views/report_invoice.xml',
         # 'views/report_vat_invoice.xml',
         'views/zatca_settings.xml',
