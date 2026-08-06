@@ -13,7 +13,7 @@
 
     <menuitem id="menu_alert_management"
               name="Alert Management"
-              parent="account.menu_finance_configuration"
+              parent="account.menu_finance"
               sequence="80"/>
 
     <menuitem id="menu_finance_alert"
@@ -21,9 +21,6 @@
               action="action_analytix_finance_alert"
               parent="menu_alert_management"
               sequence="10"/>
-
-    <menuitem id="account.account_audit_menu"
-              parent="account.menu_finance_configuration"/>
 
     <record id="account.menu_board_journal_1" model="ir.ui.menu">
         <field name="active" eval="False"/>

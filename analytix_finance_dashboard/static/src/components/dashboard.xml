@@ -230,13 +230,13 @@
                                             <span class="anx-customer-rank"><t t-esc="cust.rank"/></span>
                                             <div class="anx-customer-name"><t t-esc="cust.name"/></div>
                                             <div class="anx-customer-bar-wrap">
-                                                <t t-set="maxRev" t-value="state.data.top_customers[0] ? state.data.top_customers[0].revenue : 1"/>
+                                                <t t-set="maxRev" t-value="state.data.top_customers[0]?.revenue || 1"/>
                                                 <div class="anx-customer-bar"
                                                      t-attf-style="width:{{ Math.round((cust.revenue / maxRev) * 100) }}%;">
                                                 </div>
                                             </div>
                                             <span class="anx-customer-amt">
-                                                <t t-esc="getCurrencySymbol(state.data.currency)"/>&#160;<t t-esc="formatShort(cust.revenue)"/>
+                                                <t t-esc="state.data.currency"/>&#160;<t t-esc="formatShort(cust.revenue)"/>
                                             </span>
                                         </div>
                                     </t>
@@ -250,13 +250,13 @@
                                             <span class="anx-customer-rank"><t t-esc="vend.rank"/></span>
                                             <div class="anx-customer-name"><t t-esc="vend.name"/></div>
                                             <div class="anx-customer-bar-wrap">
-                                                <t t-set="maxExp" t-value="state.data.top_vendors[0] ? state.data.top_vendors[0].expense : 1"/>
+                                                <t t-set="maxExp" t-value="state.data.top_vendors[0]?.expense || 1"/>
                                                 <div class="anx-customer-bar"
                                                      t-attf-style="background-color: #e53935; width:{{ Math.round((vend.expense / maxExp) * 100) }}%;">
                                                 </div>
                                             </div>
                                             <span class="anx-customer-amt">
-                                                <t t-esc="getCurrencySymbol(state.data.currency)"/>&#160;<t t-esc="formatShort(vend.expense)"/>
+                                                <t t-esc="state.data.currency"/>&#160;<t t-esc="formatShort(vend.expense)"/>
                                             </span>
                                         </div>
                                     </t>
@@ -415,15 +415,15 @@
                             </div>
                             <div class="anx-inv-kpi-pill anx-inv-kpi-amount">
                                 <span class="anx-inv-kpi-pill-label">Total Amount</span>
-                                <span class="anx-inv-kpi-pill-val"><t t-esc="state.invoices.currency_sym"/>&#160;<t t-esc="formatExact(state.invoices.total_amount)"/></span>
+                                <span class="anx-inv-kpi-pill-val"><t t-esc="state.invoices.currency_sym"/>&#160;<t t-esc="formatShort(state.invoices.total_amount)"/></span>
                             </div>
                             <div class="anx-inv-kpi-pill anx-inv-kpi-paid">
                                 <span class="anx-inv-kpi-pill-label">Paid</span>
-                                <span class="anx-inv-kpi-pill-val"><t t-esc="state.invoices.currency_sym"/>&#160;<t t-esc="formatExact(state.invoices.paid_amount)"/></span>
+                                <span class="anx-inv-kpi-pill-val"><t t-esc="state.invoices.currency_sym"/>&#160;<t t-esc="formatShort(state.invoices.paid_amount)"/></span>
                             </div>
                             <div class="anx-inv-kpi-pill anx-inv-kpi-unpaid">
                                 <span class="anx-inv-kpi-pill-label">Outstanding</span>
-                                <span class="anx-inv-kpi-pill-val"><t t-esc="state.invoices.currency_sym"/>&#160;<t t-esc="formatExact(state.invoices.unpaid_amount)"/></span>
+                                <span class="anx-inv-kpi-pill-val"><t t-esc="state.invoices.currency_sym"/>&#160;<t t-esc="formatShort(state.invoices.unpaid_amount)"/></span>
                             </div>
                             <div class="anx-inv-company-legend" t-if="state.invoices.companies.length > 1">
                                 <t t-foreach="state.invoices.companies" t-as="comp" t-key="comp.id">
@@ -531,15 +531,15 @@
                             </div>
                             <div class="anx-inv-kpi-pill anx-inv-kpi-amount">
                                 <span class="anx-inv-kpi-pill-label">Total Amount</span>
-                                <span class="anx-inv-kpi-pill-val"><t t-esc="state.expenses.currency_sym"/>&#160;<t t-esc="formatExact(state.expenses.total_amount)"/></span>
+                                <span class="anx-inv-kpi-pill-val"><t t-esc="state.expenses.currency_sym"/>&#160;<t t-esc="formatShort(state.expenses.total_amount)"/></span>
                             </div>
                             <div class="anx-inv-kpi-pill anx-inv-kpi-paid">
                                 <span class="anx-inv-kpi-pill-label">Paid</span>
-                                <span class="anx-inv-kpi-pill-val"><t t-esc="state.expenses.currency_sym"/>&#160;<t t-esc="formatExact(state.expenses.paid_amount)"/></span>
+                                <span class="anx-inv-kpi-pill-val"><t t-esc="state.expenses.currency_sym"/>&#160;<t t-esc="formatShort(state.expenses.paid_amount)"/></span>
                             </div>
                             <div class="anx-inv-kpi-pill anx-inv-kpi-unpaid">
                                 <span class="anx-inv-kpi-pill-label">Outstanding</span>
-                                <span class="anx-inv-kpi-pill-val"><t t-esc="state.expenses.currency_sym"/>&#160;<t t-esc="formatExact(state.expenses.unpaid_amount)"/></span>
+                                <span class="anx-inv-kpi-pill-val"><t t-esc="state.expenses.currency_sym"/>&#160;<t t-esc="formatShort(state.expenses.unpaid_amount)"/></span>
                             </div>
                             <!-- Company legend -->
                             <div class="anx-inv-company-legend" t-if="state.expenses.companies.length > 1">
@@ -2270,7 +2270,7 @@
                  t-on-touchstart="startTouchDragChat">
                 <button class="anx-floating-chat-btn" 
                         t-on-click="toggleChatPopup"
-                        style="width: 58px; height: 58px; border-radius: 50%; background: #075e54; border: 2.5px solid #ffffff; box-shadow: 0 8px 24px rgba(7, 94, 84, 0.4); display: flex; align-items: center; justify-content: center; color: #ffffff; font-size: 24px; position: relative; cursor: pointer; transition: transform 0.15s ease;">
+                        style="width: 58px; height: 58px; border-radius: 50%; background: #1e3a8a; border: 2.5px solid #ffffff; box-shadow: 0 8px 24px rgba(30, 58, 138, 0.4); display: flex; align-items: center; justify-content: center; color: #ffffff; font-size: 24px; position: relative; cursor: pointer; transition: transform 0.15s ease;">
                     <i class="fa fa-comments" style="color: #ffffff; font-size: 24px;"/>
                     
                     <!-- Notification Badge -->
@@ -2281,266 +2281,6 @@
                     </span>
                 </button>
             </div>
-
-            <!-- WHATSAPP LEVEL FLOATING CHAT POPUP WINDOW -->
-            <t t-if="state.showChatPopup">
-                <div class="anx-chat-popup-window" t-att-style="getChatPopupStyle()">
-                    
-                    <!-- HEADER BAR (WhatsApp Modern Theme) -->
-                    <div class="anx-chat-popup-header">
-                        <!-- Left Side of Header -->
-                        <div class="anx-chat-hdr-left">
-                            <t t-if="state.activeThreadId">
-                                <button class="anx-chat-hdr-btn anx-chat-back-btn" t-on-click="goBackToChatList" title="Back to conversations">
-                                    <i class="fa fa-arrow-left"/>
-                                </button>
-                                <div class="anx-chat-hdr-avatar">
-                                    <t t-if="activeThread &amp;&amp; activeThread.avatarUrl">
-                                        <img t-att-src="activeThread.avatarUrl" class="anx-chat-avatar-img"/>
-                                    </t>
-                                    <t t-else="">
-                                        <div class="anx-chat-avatar-circle">
-                                            <t t-esc="activeThread ? activeThread.displayName[0] : 'C'"/>
-                                        </div>
-                                    </t>
-                                    <span class="anx-chat-status-dot online"></span>
-                                </div>
-                                <div class="anx-chat-hdr-info">
-                                    <div class="anx-chat-hdr-title" t-att-title="activeThread ? activeThread.displayName : ''">
-                                        <t t-esc="activeThread ? activeThread.displayName : 'Chat'"/>
-                                    </div>
-                                    <div class="anx-chat-hdr-status">
-                                        <i class="fa fa-circle text-success" style="font-size: 8px; margin-right: 4px;"/> online
-                                    </div>
-                                </div>
-                            </t>
-                            <t t-else="">
-                                <div class="anx-chat-hdr-avatar logo-avatar">
-                                    <i class="fa fa-comments-o" style="font-size: 20px; color: #25d366;"/>
-                                </div>
-                                <div class="anx-chat-hdr-info">
-                                    <div class="anx-chat-hdr-title">Analytix Chat</div>
-                                    <div class="anx-chat-hdr-status">Discuss</div>
-                                </div>
-                            </t>
-                        </div>
-
-                        <!-- Right Side of Header (Maximize, Close) -->
-                        <div class="anx-chat-hdr-actions">
-                            <!-- Fullscreen / Expand to Odoo Discuss -->
-                            <button class="anx-chat-hdr-btn" t-on-click="openFullDiscuss" title="Open Full Odoo Discuss">
-                                <i class="fa fa-expand"/>
-                            </button>
-                            <!-- Close Chat Popup -->
-                            <button class="anx-chat-hdr-btn anx-chat-close-btn" t-on-click="closeChatPopup" title="Close">
-                                <i class="fa fa-times"/>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- POPUP BODY -->
-                    <div class="anx-chat-popup-body">
-
-                        <!-- SCENARIO A: CHAT THREAD ACTIVE (MESSAGE FEED & INPUT) -->
-                        <t t-if="state.activeThreadId">
-                            <!-- Messages Feed (WhatsApp style background and bubbles) -->
-                            <div class="anx-chat-messages-container" t-ref="messageFeed">
-                                <t t-if="!activeThreadMessages.length">
-                                    <div class="anx-chat-empty-feed">
-                                        <div class="anx-chat-empty-icon">
-                                            <i class="fa fa-comments-o"/>
-                                        </div>
-                                        <div>No messages yet in this conversation.</div>
-                                        <div class="anx-chat-empty-sub">Send a message to start chatting!</div>
-                                    </div>
-                                </t>
-                                <t t-foreach="activeThreadMessages" t-as="msg" t-key="msg.id || msg_index">
-                                    <t t-set="isSelf" t-value="msg.isSelfAuthored ? true : (msg.author ? (msg.author.id === store.self.id) : false)"/>
-                                    <div t-attf-class="anx-chat-msg-row {{ isSelf ? 'msg-outgoing' : 'msg-incoming' }}">
-                                        <div class="anx-chat-msg-bubble">
-                                            <div t-if="!isSelf &amp;&amp; msg.author" class="anx-chat-msg-author">
-                                                <t t-esc="msg.author.name || msg.author.displayName || 'User'"/>
-                                            </div>
-                                            <t t-set="hasBody" t-value="msg.body &amp;&amp; msg.body.trim() &amp;&amp; msg.body !== '&lt;div class=&quot;o-paragraph&quot;&gt;&lt;br&gt;&lt;/div&gt;' &amp;&amp; msg.body !== '&lt;p&gt;&lt;br&gt;&lt;/p&gt;'"/>
-                                            <div t-if="hasBody" class="anx-chat-msg-body">
-                                                <t t-out="msg.body"/>
-                                            </div>
-                                            <t t-if="msg.attachments &amp;&amp; msg.attachments.length">
-                                                <div class="anx-chat-attachments">
-                                                    <t t-foreach="msg.attachments" t-as="att" t-key="att.id">
-                                                        <t t-set="isImg" t-value="isImageAttachment(att)"/>
-                                                        <t t-if="isImg">
-                                                            <a t-attf-href="/web/content/{{ att.id }}?download=true" target="_blank" class="anx-chat-att-img-card" title="Click to view/download image">
-                                                                <img t-attf-src="/web/content/{{ att.id }}" class="anx-chat-att-img"/>
-                                                                <span class="anx-chat-att-img-title"><t t-esc="att.name || 'Image'"/></span>
-                                                            </a>
-                                                        </t>
-                                                        <t t-else="">
-                                                            <a t-attf-href="/web/content/{{ att.id }}?download=true" target="_blank" class="anx-chat-att-item" title="Click to download file">
-                                                                <i t-attf-class="fa {{ getAttIconClass(att) }} me-1" style="font-size: 15px;"/>
-                                                                <span class="anx-att-name"><t t-esc="att.name || 'Attachment'"/></span>
-                                                                <i class="fa fa-download ms-1"/>
-                                                            </a>
-                                                        </t>
-                                                    </t>
-                                                </div>
-                                            </t>
-                                            <div class="anx-chat-msg-meta">
-                                                <span class="anx-chat-msg-time"><t t-esc="formatMessageTime(msg)"/></span>
-                                                <t t-if="isSelf">
-                                                    <i class="fa fa-check-circle anx-chat-msg-tick"/>
-                                                </t>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </t>
-                            </div>
-
-                            <!-- Input Bar (WhatsApp style bottom bar) -->
-                            <form class="anx-chat-input-bar" t-on-submit="sendMessage">
-                                <label class="anx-chat-attach-btn" title="Attach file">
-                                    <i class="fa fa-paperclip"/>
-                                    <input type="file" class="d-none" t-on-change="onAttachFileToChat"/>
-                                </label>
-                                <input type="text" 
-                                       class="anx-chat-input" 
-                                       placeholder="Type a message..." 
-                                       t-model="state.messageText"
-                                       t-on-keydown="onMessageInputKeydown"/>
-                                <button type="submit" class="anx-chat-send-btn" title="Send Message">
-                                    <i class="fa fa-paper-plane"/>
-                                </button>
-                            </form>
-                        </t>
-
-                        <!-- SCENARIO B: NO THREAD ACTIVE (USER SEARCH & CONVERSATION LIST) -->
-                        <t t-else="">
-                            <!-- Search Bar -->
-                            <div class="anx-chat-search-bar">
-                                <div class="anx-chat-search-input-wrap">
-                                    <i class="fa fa-search anx-chat-search-icon"/>
-                                    <input type="text" 
-                                           class="anx-chat-search-input" 
-                                           placeholder="Search all users or channels..." 
-                                           t-att-value="state.chatSearch"
-                                           t-on-input="onChatSearchInput"/>
-                                    <button t-if="state.chatSearch" class="anx-chat-search-clear" t-on-click="clearChatSearch">
-                                        <i class="fa fa-times-circle"/>
-                                    </button>
-                                </div>
-                            </div>
-
-                            <!-- SEARCH RESULTS VIEW -->
-                            <t t-if="state.chatSearch and state.chatSearch.length > 0">
-                                <div class="anx-chat-list-scroll">
-                                    <div class="anx-chat-section-hdr">
-                                        <span>SEARCH RESULTS</span>
-                                        <t t-if="state.chatSearchLoading">
-                                            <i class="fa fa-circle-o-notch fa-spin text-primary ms-auto"/>
-                                        </t>
-                                    </div>
-                                    <t t-if="!state.chatSearchResults.length &amp;&amp; !state.chatSearchLoading">
-                                        <div class="anx-chat-no-results">
-                                            <i class="fa fa-user-times fa-2x text-muted mb-2"/>
-                                            <div>No users or channels found matching "<t t-esc="state.chatSearch"/>"</div>
-                                        </div>
-                                    </t>
-                                    <t t-foreach="state.chatSearchResults" t-as="res" t-key="res_index">
-                                        <div class="anx-chat-item anx-search-result-item"
-                                             t-att-data-result-index="res_index"
-                                             t-on-click="onClickSearchResult">
-                                            <div class="anx-chat-item-avatar">
-                                                <t t-if="res.avatarUrl">
-                                                    <img t-att-src="res.avatarUrl" class="anx-chat-avatar-img"/>
-                                                </t>
-                                                <t t-else="">
-                                                    <div class="anx-chat-avatar-circle">
-                                                        <t t-esc="res.name ? res.name[0] : 'U'"/>
-                                                    </div>
-                                                </t>
-                                                <span t-if="res.type === 'user'" class="anx-chat-status-dot online"></span>
-                                            </div>
-                                            <div class="anx-chat-item-info">
-                                                <div class="anx-chat-item-name"><t t-esc="res.name"/></div>
-                                                <div class="anx-chat-item-sub">
-                                                    <t t-if="res.type === 'user'">
-                                                        <i class="fa fa-user-o" style="font-size: 11px; margin-right: 4px;"/> Odoo User &#8212; Click to chat
-                                                    </t>
-                                                    <t t-else="">
-                                                        <i class="fa fa-hashtag" style="font-size: 11px; margin-right: 4px;"/> Channel
-                                                    </t>
-                                                </div>
-                                            </div>
-                                            <div class="anx-chat-item-action">
-                                                <i class="fa fa-paper-plane" style="color: #128c7e; font-size: 14px;"/>
-                                            </div>
-                                        </div>
-                                    </t>
-                                </div>
-                            </t>
-
-                            <!-- RECENT CONVERSATIONS LIST VIEW -->
-                            <t t-else="">
-                                <div class="anx-chat-list-scroll">
-                                    <div class="anx-chat-section-hdr">
-                                        <span>RECENT CONVERSATIONS</span>
-                                        <button class="anx-chat-new-dm-btn" t-on-click="focusChatSearch" title="Find User to Chat">
-                                            <i class="fa fa-user-plus"/> New Chat
-                                        </button>
-                                    </div>
-
-                                    <t t-if="!activeChats.length">
-                                        <div class="anx-chat-empty-state">
-                                            <i class="fa fa-comments-o fa-2x text-muted mb-2"/>
-                                            <div>No recent conversations.</div>
-                                            <div class="anx-chat-empty-sub">Type a user name in the search bar above to start a conversation!</div>
-                                        </div>
-                                    </t>
-
-                                    <t t-foreach="activeChats" t-as="thread" t-key="thread.localId || thread.id">
-                                        <div class="anx-chat-item"
-                                             t-att-data-thread-id="thread.id"
-                                             t-att-data-thread-model="thread.model || 'discuss.channel'"
-                                             t-on-click="onClickChatThread">
-                                            <div class="anx-chat-item-avatar">
-                                                <t t-if="thread.avatarUrl">
-                                                    <img t-att-src="thread.avatarUrl" class="anx-chat-avatar-img"/>
-                                                </t>
-                                                <t t-else="">
-                                                    <div class="anx-chat-avatar-circle">
-                                                        <t t-esc="thread.displayName ? thread.displayName[0] : 'C'"/>
-                                                    </div>
-                                                </t>
-                                                <span class="anx-chat-status-dot online"></span>
-                                            </div>
-                                            <div class="anx-chat-item-info">
-                                                <div class="anx-chat-item-top">
-                                                    <span class="anx-chat-item-name"><t t-esc="thread.displayName"/></span>
-                                                    <span t-if="thread.lastInterestDateTime" class="anx-chat-item-time">
-                                                        <t t-esc="formatMessageTime({ date: thread.lastInterestDateTime })"/>
-                                                    </span>
-                                                </div>
-                                                <div class="anx-chat-item-preview">
-                                                    <t t-if="thread.customMessage">
-                                                        <t t-esc="thread.customMessage"/>
-                                                    </t>
-                                                    <t t-else="">
-                                                        Click to view messages...
-                                                    </t>
-                                                </div>
-                                            </div>
-                                            <span t-if="thread.messageUnreadCounter &gt; 0" class="anx-chat-item-badge">
-                                                <t t-esc="thread.messageUnreadCounter"/>
-                                            </span>
-                                        </div>
-                                    </t>
-                                </div>
-                            </t>
-                        </t>
-
-                    </div>
-                </div>
-            </t>
         </div>
     </div>
 </t>

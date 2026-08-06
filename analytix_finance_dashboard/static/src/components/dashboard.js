@@ -799,27 +799,19 @@ export class AnalytixFinanceDashboard extends Component {
         });
     }
 
-    getCurrencySymbol(codeOrSym) {
-        if (!codeOrSym) return '';
-        return String(codeOrSym).trim();
-    }
-
     // ── Formatters ────────────────────────────────────────────────────
     formatCurrency(value) {
         if (!this.state.data) return String(value);
-        const sym = this.getCurrencySymbol(this.state.data.currency);
+        const sym = this.state.data.currency;
         const num = Math.abs(Number(value));
-        return `${sym} ${num.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        return `${sym} ${num.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
     }
 
     formatShort(value) {
-        const n = Number(value || 0);
-        return n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    }
-
-    formatExact(value) {
-        const n = Number(value || 0);
-        return n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        const n = Number(value);
+        if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M';
+        if (n >= 1_000)     return (n / 1_000).toFixed(1) + 'k';
+        return n.toFixed(0);
     }
 
     // Cap percentage display — prevent ugly numbers like 3779.4%
@@ -2319,24 +2311,18 @@ export class AnalytixFinanceDashboard extends Component {
         document.addEventListener('touchend', onTouchEnd);
     }
 
-    async toggleChatPopup(ev) {
+    toggleChatPopup(ev) {
         if (this.preventChatClick) return;
-        this.state.showChatPopup = !this.state.showChatPopup;
-        if (this.state.showChatPopup) {
-            try {
-                if (this.store && this.store.fetchStoreData) {
-                    await this.store.fetchStoreData("init_messaging");
-                }
-            } catch (e) {}
-            if (this.state.activeThreadId) {
-                const thread = this.activeThread;
-                if (thread) {
-                    try { await thread.fetchMessages(); } catch (e) {}
-                }
-            }
-            this.startChatPolling();
+
+        // Trigger native Odoo Messaging Menu in top navbar
+        const systrayIcon = document.querySelector(
+            '.o_menu_systray .fa-comments, .o_menu_systray .fa-comment, .o_messaging_menu, [title*="Messaging"], [title*="Discuss"]'
+        );
+        if (systrayIcon) {
+            const btn = systrayIcon.closest('button') || systrayIcon;
+            btn.click();
         } else {
-            this.stopChatPolling();
+            this.action.doAction("mail.action_discuss");
         }
     }
 
@@ -2346,8 +2332,8 @@ export class AnalytixFinanceDashboard extends Component {
 
     getChatPopupStyle() {
         const btnSize = 58;
-        const popupWidth = 380;
-        const popupHeight = 520;
+        const popupWidth = 360;
+        const popupHeight = 440;
         
         let left = this.state.chatPos.x - popupWidth + btnSize;
         let top = this.state.chatPos.y - popupHeight - 12;
@@ -2363,102 +2349,6 @@ export class AnalytixFinanceDashboard extends Component {
         return `position: fixed; left: ${left}px; top: ${top}px; width: ${popupWidth}px; height: ${popupHeight}px; z-index: 100000; overflow: hidden; display: flex; flex-direction: column;`;
     }
 
-    focusChatSearch() {
-        this.clearChatSearch();
-        setTimeout(() => {
-            const inp = document.querySelector('.anx-chat-search-input');
-            if (inp) inp.focus();
-        }, 50);
-    }
-
-    async startVoiceCall(ev) {
-        if (ev) ev.stopPropagation();
-        const thread = this.activeThread;
-        if (!thread) return;
-        this.notification.add(`Starting voice call with ${thread.displayName || 'user'}...`, { type: "info", sticky: false });
-        try {
-            if (this.store && this.store.rtc) {
-                await this.store.rtc.toggleCall({ thread, video: false });
-            } else if (this.env.services && this.env.services['mail.rtc']) {
-                await this.env.services['mail.rtc'].toggleCall({ thread, video: false });
-            } else if (thread.startCall) {
-                await thread.startCall({ video: false });
-            } else {
-                this.openFullDiscuss();
-            }
-        } catch (e) {
-            console.error("Voice call error:", e);
-            this.openFullDiscuss();
-        }
-    }
-
-    async startVideoCall(ev) {
-        if (ev) ev.stopPropagation();
-        const thread = this.activeThread;
-        if (!thread) return;
-        this.notification.add(`Starting video call with ${thread.displayName || 'user'}...`, { type: "info", sticky: false });
-        try {
-            if (this.store && this.store.rtc) {
-                await this.store.rtc.toggleCall({ thread, video: true });
-            } else if (this.env.services && this.env.services['mail.rtc']) {
-                await this.env.services['mail.rtc'].toggleCall({ thread, video: true });
-            } else if (thread.startCall) {
-                await thread.startCall({ video: true });
-            } else {
-                this.openFullDiscuss();
-            }
-        } catch (e) {
-            console.error("Video call error:", e);
-            this.openFullDiscuss();
-        }
-    }
-
-    async onAttachFileToChat(ev) {
-        const file = ev.target.files && ev.target.files[0];
-        if (!file || !this.activeThread) return;
-        const thread = this.activeThread;
-        const inputEl = ev.target;
-        try {
-            const reader = new FileReader();
-            reader.onload = async () => {
-                try {
-                    const base64 = reader.result.split(',')[1];
-                    const res = await this.orm.create('ir.attachment', [{
-                        name: file.name,
-                        datas: base64,
-                        res_model: thread.model || 'discuss.channel',
-                        res_id: thread.id,
-                    }]);
-                    const attachmentId = Array.isArray(res) ? res[0] : res;
-                    if (attachmentId) {
-                        const attObj = (this.store['ir.attachment'] && this.store['ir.attachment'].insert) 
-                            ? this.store['ir.attachment'].insert({ id: attachmentId, name: file.name })
-                            : { id: attachmentId, name: file.name };
-                        await thread.post('', {
-                            attachments: [attObj],
-                        });
-                        await this.loadThreadMessages(thread);
-                        setTimeout(() => {
-                            if (this.messageFeedRef && this.messageFeedRef.el) {
-                                this.messageFeedRef.el.scrollTop = this.messageFeedRef.el.scrollHeight;
-                            }
-                        }, 50);
-                    }
-                } catch (e) {
-                    console.error("Error creating attachment:", e);
-                    this.notification.add("Failed to send attachment: " + (e.message || ''), { type: 'danger' });
-                } finally {
-                    if (inputEl) inputEl.value = "";
-                }
-            };
-            reader.readAsDataURL(file);
-        } catch (e) {
-            console.error("Attachment reader error:", e);
-            if (inputEl) inputEl.value = "";
-            this.notification.add("Failed to send attachment: " + (e.message || ''), { type: 'danger' });
-        }
-    }
-
     get discussUnreadCount() {
         if (this.store && this.store.discuss) {
             if (typeof this.store.discuss.unreadCounter === 'number') {
@@ -2469,17 +2359,8 @@ export class AnalytixFinanceDashboard extends Component {
     }
 
     openFullDiscuss() {
-        const thread = this.activeThread;
         this.state.showChatPopup = false;
-        this.action.doAction(
-            {
-                type: "ir.actions.client",
-                tag: "mail.action_discuss",
-            },
-            {
-                additionalContext: thread && thread.id ? { active_id: thread.id } : {},
-            }
-        );
+        this.action.doAction("mail.action_discuss");
     }
 
     stripHtml(html) {
@@ -2487,108 +2368,23 @@ export class AnalytixFinanceDashboard extends Component {
         return html.replace(/<[^>]*>/g, "");
     }
 
-    async loadThreadMessages(thread) {
-        if (!thread || !thread.id) return;
-        if (!this.threadMessagesCache) {
-            this.threadMessagesCache = {};
-        }
-        try {
-            await thread.fetchMessages();
-        } catch (e) {}
-        try {
-            const rawMsgs = await this.orm.searchRead(
-                'mail.message',
-                [['model', '=', 'discuss.channel'], ['res_id', '=', thread.id]],
-                ['id', 'body', 'date', 'author_id', 'message_type', 'attachment_ids'],
-                { order: 'id ascii', limit: 200 }
-            );
-            if (rawMsgs && rawMsgs.length > 0) {
-                const currentUserId = this.store.self?.main_user_id?.id || false;
-                const currentPartnerId = this.store.self?.id || false;
-
-                const allAttIds = [];
-                rawMsgs.forEach(m => {
-                    if (Array.isArray(m.attachment_ids) && m.attachment_ids.length > 0) {
-                        allAttIds.push(...m.attachment_ids);
-                    }
-                });
-
-                const attachmentsMap = new Map();
-                if (allAttIds.length > 0) {
-                    try {
-                        const rawAtts = await this.orm.searchRead(
-                            'ir.attachment',
-                            [['id', 'in', allAttIds]],
-                            ['id', 'name', 'mimetype', 'file_size']
-                        );
-                        rawAtts.forEach(att => {
-                            attachmentsMap.set(att.id, att);
-                        });
-                    } catch (e) {}
-                }
-
-                const formatted = rawMsgs.map(m => {
-                    const authorId = Array.isArray(m.author_id) ? m.author_id[0] : m.author_id;
-                    const authorName = Array.isArray(m.author_id) ? m.author_id[1] : 'User';
-                    const isSelf = (authorId === currentPartnerId) || (authorId === currentUserId);
-                    const msgAtts = Array.isArray(m.attachment_ids)
-                        ? m.attachment_ids.map(attId => attachmentsMap.get(attId)).filter(Boolean)
-                        : [];
-
-                    return {
-                        id: m.id,
-                        body: m.body,
-                        date: m.date,
-                        author: { id: authorId, name: authorName },
-                        isSelfAuthored: isSelf,
-                        message_type: m.message_type,
-                        attachments: msgAtts,
-                    };
-                }).filter(m => m.message_type !== 'notification');
-
-                this.threadMessagesCache[thread.id] = formatted;
-
-                this.store.insert({
-                    'mail.message': rawMsgs.map(m => ({
-                        id: m.id,
-                        body: m.body,
-                        date: m.date,
-                        author_id: Array.isArray(m.author_id) ? m.author_id[0] : m.author_id,
-                        message_type: m.message_type,
-                        thread: { id: thread.id, model: 'discuss.channel' },
-                    }))
-                });
-            }
-        } catch (e) {
-            console.error("Error loading thread messages:", e);
-        }
-    }
-
-    async openThread(thread) {
-        if (!thread) return;
-        this.state.activeThreadId = thread.localId;
-        if (thread.markAsRead) {
-            try { await thread.markAsRead(); } catch (e) {}
-        }
-        await this.loadThreadMessages(thread);
-        this.startChatPolling();
-        setTimeout(() => {
-            if (this.messageFeedRef && this.messageFeedRef.el) {
-                this.messageFeedRef.el.scrollTop = this.messageFeedRef.el.scrollHeight;
-            }
-        }, 50);
-    }
 
     async onClickChatThread(ev) {
         const id = parseInt(ev.currentTarget.dataset.threadId);
-        const model = ev.currentTarget.dataset.threadModel || 'discuss.channel';
+        const model = ev.currentTarget.dataset.threadModel;
         if (id && model) {
-            let thread = this.store.Thread.get({ id, model });
-            if (!thread && this.store.menuThreads) {
-                thread = this.store.menuThreads.find(t => t.id === id && (t.model || 'discuss.channel') === model);
-            }
+            const thread = this.store.Thread.get({ id, model });
             if (thread) {
-                await this.openThread(thread);
+                this.state.activeThreadId = thread.localId;
+                if (thread.markAsRead) {
+                    thread.markAsRead();
+                }
+                try {
+                    await thread.fetchMessages();
+                } catch (e) {
+                    console.error("Error fetching messages:", e);
+                }
+                this.startChatPolling();
             }
         }
     }
@@ -2600,7 +2396,13 @@ export class AnalytixFinanceDashboard extends Component {
             try {
                 const thread = this.activeThread;
                 if (thread && this.state.showChatPopup && this.state.activeThreadId) {
-                    await this.loadThreadMessages(thread);
+                    await thread.fetchMessages();
+                    // Auto-scroll to bottom
+                    setTimeout(() => {
+                        if (this.messageFeedRef.el) {
+                            this.messageFeedRef.el.scrollTop = this.messageFeedRef.el.scrollHeight;
+                        }
+                    }, 30);
                 }
             } catch (e) {
                 // Silently ignore poll errors
@@ -2624,126 +2426,21 @@ export class AnalytixFinanceDashboard extends Component {
     get activeThread() {
         if (this.state.activeThreadId && this.store) {
             return this.store.Thread.records[this.state.activeThreadId] || 
-                   this.store.menuThreads?.find(t => t.localId === this.state.activeThreadId) ||
-                   this.store.allChannels?.find(t => t.localId === this.state.activeThreadId);
+                   this.store.menuThreads?.find(t => t.localId === this.state.activeThreadId);
         }
         return null;
     }
 
-    isImageAttachment(att) {
-        if (!att) return false;
-        const name = (att.name || att.filename || att.displayName || '').toLowerCase();
-        const type = (att.mimetype || '').toLowerCase();
-        return type.startsWith('image/') || name.endsWith('.png') || name.endsWith('.jpg') || name.endsWith('.jpeg') || name.endsWith('.gif') || name.endsWith('.webp');
-    }
-
-    getAttIconClass(att) {
-        if (!att) return 'fa-file-o text-muted';
-        const name = (att.name || att.filename || att.displayName || '').toLowerCase();
-        if (name.endsWith('.pdf')) return 'fa-file-pdf-o text-danger';
-        if (name.endsWith('.doc') || name.endsWith('.docx')) return 'fa-file-word-o text-primary';
-        if (name.endsWith('.xls') || name.endsWith('.xlsx')) return 'fa-file-excel-o text-success';
-        if (name.endsWith('.zip') || name.endsWith('.rar')) return 'fa-file-archive-o text-warning';
-        if (name.endsWith('.txt')) return 'fa-file-text-o text-info';
-        return 'fa-file-o text-primary';
-    }
-
     get activeThreadMessages() {
         const thread = this.activeThread;
-        if (!thread || !thread.id) return [];
-
-        const msgMap = new Map();
-
-        const extractAtts = (m, existing) => {
-            const rawList = [];
-            if (existing && existing.attachments && existing.attachments.length) {
-                rawList.push(...existing.attachments);
-            }
-            if (m) {
-                if (Array.isArray(m.attachments) && m.attachments.length) {
-                    rawList.push(...m.attachments);
-                } else if (m.attachments && m.attachments.length) {
-                    rawList.push(...Array.from(m.attachments));
-                }
-                if (Array.isArray(m.attachment_ids) && m.attachment_ids.length) {
-                    rawList.push(...m.attachment_ids);
-                }
-            }
-            const attMap = new Map();
-            for (const item of rawList) {
-                if (!item) continue;
-                const id = typeof item === 'object' ? (item.id || item) : item;
-                if (!id) continue;
-                if (!attMap.has(id) || (typeof item === 'object' && item.name)) {
-                    const name = typeof item === 'object' ? (item.name || item.filename || item.displayName || (`File_${id}`)) : `File_${id}`;
-                    const mimetype = typeof item === 'object' ? (item.mimetype || '') : '';
-                    attMap.set(id, { id, name, mimetype });
-                }
-            }
-            return Array.from(attMap.values());
-        };
-
-        if (this.threadMessagesCache && this.threadMessagesCache[thread.id]) {
-            for (const m of this.threadMessagesCache[thread.id]) {
-                if (m && m.id) {
-                    msgMap.set(m.id, {
-                        ...m,
-                        attachments: extractAtts(m, null)
-                    });
-                }
-            }
+        if (thread && thread.messages) {
+            return thread.messages.filter(m => !m.isNotification);
         }
-
-        if (thread.messages) {
-            for (const m of thread.messages) {
-                if (m && m.id) {
-                    const existing = msgMap.get(m.id);
-                    const mergedAtts = extractAtts(m, existing);
-                    msgMap.set(m.id, {
-                        ...(existing || {}),
-                        ...m,
-                        attachments: mergedAtts
-                    });
-                }
-            }
-        }
-
-        if (this.store && this.store["mail.message"] && this.store["mail.message"].records) {
-            for (const m of Object.values(this.store["mail.message"].records)) {
-                if (m && m.id) {
-                    const matchesThread = (m.thread && m.thread.eq && m.thread.eq(thread)) ||
-                                          (m.model === thread.model && m.res_id === thread.id) ||
-                                          (m.res_id === thread.id && (!m.model || m.model === 'discuss.channel'));
-                    if (matchesThread) {
-                        const existing = msgMap.get(m.id);
-                        const mergedAtts = extractAtts(m, existing);
-                        msgMap.set(m.id, {
-                            ...(existing || {}),
-                            ...m,
-                            attachments: mergedAtts
-                        });
-                    }
-                }
-            }
-        }
-
-        let msgs = Array.from(msgMap.values());
-        msgs = msgs.filter(m => !m.isNotification);
-        msgs.sort((a, b) => (a.id || 0) - (b.id || 0));
-        return msgs;
+        return [];
     }
 
     formatMessageTime(message) {
         if (!message || !message.date) return "";
-        if (typeof message.date === 'string') {
-            try {
-                const parts = message.date.split(' ');
-                if (parts.length > 1) {
-                    const timeParts = parts[1].split(':');
-                    return `${timeParts[0]}:${timeParts[1]}`;
-                }
-            } catch (e) {}
-        }
         if (message.date.toFormat) {
             return message.date.toFormat("HH:mm");
         }
@@ -2770,14 +2467,16 @@ export class AnalytixFinanceDashboard extends Component {
 
         try {
             await thread.post(body);
-            await this.loadThreadMessages(thread);
+            // Refresh messages and scroll
+            try { await thread.fetchMessages(); } catch (e) {}
             setTimeout(() => {
-                if (this.messageFeedRef && this.messageFeedRef.el) {
+                if (this.messageFeedRef.el) {
                     this.messageFeedRef.el.scrollTop = this.messageFeedRef.el.scrollHeight;
                 }
             }, 50);
         } catch (e) {
             console.error("Error posting message:", e);
+            // Restore the text if send failed
             this.state.messageText = body;
         }
     }
@@ -2790,26 +2489,14 @@ export class AnalytixFinanceDashboard extends Component {
     }
 
     get activeChats() {
-        if (!this.store) return [];
-        const threadsMap = new Map();
-        if (this.store.menuThreads) {
-            for (const t of this.store.menuThreads) {
-                if (t && t.id) threadsMap.set(t.localId || `${t.model}_${t.id}`, t);
-            }
+        if (this.store && this.store.menuThreads) {
+            const term = (this.state.chatSearch || '').trim().toLowerCase();
+            if (!term) return this.store.menuThreads;
+            return this.store.menuThreads.filter(t =>
+                (t.displayName || '').toLowerCase().includes(term)
+            );
         }
-        if (this.store.Thread && this.store.Thread.records) {
-            for (const t of Object.values(this.store.Thread.records)) {
-                if (t && t.id && t.model === 'discuss.channel') {
-                    threadsMap.set(t.localId || `${t.model}_${t.id}`, t);
-                }
-            }
-        }
-        let list = Array.from(threadsMap.values());
-        const term = (this.state.chatSearch || '').trim().toLowerCase();
-        if (term) {
-            list = list.filter(t => (t.displayName || t.name || '').toLowerCase().includes(term));
-        }
-        return list;
+        return [];
     }
 
     clearChatSearch() {
@@ -2867,19 +2554,24 @@ export class AnalytixFinanceDashboard extends Component {
         try {
             if (result.type === 'user') {
                 // Open or create a DM with this user
-                const chat = await this.store.getChat({ partnerId: result.partnerId, userId: result.id });
+                const chat = await this.store.getChat({ userId: result.id });
                 if (chat) {
-                    await this.openThread(chat);
+                    this.state.activeThreadId = chat.localId;
+                    try { await chat.fetchMessages(); } catch (e) {}
+                    this.startChatPolling();
                 }
             } else {
                 // Open an existing channel
                 let thread = this.store.Thread.get({ id: result.id, model: 'discuss.channel' });
                 if (!thread) {
+                    // Fetch channel and then open
                     await this.store.fetchChannel(result.id);
                     thread = this.store.Thread.get({ id: result.id, model: 'discuss.channel' });
                 }
                 if (thread) {
-                    await this.openThread(thread);
+                    this.state.activeThreadId = thread.localId;
+                    try { await thread.fetchMessages(); } catch (e) {}
+                    this.startChatPolling();
                 }
             }
         } catch (e) {
