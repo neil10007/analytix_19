@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Security Group restricted strictly to Super Admin (User ID 2) -->
+    <record id="group_audit_logs_super_admin" model="res.groups">
+        <field name="name">User Activity Logs Super Admin Access</field>
+    </record>
+
+    <!-- Assign Super Admin group to base.user_admin (User ID 2) -->
+    <record id="base.user_admin" model="res.users">
+        <field name="groups_id" eval="[(4, ref('users_logs_history.group_audit_logs_super_admin'))]"/>
+    </record>
+</odoo>

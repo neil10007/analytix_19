@@ -142,7 +142,11 @@ html:not([data-color-scheme="dark"]):not(.o_dark) body:not(.kr_sp_theme_dark) {
     .anx-upload-title,
     .anx-upload-file-name,
     .anx-inv-kpi-pill-val,
-    .anx-inv-kpi-total .anx-inv-kpi-pill-val {
+    .anx-inv-kpi-total .anx-inv-kpi-pill-val,
+    .anx-inv-partner-name,
+    .anx-jrn-list-name,
+    .anx-jrn-card-name,
+    .anx-jrn-stat-val {
         color: #0f172a !important;
     }
     .anx-inv-kpi-amount .anx-inv-kpi-pill-val { color: #00b4a8 !important; }

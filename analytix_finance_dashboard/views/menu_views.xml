@@ -3,6 +3,7 @@
     <menuitem id="menu_analytix_finance_dashboard"
               name="Dashboard"
               action="action_analytix_finance_dashboard"
+              web_icon="analytix_finance_dashboard,static/description/icon.svg"
               sequence="0"/>
 
     <menuitem id="menu_analytix_finance_dashboard_accounting"

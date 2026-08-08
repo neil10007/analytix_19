@@ -14,10 +14,10 @@
                     </span>
                 </div>
                 <div class="anx-topbar-right">
-                    <div class="anx-date-badge" t-if="state.data">
+                    <div class="anx-date-badge" t-if="state.data &amp;&amp; state.data.date_range">
                         <i class="fa fa-calendar"></i>
                         &#160;<t t-esc="formatDate(state.data.date_range.start)"/>
-                        <t t-if="state.filter === 'custom' and state.customFrom and state.customTo">
+                        <t t-if="state.data.date_range.end">
                             &#160;→&#160;<t t-esc="formatDate(state.data.date_range.end)"/>
                         </t>
                     </div>
@@ -41,7 +41,7 @@
                     <input class="anx-custom-date-input"
                            type="date"
                            data-field="from"
-                           t-att-value="state.customFrom"
+                           t-model="state.customFrom"
                            t-on-change="onCustomDateChange"/>
                 </div>
                 <div class="anx-custom-date-group">
@@ -49,7 +49,7 @@
                     <input class="anx-custom-date-input"
                            type="date"
                            data-field="to"
-                           t-att-value="state.customTo"
+                           t-model="state.customTo"
                            t-on-change="onCustomDateChange"/>
                 </div>
                 <button class="anx-custom-apply-btn" t-on-click="applyCustomRange">
@@ -495,7 +495,7 @@
                                             <td class="anx-inv-td">
                                                 <div class="anx-inv-partner">
                                                     <span class="anx-inv-partner-avatar" t-attf-style="background:{{ inv.company_color.dot }}22;color:{{ inv.company_color.dot }};"><t t-esc="inv.partner.charAt(0).toUpperCase()"/></span>
-                                                    <span class="anx-inv-partner-name"><t t-esc="inv.partner"/></span>
+                                                    <span class="anx-inv-partner-name" t-att-title="inv.partner"><t t-esc="inv.partner"/></span>
                                                 </div>
                                             </td>
                                             <td class="anx-inv-td"><span class="anx-inv-type-badge" t-attf-style="color:{{ inv.move_type_color }};background:{{ inv.move_type_color }}18;"><t t-esc="inv.move_type_label"/></span></td>
@@ -601,7 +601,7 @@
                                             <td class="anx-inv-td">
                                                 <div class="anx-inv-partner">
                                                     <span class="anx-inv-partner-avatar" t-attf-style="background:#fce4ec;color:#e53935;"><t t-esc="exp.partner.charAt(0).toUpperCase()"/></span>
-                                                    <span class="anx-inv-partner-name"><t t-esc="exp.partner"/></span>
+                                                    <span class="anx-inv-partner-name" t-att-title="exp.partner"><t t-esc="exp.partner"/></span>
                                                 </div>
                                             </td>
                                             <td class="anx-inv-td"><span class="anx-inv-company-badge" t-attf-style="background:{{ exp.company_color.bg }};color:{{ exp.company_color.text }};"><span class="anx-inv-co-dot-sm" t-attf-style="background:{{ exp.company_color.dot }};"></span><t t-esc="exp.company_name"/></span></td>
@@ -707,7 +707,7 @@
                                     <t t-foreach="filteredOutputVat" t-as="vl" t-key="vl_index">
                                         <tr class="anx-inv-row anx-vat-row-output" t-att-data-id="vl.id" t-on-click="openVatDoc">
                                             <td class="anx-inv-td anx-inv-td-name"><span class="anx-inv-num"><i class="fa fa-file-text-o" style="color:#1e88e5;"/>&#160;<t t-esc="vl.move_name"/></span></td>
-                                            <td class="anx-inv-td"><div class="anx-inv-partner"><span class="anx-inv-partner-avatar" style="background:#e3f2fd;color:#1e88e5;"><t t-esc="vl.partner.charAt(0).toUpperCase()"/></span><span class="anx-inv-partner-name"><t t-esc="vl.partner"/></span></div></td>
+                                            <td class="anx-inv-td"><div class="anx-inv-partner"><span class="anx-inv-partner-avatar" style="background:#e3f2fd;color:#1e88e5;"><t t-esc="vl.partner.charAt(0).toUpperCase()"/></span><span class="anx-inv-partner-name" t-att-title="vl.partner"><t t-esc="vl.partner"/></span></div></td>
                                             <td class="anx-inv-td"><span class="anx-vat-tax-badge"><t t-esc="vl.tax_name"/></span></td>
                                             <td class="anx-inv-td"><span class="anx-inv-company-badge" t-attf-style="background:{{ vl.company_color.bg }};color:{{ vl.company_color.text }};"><span class="anx-inv-co-dot-sm" t-attf-style="background:{{ vl.company_color.dot }};"></span><t t-esc="vl.company_name"/></span></td>
                                             <td class="anx-inv-td anx-inv-td-date"><t t-esc="vl.invoice_date"/></td>
@@ -746,7 +746,7 @@
                                     <t t-foreach="filteredInputVat" t-as="vl" t-key="vl_index">
                                         <tr class="anx-inv-row anx-vat-row-input" t-att-data-id="vl.id" t-on-click="openVatDoc">
                                             <td class="anx-inv-td anx-inv-td-name"><span class="anx-inv-num"><i class="fa fa-file-text" style="color:#e53935;"/>&#160;<t t-esc="vl.move_name"/></span></td>
-                                            <td class="anx-inv-td"><div class="anx-inv-partner"><span class="anx-inv-partner-avatar" style="background:#fce4ec;color:#e53935;"><t t-esc="vl.partner.charAt(0).toUpperCase()"/></span><span class="anx-inv-partner-name"><t t-esc="vl.partner"/></span></div></td>
+                                            <td class="anx-inv-td"><div class="anx-inv-partner"><span class="anx-inv-partner-avatar" style="background:#fce4ec;color:#e53935;"><t t-esc="vl.partner.charAt(0).toUpperCase()"/></span><span class="anx-inv-partner-name" t-att-title="vl.partner"><t t-esc="vl.partner"/></span></div></td>
                                             <td class="anx-inv-td"><span class="anx-vat-tax-badge anx-vat-tax-input"><t t-esc="vl.tax_name"/></span></td>
                                             <td class="anx-inv-td"><span class="anx-inv-company-badge" t-attf-style="background:{{ vl.company_color.bg }};color:{{ vl.company_color.text }};"><span class="anx-inv-co-dot-sm" t-attf-style="background:{{ vl.company_color.dot }};"></span><t t-esc="vl.company_name"/></span></td>
                                             <td class="anx-inv-td anx-inv-td-date"><t t-esc="vl.invoice_date"/></td>
@@ -833,7 +833,7 @@
                                             <td class="anx-inv-td anx-inv-td-name">
                                                 <div class="anx-inv-partner">
                                                     <span class="anx-jrn-list-icon" t-attf-style="background:{{ jrn.type_bg }};color:{{ jrn.type_dot }};"><i t-attf-class="fa {{ jrn.type_icon }}"/></span>
-                                                    <span class="anx-jrn-list-name" style="font-weight:600;"><t t-esc="jrn.name"/></span>
+                                                    <span class="anx-jrn-list-name" t-att-title="jrn.name" style="font-weight:600;"><t t-esc="jrn.name"/></span>
                                                 </div>
                                             </td>
                                             <td class="anx-inv-td anx-inv-td-date">
@@ -842,8 +842,11 @@
                                             <td class="anx-inv-td">
                                                 <span class="anx-jrn-type-badge" t-attf-style="background:{{ jrn.type_bg }};color:{{ jrn.type_text }};"><t t-esc="jrn.journal_name"/> (<t t-esc="jrn.journal_code"/>)</span>
                                             </td>
-                                            <td class="anx-inv-td" style="font-size:12px;color:#374151;">
-                                                <t t-esc="jrn.partner"/>
+                                            <td class="anx-inv-td">
+                                                <div class="anx-inv-partner">
+                                                    <span class="anx-inv-partner-avatar" style="background:#e0f2fe;color:#0284c7;"><t t-esc="jrn.partner ? jrn.partner.charAt(0).toUpperCase() : '—'"/></span>
+                                                    <span class="anx-inv-partner-name" t-att-title="jrn.partner"><t t-esc="jrn.partner"/></span>
+                                                </div>
                                             </td>
                                             <td class="anx-inv-td" style="font-size:11.5px;color:#6b7280;">
                                                 <t t-esc="jrn.ref or '—'"/>
@@ -1133,7 +1136,7 @@
                                         <th class="anx-inv-th anx-doc-th-size" style="width:75px;">Size</th>
                                         <th class="anx-inv-th anx-doc-th-date" style="width:125px;">Upload Date</th>
                                         <th class="anx-inv-th anx-doc-th-user" style="width:115px;">Uploaded By</th>
-                                        <th class="anx-inv-th anx-doc-review-th" style="width:160px;">Review <i class="fa fa-lock" style="font-size:10px;opacity:0.5;" title="Only backend users can edit"/></th>
+                                        <th class="anx-inv-th anx-doc-review-th" style="width:220px;">Review <i class="fa fa-lock" style="font-size:10px;opacity:0.5;" title="Only backend users can edit"/></th>
                                         <th class="anx-inv-th anx-doc-th-status" style="width:100px;">Status</th>
                                         <t t-if="state.docList and state.docList.is_validator">
                                             <th class="anx-inv-th anx-inv-th-center anx-doc-th-val" style="width:165px;">Validation</th>
@@ -1259,20 +1262,20 @@
                                                         <textarea class="anx-doc-review-edit-input"
                                                                   t-att-id="'anx-review-edit-' + doc.id"
                                                                   placeholder="Add review notes…"
-                                                                  rows="3"
+                                                                  rows="2"
                                                                   t-on-input="onReviewEditInput"
                                                                   t-on-keydown="onReviewEditKeydown"><t t-esc="state.docReviewEditVal"/></textarea>
                                                         <div class="anx-doc-review-edit-btns">
-                                                            <button class="anx-doc-desc-save-btn"
+                                                            <button class="anx-doc-review-save-btn"
                                                                     t-att-data-id="doc.id"
                                                                     t-on-click="saveReviewEdit"
-                                                                    title="Save">
-                                                                <i class="fa fa-check"/>
+                                                                    title="Save Review">
+                                                                <i class="fa fa-check"/> Save
                                                             </button>
-                                                            <button class="anx-doc-desc-cancel-btn"
+                                                            <button class="anx-doc-review-cancel-btn"
                                                                     t-on-click="cancelReviewEdit"
                                                                     title="Cancel">
-                                                                <i class="fa fa-times"/>
+                                                                <i class="fa fa-times"/> Cancel
                                                             </button>
                                                         </div>
                                                     </div>
@@ -2097,7 +2100,7 @@
                                     <t t-foreach="filteredOutputVat" t-as="vl" t-key="vl_index">
                                         <tr class="anx-inv-row anx-vat-row-output" t-att-data-id="vl.id" t-on-click="openVatDoc">
                                             <td class="anx-inv-td anx-inv-td-name"><span class="anx-inv-num"><i class="fa fa-file-text-o" style="color:#1e88e5;"/>&#160;<t t-esc="vl.move_name"/></span></td>
-                                            <td class="anx-inv-td"><div class="anx-inv-partner"><span class="anx-inv-partner-avatar" style="background:#e3f2fd;color:#1e88e5;"><t t-esc="vl.partner.charAt(0).toUpperCase()"/></span><span class="anx-inv-partner-name"><t t-esc="vl.partner"/></span></div></td>
+                                            <td class="anx-inv-td"><div class="anx-inv-partner"><span class="anx-inv-partner-avatar" style="background:#e3f2fd;color:#1e88e5;"><t t-esc="vl.partner.charAt(0).toUpperCase()"/></span><span class="anx-inv-partner-name" t-att-title="vl.partner"><t t-esc="vl.partner"/></span></div></td>
                                             <td class="anx-inv-td"><span class="anx-vat-tax-badge"><t t-esc="vl.tax_name"/></span></td>
                                             <td class="anx-inv-td"><span class="anx-inv-company-badge" t-attf-style="background:{{ vl.company_color.bg }};color:{{ vl.company_color.text }};"><span class="anx-inv-co-dot-sm" t-attf-style="background:{{ vl.company_color.dot }};"></span><t t-esc="vl.company_name"/></span></td>
                                             <td class="anx-inv-td anx-inv-td-date"><t t-esc="vl.invoice_date"/></td>
@@ -2136,7 +2139,7 @@
                                     <t t-foreach="filteredInputVat" t-as="vl" t-key="vl_index">
                                         <tr class="anx-inv-row anx-vat-row-input" t-att-data-id="vl.id" t-on-click="openVatDoc">
                                             <td class="anx-inv-td anx-inv-td-name"><span class="anx-inv-num"><i class="fa fa-file-text" style="color:#e53935;"/>&#160;<t t-esc="vl.move_name"/></span></td>
-                                            <td class="anx-inv-td"><div class="anx-inv-partner"><span class="anx-inv-partner-avatar" style="background:#fce4ec;color:#e53935;"><t t-esc="vl.partner.charAt(0).toUpperCase()"/></span><span class="anx-inv-partner-name"><t t-esc="vl.partner"/></span></div></td>
+                                            <td class="anx-inv-td"><div class="anx-inv-partner"><span class="anx-inv-partner-avatar" style="background:#fce4ec;color:#e53935;"><t t-esc="vl.partner.charAt(0).toUpperCase()"/></span><span class="anx-inv-partner-name" t-att-title="vl.partner"><t t-esc="vl.partner"/></span></div></td>
                                             <td class="anx-inv-td"><span class="anx-vat-tax-badge anx-vat-tax-input"><t t-esc="vl.tax_name"/></span></td>
                                             <td class="anx-inv-td"><span class="anx-inv-company-badge" t-attf-style="background:{{ vl.company_color.bg }};color:{{ vl.company_color.text }};"><span class="anx-inv-co-dot-sm" t-attf-style="background:{{ vl.company_color.dot }};"></span><t t-esc="vl.company_name"/></span></td>
                                             <td class="anx-inv-td anx-inv-td-date"><t t-esc="vl.invoice_date"/></td>

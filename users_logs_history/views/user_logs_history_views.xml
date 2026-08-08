@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- List (Tree) View -->
+    <record id="view_user_logs_history_list" model="ir.ui.view">
+        <field name="name">user.logs.history.list</field>
+        <field name="model">user.logs.history</field>
+        <field name="arch" type="xml">
+            <list string="User Activity &amp; Business Action History" default_order="log_date desc" create="false" edit="false" delete="true">
+                <field name="log_date"/>
+                <field name="user_id" widget="many2one_avatar_user"/>
+                <field name="name" string="Business Action Outcome"/>
+                <field name="operation_type" widget="badge" 
+                       decoration-success="operation_type == 'create'" 
+                       decoration-info="operation_type == 'write'" 
+                       decoration-danger="operation_type == 'unlink'"/>
+                <field name="category" widget="badge"/>
+                <field name="model_description"/>
+                <field name="model_name" optional="hide"/>
+                <field name="record_name"/>
+                <field name="res_id" optional="hide"/>
+                <field name="ip_address" optional="show"/>
+                <field name="company_id" groups="base.group_multi_company" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Form View -->
+    <record id="view_user_logs_history_form" model="ir.ui.view">
+        <field name="name">user.logs.history.form</field>
+        <field name="model">user.logs.history</field>
+        <field name="arch" type="xml">
+            <form string="User Activity Log Detail" create="false" edit="false">
+                <header>
+                    <button name="action_open_record" type="object" string="Open Record" class="btn-primary" icon="fa-external-link"/>
+                    <field name="operation_type" widget="badge" 
+                           decoration-success="operation_type == 'create'" 
+                           decoration-info="operation_type == 'write'" 
+                           decoration-danger="operation_type == 'unlink'"/>
+                    <field name="category" widget="badge"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" string="Action Outcome Summary"/>
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group string="User &amp; Action Info">
+                            <field name="user_id" widget="many2one_avatar_user" readonly="1"/>
+                            <field name="user_name" readonly="1"/>
+                            <field name="category" readonly="1"/>
+                            <field name="log_date" readonly="1"/>
+                            <field name="ip_address" readonly="1"/>
+                            <field name="company_id" readonly="1" groups="base.group_multi_company"/>
+                        </group>
+                        <group string="Target Record &amp; Model">
+                            <field name="model_description" readonly="1"/>
+                            <field name="model_name" readonly="1"/>
+                            <field name="res_id" readonly="1"/>
+                            <field name="record_name" readonly="1"/>
+                        </group>
+                    </group>
+                    <group string="Field Changes &amp; Recorded Details">
+                        <field name="details_html" readonly="1" widget="html" nolabel="1"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Search View -->
+    <record id="view_user_logs_history_search" model="ir.ui.view">
+        <field name="name">user.logs.history.search</field>
+        <field name="model">user.logs.history</field>
+        <field name="arch" type="xml">
+            <search string="Search Activity Logs">
+                <field name="name" string="Outcome Summary"/>
+                <field name="record_name" string="Record Name"/>
+                <field name="user_name" string="User Name"/>
+                <field name="user_id"/>
+                <field name="category"/>
+                <field name="model_name"/>
+                <field name="model_description"/>
+                <field name="operation_type"/>
+                <separator/>
+                <filter string="Invoicing &amp; Payments" name="cat_accounting" domain="[('category', '=', 'accounting')]"/>
+                <filter string="Sales" name="cat_sale" domain="[('category', '=', 'sale')]"/>
+                <filter string="Purchases" name="cat_purchase" domain="[('category', '=', 'purchase')]"/>
+                <filter string="Inventory &amp; Stock" name="cat_inventory" domain="[('category', '=', 'inventory')]"/>
+                <filter string="Contacts" name="cat_contact" domain="[('category', '=', 'contact')]"/>
+                <separator/>
+                <filter string="Create Operations" name="filter_create" domain="[('operation_type', '=', 'create')]"/>
+                <filter string="Write / Updates" name="filter_write" domain="[('operation_type', '=', 'write')]"/>
+                <filter string="Deletions" name="filter_delete" domain="[('operation_type', '=', 'unlink')]"/>
+                <separator/>
+                <group>
+                    <filter string="Category" name="group_by_category" domain="[]" context="{'group_by': 'category'}"/>
+                    <filter string="User" name="group_by_user" domain="[]" context="{'group_by': 'user_id'}"/>
+                    <filter string="Operation Type" name="group_by_operation" domain="[]" context="{'group_by': 'operation_type'}"/>
+                    <filter string="Model" name="group_by_model" domain="[]" context="{'group_by': 'model_description'}"/>
+                    <filter string="Timestamp (Day)" name="group_by_date_day" domain="[]" context="{'group_by': 'log_date:day'}"/>
+                    <filter string="Timestamp (Month)" name="group_by_date_month" domain="[]" context="{'group_by': 'log_date:month'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_user_logs_history" model="ir.actions.act_window">
+        <field name="name">User Logs &amp; History</field>
+        <field name="res_model">user.logs.history</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_user_logs_history_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No database activity logs recorded yet.
+            </p>
+            <p>
+                All business actions (Payments, Invoices, Sales Orders, Purchases, Deliveries, Deletions, and Modifications) performed by users will be automatically captured here.
+            </p>
+        </field>
+    </record>
+
+    <!-- Menus under Settings (Restricted exclusively to Super Admin) -->
+    <menuitem id="menu_user_logs_history_root" 
+              name="User Activity Logs" 
+              parent="base.menu_administration" 
+              sequence="85"
+              groups="users_logs_history.group_audit_logs_super_admin"/>
+
+    <menuitem id="menu_user_logs_history_action" 
+              name="User Activity Logs" 
+              parent="menu_user_logs_history_root" 
+              action="action_user_logs_history" 
+              sequence="10"
+              groups="users_logs_history.group_audit_logs_super_admin"/>
+
+    <menuitem id="menu_user_logs_history_tech_action" 
+              name="User Activity Logs" 
+              parent="base.menu_custom" 
+              action="action_user_logs_history" 
+              sequence="100"
+              groups="users_logs_history.group_audit_logs_super_admin"/>
+</odoo>

@@ -521,65 +521,96 @@ function findDashboardApp(menuService) {
     );
 }
 
+function isActionMatch(menuActionID, targetActionId) {
+    if (!menuActionID || !targetActionId) {
+        return false;
+    }
+    if (menuActionID === targetActionId) {
+        return true;
+    }
+    if (String(menuActionID) === String(targetActionId)) {
+        return true;
+    }
+    if (Number(menuActionID) === Number(targetActionId)) {
+        return true;
+    }
+    return false;
+}
+
 function resolveCurrentAppForTabs(menuService) {
-    const currentApp = menuService?.getCurrentApp?.();
+    if (!menuService) {
+        return null;
+    }
+    const currentApp = menuService.getCurrentApp?.();
     const { actionId, actionToken } = getCurrentActionContext();
     const routeMenuId = Number.parseInt(router?.current?.menu_id, 10);
     const routeMenu =
-        Number.isFinite(routeMenuId) && routeMenuId > 0 ? menuService?.getMenu?.(routeMenuId) || null : null;
+        Number.isFinite(routeMenuId) && routeMenuId > 0 ? menuService.getMenu?.(routeMenuId) || null : null;
+
+    // Explicit Settings Context Detection
+    const path = window.location.pathname.replace(/\/+$/, "") || "/";
+    const isSettingsPath = path === "/odoo/settings" || path.startsWith("/odoo/settings/");
+    const isSettingsAction =
+        actionToken === "settings" ||
+        actionToken === "base.action_general_configuration" ||
+        (typeof actionToken === "string" && (actionToken.includes("settings") || actionToken.includes("res.config.settings")));
+
+    if (isSettingsPath || isSettingsAction) {
+        const settingsApp = menuService.getAll?.().find(
+            (m) => m && (m.xmlid === "base.menu_administration" || normalizeMenuLabel(m.name).toLowerCase() === "settings")
+        );
+        if (settingsApp) {
+            const settingsAppId = settingsApp.appID || settingsApp.id;
+            return menuService.getMenu?.(settingsAppId) || settingsApp;
+        }
+    }
+
     const matchedActionMenu =
         actionId || actionToken
-            ? menuService?.getAll?.().find((menu) => {
+            ? menuService.getAll?.().find((menu) => {
                   if (!menu) {
                       return false;
                   }
                   return (
-                      (actionId && menu.actionID === actionId) ||
+                      (actionId && isActionMatch(menu.actionID, actionId)) ||
                       (actionToken && typeof actionToken === "string" && menu.actionPath === actionToken)
                   );
               }) || null
             : null;
+
     const isDashboardMenuRoute =
         isDashboardMenuLabel(routeMenu?.name) || isDashboardMenuLabel(matchedActionMenu?.name);
     const hasNonDashboardRouteMenu = routeMenu?.id && !isDashboardMenuLabel(routeMenu.name);
     const hasNonDashboardActionMenu = matchedActionMenu?.id && !isDashboardMenuLabel(matchedActionMenu.name);
-    const hasExplicitRouteSignal = !!(routeMenu || matchedActionMenu || actionId || actionToken);
     const isDashboardRoute =
-        (!hasNonDashboardRouteMenu && !hasNonDashboardActionMenu && isDashboardActionToken(actionToken)) ||
-        isDashboardMenuRoute ||
-        (!hasExplicitRouteSignal && isDashboardContext());
+        (!hasNonDashboardRouteMenu && !hasNonDashboardActionMenu) &&
+        (isDashboardActionToken(actionToken) || isDashboardMenuRoute || isDashboardContext());
 
-    if (hasNonDashboardRouteMenu) {
-        const routeAppId = routeMenu.appID || routeMenu.id;
-        return menuService?.getMenu?.(routeAppId) || routeMenu;
-    }
-
-    if (hasNonDashboardActionMenu) {
-        const matchAppId = matchedActionMenu.appID || matchedActionMenu.id;
-        return menuService?.getMenu?.(matchAppId) || matchedActionMenu;
-    }
-
-    if (isDashboardRoute || isDashboardMenuRoute) {
+    if (isDashboardRoute) {
         const dashboardApp = findDashboardApp(menuService);
         if (dashboardApp?.id) {
             return dashboardApp;
         }
     }
 
-    const routeAppId = routeMenu?.appID || routeMenu?.id;
-    if (routeAppId) {
-        return menuService?.getMenu?.(routeAppId) || routeMenu;
-    }
-
-    if (matchedActionMenu) {
+    // 1. Action Menu Match (Active view/action currently rendering on screen)
+    if (hasNonDashboardActionMenu) {
         const matchAppId = matchedActionMenu.appID || matchedActionMenu.id;
-        if (matchAppId) {
-            return menuService?.getMenu?.(matchAppId) || matchedActionMenu;
+        const app = menuService.getMenu?.(matchAppId) || matchedActionMenu;
+        if (app?.id) {
+            return app;
         }
     }
 
-    if (currentApp?.id && !isDashboardRoute) {
+    // 2. Current App from Odoo menuService
+    if (currentApp?.id && !isDashboardRoute && !isDashboardMenuLabel(currentApp.name)) {
         return currentApp;
+    }
+
+    // 3. Fallback to routeMenu from URL menu_id parameter
+    if (hasNonDashboardRouteMenu) {
+        const routeAppId = routeMenu.appID || routeMenu.id;
+        return menuService.getMenu?.(routeAppId) || routeMenu;
     }
 
     return currentApp?.id ? currentApp : null;
@@ -661,12 +692,13 @@ function resolveCurrentMenu(menuService) {
                 return false;
             }
             return (
-                (actionId && menu.actionID === actionId) ||
+                (actionId && isActionMatch(menu.actionID, actionId)) ||
                 (actionToken && typeof actionToken === "string" && menu.actionPath === actionToken)
             );
         });
         if (matches.length) {
-            const preferredAppId = routeMenu?.appID || routeMenu?.id || storedAppId;
+            const currentApp = resolveCurrentAppForTabs(menuService);
+            const preferredAppId = currentApp?.id || routeMenu?.appID || routeMenu?.id || storedAppId;
             return matches.find((menu) => menu.appID === preferredAppId) || matches[0];
         }
     }
@@ -681,7 +713,7 @@ function menuTreeContains(menu, targetMenuId, targetActionId) {
     if (!menu) {
         return false;
     }
-    if ((targetMenuId && menu.id === targetMenuId) || (targetActionId && menu.actionID === targetActionId)) {
+    if ((targetMenuId && menu.id === targetMenuId) || (targetActionId && isActionMatch(menu.actionID, targetActionId))) {
         return true;
     }
     return (menu.childrenTree || []).some((child) =>
@@ -1022,7 +1054,17 @@ function setupModalViewportGuard() {
 }
 
 function isDashboardContext() {
-    return !!document.querySelector(".kr_sp_action_shell");
+    const activeDashboard = document.querySelector(
+        ".o_web_client > .o_action_manager > *:not(.d-none):not([style*='display: none']) .kr_sp_action_shell, .o_web_client > .o_action_manager > .kr_sp_action_shell:not(.d-none)"
+    );
+    if (activeDashboard) {
+        return true;
+    }
+    const path = window.location.pathname.replace(/\/+$/, "") || "/";
+    if (path === "/odoo/dashboard" || path === "/odoo/dashboards" || path.startsWith("/odoo/dashboard/")) {
+        return true;
+    }
+    return false;
 }
 
 function isPendingDashboardNavigation() {
@@ -1832,6 +1874,8 @@ function renderTabsInViewport(viewport, menuService) {
         scheduleTabsRender();
         if (!currentTabs) {
             viewport.replaceChildren(nextTabs);
+        } else if (currentTabs.dataset.krTabsSignature !== "empty") {
+            viewport.replaceChildren(nextTabs);
         }
         return false;
     }
@@ -2211,6 +2255,10 @@ function navigateToMenu(menuId, actionId) {
         return;
     }
     closeWorkspaceModal();
+    tabsRenderRetryCount = 0;
+    try {
+        window.sessionStorage.setItem("menu_id", String(menuId));
+    } catch {}
     const menuService = getWebclientMenuService();
     if (menuService?.selectMenu) {
         try {
@@ -2945,11 +2993,41 @@ function mountScrollers() {
     document.querySelectorAll(".kr_sp_tabs_cluster").forEach(setupTabsScroller);
 }
 
+function syncActiveSidebarApp() {
+    const menuService = getWebclientMenuService();
+    const currentApp = resolveCurrentAppForTabs(menuService);
+    const currentAppId = currentApp?.id ? String(currentApp.id) : null;
+    const currentAppName = currentApp?.name ? normalizeMenuLabel(currentApp.name).toLowerCase() : "";
+    const isDashboard = isDashboardContext() || isPendingDashboardNavigation();
+
+    document.querySelectorAll(".kr_sp_rail_apps .kr_sp_rail_btn").forEach((button) => {
+        const menuId = button.dataset.krMenuId;
+        const action = button.dataset.krAction;
+        const title = (button.title || "").toLowerCase();
+
+        let isActive = false;
+        if (isDashboard && action === "open-dashboard") {
+            isActive = true;
+        } else if (!isDashboard && currentAppId && menuId === currentAppId) {
+            isActive = true;
+        } else if (!isDashboard && currentAppName && title === currentAppName) {
+            isActive = true;
+        }
+
+        button.classList.toggle("is-active", isActive);
+    });
+}
+
 function bindNavigationRefresh(scheduleRunFeatures) {
+    const resetAndSchedule = () => {
+        tabsRenderRetryCount = 0;
+        scheduleRunFeatures();
+    };
+
     if (!boundRouteEvents) {
         routerBus.addEventListener("ROUTE_CHANGE", () => {
             closeSubmenuPopover();
-            scheduleRunFeatures();
+            resetAndSchedule();
         });
         boundRouteEvents = true;
     }
@@ -2957,12 +3035,12 @@ function bindNavigationRefresh(scheduleRunFeatures) {
     const envBus = getWebclientBus();
     if (envBus && envBus !== boundEnvBus) {
         if (boundEnvBus) {
-            boundEnvBus.removeEventListener("MENUS:APP-CHANGED", scheduleRunFeatures);
-            boundEnvBus.removeEventListener("ACTION_MANAGER:UI-UPDATED", scheduleRunFeatures);
+            boundEnvBus.removeEventListener("MENUS:APP-CHANGED", resetAndSchedule);
+            boundEnvBus.removeEventListener("ACTION_MANAGER:UI-UPDATED", resetAndSchedule);
         }
         boundEnvBus = envBus;
-        boundEnvBus.addEventListener("MENUS:APP-CHANGED", scheduleRunFeatures);
-        boundEnvBus.addEventListener("ACTION_MANAGER:UI-UPDATED", scheduleRunFeatures);
+        boundEnvBus.addEventListener("MENUS:APP-CHANGED", resetAndSchedule);
+        boundEnvBus.addEventListener("ACTION_MANAGER:UI-UPDATED", resetAndSchedule);
     }
 }
 
@@ -2993,6 +3071,7 @@ function start() {
         runSafely("mark dashboard ready", () => markDashboardReady(".kr_sp_pending_shell"));
         runSafely("refresh dashboard footer data", refreshDashboardFooterData);
         runSafely("build sidebar apps", buildSidebarApps);
+        runSafely("sync active sidebar app", syncActiveSidebarApp);
     };
 
     const scheduleRunFeatures = () => {

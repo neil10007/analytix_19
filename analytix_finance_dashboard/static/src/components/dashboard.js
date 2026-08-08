@@ -175,9 +175,9 @@ export class AnalytixFinanceDashboard extends Component {
 
         onWillStart(async () => {
             await loadJS("/web/static/lib/Chart/Chart.js");
-            // Restore last active tab from session
-            const savedTab = sessionStorage.getItem('anx_active_tab') || 'overview';
-            this.state.activeTab = savedTab;
+            // Restore last active filters and tab from session
+            this.restoreFilterState();
+            const savedTab = this.state.activeTab || 'overview';
             await this.fetchData();
             // Also fetch the saved tab's data
             if (savedTab === 'invoices')      await this.fetchInvoiceData();
@@ -218,6 +218,11 @@ export class AnalytixFinanceDashboard extends Component {
             }
             this.state.chatPos.x = cx;
             this.state.chatPos.y = cy;
+
+            this.updateUnreadCount();
+            this._unreadPollTimer = setInterval(() => {
+                this.updateUnreadCount();
+            }, 5000);
         });
         useEffect(() => this.renderCharts(), () => [this.state.data]);
         useEffect(() => {
@@ -226,9 +231,71 @@ export class AnalytixFinanceDashboard extends Component {
             }
         }, () => [this.state.activeThreadId, this.activeThreadMessages?.length]);
         onWillUnmount(() => {
+            if (this._unreadPollTimer) {
+                clearInterval(this._unreadPollTimer);
+                this._unreadPollTimer = null;
+            }
             this.store.discuss.isActive = false;
             this.stopChatPolling();
         });
+    }
+
+    // ── Save / Restore Filter Persistence ────────────────────────────
+    saveFilterState() {
+        try {
+            const filterState = {
+                filter:           this.state.filter,
+                customFrom:       this.state.customFrom,
+                customTo:         this.state.customTo,
+                showCustomPicker: this.state.showCustomPicker,
+                activeTab:        this.state.activeTab,
+                invTypeFilter:    this.state.invTypeFilter,
+                invStatusFilter:  this.state.invStatusFilter,
+                invCompanyFilter: this.state.invCompanyFilter,
+                expStatusFilter:  this.state.expStatusFilter,
+                expCompanyFilter: this.state.expCompanyFilter,
+                vatTypeFilter:    this.state.vatTypeFilter,
+                vatCompanyFilter: this.state.vatCompanyFilter,
+                jrnTypeFilter:    this.state.jrnTypeFilter,
+                jrnCompanyFilter: this.state.jrnCompanyFilter,
+                tbTypeFilter:     this.state.tbTypeFilter,
+                tbCompanyFilter:  this.state.tbCompanyFilter,
+            };
+            sessionStorage.setItem('anx_dashboard_filters', JSON.stringify(filterState));
+            sessionStorage.setItem('anx_active_tab', this.state.activeTab);
+        } catch (e) {
+            console.error("Failed to save filter state:", e);
+        }
+    }
+
+    restoreFilterState() {
+        try {
+            const saved = sessionStorage.getItem('anx_dashboard_filters');
+            if (saved) {
+                const p = JSON.parse(saved);
+                if (p.filter)           this.state.filter           = p.filter;
+                if (p.customFrom !== undefined) this.state.customFrom = p.customFrom;
+                if (p.customTo !== undefined)   this.state.customTo   = p.customTo;
+                if (p.showCustomPicker !== undefined) this.state.showCustomPicker = p.showCustomPicker;
+                if (p.activeTab)        this.state.activeTab        = p.activeTab;
+                if (p.invTypeFilter)    this.state.invTypeFilter    = p.invTypeFilter;
+                if (p.invStatusFilter)  this.state.invStatusFilter  = p.invStatusFilter;
+                if (p.invCompanyFilter) this.state.invCompanyFilter = p.invCompanyFilter;
+                if (p.expStatusFilter)  this.state.expStatusFilter  = p.expStatusFilter;
+                if (p.expCompanyFilter) this.state.expCompanyFilter = p.expCompanyFilter;
+                if (p.vatTypeFilter)    this.state.vatTypeFilter    = p.vatTypeFilter;
+                if (p.vatCompanyFilter) this.state.vatCompanyFilter = p.vatCompanyFilter;
+                if (p.jrnTypeFilter)    this.state.jrnTypeFilter    = p.jrnTypeFilter;
+                if (p.jrnCompanyFilter) this.state.jrnCompanyFilter = p.jrnCompanyFilter;
+                if (p.tbTypeFilter)     this.state.tbTypeFilter     = p.tbTypeFilter;
+                if (p.tbCompanyFilter)  this.state.tbCompanyFilter  = p.tbCompanyFilter;
+            } else {
+                const savedTab = sessionStorage.getItem('anx_active_tab');
+                if (savedTab) this.state.activeTab = savedTab;
+            }
+        } catch (e) {
+            console.error("Failed to restore filter state:", e);
+        }
     }
 
     // ── Data ──────────────────────────────────────────────────────────
@@ -248,19 +315,29 @@ export class AnalytixFinanceDashboard extends Component {
     async setFilter(ev) {
         this.state.filter = ev.target.value;
         if (this.state.filter === 'custom') {
-            // Show date picker — don't fetch yet, wait for user to pick dates
+            if (!this.state.customFrom || !this.state.customTo) {
+                const start = (this.state.data && this.state.data.date_range && this.state.data.date_range.start) || '';
+                const end   = (this.state.data && this.state.data.date_range && this.state.data.date_range.end) || '';
+                this.state.customFrom = start;
+                this.state.customTo   = end;
+            }
             this.state.showCustomPicker = true;
+            this.saveFilterState();
             return;
         }
         this.state.showCustomPicker = false;
         this.state.customFrom = '';
         this.state.customTo   = '';
+        this.state.vatFilterFrom = '';
+        this.state.vatFilterTo   = '';
+        this.saveFilterState();
         await this.fetchData();
         if (this.state.activeTab === 'invoices')      await this.fetchInvoiceData();
         if (this.state.activeTab === 'expenses')      await this.fetchExpenseData();
         if (this.state.activeTab === 'vat')           await this.fetchVatData();
         if (this.state.activeTab === 'journals')      await this.fetchJournalData();
         if (this.state.activeTab === 'trial_balance') await this.fetchTrialBalanceData();
+        if (this.state.activeTab === 'documents')     await this.fetchDocumentData();
     }
 
     // ── Custom date range change ──────────────────────────────────────
@@ -268,10 +345,16 @@ export class AnalytixFinanceDashboard extends Component {
         const field = ev.target.dataset.field;
         if (field === 'from') this.state.customFrom = ev.target.value;
         if (field === 'to')   this.state.customTo   = ev.target.value;
+        this.saveFilterState();
     }
 
     // ── Apply custom range ───────────────────────────────────────────
     async applyCustomRange() {
+        const fromEl = document.querySelector('input.anx-custom-date-input[data-field="from"]');
+        const toEl   = document.querySelector('input.anx-custom-date-input[data-field="to"]');
+        if (fromEl && fromEl.value) this.state.customFrom = fromEl.value;
+        if (toEl && toEl.value)     this.state.customTo   = toEl.value;
+
         if (!this.state.customFrom || !this.state.customTo) {
             this.notification.add('Please select both From and To dates.', { type: 'warning' });
             return;
@@ -280,12 +363,16 @@ export class AnalytixFinanceDashboard extends Component {
             this.notification.add('"From" date must be before "To" date.', { type: 'warning' });
             return;
         }
+        this.state.vatFilterFrom = this.state.customFrom;
+        this.state.vatFilterTo   = this.state.customTo;
+        this.saveFilterState();
         await this.fetchData();
         if (this.state.activeTab === 'invoices')      await this.fetchInvoiceData();
         if (this.state.activeTab === 'expenses')      await this.fetchExpenseData();
         if (this.state.activeTab === 'vat')           await this.fetchVatData();
         if (this.state.activeTab === 'journals')      await this.fetchJournalData();
         if (this.state.activeTab === 'trial_balance') await this.fetchTrialBalanceData();
+        if (this.state.activeTab === 'documents')     await this.fetchDocumentData();
     }
 
     // ── Tab click — reads data-tab attribute ──────────────────────────
@@ -296,37 +383,23 @@ export class AnalytixFinanceDashboard extends Component {
             ev.currentTarget.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
         }
         this.state.activeTab = tab;
-        sessionStorage.setItem('anx_active_tab', tab); // persist tab across refresh
+        this.saveFilterState();
         if (tab === 'invoices') {
-            if (!this.state.invoices || this.state.invTypeFilter !== 'customer') {
-                this.state.invTypeFilter = 'customer';
-                this.state.invStatusFilter = 'all';
-                this.state.invSearch = '';
-            }
             await this.fetchInvoiceData();
         }
         if (tab === 'expenses') {
-            this.state.expStatusFilter = 'all';
-            this.state.expSearch = '';
             await this.fetchExpenseData();
         }
         if (tab === 'vat') {
-            this.state.vatSearch = '';
-            this.state.vatTypeFilter = 'all';
             await this.fetchVatData();
         }
         if (tab === 'journals') {
-            this.state.jrnSearch = '';
-            this.state.jrnTypeFilter = 'all';
             await this.fetchJournalData();
         }
         if (tab === 'trial_balance') {
-            this.state.tbSearch = '';
-            this.state.tbTypeFilter = 'all';
             await this.fetchTrialBalanceData();
         }
         if (tab === 'documents') {
-            this.state.docSearch = '';
             await this.fetchDocumentData();
         }
         if (tab === 'chat') {
@@ -364,15 +437,18 @@ export class AnalytixFinanceDashboard extends Component {
         const val = ev.currentTarget.dataset.type;
         if (!val) return;
         this.state.invTypeFilter = val;
+        this.saveFilterState();
         await this.fetchInvoiceData();
     }
 
     // ── Invoice status/company/search/sort filters (client-side) ─────
     onInvStatusFilter(ev) {
         this.state.invStatusFilter = ev.currentTarget.dataset.status || 'all';
+        this.saveFilterState();
     }
     onInvCompanyFilter(ev) {
         this.state.invCompanyFilter = ev.currentTarget.dataset.company || 'all';
+        this.saveFilterState();
     }
     onInvSearch(ev) {
         this.state.invSearch = ev.target.value;
@@ -474,8 +550,8 @@ export class AnalytixFinanceDashboard extends Component {
     }
 
     // ── Expense filters (client-side) ─────────────────────────────────
-    onExpStatusFilter(ev) { this.state.expStatusFilter = ev.currentTarget.dataset.status || 'all'; }
-    onExpCompanyFilter(ev) { this.state.expCompanyFilter = ev.currentTarget.dataset.company || 'all'; }
+    onExpStatusFilter(ev) { this.state.expStatusFilter = ev.currentTarget.dataset.status || 'all'; this.saveFilterState(); }
+    onExpCompanyFilter(ev) { this.state.expCompanyFilter = ev.currentTarget.dataset.company || 'all'; this.saveFilterState(); }
     onExpSearch(ev) { this.state.expSearch = ev.target.value; }
     onExpSort(ev) {
         const col = ev.currentTarget.dataset.col;
@@ -539,13 +615,16 @@ export class AnalytixFinanceDashboard extends Component {
 
     // ── VAT data fetch ────────────────────────────────────────────────
     async fetchVatData() {
-        if (!this.state.vatFilterFrom && !this.state.vatFilterTo) {
-            this.state.vatFilterFrom = (this.state.data && this.state.data.date_range && this.state.data.date_range.start) || this.state.customFrom || '';
-            this.state.vatFilterTo   = (this.state.data && this.state.data.date_range && this.state.data.date_range.end) || this.state.customTo || '';
+        if (this.state.filter === 'custom' && this.state.customFrom && this.state.customTo) {
+            this.state.vatFilterFrom = this.state.customFrom;
+            this.state.vatFilterTo   = this.state.customTo;
+        } else if (!this.state.vatFilterFrom || !this.state.vatFilterTo) {
+            this.state.vatFilterFrom = (this.state.data && this.state.data.date_range && this.state.data.date_range.start) || '';
+            this.state.vatFilterTo   = (this.state.data && this.state.data.date_range && this.state.data.date_range.end) || '';
         }
         await this.fetchVatFilterData();
     }
-    onVatTypeFilter(ev) { this.state.vatTypeFilter = ev.currentTarget.dataset.vtype || 'all'; }
+    onVatTypeFilter(ev) { this.state.vatTypeFilter = ev.currentTarget.dataset.vtype || 'all'; this.saveFilterState(); }
     onVatSearch(ev)      { this.state.vatSearch = ev.target.value; }
     onVatSort(ev) {
         const col = ev.currentTarget.dataset.col;
@@ -553,7 +632,7 @@ export class AnalytixFinanceDashboard extends Component {
         if (this.state.vatSortCol === col) { this.state.vatSortDir = this.state.vatSortDir === 'asc' ? 'desc' : 'asc'; }
         else { this.state.vatSortCol = col; this.state.vatSortDir = 'asc'; }
     }
-    onVatCompanyFilter(ev) { this.state.vatCompanyFilter = ev.currentTarget.dataset.company || 'all'; }
+    onVatCompanyFilter(ev) { this.state.vatCompanyFilter = ev.currentTarget.dataset.company || 'all'; this.saveFilterState(); }
 
     _filterSortVat(rows) {
         if (this.state.vatCompanyFilter !== 'all') {
@@ -598,9 +677,9 @@ export class AnalytixFinanceDashboard extends Component {
             this.state.jrnLoading = false;
         }
     }
-    onJrnTypeFilter(ev) { this.state.jrnTypeFilter = ev.currentTarget.dataset.jtype || 'all'; }
+    onJrnTypeFilter(ev) { this.state.jrnTypeFilter = ev.currentTarget.dataset.jtype || 'all'; this.saveFilterState(); }
     onJrnSearch(ev)      { this.state.jrnSearch = ev.target.value; }
-    onJrnCompanyFilter(ev) { this.state.jrnCompanyFilter = ev.currentTarget.dataset.company || 'all'; }
+    onJrnCompanyFilter(ev) { this.state.jrnCompanyFilter = ev.currentTarget.dataset.company || 'all'; this.saveFilterState(); }
     onJrnSort(ev) {
         const col = ev.currentTarget.dataset.col;
         if (!col) return;
@@ -652,9 +731,9 @@ export class AnalytixFinanceDashboard extends Component {
         }
     }
 
-    onTbTypeFilter(ev)    { this.state.tbTypeFilter    = ev.currentTarget.dataset.atype   || 'all'; }
+    onTbTypeFilter(ev)    { this.state.tbTypeFilter    = ev.currentTarget.dataset.atype   || 'all'; this.saveFilterState(); }
     onTbSearch(ev)        { this.state.tbSearch        = ev.target.value; }
-    onTbCompanyFilter(ev) { this.state.tbCompanyFilter = ev.currentTarget.dataset.company || 'all'; }
+    onTbCompanyFilter(ev) { this.state.tbCompanyFilter = ev.currentTarget.dataset.company || 'all'; this.saveFilterState(); }
     onTbSort(ev) {
         const col = ev.currentTarget.dataset.col;
         if (!col) return;
@@ -1899,10 +1978,10 @@ export class AnalytixFinanceDashboard extends Component {
     }
 
     onReviewEditKeydown(ev) {
-        // Ctrl+Enter or Cmd+Enter to save; Escape to cancel
-        if ((ev.ctrlKey || ev.metaKey) && ev.key === 'Enter') {
+        if ((ev.key === 'Enter' && !ev.shiftKey) || ((ev.ctrlKey || ev.metaKey) && ev.key === 'Enter')) {
+            ev.preventDefault();
             const btn = ev.currentTarget.closest('.anx-doc-review-edit-wrap')
-                           ?.querySelector('.anx-doc-desc-save-btn');
+                           ?.querySelector('.anx-doc-review-save-btn');
             if (btn) btn.click();
         }
         if (ev.key === 'Escape') this.cancelReviewEdit();
@@ -2459,13 +2538,68 @@ export class AnalytixFinanceDashboard extends Component {
         }
     }
 
-    get discussUnreadCount() {
-        if (this.store && this.store.discuss) {
-            if (typeof this.store.discuss.unreadCounter === 'number') {
-                return this.store.discuss.unreadCounter;
+    async updateUnreadCount() {
+        try {
+            let total = 0;
+
+            const threadsMap = new Map();
+            const addThread = (t) => {
+                if (t && t.id && !threadsMap.has(t.localId || `${t.model}_${t.id}`)) {
+                    threadsMap.set(t.localId || `${t.model}_${t.id}`, t);
+                }
+            };
+
+            if (this.store) {
+                if (Array.isArray(this.store.menuThreads)) {
+                    this.store.menuThreads.forEach(addThread);
+                }
+                if (Array.isArray(this.store.allChannels)) {
+                    this.store.allChannels.forEach(addThread);
+                }
+                if (this.store.Thread && this.store.Thread.records) {
+                    Object.values(this.store.Thread.records).forEach(addThread);
+                }
+
+                for (const thread of threadsMap.values()) {
+                    const memberCount = thread.self_member_id ? (thread.self_member_id.message_unread_counter ?? thread.self_member_id.message_unread_counter_ui) : null;
+                    if (typeof memberCount === 'number' && memberCount > 0) {
+                        total += memberCount;
+                    } else if (typeof thread.unreadCounter === 'number' && thread.unreadCounter > 0) {
+                        total += thread.unreadCounter;
+                    } else if (typeof thread.message_unread_counter === 'number' && thread.message_unread_counter > 0) {
+                        total += thread.message_unread_counter;
+                    } else if (thread.isUnread) {
+                        total += 1;
+                    }
+                }
+
+                if (this.store.discuss && typeof this.store.discuss.unreadCounter === 'number' && !isNaN(this.store.discuss.unreadCounter)) {
+                    if (this.store.discuss.unreadCounter > total) {
+                        total = this.store.discuss.unreadCounter;
+                    }
+                }
             }
+
+            if (this.orm) {
+                try {
+                    const unreadDb = await this.orm.searchCount('discuss.channel', [
+                        ['is_member', '=', true],
+                        ['message_needaction_counter', '>', 0]
+                    ]);
+                    if (unreadDb > total) {
+                        total = unreadDb;
+                    }
+                } catch (e) {}
+            }
+
+            this.state.chatUnreadCount = total;
+        } catch (e) {
+            console.error("Error in updateUnreadCount:", e);
         }
-        return 3;
+    }
+
+    get discussUnreadCount() {
+        return this.state.chatUnreadCount || 0;
     }
 
     openFullDiscuss() {
@@ -2570,6 +2704,18 @@ export class AnalytixFinanceDashboard extends Component {
         if (thread.markAsRead) {
             try { await thread.markAsRead(); } catch (e) {}
         }
+        if (thread.self_member_id) {
+            thread.self_member_id.message_unread_counter = 0;
+            thread.self_member_id.message_unread_counter_ui = 0;
+        }
+        if (typeof thread.unreadCounter === 'number') {
+            thread.unreadCounter = 0;
+        }
+        if (typeof thread.message_unread_counter === 'number') {
+            thread.message_unread_counter = 0;
+        }
+        thread.isUnread = false;
+        this.updateUnreadCount();
         await this.loadThreadMessages(thread);
         this.startChatPolling();
         setTimeout(() => {
