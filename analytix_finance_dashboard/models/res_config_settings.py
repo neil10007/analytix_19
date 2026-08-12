@@ -14,6 +14,7 @@ class ResCompany(models.Model):
     )
     groq_api_key = fields.Char(string='Groq API Key')
     open_router_key = fields.Char(string='OpenRouter API Key')
+    openrouter_model = fields.Char(string='OpenRouter Model', help="Custom OpenRouter AI model ID. If empty, falls back to backend default.")
 
 
 class ResConfigSettings(models.TransientModel):
@@ -35,5 +36,10 @@ class ResConfigSettings(models.TransientModel):
         related='company_id.open_router_key',
         readonly=False,
         string='OpenRouter API Key',
+    )
+    openrouter_model = fields.Char(
+        related='company_id.openrouter_model',
+        readonly=False,
+        string='OpenRouter Model',
     )
 

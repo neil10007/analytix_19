@@ -10,6 +10,7 @@
                 <xpath expr="//field[@name='login']" position="after">
                     <field name="groq_api_key" password="True" string="Groq API Key"/>
                     <field name="open_router_key" password="True" string="OpenRouter API Key"/>
+                    <field name="openrouter_model" string="OpenRouter Model"/>
                 </xpath>
             </field>
         </record>
@@ -28,6 +29,7 @@
                         <group groups="analytix_finance_dashboard.group_groq_super_admin">
                             <field name="groq_api_key" password="True" placeholder="Enter Groq API Key..."/>
                             <field name="open_router_key" password="True" placeholder="Enter OpenRouter API Key..."/>
+                            <field name="openrouter_model" placeholder="e.g. google/gemini-2.5-flash (Optional)"/>
                         </group>
                     </group>
                 </xpath>
@@ -43,6 +45,7 @@
                 <xpath expr="//field[@name='partner_id']" position="after">
                     <field name="groq_api_key" password="True" string="Groq API Key"/>
                     <field name="open_router_key" password="True" string="OpenRouter API Key"/>
+                    <field name="openrouter_model" string="OpenRouter Model"/>
                 </xpath>
             </field>
         </record>
@@ -58,6 +61,7 @@
                         <group>
                             <field name="groq_api_key" password="True" placeholder="Enter Groq API Key..."/>
                             <field name="open_router_key" password="True" placeholder="Enter OpenRouter API Key..."/>
+                            <field name="openrouter_model" placeholder="e.g. google/gemini-2.5-flash (Optional)"/>
                         </group>
                     </page>
                 </xpath>

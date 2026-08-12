@@ -27,6 +27,13 @@
                         type="object"
                         invisible="qr_button == False or state != 'posted'"/>
             </xpath>
+            <xpath expr="//button[@name='action_print_pdf'][1]" position="replace">
+                <button name="action_report_vat_report" string="VAT Invoice"
+                        type="object"
+                        class="btn-primary"
+                        invisible="state != 'posted'"/>
+            </xpath>
+            <xpath expr="//button[@name='action_print_pdf']" position="replace"/>
         </field>
     </record>
 </odoo>
