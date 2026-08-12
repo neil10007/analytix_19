@@ -200,10 +200,3 @@ class AccountMove(models.Model):
                 raise UserError(
                     _('Necessary Requirements To Run This Operation Is '
                       'Not Satisfied'))
-
-    def action_report_vat_report(self):
-        """Action to trigger VAT invoice report preview first."""
-        action = self.env.ref('advanced_vat_invoice.action_report_vat_report').report_action(self)
-        action['report_type'] = 'qweb-html'
-        return action
-
