@@ -830,8 +830,8 @@ class AccountMove(models.Model):
         }
 
     @api.model
-    def get_analytix_pl_data(self, filter_name='this_month', date_from=None, date_to=None):
-        """Return P&L (Profit & Loss) data for dashboard modal preview."""
+    def get_analytix_pl_data(self, filter_name='this_month', date_from=None, date_to=None, compare_date_from=None, compare_date_to=None):
+        """Return P&L (Profit & Loss) data with optional comparison period for dashboard modal preview."""
         self = self.sudo()
         today = date.today()
         if filter_name == 'this_month':
@@ -876,65 +876,91 @@ class AccountMove(models.Model):
         company_currency = self.env.company.currency_id
         sym = company_currency.symbol or company_currency.name
 
-        def fetch_section(account_types, negate=False):
-            """Return list of {id, name, balance} and section total.
-            Uses ORM read_group so Odoo 19 jsonb name fields are translated correctly."""
-            if not account_types:
-                return [], 0.0
-            groups = self.env['account.move.line'].read_group(
-                domain=[
-                    ('move_id.state', '=', 'posted'),
-                    ('move_id.date', '>=', start_date),
-                    ('move_id.date', '<=', end_date),
-                    ('account_id.account_type', 'in', account_types),
-                    ('company_id', 'in', company_ids),
-                ],
-                fields=['account_id', 'balance:sum'],
-                groupby=['account_id'],
-            )
-            accounts = []
-            total = 0.0
-            for g in groups:
-                raw_bal = g.get('balance') or 0.0
-                if raw_bal == 0.0:
-                    continue
-                bal = -raw_bal if negate else raw_bal
-                acc_data = g.get('account_id')
-                if isinstance(acc_data, (list, tuple)):
-                    acc_id, acc_name = acc_data[0], acc_data[1]
-                else:
-                    acc_id, acc_name = acc_data, str(acc_data)
-                accounts.append({'id': acc_id, 'name': acc_name, 'balance': round(bal, 2)})
-                total += bal
-            accounts.sort(key=lambda x: x['name'])
-            return accounts, round(total, 2)
+        def build_pl_period(s_date, e_date):
+            def fetch_section(account_types, negate=False):
+                if not account_types:
+                    return [], 0.0
+                groups = self.env['account.move.line'].read_group(
+                    domain=[
+                        ('move_id.state', '=', 'posted'),
+                        ('move_id.date', '>=', s_date),
+                        ('move_id.date', '<=', e_date),
+                        ('account_id.account_type', 'in', account_types),
+                        ('company_id', 'in', company_ids),
+                    ],
+                    fields=['account_id', 'balance:sum'],
+                    groupby=['account_id'],
+                )
+                accounts = []
+                total = 0.0
+                for g in groups:
+                    raw_bal = g.get('balance') or 0.0
+                    if raw_bal == 0.0:
+                        continue
+                    bal = -raw_bal if negate else raw_bal
+                    acc_data = g.get('account_id')
+                    if isinstance(acc_data, (list, tuple)):
+                        acc_id, acc_name = acc_data[0], acc_data[1]
+                    else:
+                        acc_id, acc_name = acc_data, str(acc_data)
+                    accounts.append({'id': acc_id, 'name': acc_name, 'balance': round(bal, 2)})
+                    total += bal
+                accounts.sort(key=lambda x: x['name'])
+                return accounts, round(total, 2)
 
-        # Income accounts are credit-normal → negate balance to get positive revenue
-        income_accs,  income_total  = fetch_section(['income'],                negate=True)
-        cogs_accs,    cogs_total    = fetch_section(['expense_direct_cost'],   negate=False)
-        expense_accs, expense_total = fetch_section(['expense', 'expense_depreciation'], negate=False)
-        oincome_accs, oincome_total = fetch_section(['income_other'],          negate=True)
+            income_accs,  income_total  = fetch_section(['income'],                negate=True)
+            cogs_accs,    cogs_total    = fetch_section(['expense_direct_cost'],   negate=False)
+            expense_accs, expense_total = fetch_section(['expense', 'expense_depreciation'], negate=False)
+            oincome_accs, oincome_total = fetch_section(['income_other'],          negate=True)
 
-        gross_profit          = round(income_total - cogs_total,            2)
-        net_operating_income  = round(gross_profit - expense_total,         2)
-        net_other_income      = round(oincome_total,                        2)
-        net_income            = round(net_operating_income + net_other_income, 2)
+            gross_profit          = round(income_total - cogs_total,            2)
+            net_operating_income  = round(gross_profit - expense_total,         2)
+            net_other_income      = round(oincome_total,                        2)
+            net_income            = round(net_operating_income + net_other_income, 2)
 
-        return {
-            'period_label': '{} – {}'.format(
-                start_date.strftime('%d %b %Y'), end_date.strftime('%d %b %Y')),
+            return {
+                'period_label': '{} - {}'.format(s_date.strftime('%m/%d/%Y'), e_date.strftime('%m/%d/%Y')),
+                'income':       {'accounts': income_accs,  'total': income_total},
+                'cogs':         {'accounts': cogs_accs,    'total': cogs_total},
+                'gross_profit': gross_profit,
+                'expense':      {'accounts': expense_accs, 'total': expense_total},
+                'net_operating_income': net_operating_income,
+                'other_income': {'accounts': oincome_accs, 'total': oincome_total},
+                'net_other_income':     net_other_income,
+                'net_income':           net_income,
+            }
+
+        primary = build_pl_period(start_date, end_date)
+        result = {
+            'period_label': '{} – {}'.format(start_date.strftime('%d %b %Y'), end_date.strftime('%d %b %Y')),
+            'period_from_iso': str(start_date),
+            'period_to_iso': str(end_date),
             'year':         end_date.year,
             'currency_sym': sym,
             'company':      ', '.join(self.env.companies.mapped('name')),
-            'income':       {'accounts': income_accs,  'total': income_total},
-            'cogs':         {'accounts': cogs_accs,    'total': cogs_total},
-            'gross_profit': gross_profit,
-            'expense':      {'accounts': expense_accs, 'total': expense_total},
-            'net_operating_income': net_operating_income,
-            'other_income': {'accounts': oincome_accs, 'total': oincome_total},
-            'net_other_income':     net_other_income,
-            'net_income':           net_income,
         }
+        result.update(primary)
+
+        # Build comparison dataset if requested
+        cmp_start = None
+        cmp_end = None
+        if compare_date_from and compare_date_to:
+            try:
+                cmp_start = datetime.strptime(str(compare_date_from), '%Y-%m-%d').date()
+                cmp_end   = datetime.strptime(str(compare_date_to),   '%Y-%m-%d').date()
+            except Exception:
+                cmp_start = start_date - relativedelta(years=1)
+                cmp_end   = end_date - relativedelta(years=1)
+        elif compare_date_from:
+            cmp_start = start_date - relativedelta(years=1)
+            cmp_end   = end_date - relativedelta(years=1)
+
+        if cmp_start and cmp_end:
+            result['compare'] = build_pl_period(cmp_start, cmp_end)
+            result['compare_from_iso'] = str(cmp_start)
+            result['compare_to_iso']   = str(cmp_end)
+
+        return result
 
     @api.model
     def get_analytix_balance_sheet_data(self, as_of_date_str=None, compare_date_str=None):

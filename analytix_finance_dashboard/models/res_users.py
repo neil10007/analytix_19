@@ -6,6 +6,7 @@ class ResUsers(models.Model):
 
     groq_api_key = fields.Char(string='Groq API Key')
     open_router_key = fields.Char(string='OpenRouter API Key')
+    openrouter_model = fields.Char(string='OpenRouter Model', help="Custom OpenRouter AI model ID. If empty, falls back to backend default.")
 
 
     @api.model_create_multi

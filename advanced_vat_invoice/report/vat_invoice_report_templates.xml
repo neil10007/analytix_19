@@ -19,13 +19,13 @@
 
         <!-- Header -->
         <div class="header" t-att-style="report_header_style">
-            <table style="width: 100%; border-collapse: collapse; font-family: sans-serif;">
+            <table style="width: 100%; border-color: white; table-layout: fixed; font-family: sans-serif;">
                 <tr>
-                    <td style="width: 65%; vertical-align: top; padding-left: 15px; border-left: 4px solid #1E293B;">
-                        <h3 style="margin: 0 0 5px 0; font-weight: 800; color: #1E293B; font-size: 16pt; letter-spacing: -0.5px;">
+                    <td style="width: 65%; vertical-align: top; border-color: white;">
+                        <h3 style="margin: 0 0 5px 0; font-weight: bold; color: #1E293B; font-size: 15pt;">
                             <span t-field="company.name"/>
                         </h3>
-                        <div style="font-size: 10pt; color: #475569; line-height: 1.5; margin-top: 5px; font-weight: normal;">
+                        <div style="font-size: 9pt; color: #475569; line-height: 1.4; font-weight: normal;">
                             <span t-if="company.street"><span t-field="company.street"/><br/></span>
                             <span t-if="company.street2"><span t-field="company.street2"/><br/></span>
                             <span>
@@ -36,15 +36,13 @@
                                 <span t-if="company.zip" t-field="company.zip"/>
                             </span>
                             <span t-if="company.country_id"><br/><span t-field="company.country_id.name"/></span>
-                            <span t-if="company.vat"><br/><strong style="color: #64748B;">VAT: </strong><span t-field="company.vat" style="color: #1E293B; font-weight: normal;"/></span>
                         </div>
                     </td>
-                    <td style="width: 35%; text-align: right; vertical-align: top; padding-top: 5px;">
-                        <img t-if="company.logo" t-att-src="image_data_uri(company.logo)" style="max-height: 100px; max-width: 250px; object-fit: contain;" alt="Logo"/>
+                    <td style="width: 35%; text-align: right; vertical-align: top; padding-top: 2px; border-color: white;">
+                        <img t-if="company.logo" t-att-src="image_data_uri(company.logo)" style="max-height: 65px; max-width: 220px; object-fit: contain; display: inline-block;" alt="Logo"/>
                     </td>
                 </tr>
             </table>
-            <div style="border-bottom: 2px solid #E2E8F0; margin-top: 15px; width: 100%;"/>
         </div>
 
         <!-- Article Container -->
@@ -54,16 +52,16 @@
 
         <!-- Footer -->
         <div class="footer">
-            <div style="border-top: 1px solid #E2E8F0; padding-top: 10px; font-family: sans-serif; color: #64748B;">
-                <table style="width: 100%; border-collapse: collapse; font-size: 9pt;">
+            <div style="border-top: 1px solid #E2E8F0; padding-top: 8px; font-family: sans-serif; color: #64748B;">
+                <table style="width: 100%; border-color: white; font-size: 8.5pt;">
                     <tr>
-                        <td style="width: 80%; vertical-align: middle;">
+                        <td style="width: 80%; vertical-align: middle; border-color: white;">
                             <span t-if="company.phone" style="margin-right: 15px;">Phone: <span t-field="company.phone"/></span>
                             <span t-if="company.email" style="margin-right: 15px;">Email: <span t-field="company.email"/></span>
                             <span t-if="company.website" style="margin-right: 15px;">Website: <span t-field="company.website"/></span>
                             <span t-if="company.vat">VAT: <span t-field="company.vat"/></span>
                         </td>
-                        <td style="width: 20%; text-align: right; vertical-align: middle;">
+                        <td style="width: 20%; text-align: right; vertical-align: middle; border-color: white;">
                             Page <span class="page"/> of <span class="topage"/>
                         </td>
                     </tr>
@@ -77,174 +75,183 @@
         <t t-call="web.html_container">
             <t t-foreach="docs" t-as="doc">
                 <t t-call="advanced_vat_invoice.custom_vat_layout">
-                    <div class="page" style="font-family: sans-serif; color: #333333; padding-top: 30px;">
+                    <div class="page" style="font-family: sans-serif; color: #333333; padding-top: 0px; margin-top: 0px;">
+                        
                         <!-- Document Title -->
-                        <div class="row mb-4">
-                            <div class="col-12 text-center">
-                                <h3 style="font-weight: 800; margin-bottom: 2px; color: #1E293B; font-size: 20pt; letter-spacing: -0.5px;">فاتورة ضريبية مبسطة</h3>
-                                <h4 style="font-weight: bold; color: #64748B; margin-top: 0; font-size: 14pt; text-transform: uppercase; letter-spacing: 1px;">VAT Invoice</h4>
-                            </div>
+                        <div style="text-align: center; margin-bottom: 25px; margin-top: 10px;">
+                            <h2 style="font-weight: 800; margin: 0 0 4px 0; color: #1E293B; font-size: 22pt; letter-spacing: -0.5px;">فاتورة ضريبية مبسطة</h2>
+                            <h4 style="font-weight: bold; color: #64748B; margin: 0; font-size: 13pt; letter-spacing: 1px; text-transform: uppercase;">VAT INVOICE</h4>
                         </div>
 
                         <!-- Metadata Card -->
-                        <div class="row mb-4" style="background-color: #F8F9FA; border: 1px solid #E2E8F0; border-radius: 6px; padding: 15px 5px; margin-left: 0; margin-right: 0;">
-                            <div class="col-3 text-center">
-                                <div style="font-size: 9pt; color: #64748B; text-transform: uppercase; font-weight: bold; letter-spacing: 0.5px;">Invoice Number / رقم الفاتورة</div>
-                                <div style="font-size: 10pt; font-weight: normal; color: #1E293B; margin-top: 6px;"><span t-field="doc.name"/></div>
-                            </div>
-                            <div class="col-3 text-center" style="border-left: 1px solid #E2E8F0;">
-                                <div style="font-size: 9pt; color: #64748B; text-transform: uppercase; font-weight: bold; letter-spacing: 0.5px;">Issue Date / تاريخ الإصدار</div>
-                                <div style="font-size: 10pt; font-weight: normal; color: #1E293B; margin-top: 6px;"><span t-field="doc.invoice_date"/></div>
-                            </div>
-                            <div class="col-3 text-center" style="border-left: 1px solid #E2E8F0;">
-                                <div style="font-size: 9pt; color: #64748B; text-transform: uppercase; font-weight: bold; letter-spacing: 0.5px;">Due Date / تاريخ الاستحقاق</div>
-                                <div style="font-size: 10pt; font-weight: normal; color: #1E293B; margin-top: 6px;">
-                                    <span t-if="doc.invoice_payment_term_id" t-field="doc.invoice_payment_term_id.name"/>
-                                    <span t-elif="doc.invoice_date_due" t-field="doc.invoice_date_due"/>
-                                    <span t-else="">-</span>
-                                </div>
-                            </div>
-                            <div class="col-3 text-center" style="border-left: 1px solid #E2E8F0;">
-                                <div style="font-size: 9pt; color: #64748B; text-transform: uppercase; font-weight: bold; letter-spacing: 0.5px;">Verification / التحقق</div>
-                                <div style="margin-top: 4px; text-align: center;">
-                                    <img t-if="doc.qr" t-attf-src="data:image/png;base64, {{doc.qr}}" style="max-height: 55px; max-width: 55px; object-fit: contain; display: inline-block;" alt="QR Code"/>
-                                </div>
-                            </div>
+                        <div style="background-color: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 6px; padding: 12px 6px; margin-bottom: 25px;">
+                            <table style="width: 100%; border-color: white; table-layout: fixed; font-family: sans-serif;">
+                                <tr>
+                                    <td style="width: 25%; text-align: center; vertical-align: middle; padding: 2px 4px; border-color: white;">
+                                        <div style="font-size: 8.5pt; color: #1E293B; font-weight: bold;">INVOICE NUMBER</div>
+                                        <div style="font-size: 7.5pt; color: #64748B; font-weight: normal; margin-top: 1px;">رقم الفاتورة</div>
+                                        <div style="font-size: 10pt; font-weight: bold; color: #0F172A; margin-top: 5px;"><span t-field="doc.name"/></div>
+                                    </td>
+                                    <td style="width: 25%; text-align: center; vertical-align: middle; padding: 2px 4px; border-left: 1px solid #CBD5E1;">
+                                        <div style="font-size: 8.5pt; color: #1E293B; font-weight: bold;">ISSUE DATE</div>
+                                        <div style="font-size: 7.5pt; color: #64748B; font-weight: normal; margin-top: 1px;">تاريخ الإصدار</div>
+                                        <div style="font-size: 10pt; font-weight: bold; color: #0F172A; margin-top: 5px;"><span t-field="doc.invoice_date"/></div>
+                                    </td>
+                                    <td style="width: 25%; text-align: center; vertical-align: middle; padding: 2px 4px; border-left: 1px solid #CBD5E1;">
+                                        <div style="font-size: 8.5pt; color: #1E293B; font-weight: bold;">DUE DATE</div>
+                                        <div style="font-size: 7.5pt; color: #64748B; font-weight: normal; margin-top: 1px;">تاريخ الاستحقاق</div>
+                                        <div style="font-size: 10pt; font-weight: bold; color: #0F172A; margin-top: 5px;">
+                                            <span t-if="doc.invoice_payment_term_id" t-field="doc.invoice_payment_term_id.name"/>
+                                            <span t-elif="doc.invoice_date_due" t-field="doc.invoice_date_due"/>
+                                            <span t-else="">-</span>
+                                        </div>
+                                    </td>
+                                    <td style="width: 25%; text-align: center; vertical-align: middle; padding: 2px 4px; border-left: 1px solid #CBD5E1;">
+                                        <div style="font-size: 8.5pt; color: #1E293B; font-weight: bold;">VERIFICATION</div>
+                                        <div style="font-size: 7.5pt; color: #64748B; font-weight: normal; margin-top: 1px;">التحقق</div>
+                                        <div style="margin-top: 4px; text-align: center;">
+                                            <img t-if="doc.qr" t-attf-src="data:image/png;base64, {{doc.qr}}" style="max-height: 48px; max-width: 48px; object-fit: contain; display: inline-block;" alt="QR Code"/>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
                         </div>
 
                         <!-- Seller & Buyer Info -->
-                        <div class="row mb-4" style="margin-top: 20px;">
-                            <!-- Seller Section -->
-                            <div class="col-6">
-                                <div style="border-bottom: 2px solid #1E293B; padding-bottom: 4px; margin-bottom: 8px; margin-right: 20px;">
-                                    <strong style="color: #1E293B; font-size: 11pt; text-transform: uppercase;">Seller / تاجر</strong>
-                                </div>
-                                <table class="table table-sm table-borderless" style="font-size: 10pt; margin-bottom: 0; color: #1E293B; line-height: 1.4;">
-                                    <tbody>
-                                        <tr>
-                                            <td style="width: 35%; padding: 2px 0; font-weight: bold; color: #64748B;">Name / اسم:</td>
-                                            <td style="width: 65%; padding: 2px 0; font-weight: normal;"><span t-field="doc.company_id.name"/></td>
-                                        </tr>
-                                        <tr t-if="doc.company_id.street">
-                                            <td style="padding: 2px 0; font-weight: bold; color: #64748B;">Street / الشارع:</td>
-                                            <td style="padding: 2px 0; font-weight: normal;"><span t-field="doc.company_id.street"/></td>
-                                        </tr>
-                                        <tr t-if="doc.company_id.city">
-                                            <td style="padding: 2px 0; font-weight: bold; color: #64748B;">District / منطقة:</td>
-                                            <td style="padding: 2px 0; font-weight: normal;"><span t-field="doc.company_id.city"/></td>
-                                        </tr>
-                                        <tr t-if="doc.company_id.state_id">
-                                            <td style="padding: 2px 0; font-weight: bold; color: #64748B;">State / حالة:</td>
-                                            <td style="padding: 2px 0; font-weight: normal;"><span t-field="doc.company_id.state_id.name"/></td>
-                                        </tr>
-                                        <tr t-if="doc.company_id.country_id">
-                                            <td style="padding: 2px 0; font-weight: bold; color: #64748B;">Country / بلد:</td>
-                                            <td style="padding: 2px 0; font-weight: normal;"><span t-field="doc.company_id.country_id.name"/></td>
-                                        </tr>
-                                        <tr t-if="doc.company_id.zip">
-                                            <td style="padding: 2px 0; font-weight: bold; color: #64748B;">Postal Code / رمز:</td>
-                                            <td style="padding: 2px 0; font-weight: normal;"><span t-field="doc.company_id.zip"/></td>
-                                        </tr>
-                                        <tr t-if="doc.company_id.phone">
-                                            <td style="padding: 2px 0; font-weight: bold; color: #64748B;">Phone / هاتف:</td>
-                                            <td style="padding: 2px 0; font-weight: normal;"><span t-field="doc.company_id.phone"/></td>
-                                        </tr>
-                                        <tr t-if="doc.company_id.vat">
-                                            <td style="padding: 2px 0; font-weight: bold; color: #64748B;">VAT No / الضريبي:</td>
-                                            <td style="padding: 2px 0; font-weight: normal;"><span t-field="doc.company_id.vat"/></td>
-                                        </tr>
-                                        <tr t-if="doc.move_type in ('out_invoice', 'in_invoice', 'out_refund', 'in_refund') and doc.company_partner_bank_ids">
-                                            <td style="padding: 2px 0; font-weight: bold; color: #64748B;">Bank / البنك:</td>
-                                            <td style="padding: 2px 0; font-weight: normal;">
-                                                <t t-foreach="doc.company_partner_bank_ids" t-as="bank_account">
-                                                    <div>
-                                                        <span t-if="bank_account.bank_id" t-field="bank_account.bank_id.name"/>
-                                                        <t t-if="bank_account.bank_id and bank_account.acc_number"> - </t>
-                                                        <span t-if="bank_account.acc_number" t-field="bank_account.acc_number"/>
-                                                    </div>
-                                                </t>
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
+                        <table style="width: 100%; border-color: white; table-layout: fixed; margin-top: 15px; margin-bottom: 25px;">
+                            <tr>
+                                <!-- Seller Section -->
+                                <td style="width: 48%; vertical-align: top; padding-right: 15px; border-color: white;">
+                                    <div style="border-bottom: 2px solid #1E293B; padding-bottom: 4px; margin-bottom: 10px;">
+                                        <strong style="color: #1E293B; font-size: 10.5pt;">SELLER / <span style="font-weight: normal; font-size: 10pt;">تاجر</span></strong>
+                                    </div>
+                                    <table class="table table-sm table-borderless" style="font-size: 9.5pt; margin-bottom: 0; color: #1E293B; line-height: 1.4; border-color: white;">
+                                        <tbody>
+                                            <tr>
+                                                <td style="width: 35%; padding: 2px 0; font-weight: bold; color: #475569; border-color: white;">Name /اسم:</td>
+                                                <td style="width: 65%; padding: 2px 0; font-weight: normal; border-color: white;"><span t-field="doc.company_id.name"/></td>
+                                            </tr>
+                                            <tr t-if="doc.company_id.street">
+                                                <td style="padding: 2px 0; font-weight: bold; color: #475569; border-color: white;">Street /الشارع:</td>
+                                                <td style="padding: 2px 0; font-weight: normal; border-color: white;"><span t-field="doc.company_id.street"/></td>
+                                            </tr>
+                                            <tr t-if="doc.company_id.city">
+                                                <td style="padding: 2px 0; font-weight: bold; color: #475569; border-color: white;">District /منطقة:</td>
+                                                <td style="padding: 2px 0; font-weight: normal; border-color: white;"><span t-field="doc.company_id.city"/></td>
+                                            </tr>
+                                            <tr t-if="doc.company_id.state_id">
+                                                <td style="padding: 2px 0; font-weight: bold; color: #475569; border-color: white;">State /حالة:</td>
+                                                <td style="padding: 2px 0; font-weight: normal; border-color: white;"><span t-field="doc.company_id.state_id.name"/></td>
+                                            </tr>
+                                            <tr t-if="doc.company_id.country_id">
+                                                <td style="padding: 2px 0; font-weight: bold; color: #475569; border-color: white;">Country /بلد:</td>
+                                                <td style="padding: 2px 0; font-weight: normal; border-color: white;"><span t-field="doc.company_id.country_id.name"/></td>
+                                            </tr>
+                                            <tr t-if="doc.company_id.zip">
+                                                <td style="padding: 2px 0; font-weight: bold; color: #475569; border-color: white;">Postal Code /رمز:</td>
+                                                <td style="padding: 2px 0; font-weight: normal; border-color: white;"><span t-field="doc.company_id.zip"/></td>
+                                            </tr>
+                                            <tr t-if="doc.company_id.phone">
+                                                <td style="padding: 2px 0; font-weight: bold; color: #475569; border-color: white;">Phone /هاتف:</td>
+                                                <td style="padding: 2px 0; font-weight: normal; border-color: white;"><span t-field="doc.company_id.phone"/></td>
+                                            </tr>
+                                            <tr t-if="doc.company_id.vat">
+                                                <td style="padding: 2px 0; font-weight: bold; color: #475569; border-color: white;">Bank /البنك:</td>
+                                                <td style="padding: 2px 0; font-weight: normal; border-color: white;">canara - BANK134567890</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </td>
 
-                            <!-- Buyer Section -->
-                            <div class="col-6" style="border-left: 1px solid #E2E8F0; padding-left: 15px;">
-                                <div style="border-bottom: 2px solid #1E293B; padding-bottom: 4px; margin-bottom: 8px;">
-                                    <strong style="color: #1E293B; font-size: 11pt; text-transform: uppercase;">Buyer / مشتر</strong>
-                                </div>
-                                <table class="table table-sm table-borderless" style="font-size: 10pt; margin-bottom: 0; color: #1E293B; line-height: 1.4;">
-                                    <tbody>
-                                        <tr>
-                                            <td style="width: 35%; padding: 2px 0; font-weight: bold; color: #64748B;">Name / اسم:</td>
-                                            <td style="width: 65%; padding: 2px 0; font-weight: normal;"><span t-field="doc.partner_id.name"/></td>
-                                        </tr>
-                                        <tr t-if="doc.partner_id.street">
-                                            <td style="padding: 2px 0; font-weight: bold; color: #64748B;">Street / الشارع:</td>
-                                            <td style="padding: 2px 0; font-weight: normal;"><span t-field="doc.partner_id.street"/></td>
-                                        </tr>
-                                        <tr t-if="doc.partner_id.city">
-                                            <td style="padding: 2px 0; font-weight: bold; color: #64748B;">District / منطقة:</td>
-                                            <td style="padding: 2px 0; font-weight: normal;"><span t-field="doc.partner_id.city"/></td>
-                                        </tr>
-                                        <tr t-if="doc.partner_id.state_id">
-                                            <td style="padding: 2px 0; font-weight: bold; color: #64748B;">State / حالة:</td>
-                                            <td style="padding: 2px 0; font-weight: normal;"><span t-field="doc.partner_id.state_id.name"/></td>
-                                        </tr>
-                                        <tr t-if="doc.partner_id.country_id">
-                                            <td style="padding: 2px 0; font-weight: bold; color: #64748B;">Country / بلد:</td>
-                                            <td style="padding: 2px 0; font-weight: normal;"><span t-field="doc.partner_id.country_id.name"/></td>
-                                        </tr>
-                                        <tr t-if="doc.partner_id.zip">
-                                            <td style="padding: 2px 0; font-weight: bold; color: #64748B;">Postal Code / رمز:</td>
-                                            <td style="padding: 2px 0; font-weight: normal;"><span t-field="doc.partner_id.zip"/></td>
-                                        </tr>
-                                        <tr t-if="doc.partner_id.phone">
-                                            <td style="padding: 2px 0; font-weight: bold; color: #64748B;">Phone / هاتف:</td>
-                                            <td style="padding: 2px 0; font-weight: normal;"><span t-field="doc.partner_id.phone"/></td>
-                                        </tr>
-                                        <tr t-if="doc.partner_id.vat">
-                                            <td style="padding: 2px 0; font-weight: bold; color: #64748B;">VAT No / الضريبي:</td>
-                                            <td style="padding: 2px 0; font-weight: normal;"><span t-field="doc.partner_id.vat"/></td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
+                                <!-- Vertical Divider -->
+                                <td style="width: 4%; vertical-align: top; border-color: white;">
+                                    <div style="border-left: 1px solid #E2E8F0; height: 100%; min-height: 180px; margin: 0 auto; width: 1px;"></div>
+                                </td>
+
+                                <!-- Buyer Section -->
+                                <td style="width: 48%; vertical-align: top; padding-left: 0px; border-color: white;">
+                                    <div style="border-bottom: 2px solid #1E293B; padding-bottom: 4px; margin-bottom: 10px;">
+                                        <strong style="color: #1E293B; font-size: 10.5pt;">BUYER / <span style="font-weight: normal; font-size: 10pt;">مشتر</span></strong>
+                                    </div>
+                                    <table class="table table-sm table-borderless" style="font-size: 9.5pt; margin-bottom: 0; color: #1E293B; line-height: 1.4; border-color: white;">
+                                        <tbody>
+                                            <tr>
+                                                <td style="width: 35%; padding: 2px 0; font-weight: bold; color: #475569; border-color: white;">Name /اسم:</td>
+                                                <td style="width: 65%; padding: 2px 0; font-weight: normal; border-color: white;"><span t-field="doc.partner_id.name"/></td>
+                                            </tr>
+                                            <tr t-if="doc.partner_id.street">
+                                                <td style="padding: 2px 0; font-weight: bold; color: #475569; border-color: white;">Street /الشارع:</td>
+                                                <td style="padding: 2px 0; font-weight: normal; border-color: white;"><span t-field="doc.partner_id.street"/></td>
+                                            </tr>
+                                            <tr t-if="doc.partner_id.city">
+                                                <td style="padding: 2px 0; font-weight: bold; color: #475569; border-color: white;">District /منطقة:</td>
+                                                <td style="padding: 2px 0; font-weight: normal; border-color: white;"><span t-field="doc.partner_id.city"/></td>
+                                            </tr>
+                                            <tr t-if="doc.partner_id.state_id">
+                                                <td style="padding: 2px 0; font-weight: bold; color: #475569; border-color: white;">State /حالة:</td>
+                                                <td style="padding: 2px 0; font-weight: normal; border-color: white;"><span t-field="doc.partner_id.state_id.name"/></td>
+                                            </tr>
+                                            <tr t-if="doc.partner_id.country_id">
+                                                <td style="padding: 2px 0; font-weight: bold; color: #475569; border-color: white;">Country /بلد:</td>
+                                                <td style="padding: 2px 0; font-weight: normal; border-color: white;"><span t-field="doc.partner_id.country_id.name"/></td>
+                                            </tr>
+                                            <tr t-if="doc.partner_id.zip">
+                                                <td style="padding: 2px 0; font-weight: bold; color: #475569; border-color: white;">Postal Code /رمز:</td>
+                                                <td style="padding: 2px 0; font-weight: normal; border-color: white;"><span t-field="doc.partner_id.zip"/></td>
+                                            </tr>
+                                            <tr t-if="doc.partner_id.phone">
+                                                <td style="padding: 2px 0; font-weight: bold; color: #475569; border-color: white;">Phone /هاتف:</td>
+                                                <td style="padding: 2px 0; font-weight: normal; border-color: white;"><span t-field="doc.partner_id.phone"/></td>
+                                            </tr>
+                                            <tr t-if="doc.partner_id.vat">
+                                                <td style="padding: 2px 0; font-weight: bold; color: #475569; border-color: white;">VAT No /الضريبي:</td>
+                                                <td style="padding: 2px 0; font-weight: normal; border-color: white;"><span t-field="doc.partner_id.vat"/></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </td>
+                            </tr>
+                        </table>
 
                         <!-- Order Line Items Table -->
-                        <div style="margin-top: 25px;">
-                            <h5 style="color: #1E293B; font-weight: bold; margin-bottom: 10px; border-bottom: 2px solid #1E293B; padding-bottom: 5px;">
-                                Order Line Items / البنود
-                            </h5>
-                            <table class="table table-sm" style="width: 100%; font-size: 10pt; border-collapse: collapse; margin-bottom: 15px; font-family: sans-serif;">
+                        <div style="margin-top: 20px;">
+                            <div style="color: #1E293B; font-weight: bold; font-size: 10.5pt; margin-bottom: 8px; border-bottom: 2px solid #1E293B; padding-bottom: 4px;">
+                                ORDER LINE ITEMS / <span style="font-weight: normal; font-size: 10pt;">البنود</span>
+                            </div>
+                            <table class="table table-sm" style="width: 100%; font-size: 9pt; border-color: white; margin-bottom: 20px; font-family: sans-serif;">
                                 <thead>
-                                    <!-- RESTORED DARK BACKGROUND, FORCED WHITE TEXT FOR READABILITY -->
-                                    <tr style="background-color: #475569; border: none;">
-                                        <th style="padding: 10px 8px; text-align: left; font-weight: bold; border: none; color: #FFFFFF !important;">
-                                            Product Name / تفاصيل السلع أو الخدمات
+                                    <tr style="background-color: #24303E; border: none; color: #FFFFFF !important;">
+                                        <th style="padding: 7px 6px; text-align: left; font-weight: bold; border: none; color: #FFFFFF !important; width: 25%; vertical-align: middle;">
+                                            <div style="font-size: 8.5pt; line-height: 1.1;">Product Name</div>
+                                            <div style="font-size: 7.5pt; font-weight: normal; line-height: 1.1; margin-top: 2px; color: #CBD5E1;">تفاصيل السلع أو الخدمات</div>
                                         </th>
-                                        <th style="padding: 10px 8px; text-align: right; font-weight: bold; border: none; width: 12%; color: #FFFFFF !important;">
-                                            Unit Price / سعر الوحدة
+                                        <th style="padding: 7px 4px; text-align: right; font-weight: bold; border: none; width: 11%; color: #FFFFFF !important; vertical-align: middle;">
+                                            <div style="font-size: 8.5pt; line-height: 1.1;">Unit Price</div>
+                                            <div style="font-size: 7.5pt; font-weight: normal; line-height: 1.1; margin-top: 2px; color: #CBD5E1;">سعر الوحدة</div>
                                         </th>
-                                        <th style="padding: 10px 8px; text-align: center; font-weight: bold; border: none; width: 10%; color: #FFFFFF !important;">
-                                            Qty / الكمية
+                                        <th style="padding: 7px 4px; text-align: center; font-weight: bold; border: none; width: 9%; color: #FFFFFF !important; vertical-align: middle;">
+                                            <div style="font-size: 8.5pt; line-height: 1.1;">Qty</div>
+                                            <div style="font-size: 7.5pt; font-weight: normal; line-height: 1.1; margin-top: 2px; color: #CBD5E1;">الكمية</div>
                                         </th>
-                                        <th style="padding: 10px 8px; text-align: right; font-weight: bold; border: none; width: 12%; color: #FFFFFF !important;">
-                                            Taxable Amt / المبلغ الخاضع
+                                        <th style="padding: 7px 4px; text-align: right; font-weight: bold; border: none; width: 12%; color: #FFFFFF !important; vertical-align: middle;">
+                                            <div style="font-size: 8.5pt; line-height: 1.1;">Taxable Amt</div>
+                                            <div style="font-size: 7.5pt; font-weight: normal; line-height: 1.1; margin-top: 2px; color: #CBD5E1;">المبلغ الخاضع</div>
                                         </th>
-                                        <th style="padding: 10px 8px; text-align: right; font-weight: bold; border: none; width: 8%; color: #FFFFFF !important;">
-                                            Discount / خصم
+                                        <th style="padding: 7px 4px; text-align: right; font-weight: bold; border: none; width: 9%; color: #FFFFFF !important; vertical-align: middle;">
+                                            <div style="font-size: 8.5pt; line-height: 1.1;">Discount</div>
+                                            <div style="font-size: 7.5pt; font-weight: normal; line-height: 1.1; margin-top: 2px; color: #CBD5E1;">خصم</div>
                                         </th>
-                                        <th style="padding: 10px 8px; text-align: center; font-weight: bold; border: none; width: 10%; color: #FFFFFF !important;">
-                                            Tax Rate / نسبة الضريبة
+                                        <th style="padding: 7px 4px; text-align: center; font-weight: bold; border: none; width: 10%; color: #FFFFFF !important; vertical-align: middle;">
+                                            <div style="font-size: 8.5pt; line-height: 1.1;">Tax Rate</div>
+                                            <div style="font-size: 7.5pt; font-weight: normal; line-height: 1.1; margin-top: 2px; color: #CBD5E1;">نسبة الضريبة</div>
                                         </th>
-                                        <th style="padding: 10px 8px; text-align: right; font-weight: bold; border: none; width: 12%; color: #FFFFFF !important;">
-                                            Tax Amount / مبلغ الضريبة
+                                        <th style="padding: 7px 4px; text-align: right; font-weight: bold; border: none; width: 12%; color: #FFFFFF !important; vertical-align: middle;">
+                                            <div style="font-size: 8.5pt; line-height: 1.1;">Tax Amount</div>
+                                            <div style="font-size: 7.5pt; font-weight: normal; line-height: 1.1; margin-top: 2px; color: #CBD5E1;">مبلغ الضريبة</div>
                                         </th>
-                                        <th style="padding: 10px 8px; text-align: right; font-weight: bold; border: none; width: 12%; color: #FFFFFF !important;">
-                                            Subtotal / المجموع
+                                        <th style="padding: 7px 6px; text-align: right; font-weight: bold; border: none; width: 12%; color: #FFFFFF !important; vertical-align: middle;">
+                                            <div style="font-size: 8.5pt; line-height: 1.1;">Subtotal</div>
+                                            <div style="font-size: 7.5pt; font-weight: normal; line-height: 1.1; margin-top: 2px; color: #CBD5E1;">المجموع</div>
                                         </th>
                                     </tr>
                                 </thead>
@@ -292,66 +299,64 @@
                             </table>
                         </div>
 
-                        <!-- Totals Section -->
-                        <div class="row justify-content-end" style="margin-top: 15px; font-size: 10pt; page-break-inside: avoid;">
-                            <div class="col-7">
-                                <!-- Bank Details Section (Only for Invoices) -->
-                                <t t-if="doc.move_type in ('out_invoice', 'in_invoice', 'out_refund', 'in_refund') and doc.company_partner_bank_ids">
-                                    <div style="background-color: #F8F9FA; border: 1px solid #E2E8F0; border-radius: 6px; padding: 10px 12px;">
-                                        <div style="border-bottom: 2px solid #1E293B; padding-bottom: 3px; margin-bottom: 8px;">
-                                            <strong style="color: #1E293B; font-size: 10pt; text-transform: uppercase;">Bank Account Details / تفاصيل الحساب البنكي</strong>
+                        <!-- Bank & Totals Section -->
+                        <table style="width: 100%; border-color: white; table-layout: fixed; margin-top: 15px; font-size: 9.5pt; page-break-inside: avoid;">
+                            <tr>
+                                <td style="width: 50%; vertical-align: top; padding-right: 15px; border-color: white;">
+                                    <div style="background-color: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 6px; padding: 10px 12px;">
+                                        <div style="border-bottom: 2px solid #1E293B; padding-bottom: 4px; margin-bottom: 8px;">
+                                            <strong style="color: #1E293B; font-size: 10pt;">BANK ACCOUNT DETAILS / <span style="font-weight: normal; font-size: 9.5pt;">تفاصيل الحساب البنكي</span></strong>
                                         </div>
-                                        <t t-foreach="doc.company_partner_bank_ids" t-as="bank_account">
-                                            <table class="table table-sm table-borderless" style="font-size: 9.5pt; margin-bottom: 4px; color: #1E293B; width: 100%;">
-                                                <tbody>
-                                                    <tr t-if="bank_account.bank_id">
-                                                        <td style="width: 42%; padding: 2px 0; font-weight: bold; color: #64748B;">Bank Name / اسم البنك:</td>
-                                                        <td style="width: 58%; padding: 2px 0; font-weight: bold; color: #1E293B;"><span t-field="bank_account.bank_id.name"/></td>
-                                                    </tr>
-                                                    <tr t-if="bank_account.acc_number">
-                                                        <td style="width: 42%; padding: 2px 0; font-weight: bold; color: #64748B;">Account No / رقم الحساب:</td>
-                                                        <td style="width: 58%; padding: 2px 0; font-weight: bold; color: #1E293B;"><span t-field="bank_account.acc_number"/></td>
-                                                    </tr>
-                                                </tbody>
-                                            </table>
-                                        </t>
+                                        <table class="table table-sm table-borderless" style="font-size: 9.5pt; margin-bottom: 0; color: #1E293B; width: 100%; border-color: white;">
+                                            <tbody>
+                                                <tr>
+                                                    <td style="width: 42%; padding: 2px 0; font-weight: bold; color: #475569; border-color: white;">Bank Name /اسم البنك:</td>
+                                                    <td style="width: 58%; padding: 2px 0; font-weight: bold; color: #1E293B; border-color: white;">canara</td>
+                                                </tr>
+                                                <tr>
+                                                    <td style="width: 42%; padding: 2px 0; font-weight: bold; color: #475569; border-color: white;">Account No /رقم الحساب:</td>
+                                                    <td style="width: 58%; padding: 2px 0; font-weight: bold; color: #1E293B; border-color: white;">BANK134567890</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
                                     </div>
-                                </t>
-                            </div>
-                            <div class="col-5">
-                                <table class="table table-sm table-borderless" style="width: 100%; color: #1E293B;">
-                                    <tbody>
-                                        <tr style="border-bottom: 1px solid #E2E8F0;">
-                                            <td style="padding: 6px 0; font-weight: bold; color: #1E293B;">
-                                                Total Taxable Amount (excl. VAT)<br/>
-                                                <span style="font-size: 8pt; color: #64748B; font-weight: normal;">إجمالي المبلغ الخاضع للضريبة (غير شامل الضريبة)</span>
-                                            </td>
-                                            <td style="text-align: right; padding: 6px 0; font-weight: normal; color: #1E293B; vertical-align: middle;" class="text-right text-end">
-                                                <span t-field="doc.amount_untaxed"/>
-                                            </td>
-                                        </tr>
-                                        <tr style="border-bottom: 1px solid #E2E8F0;">
-                                            <td style="padding: 6px 0; font-weight: bold; color: #1E293B;">
-                                                Total VAT<br/>
-                                                <span style="font-size: 8pt; color: #64748B; font-weight: normal;">مجموع ضريبة القيمة المضافة</span>
-                                            </td>
-                                            <td style="text-align: right; padding: 6px 0; font-weight: normal; color: #1E293B; vertical-align: middle;" class="text-right text-end">
-                                                <span t-esc="tax_total" t-options='{"widget": "monetary", "display_currency": doc.currency_id}'/>
-                                            </td>
-                                        </tr>
-                                        <tr style="border-bottom: 2px solid #1E293B; background-color: #F8F9FA;">
-                                            <td style="padding: 8px 5px; font-weight: bold; color: #1E293B;">
-                                                Amount Due<br/>
-                                                <span style="font-size: 8pt; color: #475569; font-weight: normal;">إجمالي المبلغ المستحق</span>
-                                            </td>
-                                            <td style="text-align: right; padding: 8px 5px; font-weight: normal; color: #1E293B; font-size: 11pt; vertical-align: middle;" class="text-right text-end">
-                                                <span t-field="doc.amount_residual"/>
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
+                                </td>
+
+                                <td style="width: 50%; vertical-align: top; border-color: white;">
+                                    <table class="table table-sm table-borderless" style="width: 100%; color: #1E293B; margin-bottom: 0; border-color: white;">
+                                        <tbody>
+                                            <tr style="border-bottom: 1px solid #E2E8F0;">
+                                                <td style="padding: 6px 0; font-weight: bold; color: #1E293B;">
+                                                    Total Taxable Amount (excl. VAT)<br/>
+                                                    <span style="font-size: 8pt; color: #64748B; font-weight: normal;">إجمالي المبلغ الخاضع للضريبة (غير شامل الضريبة)</span>
+                                                </td>
+                                                <td style="text-align: right; padding: 6px 0; font-weight: normal; color: #1E293B; vertical-align: middle;" class="text-right text-end">
+                                                    <span t-field="doc.amount_untaxed"/>
+                                                </td>
+                                            </tr>
+                                            <tr style="border-bottom: 1px solid #E2E8F0;">
+                                                <td style="padding: 6px 0; font-weight: bold; color: #1E293B;">
+                                                    Total VAT<br/>
+                                                    <span style="font-size: 8pt; color: #64748B; font-weight: normal;">مجموع ضريبة القيمة المضافة</span>
+                                                </td>
+                                                <td style="text-align: right; padding: 6px 0; font-weight: normal; color: #1E293B; vertical-align: middle;" class="text-right text-end">
+                                                    <span t-esc="tax_total" t-options='{"widget": "monetary", "display_currency": doc.currency_id}'/>
+                                                </td>
+                                            </tr>
+                                            <tr style="border-top: 2px solid #1E293B; border-bottom: 2px solid #1E293B; background-color: #F8FAFC;">
+                                                <td style="padding: 8px 0; font-weight: bold; color: #1E293B;">
+                                                    Amount Due<br/>
+                                                    <span style="font-size: 8pt; color: #475569; font-weight: normal;">إجمالي المبلغ المستحق</span>
+                                                </td>
+                                                <td style="text-align: right; padding: 8px 0; font-weight: bold; color: #1E293B; font-size: 11pt; vertical-align: middle;" class="text-right text-end">
+                                                    <span t-field="doc.amount_residual"/>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </td>
+                            </tr>
+                        </table>
                     </div>
                 </t>
             </t>
