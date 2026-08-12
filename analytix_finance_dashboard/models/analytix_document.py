@@ -3,23 +3,12 @@ import logging
 import os
 import base64
 import json
-import re
 from io import BytesIO
 from odoo import models, api, fields
 from odoo.exceptions import UserError
 
-try:
-    from PIL import Image
-    import PIL.WebPImagePlugin
-    import PIL.PngImagePlugin
-    import PIL.JpegImagePlugin
-    import PIL.GifImagePlugin
-    import PIL.BmpImagePlugin
-    import PIL.TiffImagePlugin
-except ImportError:
-    pass
-
 _logger = logging.getLogger(__name__)
+
 
 
 class AnalytixDocument(models.Model):
@@ -31,9 +20,8 @@ class AnalytixDocument(models.Model):
     name = fields.Char(string='Document Name', required=True)
     description = fields.Char(string='Description')
     doc_type = fields.Selection([
-        ('invoice',  'Sales Invoice'),
-        ('bill',     'Purchase Bills'),
-        ('expense_bill', 'Expense Bills'),
+        ('invoice',  'Invoice'),
+        ('bill',     'Bills'),
         ('bank_statement', 'Bank Statement'),
         ('receipt_voucher', 'Receipt Voucher'),
         ('payment_voucher', 'Payment Voucher'),
@@ -60,17 +48,6 @@ class AnalytixDocument(models.Model):
         ('rejected', 'Rejected'),
     ], string='Status', required=True, default='submitted', readonly=True)
 
-    @api.constrains('file_size', 'file_data')
-    def _check_file_size(self):
-        max_size = 5 * 1024 * 1024  # 5 MB
-        for doc in self:
-            if doc.file_size and doc.file_size > max_size:
-                raise UserError("The document size is more than 5 MB")
-            if doc.file_data:
-                b64_len = len(doc.file_data) if isinstance(doc.file_data, (str, bytes)) else 0
-                approx_bytes = (b64_len * 3) // 4
-                if approx_bytes > max_size * 1.05:
-                    raise UserError("The document size is more than 5 MB")
 
     # ── Label maps ────────────────────────────────────────────────────
     STATUS_LABELS = {
@@ -79,9 +56,8 @@ class AnalytixDocument(models.Model):
         'rejected':  'Rejected',
     }
     DOC_TYPE_LABELS = {
-        'invoice': 'Sales Invoice',
-        'bill':    'Purchase Bills',
-        'expense_bill': 'Expense Bills',
+        'invoice': 'Invoice',
+        'bill':    'Bills',
         'bank_statement': 'Bank Statement',
         'receipt_voucher': 'Receipt Voucher',
         'payment_voucher': 'Payment Voucher',
@@ -92,7 +68,6 @@ class AnalytixDocument(models.Model):
     DOC_TYPE_COLORS = {
         'invoice': {'bg': '#e3f2fd', 'text': '#1565c0'},
         'bill':    {'bg': '#fce4ec', 'text': '#c62828'},
-        'expense_bill': {'bg': '#fff3e0', 'text': '#e65100'},
         'bank_statement': {'bg': '#e8f5e9', 'text': '#2e7d32'},
         'receipt_voucher': {'bg': '#fff3e0', 'text': '#ef6c00'},
         'payment_voucher': {'bg': '#fbe9e7', 'text': '#d84315'},
@@ -141,13 +116,6 @@ class AnalytixDocument(models.Model):
     def save_analytix_document(self, name, file_name, file_data_b64, mimetype,
                                file_size, description='', doc_type='other'):
         """Create a new document record and attach the file via ir.attachment."""
-        max_size = 5 * 1024 * 1024  # 5 MB
-        if file_size and int(file_size) > max_size:
-            raise UserError("The document size is more than 5 MB")
-        if file_data_b64:
-            b64_len = len(file_data_b64) if isinstance(file_data_b64, (str, bytes)) else 0
-            if (b64_len * 3) // 4 > max_size * 1.05:
-                raise UserError("The document size is more than 5 MB")
         _logger.info(
             "save_analytix_document called: name=%s file_name=%s mimetype=%s "
             "file_size=%s doc_type=%s description=%s b64_len=%s",
@@ -155,6 +123,7 @@ class AnalytixDocument(models.Model):
             len(file_data_b64) if file_data_b64 else 0,
         )
         try:
+            # ── 1. Create the metadata record (no binary here) ──────────────
             doc = self.create({
                 'name':        name or file_name or 'Unnamed',
                 'description': description or '',
@@ -165,10 +134,20 @@ class AnalytixDocument(models.Model):
                 'company_id':  self.env.company.id,
                 'user_id':     self.env.user.id,
             })
+            _logger.info("Created analytix.document id=%s", doc.id)
+
+            # ── 2. Write binary via the Binary field (attachment=True) ───────
+            #    Odoo 19: Binary(attachment=True) stores via ir.attachment.
+            #    The ORM accepts a plain base64 string when writing through the
+            #    field; it converts internally. Pass exactly what we received.
             if file_data_b64:
+                # Ensure we have a clean base64 string (strip whitespace/newlines)
                 b64_clean = file_data_b64.strip() if isinstance(file_data_b64, str) else file_data_b64
                 doc.sudo().write({'file_data': b64_clean})
+                _logger.info("File data written to doc id=%s", doc.id)
+
             return doc.id
+
         except Exception as e:
             _logger.exception("save_analytix_document FAILED: %s", e)
             raise
@@ -223,6 +202,7 @@ class AnalytixDocument(models.Model):
         doc = self.browse(doc_id)
         if not doc.exists():
             return False
+        # Binary(attachment=True) returns bytes in Odoo 19; decode to str for JSON
         raw = doc.file_data
         if raw:
             if isinstance(raw, bytes):
@@ -238,135 +218,75 @@ class AnalytixDocument(models.Model):
             'file_data': file_data_str,
         }
 
-    # ── AI Helper Methods ──────────────────────────────────────────────
-    def _clean_float(self, val):
-        """Safely convert formatted strings (with commas, %, currency symbols) or numbers to float."""
-        if not val:
-            return 0.0
-        if isinstance(val, (int, float)):
-            return float(val)
-        if isinstance(val, str):
-            cleaned = re.sub(r'[^\d.-]', '', val.replace(',', ''))
-            try:
-                return float(cleaned) if cleaned else 0.0
-            except (ValueError, TypeError):
-                return 0.0
-        return 0.0
+    PROMPT = """
+You are an OCR and financial document extraction engine.
+
+Your task is to extract structured data from the document image.
+
+Return ONLY valid JSON. Do not return markdown. Do not explain anything.
+
+First, identify what kind of document this is:
+- "invoice"      → A sales invoice issued TO a customer (money owed to the seller)
+- "bill"         → A purchase invoice / vendor bill received FROM a supplier (money owed by the buyer)
+- "credit_note"  → A credit memo that reduces an amount owed (issued by seller to customer)
+- "debit_note"   → A debit memo that increases an amount owed
+- "receipt"      → A payment receipt confirming money received
+- "other"        → Any other financial document
+
+Use exactly this schema:
+
+{
+  "document_type": "",
+  "invoice_number": "",
+  "invoice_date": "",
+  "vendor_name": "",
+  "customer_name": "",
+  "currency": "",
+
+  "items": [
+    {
+      "description": "",
+      "quantity": 0,
+      "unit_price": 0,
+      "tax_rate": 0
+    }
+  ],
+
+  "subtotal": 0,
+  "tax": 0,
+  "total": 0
+}
+
+Rules:
+
+- Set "document_type" to one of: invoice, bill, credit_note, debit_note, receipt, other.
+- If the document is addressed FROM a supplier/vendor TO a buyer, it is a "bill".
+- If the document is issued BY a company TO their customer, it is an "invoice".
+- For "tax_rate" per item: extract the tax percentage applied to that line (e.g. 5 for 5%, 15 for 15%). If no tax on that line, use 0.
+- Never hallucinate values.
+- Missing string -> ""
+- Missing number -> 0
+- Missing array -> []
+- Dates should be YYYY-MM-DD.
+- Numbers should not contain commas.
+- Ignore signatures, logos, QR codes and stamps.
+- Extract every visible line item.
+"""
 
     def _image_to_base64(self, image):
-        """Convert a PIL Image to a fast, compressed base64 JPEG string (max 1600px)."""
-        from PIL import Image
-        img = image.copy()
-        max_dim = 1600
-        if max(img.width, img.height) > max_dim:
-            img.thumbnail((max_dim, max_dim), Image.Resampling.LANCZOS)
-        if img.mode != 'RGB':
-            img = img.convert('RGB')
+        """Convert a PIL Image to a base64-encoded PNG string."""
         buffer = BytesIO()
-        img.save(buffer, format="JPEG", quality=85, optimize=True)
+        image.save(buffer, format="PNG")
         return base64.b64encode(buffer.getvalue()).decode("utf-8")
-
-    def _repair_json_string(self, s):
-        """Repair truncated or slightly malformed JSON string returned by AI."""
-        if not s:
-            return "{}"
-        s = s.strip()
-
-        if "```" in s:
-            match = re.search(r"```(?:json)?\s*({[\s\S]*?})\s*```", s, re.IGNORECASE)
-            if match:
-                s = match.group(1)
-            else:
-                s = s.replace("```json", "").replace("```", "").strip()
-
-        # Step 1: Remove invalid control characters
-        s = re.sub(r'[\x00-\x1f\x7f-\x9f]', ' ', s)
-
-        # Step 2: Remove trailing commas before closing braces/brackets
-        s = re.sub(r',\s*([}\]])', r'\1', s)
-
-        # Step 3: Check if string has unclosed quotes at end
-        quote_count = len(re.findall(r'(?<!\\)"', s))
-        if quote_count % 2 != 0:
-            s += '"'
-
-        # Remove trailing comma if truncated right after a comma
-        s = re.sub(r',\s*$', '', s)
-
-        # Step 4: Balance unclosed braces and brackets
-        stack = []
-        in_string = False
-        escape = False
-        for char in s:
-            if escape:
-                escape = False
-                continue
-            if char == '\\':
-                escape = True
-                continue
-            if char == '"':
-                in_string = not in_string
-                continue
-            if not in_string:
-                if char in '{[':
-                    stack.append(char)
-                elif char == '}':
-                    if stack and stack[-1] == '{':
-                        stack.pop()
-                elif char == ']':
-                    if stack and stack[-1] == '[':
-                        stack.pop()
-
-        for char in reversed(stack):
-            if char == '{':
-                s += '}'
-            elif char == '[':
-                s += ']'
-
-        s = re.sub(r',\s*([}\]])', r'\1', s)
-        return s
-
-    def _regex_extract_json_fallback(self, s):
-        """Regex fallback to extract essential fields if JSON structure is severely corrupted."""
-        doc_type = 'invoice'
-        m_dt = re.search(r'"document_type"\s*:\s*"([^"]+)"', s, re.IGNORECASE)
-        if m_dt:
-            doc_type = m_dt.group(1)
-
-        def _extract_str(key):
-            m = re.search(rf'"{key}"\s*:\s*"([^"]+)"', s, re.IGNORECASE)
-            return m.group(1) if m else None
-
-        def _extract_num(key):
-            m = re.search(rf'"{key}"\s*:\s*([0-9]+(?:\.[0-9]+)?)', s, re.IGNORECASE)
-            return float(m.group(1)) if m else 0.0
-
-        vendor_name = _extract_str('vendor_name') or _extract_str('name')
-        customer_name = _extract_str('customer_name')
-        invoice_date = _extract_str('invoice_date')
-        currency = _extract_str('currency') or 'USD'
-        subtotal = _extract_num('subtotal')
-        tax = _extract_num('tax')
-        total = _extract_num('total') or (subtotal + tax)
-
-        return {
-            "document_type": doc_type,
-            "vendor": {"name": vendor_name},
-            "customer": {"name": customer_name},
-            "vendor_name": vendor_name,
-            "customer_name": customer_name,
-            "invoice_date": invoice_date,
-            "currency": currency,
-            "subtotal": subtotal,
-            "tax": tax,
-            "total": total,
-            "items": []
-        }
 
     def _call_openrouter(self, client, image_b64):
         """
         Send a single page/image to OpenRouter (Gemini model) and return the
-        parsed JSON dict describing the document.
+        parsed JSON dict describing the document (invoice/bill/receipt/etc).
+
+        `client` is an openai.OpenAI instance already pointed at OpenRouter.
+        `image_b64` is a base64-encoded PNG/JPEG string (no data: prefix),
+        as produced by self._image_to_base64().
         """
         system_prompt = (
             "You are a document-extraction engine for an accounting system. "
@@ -375,25 +295,8 @@ class AnalytixDocument(models.Model):
             "commentary) using this shape:\n"
             "{\n"
             '  "document_type": "invoice|bill|credit_note|debit_note|receipt|other",\n'
-            '  "vendor": {\n'
-            '    "name": "string or null",\n'
-            '    "street": "building number / street address or null",\n'
-            '    "street2": "district / additional street address or null",\n'
-            '    "city": "city name or null",\n'
-            '    "zip": "postal/ZIP code or null",\n'
-            '    "country": "country name or null",\n'
-            '    "vat": "tax ID / VAT number or null"\n'
-            '  },\n'
-            '  "customer": {\n'
-            '    "name": "string or null",\n'
-            '    "street": "building number / street address or null",\n'
-            '    "street2": "district / additional street address or null",\n'
-            '    "city": "city name or null",\n'
-            '    "zip": "postal/ZIP code or null",\n'
-            '    "country": "country name or null",\n'
-            '    "vat": "tax ID / VAT number or null"\n'
-            '  },\n'
-            '  "invoice_number": "sequence / invoice / bill / reference number or null",\n'
+            '  "vendor_name": "string or null",\n'
+            '  "customer_name": "string or null",\n'
             '  "invoice_date": "YYYY-MM-DD or null",\n'
             '  "currency": "3-letter ISO code or null",\n'
             '  "subtotal": number,\n'
@@ -402,41 +305,10 @@ class AnalytixDocument(models.Model):
             '  "items": [\n'
             '    {"description": "string", "quantity": number, "unit_price": number, "tax_rate": number}\n'
             "  ]\n"
-            "}\n"
-            "Rules:\n"
-            "- Extract full partner details for both vendor and customer including street, city, zip, country, and vat (tax ID).\n"
-            "- tax_rate must be the tax percentage applied (e.g. 15 for 15%, 5 for 5%). If no tax, use 0.\n"
-            "- tax must be the total tax/VAT amount.\n"
-            "- subtotal must be the total amount before tax.\n"
-            "- total must be the final amount including tax.\n"
-            "- numbers should be numeric without currency symbols.\n"
-            "- CRITICAL FOR LINE ITEM UNIT PRICES & AMOUNTS:\n"
-            "  1. The sum of (quantity * unit_price) across all items MUST be consistent with the document subtotal. If subtotal is 8000, item unit prices CANNOT be in millions.\n"
-            "  2. Do NOT misread formatting commas or period delimiters as extra zeros (e.g. 20.23 is not 20230450).\n"
-            "  3. unit_price must be the actual single unit rate.\n"
+            "}"
         )
 
-        # ── OpenRouter Model Selection: Use Frontend Field if configured, else Fallback to Backend Default ──
-        user_model = False
-        try:
-            user_model = (getattr(self.env.user, 'openrouter_model', '') or '').strip()
-        except Exception:
-            user_model = False
-
-        company_model = False
-        try:
-            company_model = (getattr(self.env.company, 'openrouter_model', '') or '').strip()
-        except Exception:
-            company_model = False
-
-        if user_model:
-            model_name = user_model
-        elif company_model:
-            model_name = company_model
-        else:
-            model_name = "google/gemini-2.5-flash"
-
-        _logger.info("Calling OpenRouter with model: %s (User configured: %s, Company configured: %s)", model_name, user_model, company_model)
+        model_name = getattr(self.env.user, 'openrouter_model', False) or getattr(self.env.company, 'openrouter_model', False) or "google/gemini-2.5-flash"
 
         response = client.chat.completions.create(
             model=model_name,
@@ -449,7 +321,7 @@ class AnalytixDocument(models.Model):
                         {
                             "type": "image_url",
                             "image_url": {
-                                "url": f"data:image/jpeg;base64,{image_b64}"
+                                "url": f"data:image/png;base64,{image_b64}"
                             },
                         },
                     ],
@@ -464,90 +336,87 @@ class AnalytixDocument(models.Model):
         cleaned = content.strip()
 
         if "```" in cleaned:
+            import re
             match = re.search(r"```(?:json)?\s*({[\s\S]*?})\s*```", cleaned, re.IGNORECASE)
             if match:
                 cleaned = match.group(1)
             else:
                 cleaned = cleaned.replace("```json", "").replace("```", "").strip()
 
-        # Multi-Tier JSON Parsing with Automatic Repair
-        parsed_data = None
         try:
-            parsed_data = json.loads(cleaned)
-        except Exception as exc_direct:
-            _logger.warning("Direct JSON parse failed: %s. Attempting auto-repair...", exc_direct)
+            return json.loads(cleaned)
+        except (json.JSONDecodeError, TypeError) as err:
+            _logger.warning("Initial JSON parse failed: %s. Cleaning control chars...", err)
+            import re
+            cleaned_fix = re.sub(r'[\x00-\x1f\x7f-\x9f]', ' ', cleaned)
             try:
-                repaired_str = self._repair_json_string(cleaned)
-                parsed_data = json.loads(repaired_str)
-                _logger.info("JSON successfully repaired and parsed.")
-            except Exception as exc_repair:
-                _logger.warning("JSON repair failed: %s. Using regex extraction fallback...", exc_repair)
-                parsed_data = self._regex_extract_json_fallback(cleaned)
+                return json.loads(cleaned_fix)
+            except Exception:
+                raise UserError(
+                    f"AI response error: {err}\n\n"
+                    f"Raw Response: {content[:300]}"
+                )
 
-        formatted_json = json.dumps(parsed_data, indent=4)
-        print("\n" + "=" * 80)
-        print(">>> ANALYTIX AI EXTRACTED JSON RESPONSE <<<")
-        print("=" * 80)
-        print(formatted_json)
-        print("=" * 80 + "\n")
-        _logger.info("ANALYTIX AI EXTRACTED JSON RESPONSE:\n%s", formatted_json)
+    def _call_groq(self, client, image_b64):
+        """Call Groq API with the given base64 image."""
+        completion = client.chat.completions.create(
+            model="qwen/qwen3.6-27b",
+            messages=[
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": self.PROMPT
+                        },
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:image/png;base64,{image_b64}"
+                            }
+                        }
+                    ]
+                }
+            ],
+            temperature=0,
+            max_completion_tokens=4096,
+            top_p=1,
+            stream=False,
+            stop=None,
+            response_format={"type": "json_object"},
+        )
+        return json.loads(completion.choices[0].message.content)
 
-        return parsed_data
+    def _resolve_tax(self, move_type, tax_rate):
+        """Find an account.tax record matching the given percentage."""
+        if not tax_rate:
+            return self.env['account.tax']
 
-    def _resolve_tax(self, move_type, tax_rate, tax_amount=0.0):
-        """Find an account.tax record matching the given percentage or tax amount."""
-        rate_val = self._clean_float(tax_rate)
-        amt_val = self._clean_float(tax_amount)
-        company = self.env.company
         tax_type = 'sale' if move_type in ('out_invoice', 'out_refund') else 'purchase'
+        rate = round(float(tax_rate), 2)
+        company = self.env.company
 
-        if rate_val > 0:
-            rate = round(rate_val, 2)
+        tax = self.env['account.tax'].search([
+            ('type_tax_use', '=', tax_type),
+            ('amount', '=', rate),
+            ('amount_type', '=', 'percent'),
+            ('company_id', '=', company.id),
+            ('active', '=', True),
+        ], limit=1)
+
+        if not tax:
             tax = self.env['account.tax'].search([
-                ('type_tax_use', '=', tax_type),
                 ('amount', '=', rate),
                 ('amount_type', '=', 'percent'),
-                ('company_id', 'in', [company.id, False]),
+                ('company_id', '=', company.id),
                 ('active', '=', True),
             ], limit=1)
 
-            if not tax:
-                taxes = self.env['account.tax'].search([
-                    ('type_tax_use', '=', tax_type),
-                    ('amount_type', '=', 'percent'),
-                    ('company_id', 'in', [company.id, False]),
-                    ('active', '=', True),
-                ])
-                for t in taxes:
-                    if abs(t.amount - rate) < 0.1:
-                        tax = t
-                        break
-
-            if not tax:
-                tax = self.env['account.tax'].search([
-                    ('amount', '=', rate),
-                    ('amount_type', '=', 'percent'),
-                    ('company_id', 'in', [company.id, False]),
-                    ('active', '=', True),
-                ], limit=1)
-
-            if tax:
-                return tax
-
-        # If rate was 0 or not found, but tax_amount > 0, fallback to standard sale/purchase tax for company
-        if amt_val > 0 or rate_val > 0:
-            default_tax = self.env['account.tax'].search([
-                ('type_tax_use', '=', tax_type),
-                ('company_id', 'in', [company.id, False]),
-                ('active', '=', True),
-            ], order='sequence, id', limit=1)
-            if default_tax:
-                return default_tax
-
-        return self.env['account.tax']
+        return tax
 
     def _get_next_sequence_number(self, move_type, journal):
         """Retrieve the last account.move number/ref and auto-increment it."""
+        import re
         last_move = self.env['account.move'].search([
             ('move_type', '=', move_type),
             ('journal_id', '=', journal.id),
@@ -576,140 +445,23 @@ class AnalytixDocument(models.Model):
         else:
             return f"{last_val}-1000"
 
-    @api.model
-    def get_analytix_accounts_list(self, doc_type=None):
-        """Return filtered chart of accounts strictly based on doc_type (Income accounts for Sales Invoices, Expense/Asset accounts for Purchase & Expense Bills)."""
-        domain = [('company_ids', 'in', self.env.company.ids)]
-
-        effective_type = (doc_type or (self.doc_type if hasattr(self, 'doc_type') else '') or getattr(self, 'detected_doc_type', '') or '').strip().lower()
-        
-        if effective_type in ('invoice', 'out_invoice', 'sales_invoice'):
-            domain.append(('account_type', 'in', ['income', 'income_other']))
-        elif effective_type in ('bill', 'in_invoice', 'purchase_bill', 'expense_bill'):
-            domain.append(('account_type', 'in', [
-                'expense', 'expense_depreciation', 'expense_direct_cost', 'cost_of_goods_sold',
-                'asset_current', 'liability_current'
-            ]))
-        else:
-            domain.append(('account_type', 'in', [
-                'income', 'income_other', 'expense', 'expense_depreciation', 'expense_direct_cost',
-                'cost_of_goods_sold', 'asset_current'
-            ]))
-
-        accounts = self.env['account.account'].search(domain, order='code asc')
-
-        res = []
-        for a in accounts:
-            res.append({
-                'id': a.id,
-                'code': a.code or '',
-                'name': a.name or '',
-                'account_type': a.account_type or '',
-                'display_name': f"{a.code or ''} {a.name or ''}".strip(),
-            })
-
-        # Safe Fallback: If strict filter yields empty list, load all company accounts
-        if not res:
-            all_accounts = self.env['account.account'].search([
-                ('company_ids', 'in', self.env.company.ids)
-            ], order='code asc')
-            for a in all_accounts:
-                res.append({
-                    'id': a.id,
-                    'code': a.code or '',
-                    'name': a.name or '',
-                    'account_type': a.account_type or '',
-                    'display_name': f"{a.code or ''} {a.name or ''}".strip(),
-                })
-        return res
-
-    @api.model
-    def get_analytix_tax_accounts_list(self):
-        """Return GL accounts suitable for Tax posting (Tax Paid, Asset Current, Liability Current, Expenses)."""
-        domain = [
-            ('company_ids', 'in', self.env.company.ids),
-            ('account_type', 'in', ['asset_current', 'liability_current', 'expense', 'expense_direct_cost'])
-        ]
-        accounts = self.env['account.account'].search(domain, order='code asc')
-        res = []
-        for a in accounts:
-            res.append({
-                'id': a.id,
-                'code': a.code or '',
-                'name': a.name or '',
-                'account_type': a.account_type or '',
-                'display_name': f"{a.code or ''} {a.name or ''}".strip(),
-            })
-        if not res:
-            all_accounts = self.env['account.account'].search([('company_ids', 'in', self.env.company.ids)], order='code asc')
-            for a in all_accounts:
-                res.append({
-                    'id': a.id,
-                    'code': a.code or '',
-                    'name': a.name or '',
-                    'account_type': a.account_type or '',
-                    'display_name': f"{a.code or ''} {a.name or ''}".strip(),
-                })
-        return res
-
-    def _get_decoded_file_bytes(self):
-        """Extract and clean binary bytes from self.file_data regardless of format (base64, data URL, raw bytes)."""
-        if not self.file_data:
-            return b''
-
-        raw = self.file_data
-        if isinstance(raw, str):
-            raw = raw.encode('utf-8')
-
-        raw = raw.strip()
-
-        # Handle Data URL headers like b'data:image/webp;base64,...' or b'data:image/png;base64,...'
-        if b';base64,' in raw[:120]:
-            raw = raw.split(b';base64,')[1].strip()
-        elif b'base64,' in raw[:120]:
-            raw = raw.split(b'base64,')[1].strip()
-
-        # Remove line breaks or whitespace within base64 body
-        raw_clean = re.sub(rb'\s+', b'', raw)
-
-        # Check if raw_clean is ALREADY unencoded binary (starts with magic bytes)
-        if raw_clean.startswith(b'%PDF') or raw_clean.startswith(b'\x89PNG') or raw_clean.startswith(b'\xff\xd8') or raw_clean.startswith(b'GIF8') or raw_clean.startswith(b'RIFF'):
-            return raw_clean
-
-        # Attempt base64 decoding with padding repair
-        try:
-            missing_padding = len(raw_clean) % 4
-            if missing_padding:
-                raw_clean += b'=' * (4 - missing_padding)
-            decoded = base64.b64decode(raw_clean, validate=False)
-
-            # Check if double encoded base64
-            if decoded.startswith(b'data:image') or decoded.startswith(b'iVBORw') or decoded.startswith(b'UklGR') or decoded.startswith(b'JVBERi'):
-                if b';base64,' in decoded[:120]:
-                    decoded = decoded.split(b';base64,')[1].strip()
-                missing_padding = len(decoded) % 4
-                if missing_padding:
-                    decoded += b'=' * (4 - missing_padding)
-                decoded = base64.b64decode(decoded, validate=False)
-
-            return decoded
-        except Exception as exc:
-            _logger.warning("Base64 decode warning for doc %s: %s. Using raw bytes.", self.id, exc)
-            return raw_clean
-
-    def action_analyze_and_create_entry(self, override_account_id=None, override_line_accounts=None, override_tax_account_id=None):
-        """Process the document file with OpenRouter (Gemini) and create corresponding accounting entry with product search & account validation."""
+    def action_analyze_and_create_entry(self):
+        """Process the document file with OpenRouter (Gemini) and create corresponding accounting entry."""
         self.ensure_one()
-        if self.status != 'approved':
-            raise UserError("AI Entry creation is only allowed for approved documents. Please approve the document first.")
         if not self.file_data:
             raise UserError("No file uploaded for this document record.")
 
+        # Determine OpenRouter API key (check user first, then company)
         api_key = self.env.user.open_router_key or getattr(self.env.user, 'openrouter_api_key', False) or self.env.company.open_router_key or getattr(self.env.company, 'openrouter_api_key', False)
+
         if not api_key:
             raise UserError("Please configure an OpenRouter API Key on your User profile or Company settings.")
 
-        _logger.info("OpenRouter API key found for entry creation.")
+        # Print the API key in the logs as requested
+        print("--------------------------------------------------")
+        print("OPENROUTER API KEY IS:", api_key)
+        print("--------------------------------------------------")
+        _logger.info("OPENROUTER API KEY IS: %s", api_key)
 
         try:
             import fitz          # PyMuPDF
@@ -726,69 +478,66 @@ class AnalytixDocument(models.Model):
             api_key=api_key.strip(),
         )
 
-        file_bytes = self._get_decoded_file_bytes()
-        if not file_bytes:
-            raise UserError("Document file content is empty or unreadable.")
+        raw_data = self.file_data
+        if not raw_data:
+            raise UserError("No file data found.")
 
-        output = None
+        if isinstance(raw_data, str):
+            raw_data = raw_data.encode('utf-8')
 
-        # Determine file format based on magic bytes or mimetype
-        is_pdf = file_bytes.startswith(b'%PDF') or (self.mimetype and 'pdf' in self.mimetype.lower())
+        if b'base64,' in raw_data[:100]:
+            raw_data = raw_data.split(b'base64,')[1]
 
-        if is_pdf:
-            # Process PDF via PyMuPDF
+        decoded_data = None
+        try:
+            decoded_data = base64.b64decode(raw_data)
+        except Exception:
+            pass
+
+        doc = None
+        if decoded_data:
             try:
-                doc = fitz.open(stream=file_bytes, filetype="pdf")
-                results = []
-                for page_index in range(len(doc)):
-                    page = doc.load_page(page_index)
-                    pix = page.get_pixmap(dpi=150, alpha=False)
-                    image = Image.open(BytesIO(pix.tobytes("png"))).convert("RGB")
-                    image_b64 = self._image_to_base64(image)
-                    result = self._call_openrouter(client, image_b64)
-                    results.append(result)
-                doc.close()
-                output = results[0] if len(results) == 1 else results
-                _logger.info("Processed document as PDF via PyMuPDF for doc ID %s", self.id)
-            except Exception as e_fitz:
-                raise UserError(f"Could not parse PDF document: {e_fitz}")
-        else:
-            # Process image formats (PNG, JPG, WEBP, GIF, BMP, TIFF) via Pillow & fitz fallback
-            image = None
+                doc = fitz.open(stream=decoded_data)
+            except Exception:
+                pass
+
+        if not doc:
             try:
-                import PIL.WebPImagePlugin
-                import PIL.PngImagePlugin
-                import PIL.JpegImagePlugin
-                import PIL.GifImagePlugin
-                image = Image.open(BytesIO(file_bytes)).convert("RGB")
-            except Exception as e_pil:
-                _logger.info("Direct Pillow load failed (%s) for doc ID %s. Trying PyMuPDF Pixmap...", e_pil, self.id)
+                doc = fitz.open(stream=raw_data)
+            except Exception as e_fitz_raw:
                 try:
-                    pix = fitz.Pixmap(file_bytes)
-                    if pix.colorspace and pix.colorspace.name == fitz.csGRAY.name:
-                        pix = fitz.Pixmap(fitz.csRGB, pix)
-                    png_bytes = pix.tobytes("png")
-                    image = Image.open(BytesIO(png_bytes)).convert("RGB")
-                except Exception as e_pix:
-                    _logger.warning("PyMuPDF Pixmap load failed (%s) for doc ID %s", e_pix, self.id)
+                    if decoded_data:
+                        image = Image.open(BytesIO(decoded_data)).convert("RGB")
+                    else:
+                        image = Image.open(BytesIO(raw_data)).convert("RGB")
 
-            if not image:
-                raise UserError(
-                    f"Could not parse uploaded document image format.\n"
-                    f"Please ensure the file is a valid PNG, JPG, WEBP, GIF, or PDF document."
-                )
+                    image_b64 = self._image_to_base64(image)
+                    output = self._call_openrouter(client, image_b64)
+                except Exception as e_pil:
+                    raise UserError(f"Could not parse file format.\nPyMuPDF error: {e_fitz_raw}\nPillow error: {e_pil}")
 
-            image_b64 = self._image_to_base64(image)
-            output = self._call_openrouter(client, image_b64)
-            _logger.info("Processed document image via vision pipeline for doc ID %s", self.id)
+        if doc:
+            results = []
+            for page_index in range(len(doc)):
+                page = doc.load_page(page_index)
+                pix = page.get_pixmap(dpi=250, alpha=False)
+                image = Image.open(BytesIO(pix.tobytes("png"))).convert("RGB")
+                image_b64 = self._image_to_base64(image)
+                result = self._call_openrouter(client, image_b64)
+                results.append(result)
+            doc.close()
+            output = results[0] if len(results) == 1 else results
 
         self.response_json = json.dumps(output, indent=4)
-        print("\n" + "#" * 80)
-        print(f"### ANALYTIX DOCUMENT [ID: {self.id} | NAME: '{self.name}'] FINAL EXTRACTED JSON ###")
-        print("#" * 80)
+
+        # Print the AI JSON response format to terminal log instantly
+        import sys
+        print("\n==================================================")
+        print("AI EXTRACTED JSON FORMAT:")
         print(self.response_json)
-        print("#" * 80 + "\n")
-        _logger.info("AI EXTRACTED JSON FORMAT FOR DOC %s:\n%s", self.id, self.response_json)
+        print("==================================================\n")
+        sys.stdout.flush()
+        _logger.info("AI EXTRACTED JSON FORMAT:\n%s", self.response_json)
 
         if isinstance(output, dict):
             self.detected_doc_type = output.get('document_type') or ''
@@ -809,121 +558,55 @@ class AnalytixDocument(models.Model):
         if not isinstance(data, dict):
             raise UserError("Unexpected JSON structure — expected a JSON object.")
 
+        # Determine effective document type: prioritize user-assigned doc_type, fallback to AI detected document_type
         effective_doc_type = (self.doc_type or '').strip().lower()
         if not effective_doc_type:
             effective_doc_type = (data.get('document_type') or '').strip().lower()
 
-        if effective_doc_type not in ('invoice', 'bill', 'expense_bill'):
+        # Only 'invoice' and 'bill' document types are supported for AI creation; raise UserError for all other document types
+        if effective_doc_type not in ('invoice', 'bill'):
             raise UserError(
-                f"AI entry creation is only allowed for 'invoice', 'bill', or 'expense_bill' document types.\n"
+                f"AI entry creation is only allowed for 'invoice' or 'bill' document types.\n"
                 f"The current document type is '{effective_doc_type or 'other'}'. Entry creation cannot proceed for this document type."
             )
 
         if effective_doc_type == 'invoice':
             move_type = 'out_invoice'
-        elif effective_doc_type == 'expense_bill':
-            move_type = 'entry'
         else:
             move_type = 'in_invoice'
         _logger.info("Selected move_type '%s' for effective_doc_type '%s'", move_type, effective_doc_type)
 
-        # Extract sequence / reference number from AI document JSON
-        seq_ref = (
-            data.get('invoice_number')
-            or data.get('bill_number')
-            or data.get('document_number')
-            or data.get('reference_number')
-            or data.get('reference')
-            or data.get('ref')
-            or data.get('seq_number')
-            or data.get('number')
-            or ''
-        ).strip()
-
-        # Resolve / Create / Update Partner (Vendor or Customer with full address & VAT)
+        # Resolve / Create Partner (Partner_id is assigned to the vendor for bills, customer for invoices)
         partner = None
         my_company_names = {c.name.strip().lower() for c in self.env.companies if c.name}
-
-        def _get_partner_dict(p_data, p_name_str):
-            if isinstance(p_data, dict):
-                p_name = (p_data.get('name') or p_name_str or '').strip()
-                return {
-                    'name': p_name,
-                    'street': (p_data.get('street') or '').strip(),
-                    'street2': (p_data.get('street2') or '').strip(),
-                    'city': (p_data.get('city') or '').strip(),
-                    'zip': (p_data.get('zip') or '').strip(),
-                    'country': (p_data.get('country') or '').strip(),
-                    'vat': (p_data.get('vat') or '').strip(),
-                }
-            else:
-                return {
-                    'name': (p_name_str or '').strip(),
-                    'street': '', 'street2': '', 'city': '', 'zip': '', 'country': '', 'vat': '',
-                }
-
-        vendor_dict = _get_partner_dict(data.get('vendor'), data.get('vendor_name'))
-        customer_dict = _get_partner_dict(data.get('customer'), data.get('customer_name'))
+        vendor_str = (data.get('vendor_name') or '').strip()
+        customer_str = (data.get('customer_name') or '').strip()
 
         if move_type in ('out_invoice', 'out_refund'):
-            if customer_dict['name'] and customer_dict['name'].lower() not in my_company_names:
-                target_pdict = customer_dict
-            elif vendor_dict['name'] and vendor_dict['name'].lower() not in my_company_names:
-                target_pdict = vendor_dict
+            # For Customer Invoices: partner_id is the Customer
+            if customer_str and customer_str.lower() not in my_company_names:
+                partner_name = customer_str
+            elif vendor_str and vendor_str.lower() not in my_company_names:
+                partner_name = vendor_str
             else:
-                target_pdict = customer_dict if customer_dict['name'] else vendor_dict
+                partner_name = customer_str or vendor_str
         else:
-            if vendor_dict['name'] and vendor_dict['name'].lower() not in my_company_names:
-                target_pdict = vendor_dict
-            elif customer_dict['name'] and customer_dict['name'].lower() not in my_company_names:
-                target_pdict = customer_dict
+            # For Vendor Bills: partner_id is the Vendor
+            if vendor_str and vendor_str.lower() not in my_company_names:
+                partner_name = vendor_str
+            elif customer_str and customer_str.lower() not in my_company_names:
+                partner_name = customer_str
             else:
-                target_pdict = vendor_dict if vendor_dict['name'] else customer_dict
+                partner_name = vendor_str or customer_str
 
-        partner_name = target_pdict['name']
         if partner_name:
-            if target_pdict['vat']:
-                partner = self.env['res.partner'].search([('vat', '=', target_pdict['vat'])], limit=1)
-
+            partner = self.env['res.partner'].search(
+                [('name', 'ilike', partner_name)], limit=1
+            )
             if not partner:
-                partner = self.env['res.partner'].search([('name', 'ilike', partner_name)], limit=1)
+                partner = self.env['res.partner'].create({'name': partner_name})
 
-            country_id = False
-            if target_pdict['country']:
-                c_name = target_pdict['country']
-                country = self.env['res.country'].search([
-                    '|', ('name', 'ilike', c_name), ('code', '=ilike', c_name)
-                ], limit=1)
-                if country:
-                    country_id = country.id
-
-            partner_vals = {}
-            if target_pdict['street']:
-                partner_vals['street'] = target_pdict['street']
-            if target_pdict['street2']:
-                partner_vals['street2'] = target_pdict['street2']
-            if target_pdict['city']:
-                partner_vals['city'] = target_pdict['city']
-            if target_pdict['zip']:
-                partner_vals['zip'] = target_pdict['zip']
-            if target_pdict['vat']:
-                partner_vals['vat'] = target_pdict['vat']
-            if country_id:
-                partner_vals['country_id'] = country_id
-
-            if not partner:
-                create_vals = {'name': partner_name}
-                create_vals.update(partner_vals)
-                partner = self.env['res.partner'].create(create_vals)
-            else:
-                update_vals = {}
-                for k, v in partner_vals.items():
-                    if not getattr(partner, k):
-                        update_vals[k] = v
-                if update_vals:
-                    partner.write(update_vals)
-
-        # Resolve Invoice Date
+        # Resolve Invoice Date (default to today if missing or invalid)
         from datetime import date as _date
         today_str = _date.today().strftime('%Y-%m-%d')
         invoice_date = data.get('invoice_date') or today_str
@@ -943,350 +626,125 @@ class AnalytixDocument(models.Model):
                 currency_id = currency.id
 
         company = self.env.company
-
-        if move_type == 'entry':
-            journal = self.env['account.journal'].search(
-                [
-                    ('type', '=', 'general'),
-                    ('company_id', '=', company.id),
-                ],
-                limit=1,
-            )
-            if not journal:
-                journal = self.env['account.journal'].search(
-                    [
-                        ('company_id', '=', company.id),
-                    ],
-                    limit=1,
-                )
-        else:
-            journal_type = 'sale' if move_type in ('out_invoice', 'out_refund') else 'purchase'
-            journal = self.env['account.journal'].search(
-                [
-                    ('type', '=', journal_type),
-                    ('company_id', '=', company.id),
-                ],
-                limit=1,
-            )
+        journal_type = 'sale' if move_type in ('out_invoice', 'out_refund') else 'purchase'
+        journal = self.env['account.journal'].search(
+            [
+                ('type', '=', journal_type),
+                ('company_id', '=', company.id),
+            ],
+            limit=1,
+        )
         if not journal:
             raise UserError(
-                "No appropriate journal found for company '%s'. Please configure one in Accounting."
-                % company.name
+                "No '%s' journal found for company '%s'. Please configure one in Accounting."
+                % ('Sales' if journal_type == 'sale' else 'Purchase', company.name)
             )
 
-        account_types = ['income', 'income_other'] if move_type in ('out_invoice', 'out_refund') else ['expense', 'expense_depreciation', 'expense_direct_cost']
+        account_types = ['income', 'income_other'] if move_type in ('out_invoice', 'out_refund') else ['expense', 'expense_depreciation']
         default_account = (
             journal.default_account_id
             or self.env['account.account'].search(
                 [
                     ('account_type', 'in', account_types),
                     ('company_ids', 'in', company.id),
+                    ('deprecated', '=', False),
                 ],
                 limit=1,
             )
         )
+        if not default_account:
+            raise UserError(
+                "Could not determine a default account for %s. "
+                "Please set a Default Account on the '%s' journal."
+                % ('Invoices' if journal_type == 'sale' else 'Bills', journal.name)
+            )
 
-        # Build lines, perform product search, & resolve account
+        # Build lines
         items = data.get('items') or []
         invoice_line_vals = []
-        unconfigured_lines = []
 
         global_tax_rate = 0.0
-        json_subtotal = self._clean_float(data.get('subtotal'))
-        json_tax = self._clean_float(data.get('tax'))
-        json_total = self._clean_float(data.get('total'))
-
-        if json_subtotal > 0 and json_tax > 0:
+        json_subtotal = float(data.get('subtotal') or 0.0)
+        json_tax = float(data.get('tax') or 0.0)
+        if json_subtotal and json_tax:
             global_tax_rate = round((json_tax / json_subtotal) * 100, 4)
-        elif json_total > 0 and json_tax > 0 and json_total > json_tax:
-            subtotal_calc = json_total - json_tax
-            global_tax_rate = round((json_tax / subtotal_calc) * 100, 4)
 
-        # ── Smart Sanity Check & Normalization for Item Unit Prices ──
-        is_tax_inclusive_detected = False
-        if items and (json_subtotal > 0 or json_total > 0):
-            valid_items_sum = sum(
-                (self._clean_float(it.get('quantity')) or 1.0) * self._clean_float(it.get('unit_price'))
-                for it in items
-            )
-            target_subtotal = json_subtotal if json_subtotal > 0 else (
-                (json_total - json_tax) if (json_total > json_tax and json_tax > 0) else json_total
-            )
-
-            if target_subtotal > 0 and valid_items_sum > 0:
-                # 1. Check if extracted prices are tax-inclusive (sum of item prices matches total rather than untaxed subtotal)
-                if json_tax > 0 and json_total > target_subtotal:
-                    diff_from_total = abs(valid_items_sum - json_total)
-                    diff_from_subtotal = abs(valid_items_sum - target_subtotal)
-                    if diff_from_total < diff_from_subtotal and diff_from_total < (json_total * 0.05):
-                        is_tax_inclusive_detected = True
-
-                # 2. Check if item sum diverges wildly or matches tax-inclusive total
-                is_wild_divergence = valid_items_sum > (target_subtotal * 1.5) or valid_items_sum < (target_subtotal * 0.5)
-
-                if is_tax_inclusive_detected or is_wild_divergence:
-                    _logger.info(
-                        "Normalizing line item unit prices (tax_inclusive=%s, wild_divergence=%s). Extracted item sum: %.2f, Target subtotal: %.2f",
-                        is_tax_inclusive_detected, is_wild_divergence, valid_items_sum, target_subtotal
-                    )
-                    ratio = target_subtotal / valid_items_sum
-                    for item in items:
-                        orig_p = self._clean_float(item.get('unit_price'))
-                        item['unit_price'] = round(orig_p * ratio, 4)
-
-        for idx, item in enumerate(items):
-            desc = (item.get('description') or 'Item').strip()
-            qty = self._clean_float(item.get('quantity')) or 1.0
-            price = self._clean_float(item.get('unit_price'))
-            tax_rate = self._clean_float(item.get('tax_rate'))
+        for item in items:
+            desc = item.get('description') or 'Item'
+            qty = float(item.get('quantity') or 1)
+            price = float(item.get('unit_price') or 0.0)
+            tax_rate = float(item.get('tax_rate') or 0.0)
 
             if not tax_rate and global_tax_rate:
                 tax_rate = global_tax_rate
 
-            tax = self._resolve_tax(move_type, tax_rate, tax_amount=json_tax)
-
-            # ── Product Search in Odoo ──
-            product = None
-            if desc:
-                # 1. Search by SKU / Barcode / Name exact
-                product = self.env['product.product'].search([
-                    '|', '|',
-                    ('default_code', '=ilike', desc),
-                    ('barcode', '=', desc),
-                    ('name', '=ilike', desc),
-                ], limit=1)
-                
-                # 2. Search by Name ilike
-                if not product:
-                    product = self.env['product.product'].search([
-                        ('name', 'ilike', desc)
-                    ], limit=1)
-
-            line_account = None
-
-            # 1. Check per-line override account
-            specific_acc_id = None
-            if override_line_accounts and isinstance(override_line_accounts, dict):
-                specific_acc_id = override_line_accounts.get(str(idx)) or override_line_accounts.get(idx)
-
-            if specific_acc_id:
-                line_account = self.env['account.account'].browse(int(specific_acc_id))
-            elif override_account_id:
-                line_account = self.env['account.account'].browse(int(override_account_id))
-            elif product:
-                # Product exists in master: get income/expense account from product or category
-                if move_type in ('out_invoice', 'out_refund'):
-                    line_account = product.property_account_income_id or product.categ_id.property_account_income_categ_id
-                else:
-                    line_account = product.property_account_expense_id or product.categ_id.property_account_expense_categ_id
-
-            # If no account resolved (product not in master or missing product account), add to unconfigured lines
-            if not line_account or not line_account.exists():
-                unconfigured_lines.append({
-                    'index': idx,
-                    'description': desc,
-                    'product_name': product.name if product else False,
-                    'product_exists': bool(product),
-                    'qty': qty,
-                    'price': price,
-                })
+            tax_ids = []
+            if tax_rate:
+                tax = self._resolve_tax(move_type, tax_rate)
+                if tax:
+                    tax_ids = [(4, tax.id)]
 
             line_vals = {
                 'name': desc,
                 'quantity': qty,
                 'price_unit': price,
+                'account_id': default_account.id,
             }
-            if product:
-                line_vals['product_id'] = product.id
-            if line_account and line_account.exists():
-                line_vals['account_id'] = line_account.id
-            if tax:
-                line_vals['tax_ids'] = [(6, 0, [tax.id])]
+            if tax_ids:
+                line_vals['tax_ids'] = tax_ids
 
             invoice_line_vals.append((0, 0, line_vals))
 
         if not invoice_line_vals:
-            total = json_total or json_subtotal
-            price_unit = json_subtotal if json_subtotal > 0 else total
-            tax = self._resolve_tax(move_type, global_tax_rate, tax_amount=json_tax)
+            total = float(data.get('total') or data.get('subtotal') or 0.0)
+            subtotal = float(data.get('subtotal') or 0.0)
+            price_unit = subtotal if subtotal else total
 
-            line_account = None
-            if override_account_id:
-                line_account = self.env['account.account'].browse(int(override_account_id))
-
-            if not line_account or not line_account.exists():
-                unconfigured_lines.append({
-                    'description': self.name or 'Document',
-                    'product_name': False,
-                    'product_exists': False,
-                    'qty': 1.0,
-                    'price': price_unit,
-                })
+            tax_ids = []
+            if global_tax_rate:
+                tax = self._resolve_tax(move_type, global_tax_rate)
+                if tax:
+                    tax_ids = [(4, tax.id)]
 
             line_vals = {
                 'name': self.name or 'Document',
-                'quantity': 1.0,
+                'quantity': 1,
                 'price_unit': price_unit,
+                'account_id': default_account.id,
             }
-            if line_account and line_account.exists():
-                line_vals['account_id'] = line_account.id
-            if tax:
-                line_vals['tax_ids'] = [(6, 0, [tax.id])]
+            if tax_ids:
+                line_vals['tax_ids'] = tax_ids
             invoice_line_vals.append((0, 0, line_vals))
 
-        # Check if validation dialog is required for unconfigured accounts
-        if unconfigured_lines and not override_account_id and not override_line_accounts:
-            available_accounts = self.get_analytix_accounts_list(doc_type=effective_doc_type)
-            available_tax_accounts = self.get_analytix_tax_accounts_list()
-            return {
-                'requires_account_selection': True,
-                'doc_id': self.id,
-                'doc_name': self.name or self.file_name or 'Document',
-                'doc_type': effective_doc_type,
-                'ref': seq_ref or '',
-                'partner_name': partner.name if partner else (partner_name or 'Unassigned Partner'),
-                'partner_exists': bool(partner),
-                'invoice_date': str(invoice_date or ''),
-                'currency': currency_code or 'USD',
-                'subtotal': json_subtotal or 0.0,
-                'tax_amount': json_tax or 0.0,
-                'total': json_total or (json_subtotal + json_tax),
-                'total_lines_count': len(items) if items else len(unconfigured_lines),
-                'unconfigured_count': len(unconfigured_lines),
-                'unconfigured_lines': unconfigured_lines,
-                'available_accounts': available_accounts,
-                'available_tax_accounts': available_tax_accounts,
-                'is_tax_inclusive_detected': is_tax_inclusive_detected,
-                'message': 'Account configuration required for extracted document items.',
-            }
+        # Always auto-generate the sequence number (no call from the JSON)
+        invoice_ref = self._get_next_sequence_number(move_type, journal)
 
-        invoice_ref = seq_ref or self._get_next_sequence_number(move_type, journal)
-
-        if move_type == 'entry':
-            journal_line_vals = []
-            total_expense_debit = 0.0
-            total_tax_debit = 0.0
-
-            # 1. Debit Expense Lines
-            for idx, tuple_val in enumerate(invoice_line_vals):
-                l_dict = tuple_val[2]
-                price_u = float(l_dict.get('price_unit') or 0.0)
-                q_val = float(l_dict.get('quantity') or 1.0)
-                debit_amt = round(price_u * q_val, 2)
-                if debit_amt <= 0 and json_total > 0:
-                    debit_amt = json_total
-
-                d_acc = l_dict.get('account_id') or (default_account.id if default_account else False)
-
-                d_line = {
-                    'name': l_dict.get('name') or self.name or 'Expense Line',
-                    'debit': debit_amt,
-                    'credit': 0.0,
-                }
-                if d_acc:
-                    d_line['account_id'] = d_acc
-                if 'product_id' in l_dict:
-                    d_line['product_id'] = l_dict['product_id']
-                if 'tax_ids' in l_dict:
-                    # Calculate expected tax amount for fallback if json_tax not present
-                    tax_objs = self.env['account.tax'].browse(l_dict['tax_ids'][0][2])
-                    for t in tax_objs:
-                        if t.amount_type == 'percent':
-                            total_tax_debit += round(debit_amt * (t.amount / 100.0), 2)
-                        elif t.amount_type == 'fixed':
-                            total_tax_debit += t.amount
-
-                if partner:
-                    d_line['partner_id'] = partner.id
-
-                journal_line_vals.append((0, 0, d_line))
-                total_expense_debit += debit_amt
-
-            if total_expense_debit <= 0:
-                total_expense_debit = json_subtotal or json_total or 1.0
-
-            # 2. Debit Tax Line (Explicit Tax Line for Expense Bill)
-            actual_tax_amt = json_tax if json_tax > 0 else total_tax_debit
-            if actual_tax_amt > 0:
-                tax_acc_id = override_tax_account_id
-                if not tax_acc_id:
-                    # Find default Tax Paid account (e.g. 131000 Tax Paid or tax/asset_current account)
-                    tax_acc = self.env['account.account'].search([
-                        ('code', '=like', '131%'),
-                        ('company_ids', 'in', company.id)
-                    ], limit=1)
-                    if not tax_acc:
-                        tax_acc = self.env['account.account'].search([
-                            ('name', 'ilike', 'tax'),
-                            ('company_ids', 'in', company.id)
-                        ], limit=1)
-                    if tax_acc:
-                        tax_acc_id = tax_acc.id
-
-                if tax_acc_id:
-                    t_line = {
-                        'name': f"Tax Paid ({currency_code or ''})",
-                        'debit': round(actual_tax_amt, 2),
-                        'credit': 0.0,
-                        'account_id': tax_acc_id,
-                    }
-                    if partner:
-                        t_line['partner_id'] = partner.id
-                    journal_line_vals.append((0, 0, t_line))
-
-            total_entry_credit = round(total_expense_debit + actual_tax_amt, 2)
-            if json_total > 0 and abs(total_entry_credit - json_total) < 2.0:
-                total_entry_credit = json_total
-
-            # 3. Credit Balancing Line (Payable Account for Partner)
-            credit_acc = partner.property_account_payable_id if (partner and getattr(partner, 'property_account_payable_id', False)) else None
-            if not credit_acc or not credit_acc.exists():
-                credit_acc = self.env['account.account'].search([
-                    ('account_type', '=', 'liability_payable'),
-                    ('company_ids', 'in', company.id)
-                ], limit=1)
-            if not credit_acc or not credit_acc.exists():
-                credit_acc = journal.default_account_id or default_account
-
-            c_line = {
-                'name': invoice_ref or self.name or 'Expense Bill',
-                'account_id': credit_acc.id if credit_acc else default_account.id,
-                'debit': 0.0,
-                'credit': total_entry_credit,
-            }
-            if partner:
-                c_line['partner_id'] = partner.id
-
-            journal_line_vals.append((0, 0, c_line))
-
-            move_vals = {
-                'move_type': 'entry',
-                'journal_id': journal.id,
-                'company_id': journal.company_id.id,
-                'date': invoice_date or False,
-                'ref': invoice_ref,
-                'line_ids': journal_line_vals,
-            }
-        else:
-            move_vals = {
-                'move_type': move_type,
-                'journal_id': journal.id,
-                'company_id': journal.company_id.id,
-                'invoice_date': invoice_date or False,
-                'ref': invoice_ref,
-                'invoice_line_ids': invoice_line_vals,
-            }
+        move_vals = {
+            'move_type': move_type,
+            'journal_id': journal.id,
+            'company_id': journal.company_id.id,
+            'invoice_date': invoice_date or False,
+            'ref': invoice_ref,
+            'invoice_line_ids': invoice_line_vals,
+        }
         if partner:
             move_vals['partner_id'] = partner.id
         if currency_id:
             move_vals['currency_id'] = currency_id
 
-        _logger.info("Creating draft entry %s with %d lines for partner %s", move_type, len(invoice_line_vals), partner.name if partner else 'None')
+        print("==================================================")
+        print("CREATING DRAFT ENTRY WITH VALUES:")
+        print("Target Move Type:", move_type)
+        print("Partner:", partner.name if partner else "None")
+        print("Journal:", journal.name if journal else "None")
+        print("Invoice Date:", invoice_date)
+        print("Reference:", invoice_ref)
+        print("==================================================")
 
         move = self.env['account.move'].create(move_vals)
         self.created_move_id = move.id
 
-        # Attach file data to created account.move
+        # Also create attachment for the newly created account.move containing the document's file_data
         self.env['ir.attachment'].create({
             'name':      self.file_name or self.name,
             'res_model': 'account.move',
@@ -1305,3 +763,4 @@ class AnalytixDocument(models.Model):
             'views': [[False, 'form']],
             'target': 'current',
         }
+

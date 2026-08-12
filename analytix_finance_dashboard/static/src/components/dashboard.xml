@@ -58,7 +58,7 @@
             </div>
 
             <!-- TAB BAR -->
-            <div class="anx-tabs" style="display: flex; align-items: center; justify-content: flex-start; gap: 4px;">
+            <div class="anx-tabs">
                 <button t-attf-class="anx-tab {{ state.activeTab === 'overview'  ? 'active' : '' }}"
                         data-tab="overview"  t-on-click="onTabClick">
                     <i class="fa fa-th-large"></i> Overview
@@ -87,23 +87,14 @@
                         data-tab="documents" t-on-click="onTabClick">
                     <i class="fa fa-folder-open-o"></i> Documents
                 </button>
-                <button t-attf-class="anx-tab {{ state.activeTab === 'inventory' ? 'active' : '' }}"
-                        data-tab="inventory" t-on-click="onTabClick">
-                    <i class="fa fa-cubes"></i> Inventory
-                </button>
                 <button t-attf-class="anx-tab {{ state.activeTab === 'chat' ? 'active' : '' }}"
                         data-tab="chat" t-on-click="onTabClick">
                     <i class="fa fa-comments-o"></i> Chat
                 </button>
-                <div style="margin-left: auto; display: flex; align-items: center; padding-right: 12px;">
-                    <span style="background: linear-gradient(135deg, #00d4c8 0%, #05b2a4 100%); color: #ffffff !important; font-size: 10.5px; font-weight: 700; padding: 4px 12px; border-radius: 20px; letter-spacing: 0.5px; text-transform: uppercase; box-shadow: 0 2px 10px rgba(0, 212, 200, 0.4); display: inline-flex; align-items: center; gap: 6px; border: 1px solid rgba(255, 255, 255, 0.3);">
-                        <i class="fa fa-sparkles" style="font-size: 10px; color: #ffffff;"/> 360 Phase 1
-                    </span>
-                </div>
             </div>
 
             <!-- BODY -->
-            <div t-attf-class="anx-body {{ state.activeTab === 'chat' ? 'anx-body-chat' : (state.activeTab === 'inventory' ? 'anx-body-inventory' : '') }}">
+            <div t-attf-class="anx-body {{ state.activeTab === 'chat' ? 'anx-body-chat' : '' }}">
 
                 <!-- LOADING -->
                 <div t-if="!state.data" class="anx-loading">
@@ -228,8 +219,8 @@
                                     <t t-else="">Top vendors</t>
                                 </span>
                                 <span class="anx-period-badge" t-on-click="toggleTopPartners" style="cursor: pointer; user-select: none;" title="Click to toggle between Revenue and Expense">
-                                    <t t-if="state.topPartnerMode === 'customers'">By vendors</t>
-                                    <t t-else="">By customers</t>
+                                    <t t-if="state.topPartnerMode === 'customers'">By revenue</t>
+                                    <t t-else="">By expense</t>
                                 </span>
                             </div>
                             <div class="anx-customer-list">
@@ -1001,7 +992,7 @@
                                  t-on-drop="onDocDrop"
                                  t-attf-class="anx-doc-upload-zone {{ state.docDragOver ? 'drag-over' : '' }} {{ state.docUploadFile ? 'has-file' : '' }}">
                                 <input type="file" id="anx-doc-file-input" class="anx-upload-file-input"
-                                       accept=".pdf,.png,.jpg,.jpeg,.webp,.gif,.bmp,.tiff,.xlsx,.xls,.csv,.docx,.doc,.txt"
+                                       accept=".pdf,.png,.jpg,.jpeg,.gif,.bmp,.tiff,.xlsx,.xls,.csv,.docx,.doc,.txt"
                                        t-on-change="onDocFileSelected"/>
                                 <t t-if="!state.docUploadFile">
                                     <div class="anx-doc-dz-inner" t-on-click="triggerDocFileInput">
@@ -1066,15 +1057,11 @@
                                             <div t-attf-class="anx-doc-type-pills {{ state.docTypeError ? 'anx-doc-type-pills-error' : '' }}">
                                                 <button t-attf-class="anx-doc-type-pill {{ state.docType === 'invoice' ? 'active invoice' : '' }}"
                                                         data-dtype="invoice" t-on-click="onDocTypeSelect">
-                                                    <i class="fa fa-file-text-o"/> Sales Invoice
+                                                    <i class="fa fa-file-text-o"/> Invoice
                                                 </button>
                                                 <button t-attf-class="anx-doc-type-pill {{ state.docType === 'bill' ? 'active bill' : '' }}"
                                                         data-dtype="bill" t-on-click="onDocTypeSelect">
-                                                    <i class="fa fa-file-text"/> Purchase Bills
-                                                </button>
-                                                <button t-attf-class="anx-doc-type-pill {{ state.docType === 'expense_bill' ? 'active expense_bill' : '' }}"
-                                                        data-dtype="expense_bill" t-on-click="onDocTypeSelect">
-                                                    <i class="fa fa-credit-card"/> Expense Bills
+                                                    <i class="fa fa-file-text"/> Bills
                                                 </button>
                                                 <button t-attf-class="anx-doc-type-pill {{ state.docType === 'bank_statement' ? 'active bank_statement' : '' }}"
                                                         data-dtype="bank_statement" t-on-click="onDocTypeSelect">
@@ -1136,7 +1123,7 @@
                         </div>
 
                         <!-- Document list table -->
-                        <div class="anx-inv-table-wrap anx-doc-table-wrap anx-panel">
+                        <div class="anx-inv-table-wrap anx-panel">
                             <table class="anx-inv-table anx-doc-table">
                                 <thead>
                                     <tr>
@@ -1335,12 +1322,7 @@
                                                         </button>
                                                     </t>
                                                     <t t-else="">
-                                                        <button class="anx-doc-btn-preview" 
-                                                                t-attf-style="background: {{ doc.status === 'approved' ? '#1565c0' : '#78909c' }}; color:#fff; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; border: none; cursor: {{ doc.status === 'approved' ? 'pointer' : 'not-allowed' }}; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; opacity: {{ doc.status === 'approved' ? '1' : '0.75' }};" 
-                                                                t-att-data-id="doc.id" 
-                                                                t-on-click="analyzeAndCreateDocument" 
-                                                                t-att-disabled="state.analyzingDocId === doc.id" 
-                                                                t-att-title="doc.status === 'approved' ? 'Process with OpenRouter / Gemini AI to create draft entry' : 'Only approved documents can be created with AI'">
+                                                        <button class="anx-doc-btn-preview" style="background:#1565c0; color:#fff; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;" t-att-data-id="doc.id" t-on-click="analyzeAndCreateDocument" t-att-disabled="state.analyzingDocId === doc.id" title="Process with OpenRouter / Groq AI to create draft Invoice/Bill">
                                                             <t t-if="state.analyzingDocId === doc.id">
                                                                  <i class="fa fa-spinner fa-spin"/> Processing...
                                                             </t>
@@ -1380,115 +1362,11 @@
                 </t>
 
 <!-- OTHER TABS PLACEHOLDER -->
-                <t t-if="state.data and state.activeTab !== 'overview' and state.activeTab !== 'invoices' and state.activeTab !== 'expenses' and state.activeTab !== 'vat' and state.activeTab !== 'journals' and state.activeTab !== 'trial_balance' and state.activeTab !== 'documents' and state.activeTab !== 'inventory' and state.activeTab !== 'chat'">
+                <t t-if="state.data and state.activeTab !== 'overview' and state.activeTab !== 'invoices' and state.activeTab !== 'expenses' and state.activeTab !== 'vat' and state.activeTab !== 'journals' and state.activeTab !== 'trial_balance' and state.activeTab !== 'documents' and state.activeTab !== 'chat'">
                     <div class="anx-tab-placeholder">
                         <i class="fa fa-wrench fa-2x" style="color:#c8cdd8; margin-bottom:12px;"></i>
                         <p style="color:#8a93a4;"><strong><t t-esc="state.activeTab"/></strong> detailed view coming soon.</p>
                         <button class="btn btn-sm btn-outline-secondary" data-tab="overview" t-on-click="onTabClick">← Back to Overview</button>
-                    </div>
-                </t>
-
-<!-- INVENTORY TAB CONTENT -->
-                <t t-if="state.activeTab === 'inventory'">
-                    <div class="anx-inventory-container">
-
-                        <!-- Toolbar: New + Search -->
-                        <div class="anx-inv-toolbar" style="margin-bottom:14px; display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
-                            <button class="anx-new-btn" t-on-click="createNewProduct">
-                                <i class="fa fa-plus"/> New
-                            </button>
-                            <div class="anx-inv-search-wrap" style="flex:1; max-width:380px;">
-                                <i class="fa fa-search anx-inv-search-icon"/>
-                                <input class="anx-inv-search" type="text"
-                                       placeholder="Search by name, reference, barcode, category…"
-                                       t-on-input="onInvProductSearch"/>
-                            </div>
-                            <span class="anx-inv-count" style="margin-left:auto; color:#8a93a4; font-size:12px;" t-if="state.invProducts">
-                                <t t-esc="filteredProducts.length"/> / <t t-esc="state.invProducts.length"/> products
-                            </span>
-                        </div>
-
-                        <!-- Loading -->
-                        <div t-if="state.invProductsLoading" class="anx-inv-loading-row" style="text-align:center; padding:40px; color:#8a93a4;">
-                            <div class="anx-inv-spinner"/> Loading products…
-                        </div>
-
-                        <!-- Product Table -->
-                        <div t-if="!state.invProductsLoading" class="anx-inv-table-wrap anx-panel">
-                            <table class="anx-inv-table">
-                                <thead>
-                                    <tr>
-                                        <th class="anx-inv-th anx-inv-th-sortable" data-col="name" t-on-click="onInvProductSort">
-                                            Product Name
-                                            <i t-attf-class="fa fa-sort{{ state.invProductSortCol === 'name' ? (state.invProductSortDir === 'asc' ? '-asc' : '-desc') : '' }} anx-sort-icon"/>
-                                        </th>
-                                        <th class="anx-inv-th anx-inv-th-sortable" data-col="default_code" t-on-click="onInvProductSort">
-                                            Internal Reference
-                                            <i t-attf-class="fa fa-sort{{ state.invProductSortCol === 'default_code' ? (state.invProductSortDir === 'asc' ? '-asc' : '-desc') : '' }} anx-sort-icon"/>
-                                        </th>
-                                        <th class="anx-inv-th">Category</th>
-                                        <th class="anx-inv-th anx-inv-th-sortable anx-inv-th-right" data-col="list_price" t-on-click="onInvProductSort">
-                                            Sales Price
-                                            <i t-attf-class="fa fa-sort{{ state.invProductSortCol === 'list_price' ? (state.invProductSortDir === 'asc' ? '-asc' : '-desc') : '' }} anx-sort-icon"/>
-                                        </th>
-                                        <th class="anx-inv-th anx-inv-th-sortable anx-inv-th-right" data-col="standard_price" t-on-click="onInvProductSort">
-                                            Cost
-                                            <i t-attf-class="fa fa-sort{{ state.invProductSortCol === 'standard_price' ? (state.invProductSortDir === 'asc' ? '-asc' : '-desc') : '' }} anx-sort-icon"/>
-                                        </th>
-                                        <th class="anx-inv-th anx-inv-th-right">On Hand</th>
-                                        <th class="anx-inv-th anx-inv-th-right">Forecasted</th>
-                                        <th class="anx-inv-th">UoM</th>
-                                        <th class="anx-inv-th">Barcode</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <t t-if="filteredProducts.length === 0">
-                                        <tr>
-                                            <td colspan="9" class="anx-inv-empty">
-                                                <i class="fa fa-cubes fa-2x" style="color:#c8cdd8; display:block; margin-bottom:10px;"/>
-                                                No products found.
-                                            </td>
-                                        </tr>
-                                    </t>
-                                    <t t-foreach="filteredProducts" t-as="prod" t-key="prod.id">
-                                        <tr class="anx-inv-row anx-inv-row-clickable"
-                                            t-att-data-id="prod.id"
-                                            t-on-click="openProduct"
-                                            title="Open product">
-                                            <td class="anx-inv-td anx-inv-td-name">
-                                                <span class="anx-inv-num"><t t-esc="prod.name"/></span>
-                                            </td>
-                                            <td class="anx-inv-td" style="color:#6b7280; font-size:12px;">
-                                                <t t-esc="prod.default_code or '—'"/>
-                                            </td>
-                                            <td class="anx-inv-td" style="color:#6b7280; font-size:12px;">
-                                                <t t-esc="prod.categ_id and prod.categ_id[1] or '—'"/>
-                                            </td>
-                                            <td class="anx-inv-td anx-inv-td-right">
-                                                <t t-esc="'$ ' + prod.list_price.toFixed(2)"/>
-                                            </td>
-                                            <td class="anx-inv-td anx-inv-td-right">
-                                                <t t-esc="'$ ' + prod.standard_price.toFixed(2)"/>
-                                            </td>
-                                            <td class="anx-inv-td anx-inv-td-right">
-                                                <t t-esc="prod.qty_available != null ? prod.qty_available.toFixed(2) : '—'"/>
-                                            </td>
-                                            <td class="anx-inv-td anx-inv-td-right"
-                                                t-attf-style="color: {{ (prod.virtual_available != null and prod.virtual_available &lt; 0) ? '#ef4444' : 'inherit' }};">
-                                                <t t-esc="prod.virtual_available != null ? prod.virtual_available.toFixed(2) : '—'"/>
-                                            </td>
-                                            <td class="anx-inv-td" style="color:#6b7280; font-size:12px;">
-                                                <t t-esc="prod.uom_id and prod.uom_id[1] or '—'"/>
-                                            </td>
-                                            <td class="anx-inv-td" style="color:#6b7280; font-size:12px;">
-                                                <t t-esc="prod.barcode or '—'"/>
-                                            </td>
-                                        </tr>
-                                    </t>
-                                </tbody>
-                            </table>
-                        </div>
-
                     </div>
                 </t>
 
@@ -1548,298 +1426,199 @@
             </div>
 
 <!-- P&L STATEMENT MODAL -->
-            <!-- ── PROFIT & LOSS STATEMENT MODAL (Persona Dark Theme) ── -->
-            <div t-if="state.showPlModal" class="anx-pl-overlay anx-bs-overlay" t-on-click.self="closePlModal">
-                <div class="anx-pl-modal anx-bs-modal">
-                    <!-- Modal Header -->
-                    <div class="anx-pl-mhdr anx-bs-mhdr">
-                        <div class="anx-bs-mhdr-left" style="display:flex;align-items:center;gap:12px;">
-                            <button class="anx-bs-print-btn" t-on-click="printPlReport" t-if="state.plData">
-                                Print
-                            </button>
-                            <div style="display:flex;align-items:center;gap:8px;">
-                                <span class="anx-pl-mhdr-title" style="font-weight:700;font-size:16px;color:#f8fafc;">Profit and Loss</span>
-                                <i class="fa fa-cog" style="color:#94a3b8;font-size:14px;cursor:pointer;"/>
+            <div t-if="state.showPlModal" class="anx-pl-overlay" t-on-click.self="closePlModal">
+                <div class="anx-pl-modal">
+
+                    <!-- Modal header -->
+                    <div class="anx-pl-mhdr">
+                        <div class="anx-pl-mhdr-left">
+                            <i class="fa fa-line-chart anx-pl-mhdr-icon"/>
+                            <div>
+                                <div class="anx-pl-mhdr-title">Profit &amp; Loss Statement</div>
+                                <div class="anx-pl-mhdr-sub" t-if="state.plData">
+                                    <t t-esc="state.plData.company"/> &#8212;
+                                    <t t-esc="state.plData.period_label"/>
+                                </div>
                             </div>
                         </div>
                         <div class="anx-pl-mhdr-right">
-                            <button class="anx-pl-close-btn" t-on-click="closePlModal" style="background:transparent;border:none;color:#94a3b8;font-size:16px;cursor:pointer;">
+                            <button class="anx-pl-print-btn" t-on-click="printPlReport" t-if="state.plData">
+                                <i class="fa fa-print"/> Print Report
+                            </button>
+                            <button class="anx-pl-close-btn" t-on-click="closePlModal">
                                 <i class="fa fa-times"/>
                             </button>
                         </div>
                     </div>
 
-                    <!-- Toolbar / Filters -->
-                    <div t-if="!state.plLoading and state.plData" class="anx-bs-toolbar">
-                        <!-- Date Filter dropdown pill -->
-                        <div class="anx-bs-datepicker-wrap">
-                            <button class="anx-bs-datepicker-btn" t-on-click="togglePlDateDrop">
-                                <i class="fa fa-calendar-o"/> <t t-esc="state.plData.period_label"/>
-                                <i class="fa fa-caret-down" style="margin-left:4px;font-size:10px;"/>
+                    <!-- ── Date Picker Toolbar ── -->
+                    <div t-if="!state.plLoading and state.plData" class="anx-pl-toolbar">
+                        <div class="anx-pl-datepicker-wrap">
+                            <button class="anx-pl-datepicker-btn" t-on-click="togglePlDateDrop">
+                                <i class="fa fa-calendar"/> Date Filter: <t t-esc="state.plData.period_label"/>
+                                <i class="fa fa-caret-down" style="margin-left:6px;font-size:10px;"/>
                             </button>
 
-                            <!-- Dropdown popover options -->
-                            <div t-if="state.plShowDateDrop" class="anx-bs-date-drop">
+                            <!-- Dropdown options -->
+                            <div t-if="state.plShowDateDrop" class="anx-pl-date-drop">
                                 <t t-foreach="getPlDateOptions()" t-as="opt" t-key="opt.key">
-                                    <div t-attf-class="anx-bs-date-opt {{ state.plDateOption === opt.key ? 'active' : '' }}"
+                                    <div t-attf-class="anx-pl-date-opt {{ state.plDateOption === opt.key ? 'active' : '' }}"
                                          t-att-data-key="opt.key"
                                          t-on-click="onPlDateOptClick">
-                                        <span class="anx-bs-date-opt-label"><t t-esc="opt.label"/></span>
-                                        <span class="anx-bs-date-opt-sub" t-if="opt.sub"><t t-esc="opt.sub"/></span>
-                                    </div>
-                                    <!-- Custom Date Range inputs inside dropdown -->
-                                    <div t-if="opt.key === 'custom' and state.plDateOption === 'custom'" class="anx-bs-specific-wrap" t-on-click.stop="" style="flex-direction:column;gap:6px;">
-                                        <div style="display:flex;align-items:center;gap:6px;width:100%;">
-                                            <span style="font-size:11px;color:#94a3b8;min-width:35px;">From:</span>
-                                            <input type="date" class="anx-bs-specific-input"
-                                                   t-att-value="state.plCustomFrom"
-                                                   t-on-change="onPlCustomFromChange"/>
-                                        </div>
-                                        <div style="display:flex;align-items:center;gap:6px;width:100%;">
-                                            <span style="font-size:11px;color:#94a3b8;min-width:35px;">To:</span>
-                                            <input type="date" class="anx-bs-specific-input"
-                                                   t-att-value="state.plCustomTo"
-                                                   t-on-change="onPlCustomToChange"/>
-                                        </div>
-                                        <button class="anx-bs-compare-btn" style="width:100%;justify-content:center;margin-top:4px;" t-on-click="applyPlCustomDate">
-                                            Apply Filter
-                                        </button>
+                                        <span class="anx-pl-date-opt-label"><t t-esc="opt.label"/></span>
+                                        <span class="anx-pl-date-opt-sub" t-if="opt.sub"><t t-esc="opt.sub"/></span>
                                     </div>
                                 </t>
+                                <!-- Custom Date Range inputs -->
+                                <div t-if="state.plDateOption === 'custom'" class="anx-pl-custom-wrap">
+                                    <div class="anx-pl-custom-field">
+                                        <label>From:</label>
+                                        <input type="date" class="anx-pl-custom-input"
+                                               t-att-value="state.plCustomFrom"
+                                               t-on-change="onPlCustomFromChange"/>
+                                    </div>
+                                    <div class="anx-pl-custom-field">
+                                        <label>To:</label>
+                                        <input type="date" class="anx-pl-custom-input"
+                                               t-att-value="state.plCustomTo"
+                                               t-on-change="onPlCustomToChange"/>
+                                    </div>
+                                    <button class="anx-pl-apply-btn" t-on-click="applyPlCustomDate">
+                                        Apply Filter
+                                    </button>
+                                </div>
                             </div>
                         </div>
 
-                        <!-- Comparison toggle pill -->
-                        <button t-attf-class="anx-bs-compare-btn {{ state.plCompareMode ? 'active' : '' }}"
-                                t-on-click="togglePlComparison">
-                            Comparison
-                        </button>
-
-                        <!-- Comparison Date Range inline inputs -->
-                        <div t-if="state.plCompareMode" class="anx-bs-cmp-date-wrap" style="display:inline-flex;align-items:center;gap:6px;">
-                            <span style="font-size:11px;color:#94a3b8;font-weight:500;">From:</span>
-                            <input type="date" class="anx-bs-cmp-date-input"
-                                   t-att-value="state.plCompareFromIso"
-                                   t-on-change="onPlCompareFromChange"/>
-                            <span style="font-size:11px;color:#94a3b8;font-weight:500;">To:</span>
-                            <input type="date" class="anx-bs-cmp-date-input"
-                                   t-att-value="state.plCompareToIso"
-                                   t-on-change="onPlCompareToChange"/>
+                        <!-- Quick date filter options -->
+                        <div class="anx-pl-quick-filters">
+                            <button t-attf-class="anx-pl-qbtn {{ state.plDateOption === 'this_month' ? 'active' : '' }}"
+                                    data-key="this_month" t-on-click="onPlDateOptClick">
+                                This Month
+                            </button>
+                            <button t-attf-class="anx-pl-qbtn {{ state.plDateOption === 'last_3_months' ? 'active' : '' }}"
+                                    data-key="last_3_months" t-on-click="onPlDateOptClick">
+                                Last 3 Months
+                            </button>
+                            <button t-attf-class="anx-pl-qbtn {{ state.plDateOption === 'this_year' ? 'active' : '' }}"
+                                    data-key="this_year" t-on-click="onPlDateOptClick">
+                                This Year
+                            </button>
                         </div>
                     </div>
 
-                    <!-- Loading Spinner -->
-                    <div t-if="state.plLoading" class="anx-bs-loading" style="padding:40px;text-align:center;">
+                    <!-- Loading -->
+                    <div t-if="state.plLoading" class="anx-pl-loading">
                         <div class="anx-inv-spinner"/>
-                        <span style="margin-left:8px;color:#94a3b8;">Loading P&amp;L data…</span>
+                        <span>Loading P&amp;L data…</span>
                     </div>
 
-                    <!-- Profit & Loss Table Card -->
-                    <div t-if="!state.plLoading and state.plData" class="anx-bs-card-wrap">
-                        <div class="anx-bs-card">
-                            <table class="anx-bs-table">
-                                <thead>
-                                    <!-- Table Header Row 1 (Comparison Mode) -->
-                                    <tr t-if="state.plCompareMode">
-                                        <th style="width:35%;"/>
-                                        <th class="anx-bs-th-date" style="width:20%;color:#ffffff !important;font-weight:700;font-size:13px;text-align:right;padding-right:16px;"><t t-esc="state.plData.period_label"/></th>
-                                        <th class="anx-bs-th-date anx-bs-th-cmp" style="width:25%;color:#f1f5f9 !important;font-weight:700;font-size:13px;text-align:right;padding-right:16px;"><t t-esc="state.plData.compare ? state.plData.compare.period_label : 'Comparison'"/></th>
-                                        <th class="anx-bs-th-date" style="width:20%;color:#94a3b8 !important;font-weight:700;font-size:12px;text-align:right;padding-right:16px;">Change (%)</th>
-                                    </tr>
-                                    <tr t-if="state.plCompareMode">
-                                        <th class="anx-bs-th-lbl" style="width:35%;text-align:left;padding-left:16px;"/>
-                                        <th class="anx-bs-th-sub" style="width:20%;color:#cbd5e1 !important;font-weight:600;font-size:12px;text-align:right;padding-right:16px;">Balance</th>
-                                        <th class="anx-bs-th-sub anx-bs-th-cmp" style="width:25%;color:#cbd5e1 !important;font-weight:600;font-size:12px;text-align:right;padding-right:16px;">Balance</th>
-                                        <th class="anx-bs-th-sub" style="width:20%;"/>
-                                    </tr>
-
-                                    <!-- Table Header Rows (Single Period Mode) -->
-                                    <tr t-if="!state.plCompareMode">
-                                        <th style="width:65%;"/>
-                                        <th class="anx-bs-th-date" style="width:35%;color:#ffffff !important;font-weight:700;font-size:13px;text-align:right;padding-right:16px;"><t t-esc="state.plData.period_label"/></th>
-                                    </tr>
-                                    <tr t-if="!state.plCompareMode">
-                                        <th class="anx-bs-th-lbl" style="width:65%;text-align:left;padding-left:16px;"/>
-                                        <th class="anx-bs-th-sub" style="width:35%;color:#cbd5e1 !important;font-weight:600;font-size:12px;text-align:right;padding-right:16px;">Balance</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-
-                                    <!-- 1. INCOME SECTION -->
-                                    <tr class="anx-bs-row-cat">
-                                        <td class="anx-bs-cell-cat" t-att-colspan="state.plCompareMode ? 4 : 2" style="background:#232838 !important;color:#ffffff !important;font-weight:700;font-size:13px;padding:10px 16px;letter-spacing:0.3px;text-align:left;">Income</td>
-                                    </tr>
-                                    <t t-foreach="state.plData.income.accounts" t-as="acc" t-key="acc.id">
-                                        <tr class="anx-bs-row-acc">
-                                            <td class="anx-bs-cell-acc-name" style="padding-left:36px;text-align:left;">
-                                                <a class="anx-tb-acc-link" t-att-data-id="acc.id" t-on-click="openTrialBalanceAccount" style="color:#00a09d !important;font-weight:600;font-size:12.5px;text-decoration:none;cursor:pointer;"><t t-esc="acc.name"/></a>
-                                            </td>
-                                            <td class="anx-bs-cell-val" style="color:#ffffff !important;font-weight:700;font-size:13px;text-align:right;padding-right:16px;"><t t-esc="formatPlVal(acc.balance)"/></td>
-                                            <!-- Comparison & Variance -->
-                                            <t t-if="state.plCompareMode">
-                                                <t t-set="cmpAcc" t-value="state.plData.compare and state.plData.compare.income.accounts.find(a =&gt; a.id === acc.id)"/>
-                                                <t t-set="cmpBal" t-value="cmpAcc ? cmpAcc.balance : 0"/>
-                                                <td class="anx-bs-cell-val anx-bs-cell-cmp" style="color:#f1f5f9 !important;font-weight:600;font-size:13px;text-align:right;padding-right:16px;"><t t-esc="formatPlVal(cmpBal)"/></td>
-                                                <td class="anx-bs-cell-val" style="text-align:right;padding-right:16px;">
-                                                    <span t-attf-class="anx-bs-pct-badge {{ plChangeClass(acc.balance, cmpBal) }}">
-                                                        <t t-esc="plChangePct(acc.balance, cmpBal)"/>
-                                                    </span>
-                                                </td>
-                                            </t>
-                                        </tr>
-                                    </t>
-
-                                    <!-- 2. COST OF SALES SECTION -->
-                                    <tr class="anx-bs-row-cat">
-                                        <td class="anx-bs-cell-cat" t-att-colspan="state.plCompareMode ? 4 : 2" style="background:#232838 !important;color:#ffffff !important;font-weight:700;font-size:13px;padding:10px 16px;letter-spacing:0.3px;text-align:left;">Cost of Sales</td>
-                                    </tr>
-                                    <t t-foreach="state.plData.cogs.accounts" t-as="acc" t-key="acc.id">
-                                        <tr class="anx-bs-row-acc">
-                                            <td class="anx-bs-cell-acc-name" style="padding-left:36px;text-align:left;">
-                                                <a class="anx-tb-acc-link" t-att-data-id="acc.id" t-on-click="openTrialBalanceAccount" style="color:#00a09d !important;font-weight:600;font-size:12.5px;text-decoration:none;cursor:pointer;"><t t-esc="acc.name"/></a>
-                                            </td>
-                                            <td class="anx-bs-cell-val" style="color:#ffffff !important;font-weight:700;font-size:13px;text-align:right;padding-right:16px;"><t t-esc="formatPlVal(acc.balance)"/></td>
-                                            <!-- Comparison & Variance -->
-                                            <t t-if="state.plCompareMode">
-                                                <t t-set="cmpAcc" t-value="state.plData.compare and state.plData.compare.cogs.accounts.find(a =&gt; a.id === acc.id)"/>
-                                                <t t-set="cmpBal" t-value="cmpAcc ? cmpAcc.balance : 0"/>
-                                                <td class="anx-bs-cell-val anx-bs-cell-cmp" style="color:#f1f5f9 !important;font-weight:600;font-size:13px;text-align:right;padding-right:16px;"><t t-esc="formatPlVal(cmpBal)"/></td>
-                                                <td class="anx-bs-cell-val" style="text-align:right;padding-right:16px;">
-                                                    <span t-attf-class="anx-bs-pct-badge {{ plChangeClass(acc.balance, cmpBal) }}">
-                                                        <t t-esc="plChangePct(acc.balance, cmpBal)"/>
-                                                    </span>
-                                                </td>
-                                            </t>
-                                        </tr>
-                                    </t>
-
-                                    <!-- 3. GROSS PROFIT SUBTOTAL -->
-                                    <tr class="anx-bs-row-subtotal" style="background:#1c202d !important;border-top:1px solid #333a50 !important;border-bottom:1px solid #333a50 !important;">
-                                        <td class="anx-bs-cell-subtotal-lbl" style="background:#1c202d !important;color:#ffffff !important;font-weight:700;font-style:italic;font-size:13px;padding-left:24px;text-align:left;">Gross Profit</td>
-                                        <td t-attf-class="anx-bs-cell-val {{ state.plData.gross_profit &lt; 0 ? 'anx-bs-neg' : '' }}" style="background:#1c202d !important;color:#ffffff !important;font-weight:700;font-size:13px;text-align:right;padding-right:16px;">
-                                            <t t-esc="formatPlVal(state.plData.gross_profit)"/>
+                    <!-- P&L Report body -->
+                    <div t-if="!state.plLoading and state.plData" class="anx-pl-body">
+                        <table class="anx-pl-table">
+                            <thead>
+                                <tr>
+                                    <th class="anx-pl-th"/>
+                                    <th class="anx-pl-th anx-pl-th-bal">Balance</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- INCOME -->
+                                <tr class="anx-pl-sec">
+                                    <td class="anx-pl-sec-lbl">Income</td>
+                                    <td t-attf-class="anx-pl-sec-val {{ state.plData.income.total &lt; 0 ? 'anx-pl-neg' : '' }}">
+                                        <t t-esc="formatPlVal(state.plData.income.total)"/>
+                                    </td>
+                                </tr>
+                                <t t-foreach="state.plData.income.accounts" t-as="acc" t-key="acc.id">
+                                    <tr class="anx-pl-acc">
+                                        <td class="anx-pl-acc-name"><a class="anx-tb-acc-link" t-att-data-id="acc.id" t-on-click="openTrialBalanceAccount"><t t-esc="acc.name"/></a></td>
+                                        <td t-attf-class="anx-pl-acc-val {{ acc.balance &lt; 0 ? 'anx-pl-neg' : '' }}">
+                                            <t t-esc="formatPlVal(acc.balance)"/>
                                         </td>
-                                        <t t-if="state.plCompareMode">
-                                            <t t-set="cmpGp" t-value="state.plData.compare ? state.plData.compare.gross_profit : 0"/>
-                                            <td t-attf-class="anx-bs-cell-val anx-bs-cell-cmp {{ cmpGp &lt; 0 ? 'anx-bs-neg' : '' }}" style="color:#f1f5f9 !important;font-weight:700;font-size:13px;text-align:right;padding-right:16px;">
-                                                <t t-esc="formatPlVal(cmpGp)"/>
-                                            </td>
-                                            <td class="anx-bs-cell-val" style="text-align:right;padding-right:16px;">
-                                                <span t-attf-class="anx-bs-pct-badge {{ plChangeClass(state.plData.gross_profit, cmpGp) }}">
-                                                    <t t-esc="plChangePct(state.plData.gross_profit, cmpGp)"/>
-                                                </span>
-                                            </td>
-                                        </t>
                                     </tr>
-
-                                    <!-- 4. EXPENSE SECTION -->
-                                    <tr class="anx-bs-row-cat">
-                                        <td class="anx-bs-cell-cat" t-att-colspan="state.plCompareMode ? 4 : 2" style="background:#232838 !important;color:#ffffff !important;font-weight:700;font-size:13px;padding:10px 16px;letter-spacing:0.3px;text-align:left;">Expense</td>
-                                    </tr>
-                                    <t t-foreach="state.plData.expense.accounts" t-as="acc" t-key="acc.id">
-                                        <tr class="anx-bs-row-acc">
-                                            <td class="anx-bs-cell-acc-name" style="padding-left:36px;text-align:left;">
-                                                <a class="anx-tb-acc-link" t-att-data-id="acc.id" t-on-click="openTrialBalanceAccount" style="color:#00a09d !important;font-weight:600;font-size:12.5px;text-decoration:none;cursor:pointer;"><t t-esc="acc.name"/></a>
-                                            </td>
-                                            <td class="anx-bs-cell-val" style="color:#ffffff !important;font-weight:700;font-size:13px;text-align:right;padding-right:16px;"><t t-esc="formatPlVal(acc.balance)"/></td>
-                                            <!-- Comparison & Variance -->
-                                            <t t-if="state.plCompareMode">
-                                                <t t-set="cmpAcc" t-value="state.plData.compare and state.plData.compare.expense.accounts.find(a =&gt; a.id === acc.id)"/>
-                                                <t t-set="cmpBal" t-value="cmpAcc ? cmpAcc.balance : 0"/>
-                                                <td class="anx-bs-cell-val anx-bs-cell-cmp" style="color:#f1f5f9 !important;font-weight:600;font-size:13px;text-align:right;padding-right:16px;"><t t-esc="formatPlVal(cmpBal)"/></td>
-                                                <td class="anx-bs-cell-val" style="text-align:right;padding-right:16px;">
-                                                    <span t-attf-class="anx-bs-pct-badge {{ plChangeClass(acc.balance, cmpBal) }}">
-                                                        <t t-esc="plChangePct(acc.balance, cmpBal)"/>
-                                                    </span>
-                                                </td>
-                                            </t>
-                                        </tr>
-                                    </t>
-
-                                    <!-- 5. NET OPERATING INCOME SUBTOTAL -->
-                                    <tr class="anx-bs-row-subtotal" style="background:#1c202d !important;border-top:1px solid #333a50 !important;border-bottom:1px solid #333a50 !important;">
-                                        <td class="anx-bs-cell-subtotal-lbl" style="background:#1c202d !important;color:#ffffff !important;font-weight:700;font-style:italic;font-size:13px;padding-left:24px;text-align:left;">Net Operating Income</td>
-                                        <td t-attf-class="anx-bs-cell-val {{ state.plData.net_operating_income &lt; 0 ? 'anx-bs-neg' : '' }}" style="background:#1c202d !important;color:#ffffff !important;font-weight:700;font-size:13px;text-align:right;padding-right:16px;">
-                                            <t t-esc="formatPlVal(state.plData.net_operating_income)"/>
+                                </t>
+                                <!-- COGS -->
+                                <tr class="anx-pl-sec">
+                                    <td class="anx-pl-sec-lbl">Cost of Sales</td>
+                                    <td t-attf-class="anx-pl-sec-val {{ state.plData.cogs.total &lt; 0 ? 'anx-pl-neg' : '' }}">
+                                        <t t-esc="formatPlVal(state.plData.cogs.total)"/>
+                                    </td>
+                                </tr>
+                                <t t-foreach="state.plData.cogs.accounts" t-as="acc" t-key="acc.id">
+                                    <tr class="anx-pl-acc">
+                                        <td class="anx-pl-acc-name"><a class="anx-tb-acc-link" t-att-data-id="acc.id" t-on-click="openTrialBalanceAccount"><t t-esc="acc.name"/></a></td>
+                                        <td t-attf-class="anx-pl-acc-val {{ acc.balance &lt; 0 ? 'anx-pl-neg' : '' }}">
+                                            <t t-esc="formatPlVal(acc.balance)"/>
                                         </td>
-                                        <t t-if="state.plCompareMode">
-                                            <t t-set="cmpNoi" t-value="state.plData.compare ? state.plData.compare.net_operating_income : 0"/>
-                                            <td t-attf-class="anx-bs-cell-val anx-bs-cell-cmp {{ cmpNoi &lt; 0 ? 'anx-bs-neg' : '' }}" style="color:#f1f5f9 !important;font-weight:700;font-size:13px;text-align:right;padding-right:16px;">
-                                                <t t-esc="formatPlVal(cmpNoi)"/>
-                                            </td>
-                                            <td class="anx-bs-cell-val" style="text-align:right;padding-right:16px;">
-                                                <span t-attf-class="anx-bs-pct-badge {{ plChangeClass(state.plData.net_operating_income, cmpNoi) }}">
-                                                    <t t-esc="plChangePct(state.plData.net_operating_income, cmpNoi)"/>
-                                                </span>
-                                            </td>
-                                        </t>
                                     </tr>
+                                </t>
+                                <!-- GROSS PROFIT -->
+                                <tr class="anx-pl-sub">
+                                    <td class="anx-pl-sub-lbl">Gross Profit</td>
+                                    <td t-attf-class="anx-pl-sub-val {{ state.plData.gross_profit &lt; 0 ? 'anx-pl-neg' : '' }}">
+                                        <t t-esc="formatPlVal(state.plData.gross_profit)"/>
+                                    </td>
+                                </tr>
+                                <tr class="anx-pl-spacer"><td colspan="2"/></tr>
 
-                                    <!-- 6. OTHER INCOME SECTION -->
-                                    <tr class="anx-bs-row-cat">
-                                        <td class="anx-bs-cell-cat" t-att-colspan="state.plCompareMode ? 4 : 2" style="background:#232838 !important;color:#ffffff !important;font-weight:700;font-size:13px;padding:10px 16px;letter-spacing:0.3px;text-align:left;">Other Income</td>
-                                    </tr>
-                                    <t t-foreach="state.plData.other_income.accounts" t-as="acc" t-key="acc.id">
-                                        <tr class="anx-bs-row-acc">
-                                            <td class="anx-bs-cell-acc-name" style="padding-left:36px;text-align:left;">
-                                                <a class="anx-tb-acc-link" t-att-data-id="acc.id" t-on-click="openTrialBalanceAccount" style="color:#00a09d !important;font-weight:600;font-size:12.5px;text-decoration:none;cursor:pointer;"><t t-esc="acc.name"/></a>
-                                            </td>
-                                            <td class="anx-bs-cell-val" style="color:#ffffff !important;font-weight:700;font-size:13px;text-align:right;padding-right:16px;"><t t-esc="formatPlVal(acc.balance)"/></td>
-                                            <!-- Comparison & Variance -->
-                                            <t t-if="state.plCompareMode">
-                                                <t t-set="cmpAcc" t-value="state.plData.compare and state.plData.compare.other_income.accounts.find(a =&gt; a.id === acc.id)"/>
-                                                <t t-set="cmpBal" t-value="cmpAcc ? cmpAcc.balance : 0"/>
-                                                <td class="anx-bs-cell-val anx-bs-cell-cmp" style="color:#f1f5f9 !important;font-weight:600;font-size:13px;text-align:right;padding-right:16px;"><t t-esc="formatPlVal(cmpBal)"/></td>
-                                                <td class="anx-bs-cell-val" style="text-align:right;padding-right:16px;">
-                                                    <span t-attf-class="anx-bs-pct-badge {{ plChangeClass(acc.balance, cmpBal) }}">
-                                                        <t t-esc="plChangePct(acc.balance, cmpBal)"/>
-                                                    </span>
-                                                </td>
-                                            </t>
-                                        </tr>
-                                    </t>
-
-                                    <!-- 7. NET OTHER INCOME SUBTOTAL -->
-                                    <tr class="anx-bs-row-subtotal" style="background:#1c202d !important;border-top:1px solid #333a50 !important;border-bottom:1px solid #333a50 !important;">
-                                        <td class="anx-bs-cell-subtotal-lbl" style="background:#1c202d !important;color:#ffffff !important;font-weight:700;font-style:italic;font-size:13px;padding-left:24px;text-align:left;">Net Other Income</td>
-                                        <td t-attf-class="anx-bs-cell-val {{ state.plData.net_other_income &lt; 0 ? 'anx-bs-neg' : '' }}" style="background:#1c202d !important;color:#ffffff !important;font-weight:700;font-size:13px;text-align:right;padding-right:16px;">
-                                            <t t-esc="formatPlVal(state.plData.net_other_income)"/>
+                                <!-- EXPENSE -->
+                                <tr class="anx-pl-sec">
+                                    <td class="anx-pl-sec-lbl">Expense</td>
+                                    <td t-attf-class="anx-pl-sec-val {{ state.plData.expense.total &lt; 0 ? 'anx-pl-neg' : '' }}">
+                                        <t t-esc="formatPlVal(state.plData.expense.total)"/>
+                                    </td>
+                                </tr>
+                                <t t-foreach="state.plData.expense.accounts" t-as="acc" t-key="acc.id">
+                                    <tr class="anx-pl-acc">
+                                        <td class="anx-pl-acc-name"><a class="anx-tb-acc-link" t-att-data-id="acc.id" t-on-click="openTrialBalanceAccount"><t t-esc="acc.name"/></a></td>
+                                        <td t-attf-class="anx-pl-acc-val {{ acc.balance &lt; 0 ? 'anx-pl-neg' : '' }}">
+                                            <t t-esc="formatPlVal(acc.balance)"/>
                                         </td>
-                                        <t t-if="state.plCompareMode">
-                                            <t t-set="cmpNoi" t-value="state.plData.compare ? state.plData.compare.net_other_income : 0"/>
-                                            <td t-attf-class="anx-bs-cell-val anx-bs-cell-cmp {{ cmpNoi &lt; 0 ? 'anx-bs-neg' : '' }}" style="color:#f1f5f9 !important;font-weight:700;font-size:13px;text-align:right;padding-right:16px;">
-                                                <t t-esc="formatPlVal(cmpNoi)"/>
-                                            </td>
-                                            <td class="anx-bs-cell-val" style="text-align:right;padding-right:16px;">
-                                                <span t-attf-class="anx-bs-pct-badge {{ plChangeClass(state.plData.net_other_income, cmpNoi) }}">
-                                                    <t t-esc="plChangePct(state.plData.net_other_income, cmpNoi)"/>
-                                                </span>
-                                            </td>
-                                        </t>
                                     </tr>
+                                </t>
+                                <!-- NET OPERATING INCOME -->
+                                <tr class="anx-pl-sub">
+                                    <td class="anx-pl-sub-lbl">Net Operating Income</td>
+                                    <td t-attf-class="anx-pl-sub-val {{ state.plData.net_operating_income &lt; 0 ? 'anx-pl-neg' : '' }}">
+                                        <t t-esc="formatPlVal(state.plData.net_operating_income)"/>
+                                    </td>
+                                </tr>
+                                <tr class="anx-pl-spacer"><td colspan="2"/></tr>
 
-                                    <!-- 8. NET INCOME TOTAL ROW -->
-                                    <tr class="anx-bs-row-total" style="background:#0f1729 !important;border-top:2px solid #00a09d !important;border-bottom:2px solid #00a09d !important;">
-                                        <td class="anx-bs-cell-total-lbl" style="background:#0f1729 !important;color:#ffffff !important;font-weight:800;font-size:14.5px;padding:12px 16px;text-align:left;">Net Income</td>
-                                        <td t-attf-class="anx-bs-cell-total-val {{ state.plData.net_income &lt; 0 ? 'anx-bs-neg' : '' }}" style="background:#0f1729 !important;color:#ffffff !important;font-weight:800;font-size:14.5px;text-align:right;padding-right:16px;">
-                                            <t t-esc="formatPlVal(state.plData.net_income)"/>
+                                <!-- OTHER INCOME -->
+                                <tr class="anx-pl-sec">
+                                    <td class="anx-pl-sec-lbl">Other Income</td>
+                                    <td t-attf-class="anx-pl-sec-val {{ state.plData.other_income.total &lt; 0 ? 'anx-pl-neg' : '' }}">
+                                        <t t-esc="formatPlVal(state.plData.other_income.total)"/>
+                                    </td>
+                                </tr>
+                                <t t-foreach="state.plData.other_income.accounts" t-as="acc" t-key="acc.id">
+                                    <tr class="anx-pl-acc">
+                                        <td class="anx-pl-acc-name"><a class="anx-tb-acc-link" t-att-data-id="acc.id" t-on-click="openTrialBalanceAccount"><t t-esc="acc.name"/></a></td>
+                                        <td t-attf-class="anx-pl-acc-val {{ acc.balance &lt; 0 ? 'anx-pl-neg' : '' }}">
+                                            <t t-esc="formatPlVal(acc.balance)"/>
                                         </td>
-                                        <t t-if="state.plCompareMode">
-                                            <t t-set="cmpNi" t-value="state.plData.compare ? state.plData.compare.net_income : 0"/>
-                                            <td t-attf-class="anx-bs-cell-total-val anx-bs-cell-cmp {{ cmpNi &lt; 0 ? 'anx-bs-neg' : '' }}" style="background:#0f1729 !important;color:#ffffff !important;font-weight:800;font-size:14.5px;text-align:right;padding-right:16px;">
-                                                <t t-esc="formatPlVal(cmpNi)"/>
-                                            </td>
-                                            <td class="anx-bs-cell-total-val" style="background:#0f1729 !important;text-align:right;padding-right:16px;">
-                                                <span t-attf-class="anx-bs-pct-badge {{ plChangeClass(state.plData.net_income, cmpNi) }}">
-                                                    <t t-esc="plChangePct(state.plData.net_income, cmpNi)"/>
-                                                </span>
-                                            </td>
-                                        </t>
                                     </tr>
+                                </t>
+                                <!-- NET OTHER INCOME -->
+                                <tr class="anx-pl-sub">
+                                    <td class="anx-pl-sub-lbl">Net Other Income</td>
+                                    <td t-attf-class="anx-pl-sub-val {{ state.plData.net_other_income &lt; 0 ? 'anx-pl-neg' : '' }}">
+                                        <t t-esc="formatPlVal(state.plData.net_other_income)"/>
+                                    </td>
+                                </tr>
+                                <tr class="anx-pl-spacer"><td colspan="2"/></tr>
 
-                                </tbody>
-                            </table>
-                        </div>
+                                <!-- NET INCOME TOTAL -->
+                                <tr class="anx-pl-total">
+                                    <td class="anx-pl-total-lbl">Net Income</td>
+                                    <td t-attf-class="anx-pl-total-val {{ state.plData.net_income &lt; 0 ? 'anx-pl-neg' : '' }}">
+                                        <t t-esc="formatPlVal(state.plData.net_income)"/>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -1850,17 +1629,21 @@
 
                     <!-- Modal header -->
                     <div class="anx-pl-mhdr anx-bs-mhdr">
-                        <div class="anx-pl-mhdr-left" style="display:flex;align-items:center;gap:12px;">
-                            <button class="anx-bs-print-btn" t-on-click="printBsReport" t-if="state.bsData">
-                                Print
-                            </button>
-                            <div style="display:flex;align-items:center;gap:8px;">
-                                <span class="anx-pl-mhdr-title" style="font-weight:700;font-size:16px;color:#f8fafc;">Balance Sheet</span>
-                                <i class="fa fa-cog" style="color:#94a3b8;font-size:14px;cursor:pointer;"/>
+                        <div class="anx-pl-mhdr-left">
+                            <i class="fa fa-balance-scale anx-pl-mhdr-icon anx-bs-mhdr-icon"/>
+                            <div>
+                                <div class="anx-pl-mhdr-title">Balance Sheet</div>
+                                <div class="anx-pl-mhdr-sub" t-if="state.bsData">
+                                    <t t-esc="state.bsData.company"/> &#8212;
+                                    As of <t t-esc="state.bsData.as_of_date"/>
+                                </div>
                             </div>
                         </div>
                         <div class="anx-pl-mhdr-right">
-                            <button class="anx-pl-close-btn" t-on-click="closeBsModal" style="background:transparent;border:none;color:#94a3b8;font-size:16px;cursor:pointer;">
+                            <button class="anx-pl-print-btn anx-bs-print-btn" t-on-click="printBsReport" t-if="state.bsData">
+                                <i class="fa fa-print"/> Print Report
+                            </button>
+                            <button class="anx-pl-close-btn" t-on-click="closeBsModal">
                                 <i class="fa fa-times"/>
                             </button>
                         </div>
@@ -1872,14 +1655,14 @@
                         <span>Loading Balance Sheet…</span>
                     </div>
 
-                    <!-- ── Date & Filter Toolbar ── -->
+                    <!-- ── Date Picker Toolbar ── -->
                     <div t-if="!state.bsLoading and state.bsData" class="anx-bs-toolbar">
 
-                        <!-- "As of [date]" dropdown pill -->
+                        <!-- "As of [date]" dropdown -->
                         <div class="anx-bs-datepicker-wrap">
                             <button class="anx-bs-datepicker-btn" t-on-click="toggleBsDateDrop">
                                 <i class="fa fa-calendar-o"/> As of <t t-esc="state.bsData.as_of_date"/>
-                                <i class="fa fa-caret-down" style="margin-left:4px;font-size:10px;"/>
+                                <i class="fa fa-caret-down" style="margin-left:6px;font-size:10px;"/>
                             </button>
 
                             <!-- Dropdown options -->
@@ -1891,323 +1674,206 @@
                                         <span class="anx-bs-date-opt-label"><t t-esc="opt.label"/></span>
                                         <span class="anx-bs-date-opt-sub" t-if="opt.sub"><t t-esc="opt.sub"/></span>
                                     </div>
-                                    <div t-if="opt.key === 'specific' and state.bsDateOption === 'specific'" class="anx-bs-specific-wrap" t-on-click.stop="">
-                                        <input type="date" class="anx-bs-specific-input"
-                                               t-att-value="state.bsSpecificDate || state.bsAsOfIso"
-                                               t-on-change="applyBsSpecificDate"/>
-                                    </div>
                                 </t>
+                                <!-- Specific Date input -->
+                                <div t-if="state.bsDateOption === 'specific'" class="anx-bs-specific-wrap">
+                                    <input type="date" class="anx-bs-specific-input"
+                                           t-att-value="state.bsSpecificDate"
+                                           t-on-change="applyBsSpecificDate"/>
+                                </div>
                             </div>
                         </div>
 
-                        <!-- Comparison toggle pill -->
+                        <!-- Comparison toggle -->
                         <button t-attf-class="anx-bs-compare-btn {{ state.bsCompareMode ? 'active' : '' }}"
                                 t-on-click="toggleBsComparison">
-                            Comparison
+                            <i class="fa fa-percent"/> Comparison
                         </button>
-
-                        <!-- Comparison Date Picker inline -->
-                        <div t-if="state.bsCompareMode" class="anx-bs-cmp-date-wrap" style="display:inline-flex;align-items:center;gap:6px;">
-                            <span style="font-size:11px;color:#94a3b8;font-weight:500;">Date:</span>
-                            <input type="date" class="anx-bs-cmp-date-input"
-                                   t-att-value="state.bsCompareIso"
-                                   t-on-change="onBsCompareDateChange"/>
-                        </div>
-
                     </div>
 
+                    <!-- Balance Sheet body -->
+                    <div t-if="!state.bsLoading and state.bsData" class="anx-pl-body">
 
-                    <!-- Balance Sheet body in Card -->
-                    <div t-if="!state.bsLoading and state.bsData" class="anx-bs-card-wrap">
-                        <div class="anx-bs-card">
-                            <table class="anx-bs-table">
-                                <thead>
-                                    <!-- Table Header Row 1 -->
-                                    <tr t-if="state.bsCompareMode">
-                                        <th style="width:35%;"/>
-                                        <th class="anx-bs-th-date" style="width:20%;">As of <t t-esc="state.bsData.as_of_date"/></th>
-                                        <th class="anx-bs-th-date anx-bs-th-cmp" style="width:25%;">As of <t t-esc="state.bsData.compare_date || state.bsCompareIso"/></th>
-                                        <th class="anx-bs-th-pct" style="width:20%;">Change (%)</th>
-                                    </tr>
-                                    <!-- Table Header Row 2 -->
-                                    <tr t-if="state.bsCompareMode">
-                                        <th/>
-                                        <th class="anx-bs-th-sub">Balance</th>
-                                        <th class="anx-bs-th-sub anx-bs-th-cmp">Balance</th>
-                                        <th class="anx-bs-th-sub"/>
-                                    </tr>
+                        <!-- Column header row -->
+                        <div class="anx-bs-date-row">
+                            <span class="anx-bs-date-box" t-att-class="state.bsCompareMode ? 'has-compare' : ''">
+                                As of <t t-esc="state.bsData.as_of_date"/>
+                            </span>
+                            <span t-if="state.bsCompareMode and state.bsData.compare_date" class="anx-bs-date-box anx-bs-date-box-cmp">
+                                As of <t t-esc="state.bsData.compare_date"/>
+                            </span>
+                        </div>
 
-                                    <!-- Single Period Header -->
-                                    <tr t-if="!state.bsCompareMode">
-                                        <th style="width:70%;"/>
-                                        <th class="anx-bs-th-date" style="width:30%;">As of <t t-esc="state.bsData.as_of_date"/></th>
-                                    </tr>
-                                    <tr t-if="!state.bsCompareMode">
-                                        <th/>
-                                        <th class="anx-bs-th-sub">Balance</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
+                        <table class="anx-pl-table anx-bs-table">
+                            <tbody>
 
                                 <!-- ═════════════ ASSETS ═════════════ -->
-                                    <!-- ═════════════ ASSETS ═════════════ -->
-                                    <tr class="anx-bs-section-hdr">
-                                        <td t-att-colspan="state.bsCompareMode ? 4 : 2" class="anx-bs-section-hdr-lbl">Assets</td>
-                                    </tr>
-
-                                    <!-- Current Assets -->
-                                    <tr class="anx-bs-subsec">
-                                        <td class="anx-bs-subsec-lbl">Current Assets</td>
-                                        <td/>
-                                        <td t-if="state.bsCompareMode" class="anx-bs-td-cmp"/>
-                                        <td t-if="state.bsCompareMode"/>
-                                    </tr>
-
-                                    <!-- Bank and Cash -->
-                                    <tr class="anx-bs-group">
-                                        <td class="anx-bs-group-lbl">
-                                            <i class="fa fa-caret-right anx-bs-caret" t-if="state.bsData.bank_cash.accounts.length"/>
-                                            Bank and Cash
-                                        </td>
-                                        <td><t t-esc="formatBsVal(state.bsData.bank_cash.total)"/></td>
-                                        <td t-if="state.bsCompareMode" class="anx-bs-td-cmp"><t t-esc="formatBsVal(bsCmp('bank_cash'))"/></td>
-                                        <td t-if="state.bsCompareMode">
-                                            <span t-att-class="bsChangeClass(state.bsData.bank_cash.total, bsCmp('bank_cash'))">
-                                                <t t-esc="bsChangePct(state.bsData.bank_cash.total, bsCmp('bank_cash'))"/>
-                                            </span>
-                                        </td>
-                                    </tr>
-                                    <t t-foreach="state.bsData.bank_cash.accounts" t-as="acc" t-key="acc.id">
-                                        <tr class="anx-pl-acc">
-                                            <td class="anx-pl-acc-name"><a class="anx-tb-acc-link" t-att-data-id="acc.id" t-on-click="openTrialBalanceAccount"><t t-esc="acc.name"/></a></td>
-                                            <td><t t-esc="formatBsVal(acc.balance)"/></td>
-                                            <td t-if="state.bsCompareMode" class="anx-bs-td-cmp"><t t-esc="formatBsVal(bsAccCmp('bank_cash', acc.id))"/></td>
-                                            <td t-if="state.bsCompareMode">
-                                                <span t-att-class="bsChangeClass(acc.balance, bsAccCmp('bank_cash', acc.id))">
-                                                    <t t-esc="bsChangePct(acc.balance, bsAccCmp('bank_cash', acc.id))"/>
-                                                </span>
-                                            </td>
-                                        </tr>
-                                    </t>
-
-                                    <!-- Accounts Receivable -->
-                                    <tr class="anx-bs-group">
-                                        <td class="anx-bs-group-lbl">
-                                            <i class="fa fa-caret-right anx-bs-caret" t-if="state.bsData.receivable.accounts.length"/>
-                                            Accounts Receivable
-                                        </td>
-                                        <td><t t-esc="formatBsVal(state.bsData.receivable.total)"/></td>
-                                        <td t-if="state.bsCompareMode" class="anx-bs-td-cmp"><t t-esc="formatBsVal(bsCmp('receivable'))"/></td>
-                                        <td t-if="state.bsCompareMode">
-                                            <span t-att-class="bsChangeClass(state.bsData.receivable.total, bsCmp('receivable'))">
-                                                <t t-esc="bsChangePct(state.bsData.receivable.total, bsCmp('receivable'))"/>
-                                            </span>
-                                        </td>
-                                    </tr>
-                                    <t t-foreach="state.bsData.receivable.accounts" t-as="acc" t-key="acc.id">
-                                        <tr class="anx-pl-acc">
-                                            <td class="anx-pl-acc-name"><a class="anx-tb-acc-link" t-att-data-id="acc.id" t-on-click="openTrialBalanceAccount"><t t-esc="acc.name"/></a></td>
-                                            <td><t t-esc="formatBsVal(acc.balance)"/></td>
-                                            <td t-if="state.bsCompareMode" class="anx-bs-td-cmp"><t t-esc="formatBsVal(bsAccCmp('receivable', acc.id))"/></td>
-                                            <td t-if="state.bsCompareMode">
-                                                <span t-att-class="bsChangeClass(acc.balance, bsAccCmp('receivable', acc.id))">
-                                                    <t t-esc="bsChangePct(acc.balance, bsAccCmp('receivable', acc.id))"/>
-                                                </span>
-                                            </td>
-                                        </tr>
-                                    </t>
-
-                                    <!-- Other Current Assets -->
-                                    <tr class="anx-bs-group">
-                                        <td class="anx-bs-group-lbl">
-                                            <i class="fa fa-caret-right anx-bs-caret" t-if="state.bsData.current_assets.accounts.length"/>
-                                            Other Current Assets
-                                        </td>
-                                        <td><t t-esc="formatBsVal(state.bsData.current_assets.total)"/></td>
-                                        <td t-if="state.bsCompareMode" class="anx-bs-td-cmp"><t t-esc="formatBsVal(bsCmp('current_assets'))"/></td>
-                                        <td t-if="state.bsCompareMode">
-                                            <span t-att-class="bsChangeClass(state.bsData.current_assets.total, bsCmp('current_assets'))">
-                                                <t t-esc="bsChangePct(state.bsData.current_assets.total, bsCmp('current_assets'))"/>
-                                            </span>
-                                        </td>
-                                    </tr>
-                                    <t t-foreach="state.bsData.current_assets.accounts" t-as="acc" t-key="acc.id">
-                                        <tr class="anx-pl-acc">
-                                            <td class="anx-pl-acc-name"><a class="anx-tb-acc-link" t-att-data-id="acc.id" t-on-click="openTrialBalanceAccount"><t t-esc="acc.name"/></a></td>
-                                            <td><t t-esc="formatBsVal(acc.balance)"/></td>
-                                            <td t-if="state.bsCompareMode" class="anx-bs-td-cmp"><t t-esc="formatBsVal(bsAccCmp('current_assets', acc.id))"/></td>
-                                            <td t-if="state.bsCompareMode">
-                                                <span t-att-class="bsChangeClass(acc.balance, bsAccCmp('current_assets', acc.id))">
-                                                    <t t-esc="bsChangePct(acc.balance, bsAccCmp('current_assets', acc.id))"/>
-                                                </span>
-                                            </td>
-                                        </tr>
-                                    </t>
-
-                                    <!-- Total Other Current Assets -->
-                                    <tr class="anx-pl-sub">
-                                        <td class="anx-pl-sub-lbl anx-bs-bold">Total Other Current Assets</td>
-                                        <td><t t-esc="formatBsVal(state.bsData.current_assets.total)"/></td>
-                                        <td t-if="state.bsCompareMode" class="anx-bs-td-cmp"><t t-esc="formatBsVal(bsCmp('current_assets'))"/></td>
-                                        <td t-if="state.bsCompareMode">
-                                            <span t-att-class="bsChangeClass(state.bsData.current_assets.total, bsCmp('current_assets'))">
-                                                <t t-esc="bsChangePct(state.bsData.current_assets.total, bsCmp('current_assets'))"/>
-                                            </span>
-                                        </td>
-                                    </tr>
-
-                                    <!-- Total Current Assets -->
-                                    <tr class="anx-pl-sub">
-                                        <td class="anx-pl-sub-lbl anx-bs-bold">Total Current Assets</td>
-                                        <td><t t-esc="formatBsVal(state.bsData.total_current_assets)"/></td>
-                                        <td t-if="state.bsCompareMode" class="anx-bs-td-cmp"><t t-esc="formatBsVal(bsCmp('total_current_assets'))"/></td>
-                                        <td t-if="state.bsCompareMode">
-                                            <span t-att-class="bsChangeClass(state.bsData.total_current_assets, bsCmp('total_current_assets'))">
-                                                <t t-esc="bsChangePct(state.bsData.total_current_assets, bsCmp('total_current_assets'))"/>
-                                            </span>
-                                        </td>
-                                    </tr>
-
-                                    <!-- Fixed Assets -->
-                                    <tr class="anx-bs-group">
-                                        <td class="anx-bs-group-lbl">Fixed Assets</td>
-                                        <td><t t-esc="formatBsVal(state.bsData.fixed_assets.total)"/></td>
-                                        <td t-if="state.bsCompareMode" class="anx-bs-td-cmp"><t t-esc="formatBsVal(bsCmp('fixed_assets'))"/></td>
-                                        <td t-if="state.bsCompareMode">
-                                            <span t-att-class="bsChangeClass(state.bsData.fixed_assets.total, bsCmp('fixed_assets'))">
-                                                <t t-esc="bsChangePct(state.bsData.fixed_assets.total, bsCmp('fixed_assets'))"/>
-                                            </span>
-                                        </td>
-                                    </tr>
-                                    <t t-foreach="state.bsData.fixed_assets.accounts" t-as="acc" t-key="acc.id">
-                                        <tr class="anx-pl-acc">
-                                            <td class="anx-pl-acc-name"><a class="anx-tb-acc-link" t-att-data-id="acc.id" t-on-click="openTrialBalanceAccount"><t t-esc="acc.name"/></a></td>
-                                            <td><t t-esc="formatBsVal(acc.balance)"/></td>
-                                            <td t-if="state.bsCompareMode" class="anx-bs-td-cmp"><t t-esc="formatBsVal(bsAccCmp('fixed_assets', acc.id))"/></td>
-                                            <td t-if="state.bsCompareMode">
-                                                <span t-att-class="bsChangeClass(acc.balance, bsAccCmp('fixed_assets', acc.id))">
-                                                    <t t-esc="bsChangePct(acc.balance, bsAccCmp('fixed_assets', acc.id))"/>
-                                                </span>
-                                            </td>
-                                        </tr>
-                                    </t>
-
-                                    <!-- Other Assets -->
-                                    <tr class="anx-bs-group">
-                                        <td class="anx-bs-group-lbl">Other Assets</td>
-                                        <td><t t-esc="formatBsVal(state.bsData.other_assets.total)"/></td>
-                                        <td t-if="state.bsCompareMode" class="anx-bs-td-cmp"><t t-esc="formatBsVal(bsCmp('other_assets'))"/></td>
-                                        <td t-if="state.bsCompareMode">
-                                            <span t-att-class="bsChangeClass(state.bsData.other_assets.total, bsCmp('other_assets'))">
-                                                <t t-esc="bsChangePct(state.bsData.other_assets.total, bsCmp('other_assets'))"/>
-                                            </span>
-                                        </td>
-                                    </tr>
-                                    <t t-foreach="state.bsData.other_assets.accounts" t-as="acc" t-key="acc.id">
-                                        <tr class="anx-pl-acc">
-                                            <td class="anx-pl-acc-name"><a class="anx-tb-acc-link" t-att-data-id="acc.id" t-on-click="openTrialBalanceAccount"><t t-esc="acc.name"/></a></td>
-                                            <td><t t-esc="formatBsVal(acc.balance)"/></td>
-                                            <td t-if="state.bsCompareMode" class="anx-bs-td-cmp"><t t-esc="formatBsVal(bsAccCmp('other_assets', acc.id))"/></td>
-                                            <td t-if="state.bsCompareMode">
-                                                <span t-att-class="bsChangeClass(acc.balance, bsAccCmp('other_assets', acc.id))">
-                                                    <t t-esc="bsChangePct(acc.balance, bsAccCmp('other_assets', acc.id))"/>
-                                                </span>
-                                            </td>
-                                        </tr>
-                                    </t>
-
-                                    <!-- Total Assets -->
-                                    <tr class="anx-bs-total-row">
-                                        <td class="anx-pl-total-lbl">Total Assets</td>
-                                        <td><t t-esc="formatBsVal(state.bsData.total_assets)"/></td>
-                                        <td t-if="state.bsCompareMode" class="anx-bs-td-cmp"><t t-esc="formatBsVal(bsCmp('total_assets'))"/></td>
-                                        <td t-if="state.bsCompareMode">
-                                            <span t-att-class="bsChangeClass(state.bsData.total_assets, bsCmp('total_assets'))">
-                                                <t t-esc="bsChangePct(state.bsData.total_assets, bsCmp('total_assets'))"/>
-                                            </span>
-                                        </td>
-                                    </tr>
-
-                                    <tr class="anx-pl-spacer"><td t-att-colspan="state.bsCompareMode ? 4 : 2"/></tr>
                                 <tr class="anx-bs-section-hdr">
-                                    <td t-att-colspan="state.bsCompareMode ? 4 : 2" class="anx-bs-section-hdr-lbl">Liabilities &amp; Equity</td>
+                                    <td t-att-colspan="state.bsCompareMode ? 3 : 2" class="anx-bs-section-hdr-lbl">Assets</td>
+                                </tr>
+
+
+                                <!-- Current Assets -->
+                                <tr class="anx-bs-subsec">
+                                    <td class="anx-bs-subsec-lbl">Current Assets</td>
+                                    <td/>
+                                </tr>
+
+                                <!-- Bank and Cash -->
+                                <tr class="anx-bs-group">
+                                    <td class="anx-bs-group-lbl">
+                                        <i class="fa fa-caret-right anx-bs-caret" t-if="state.bsData.bank_cash.accounts.length"/>
+                                        Bank and Cash
+                                    </td>
+                                    <td t-attf-class="anx-bs-group-val {{ state.bsData.bank_cash.total &lt; 0 ? 'anx-pl-neg' : '' }}">
+                                        <t t-esc="formatBsVal(state.bsData.bank_cash.total)"/>
+                                    </td>
+                                </tr>
+                                <t t-foreach="state.bsData.bank_cash.accounts" t-as="acc" t-key="acc.id">
+                                    <tr class="anx-pl-acc">
+                                        <td class="anx-pl-acc-name"><a class="anx-tb-acc-link" t-att-data-id="acc.id" t-on-click="openTrialBalanceAccount"><t t-esc="acc.name"/></a></td>
+                                        <td t-attf-class="anx-pl-acc-val {{ acc.balance &lt; 0 ? 'anx-pl-neg' : '' }}">
+                                            <t t-esc="formatBsVal(acc.balance)"/>
+                                        </td>
+                                    </tr>
+                                </t>
+
+                                <!-- Accounts Receivable -->
+                                <tr class="anx-bs-group">
+                                    <td class="anx-bs-group-lbl">
+                                        <i class="fa fa-caret-right anx-bs-caret" t-if="state.bsData.receivable.accounts.length"/>
+                                        Accounts Receivable
+                                    </td>
+                                    <td t-attf-class="anx-bs-group-val {{ state.bsData.receivable.total &lt; 0 ? 'anx-pl-neg' : '' }}">
+                                        <t t-esc="formatBsVal(state.bsData.receivable.total)"/>
+                                    </td>
+                                </tr>
+                                <t t-foreach="state.bsData.receivable.accounts" t-as="acc" t-key="acc.id">
+                                    <tr class="anx-pl-acc">
+                                        <td class="anx-pl-acc-name"><a class="anx-tb-acc-link" t-att-data-id="acc.id" t-on-click="openTrialBalanceAccount"><t t-esc="acc.name"/></a></td>
+                                        <td t-attf-class="anx-pl-acc-val {{ acc.balance &lt; 0 ? 'anx-pl-neg' : '' }}">
+                                            <t t-esc="formatBsVal(acc.balance)"/>
+                                        </td>
+                                    </tr>
+                                </t>
+
+                                <!-- Other Current Assets -->
+                                <tr class="anx-bs-group">
+                                    <td class="anx-bs-group-lbl">
+                                        <i class="fa fa-caret-right anx-bs-caret" t-if="state.bsData.current_assets.accounts.length"/>
+                                        Other Current Assets
+                                    </td>
+                                    <td t-attf-class="anx-bs-group-val {{ state.bsData.current_assets.total &lt; 0 ? 'anx-pl-neg' : '' }}">
+                                        <t t-esc="formatBsVal(state.bsData.current_assets.total)"/>
+                                    </td>
+                                </tr>
+                                <t t-foreach="state.bsData.current_assets.accounts" t-as="acc" t-key="acc.id">
+                                    <tr class="anx-pl-acc">
+                                        <td class="anx-pl-acc-name"><a class="anx-tb-acc-link" t-att-data-id="acc.id" t-on-click="openTrialBalanceAccount"><t t-esc="acc.name"/></a></td>
+                                        <td t-attf-class="anx-pl-acc-val {{ acc.balance &lt; 0 ? 'anx-pl-neg' : '' }}">
+                                            <t t-esc="formatBsVal(acc.balance)"/>
+                                        </td>
+                                    </tr>
+                                </t>
+
+                                <!-- Total Current Assets -->
+                                <tr class="anx-pl-sub">
+                                    <td class="anx-pl-sub-lbl anx-bs-bold">Total Current Assets</td>
+                                    <td t-attf-class="anx-pl-sub-val {{ state.bsData.total_current_assets &lt; 0 ? 'anx-pl-neg' : '' }}">
+                                        <t t-esc="formatBsVal(state.bsData.total_current_assets)"/>
+                                    </td>
+                                </tr>
+
+                                <!-- Fixed Assets -->
+                                <tr class="anx-bs-group">
+                                    <td class="anx-bs-group-lbl">Fixed Assets</td>
+                                    <td t-attf-class="anx-bs-group-val {{ state.bsData.fixed_assets.total &lt; 0 ? 'anx-pl-neg' : '' }}">
+                                        <t t-esc="formatBsVal(state.bsData.fixed_assets.total)"/>
+                                    </td>
+                                </tr>
+                                <t t-foreach="state.bsData.fixed_assets.accounts" t-as="acc" t-key="acc.id">
+                                    <tr class="anx-pl-acc">
+                                        <td class="anx-pl-acc-name"><a class="anx-tb-acc-link" t-att-data-id="acc.id" t-on-click="openTrialBalanceAccount"><t t-esc="acc.name"/></a></td>
+                                        <td t-attf-class="anx-pl-acc-val {{ acc.balance &lt; 0 ? 'anx-pl-neg' : '' }}">
+                                            <t t-esc="formatBsVal(acc.balance)"/>
+                                        </td>
+                                    </tr>
+                                </t>
+
+                                <!-- Other Assets -->
+                                <tr class="anx-bs-group">
+                                    <td class="anx-bs-group-lbl">Other Assets</td>
+                                    <td t-attf-class="anx-bs-group-val {{ state.bsData.other_assets.total &lt; 0 ? 'anx-pl-neg' : '' }}">
+                                        <t t-esc="formatBsVal(state.bsData.other_assets.total)"/>
+                                    </td>
+                                </tr>
+                                <t t-foreach="state.bsData.other_assets.accounts" t-as="acc" t-key="acc.id">
+                                    <tr class="anx-pl-acc">
+                                        <td class="anx-pl-acc-name"><a class="anx-tb-acc-link" t-att-data-id="acc.id" t-on-click="openTrialBalanceAccount"><t t-esc="acc.name"/></a></td>
+                                        <td t-attf-class="anx-pl-acc-val {{ acc.balance &lt; 0 ? 'anx-pl-neg' : '' }}">
+                                            <t t-esc="formatBsVal(acc.balance)"/>
+                                        </td>
+                                    </tr>
+                                </t>
+
+                                <!-- Total Assets -->
+                                <tr class="anx-pl-total anx-bs-total-row">
+                                    <td class="anx-pl-total-lbl">Total Assets</td>
+                                    <td t-attf-class="anx-pl-total-val {{ state.bsData.total_assets &lt; 0 ? 'anx-pl-neg' : '' }}">
+                                        <t t-esc="formatBsVal(state.bsData.total_assets)"/>
+                                    </td>
+                                </tr>
+
+                                <tr class="anx-pl-spacer"><td colspan="2"/></tr>
+
+                                <!-- ═════════════ LIABILITIES & EQUITY ═════════════ -->
+                                <tr class="anx-bs-section-hdr">
+                                    <td colspan="2" class="anx-bs-section-hdr-lbl">Liabilities &amp; Equity</td>
                                 </tr>
 
                                 <!-- Liabilities subsection -->
                                 <tr class="anx-bs-subsec">
                                     <td class="anx-bs-subsec-lbl">Liabilities</td>
                                     <td/>
-                                    <td t-if="state.bsCompareMode" class="anx-bs-td-cmp"/>
-                                    <td t-if="state.bsCompareMode"/>
                                 </tr>
 
                                 <!-- Current Liabilities -->
                                 <tr class="anx-bs-subsec anx-bs-subsec-indent">
                                     <td class="anx-bs-subsec-lbl">Current Liabilities</td>
                                     <td/>
-                                    <td t-if="state.bsCompareMode" class="anx-bs-td-cmp"/>
-                                    <td t-if="state.bsCompareMode"/>
                                 </tr>
 
                                 <!-- Accounts Payable -->
                                 <tr class="anx-bs-group">
                                     <td class="anx-bs-group-lbl anx-bs-group-lbl-l2">
-                                        <i class="fa fa-caret-down anx-bs-caret" t-if="state.bsData.payable.accounts.length"/>
+                                        <i class="fa fa-caret-right anx-bs-caret" t-if="state.bsData.payable.accounts.length"/>
                                         Accounts Payable
                                     </td>
-                                    <td><t t-esc="formatBsVal(state.bsData.payable.total)"/></td>
-                                    <td t-if="state.bsCompareMode" class="anx-bs-td-cmp"><t t-esc="formatBsVal(bsCmp('payable'))"/></td>
-                                    <td t-if="state.bsCompareMode">
-                                        <span t-att-class="bsChangeClass(state.bsData.payable.total, bsCmp('payable'))">
-                                            <t t-esc="bsChangePct(state.bsData.payable.total, bsCmp('payable'))"/>
-                                        </span>
+                                    <td t-attf-class="anx-bs-group-val {{ state.bsData.payable.total &lt; 0 ? 'anx-pl-neg' : '' }}">
+                                        <t t-esc="formatBsVal(state.bsData.payable.total)"/>
                                     </td>
                                 </tr>
                                 <t t-foreach="state.bsData.payable.accounts" t-as="acc" t-key="acc.id">
                                     <tr class="anx-pl-acc">
                                         <td class="anx-pl-acc-name"><a class="anx-tb-acc-link" t-att-data-id="acc.id" t-on-click="openTrialBalanceAccount"><t t-esc="acc.name"/></a></td>
-                                        <td><t t-esc="formatBsVal(acc.balance)"/></td>
-                                        <td t-if="state.bsCompareMode" class="anx-bs-td-cmp"><t t-esc="formatBsVal(bsAccCmp('payable', acc.id))"/></td>
-                                        <td t-if="state.bsCompareMode">
-                                            <span t-att-class="bsChangeClass(acc.balance, bsAccCmp('payable', acc.id))">
-                                                <t t-esc="bsChangePct(acc.balance, bsAccCmp('payable', acc.id))"/>
-                                            </span>
+                                        <td t-attf-class="anx-pl-acc-val {{ acc.balance &lt; 0 ? 'anx-pl-neg' : '' }}">
+                                            <t t-esc="formatBsVal(acc.balance)"/>
                                         </td>
                                     </tr>
                                 </t>
 
-                                <!-- Total Accounts Payable -->
-                                <tr class="anx-pl-sub">
-                                    <td class="anx-pl-sub-lbl anx-bs-bold" style="padding-left:48px!important;">Total Accounts Payable</td>
-                                    <td><t t-esc="formatBsVal(state.bsData.payable.total)"/></td>
-                                    <td t-if="state.bsCompareMode" class="anx-bs-td-cmp"><t t-esc="formatBsVal(bsCmp('payable'))"/></td>
-                                    <td t-if="state.bsCompareMode">
-                                        <span t-att-class="bsChangeClass(state.bsData.payable.total, bsCmp('payable'))">
-                                            <t t-esc="bsChangePct(state.bsData.payable.total, bsCmp('payable'))"/>
-                                        </span>
-                                    </td>
-                                </tr>
-
                                 <!-- Credit Cards -->
                                 <tr class="anx-bs-group">
                                     <td class="anx-bs-group-lbl anx-bs-group-lbl-l2">Credit Cards</td>
-                                    <td><t t-esc="formatBsVal(state.bsData.credit_cards.total)"/></td>
-                                    <td t-if="state.bsCompareMode" class="anx-bs-td-cmp"><t t-esc="formatBsVal(bsCmp('credit_cards'))"/></td>
-                                    <td t-if="state.bsCompareMode">
-                                        <span t-att-class="bsChangeClass(state.bsData.credit_cards.total, bsCmp('credit_cards'))">
-                                            <t t-esc="bsChangePct(state.bsData.credit_cards.total, bsCmp('credit_cards'))"/>
-                                        </span>
+                                    <td t-attf-class="anx-bs-group-val {{ state.bsData.credit_cards.total &lt; 0 ? 'anx-pl-neg' : '' }}">
+                                        <t t-esc="formatBsVal(state.bsData.credit_cards.total)"/>
                                     </td>
                                 </tr>
                                 <t t-foreach="state.bsData.credit_cards.accounts" t-as="acc" t-key="acc.id">
                                     <tr class="anx-pl-acc">
                                         <td class="anx-pl-acc-name"><a class="anx-tb-acc-link" t-att-data-id="acc.id" t-on-click="openTrialBalanceAccount"><t t-esc="acc.name"/></a></td>
-                                        <td><t t-esc="formatBsVal(acc.balance)"/></td>
-                                        <td t-if="state.bsCompareMode" class="anx-bs-td-cmp"><t t-esc="formatBsVal(bsAccCmp('credit_cards', acc.id))"/></td>
-                                        <td t-if="state.bsCompareMode">
-                                            <span t-att-class="bsChangeClass(acc.balance, bsAccCmp('credit_cards', acc.id))">
-                                                <t t-esc="bsChangePct(acc.balance, bsAccCmp('credit_cards', acc.id))"/>
-                                            </span>
+                                        <td t-attf-class="anx-pl-acc-val {{ acc.balance &lt; 0 ? 'anx-pl-neg' : '' }}">
+                                            <t t-esc="formatBsVal(acc.balance)"/>
                                         </td>
                                     </tr>
                                 </t>
@@ -2218,23 +1884,15 @@
                                         <i class="fa fa-caret-right anx-bs-caret" t-if="state.bsData.current_liabilities.accounts.length"/>
                                         Other Current Liabilities
                                     </td>
-                                    <td><t t-esc="formatBsVal(state.bsData.current_liabilities.total)"/></td>
-                                    <td t-if="state.bsCompareMode" class="anx-bs-td-cmp"><t t-esc="formatBsVal(bsCmp('current_liabilities'))"/></td>
-                                    <td t-if="state.bsCompareMode">
-                                        <span t-att-class="bsChangeClass(state.bsData.current_liabilities.total, bsCmp('current_liabilities'))">
-                                            <t t-esc="bsChangePct(state.bsData.current_liabilities.total, bsCmp('current_liabilities'))"/>
-                                        </span>
+                                    <td t-attf-class="anx-bs-group-val {{ state.bsData.current_liabilities.total &lt; 0 ? 'anx-pl-neg' : '' }}">
+                                        <t t-esc="formatBsVal(state.bsData.current_liabilities.total)"/>
                                     </td>
                                 </tr>
                                 <t t-foreach="state.bsData.current_liabilities.accounts" t-as="acc" t-key="acc.id">
                                     <tr class="anx-pl-acc">
                                         <td class="anx-pl-acc-name"><a class="anx-tb-acc-link" t-att-data-id="acc.id" t-on-click="openTrialBalanceAccount"><t t-esc="acc.name"/></a></td>
-                                        <td><t t-esc="formatBsVal(acc.balance)"/></td>
-                                        <td t-if="state.bsCompareMode" class="anx-bs-td-cmp"><t t-esc="formatBsVal(bsAccCmp('current_liabilities', acc.id))"/></td>
-                                        <td t-if="state.bsCompareMode">
-                                            <span t-att-class="bsChangeClass(acc.balance, bsAccCmp('current_liabilities', acc.id))">
-                                                <t t-esc="bsChangePct(acc.balance, bsAccCmp('current_liabilities', acc.id))"/>
-                                            </span>
+                                        <td t-attf-class="anx-pl-acc-val {{ acc.balance &lt; 0 ? 'anx-pl-neg' : '' }}">
+                                            <t t-esc="formatBsVal(acc.balance)"/>
                                         </td>
                                     </tr>
                                 </t>
@@ -2242,79 +1900,55 @@
                                 <!-- Total Current Liabilities -->
                                 <tr class="anx-pl-sub">
                                     <td class="anx-pl-sub-lbl anx-bs-bold">Total Current Liabilities</td>
-                                    <td><t t-esc="formatBsVal(state.bsData.total_current_liabilities)"/></td>
-                                    <td t-if="state.bsCompareMode" class="anx-bs-td-cmp"><t t-esc="formatBsVal(bsCmp('total_current_liabilities'))"/></td>
-                                    <td t-if="state.bsCompareMode">
-                                        <span t-att-class="bsChangeClass(state.bsData.total_current_liabilities, bsCmp('total_current_liabilities'))">
-                                            <t t-esc="bsChangePct(state.bsData.total_current_liabilities, bsCmp('total_current_liabilities'))"/>
-                                        </span>
+                                    <td t-attf-class="anx-pl-sub-val {{ state.bsData.total_current_liabilities &lt; 0 ? 'anx-pl-neg' : '' }}">
+                                        <t t-esc="formatBsVal(state.bsData.total_current_liabilities)"/>
                                     </td>
                                 </tr>
 
                                 <!-- Long-term Liabilities -->
                                 <tr class="anx-bs-group">
                                     <td class="anx-bs-group-lbl">Long-term Liabilities</td>
-                                    <td><t t-esc="formatBsVal(state.bsData.noncurrent_liabilities.total)"/></td>
-                                    <td t-if="state.bsCompareMode" class="anx-bs-td-cmp"><t t-esc="formatBsVal(bsCmp('noncurrent_liabilities'))"/></td>
-                                    <td t-if="state.bsCompareMode">
-                                        <span t-att-class="bsChangeClass(state.bsData.noncurrent_liabilities.total, bsCmp('noncurrent_liabilities'))">
-                                            <t t-esc="bsChangePct(state.bsData.noncurrent_liabilities.total, bsCmp('noncurrent_liabilities'))"/>
-                                        </span>
+                                    <td t-attf-class="anx-bs-group-val {{ state.bsData.noncurrent_liabilities.total &lt; 0 ? 'anx-pl-neg' : '' }}">
+                                        <t t-esc="formatBsVal(state.bsData.noncurrent_liabilities.total)"/>
                                     </td>
                                 </tr>
                                 <t t-foreach="state.bsData.noncurrent_liabilities.accounts" t-as="acc" t-key="acc.id">
                                     <tr class="anx-pl-acc">
                                         <td class="anx-pl-acc-name"><a class="anx-tb-acc-link" t-att-data-id="acc.id" t-on-click="openTrialBalanceAccount"><t t-esc="acc.name"/></a></td>
-                                        <td><t t-esc="formatBsVal(acc.balance)"/></td>
-                                        <td t-if="state.bsCompareMode" class="anx-bs-td-cmp"><t t-esc="formatBsVal(bsAccCmp('noncurrent_liabilities', acc.id))"/></td>
-                                        <td t-if="state.bsCompareMode">
-                                            <span t-att-class="bsChangeClass(acc.balance, bsAccCmp('noncurrent_liabilities', acc.id))">
-                                                <t t-esc="bsChangePct(acc.balance, bsAccCmp('noncurrent_liabilities', acc.id))"/>
-                                            </span>
+                                        <td t-attf-class="anx-pl-acc-val {{ acc.balance &lt; 0 ? 'anx-pl-neg' : '' }}">
+                                            <t t-esc="formatBsVal(acc.balance)"/>
                                         </td>
                                     </tr>
                                 </t>
 
                                 <!-- Total Liabilities -->
-                                <tr class="anx-bs-total-row">
+                                <tr class="anx-pl-total anx-bs-total-row">
                                     <td class="anx-pl-total-lbl">Total Liabilities</td>
-                                    <td><t t-esc="formatBsVal(state.bsData.total_liabilities)"/></td>
-                                    <td t-if="state.bsCompareMode" class="anx-bs-td-cmp"><t t-esc="formatBsVal(bsCmp('total_liabilities'))"/></td>
-                                    <td t-if="state.bsCompareMode">
-                                        <span t-att-class="bsChangeClass(state.bsData.total_liabilities, bsCmp('total_liabilities'))">
-                                            <t t-esc="bsChangePct(state.bsData.total_liabilities, bsCmp('total_liabilities'))"/>
-                                        </span>
+                                    <td t-attf-class="anx-pl-total-val {{ state.bsData.total_liabilities &lt; 0 ? 'anx-pl-neg' : '' }}">
+                                        <t t-esc="formatBsVal(state.bsData.total_liabilities)"/>
                                     </td>
                                 </tr>
+
+                                <tr class="anx-pl-spacer"><td colspan="2"/></tr>
 
                                 <!-- Equity subsection -->
                                 <tr class="anx-bs-subsec">
                                     <td class="anx-bs-subsec-lbl">Equity (&amp; Earnings)</td>
                                     <td/>
-                                    <td t-if="state.bsCompareMode" class="anx-bs-td-cmp"/>
-                                    <td t-if="state.bsCompareMode"/>
                                 </tr>
 
                                 <!-- Equity accounts -->
                                 <tr class="anx-bs-group">
                                     <td class="anx-bs-group-lbl">Equity</td>
-                                    <td><t t-esc="formatBsVal(state.bsData.equity.total)"/></td>
-                                    <td t-if="state.bsCompareMode" class="anx-bs-td-cmp"><t t-esc="formatBsVal(bsCmp('equity'))"/></td>
-                                    <td t-if="state.bsCompareMode">
-                                        <span t-att-class="bsChangeClass(state.bsData.equity.total, bsCmp('equity'))">
-                                            <t t-esc="bsChangePct(state.bsData.equity.total, bsCmp('equity'))"/>
-                                        </span>
+                                    <td t-attf-class="anx-bs-group-val {{ state.bsData.equity.total &lt; 0 ? 'anx-pl-neg' : '' }}">
+                                        <t t-esc="formatBsVal(state.bsData.equity.total)"/>
                                     </td>
                                 </tr>
                                 <t t-foreach="state.bsData.equity.accounts" t-as="acc" t-key="acc.id">
                                     <tr class="anx-pl-acc">
                                         <td class="anx-pl-acc-name"><a class="anx-tb-acc-link" t-att-data-id="acc.id" t-on-click="openTrialBalanceAccount"><t t-esc="acc.name"/></a></td>
-                                        <td><t t-esc="formatBsVal(acc.balance)"/></td>
-                                        <td t-if="state.bsCompareMode" class="anx-bs-td-cmp"><t t-esc="formatBsVal(bsAccCmp('equity', acc.id))"/></td>
-                                        <td t-if="state.bsCompareMode">
-                                            <span t-att-class="bsChangeClass(acc.balance, bsAccCmp('equity', acc.id))">
-                                                <t t-esc="bsChangePct(acc.balance, bsAccCmp('equity', acc.id))"/>
-                                            </span>
+                                        <td t-attf-class="anx-pl-acc-val {{ acc.balance &lt; 0 ? 'anx-pl-neg' : '' }}">
+                                            <t t-esc="formatBsVal(acc.balance)"/>
                                         </td>
                                     </tr>
                                 </t>
@@ -2323,51 +1957,33 @@
                                 <tr class="anx-bs-group">
                                     <td class="anx-bs-group-lbl">Earnings</td>
                                     <td/>
-                                    <td t-if="state.bsCompareMode" class="anx-bs-td-cmp"/>
-                                    <td t-if="state.bsCompareMode"/>
                                 </tr>
                                 <tr class="anx-pl-acc">
                                     <td class="anx-pl-acc-name">Current Year Unallocated Earnings</td>
-                                    <td><t t-esc="formatBsVal(state.bsData.current_year_earnings)"/></td>
-                                    <td t-if="state.bsCompareMode" class="anx-bs-td-cmp"><t t-esc="formatBsVal(bsCmp('current_year_earnings'))"/></td>
-                                    <td t-if="state.bsCompareMode">
-                                        <span t-att-class="bsChangeClass(state.bsData.current_year_earnings, bsCmp('current_year_earnings'))">
-                                            <t t-esc="bsChangePct(state.bsData.current_year_earnings, bsCmp('current_year_earnings'))"/>
-                                        </span>
+                                    <td t-attf-class="anx-pl-acc-val {{ state.bsData.current_year_earnings &lt; 0 ? 'anx-pl-neg' : '' }}">
+                                        <t t-esc="formatBsVal(state.bsData.current_year_earnings)"/>
                                     </td>
                                 </tr>
                                 <tr class="anx-pl-acc">
                                     <td class="anx-pl-acc-name">Previous Year Earnings</td>
-                                    <td><t t-esc="formatBsVal(state.bsData.prev_year_earnings)"/></td>
-                                    <td t-if="state.bsCompareMode" class="anx-bs-td-cmp"><t t-esc="formatBsVal(bsCmp('prev_year_earnings'))"/></td>
-                                    <td t-if="state.bsCompareMode">
-                                        <span t-att-class="bsChangeClass(state.bsData.prev_year_earnings, bsCmp('prev_year_earnings'))">
-                                            <t t-esc="bsChangePct(state.bsData.prev_year_earnings, bsCmp('prev_year_earnings'))"/>
-                                        </span>
+                                    <td t-attf-class="anx-pl-acc-val {{ state.bsData.prev_year_earnings &lt; 0 ? 'anx-pl-neg' : '' }}">
+                                        <t t-esc="formatBsVal(state.bsData.prev_year_earnings)"/>
                                     </td>
                                 </tr>
 
                                 <!-- Total Equity -->
                                 <tr class="anx-pl-sub">
                                     <td class="anx-pl-sub-lbl anx-bs-bold">Total Equity (&amp; Earnings)</td>
-                                    <td><t t-esc="formatBsVal(state.bsData.total_equity)"/></td>
-                                    <td t-if="state.bsCompareMode" class="anx-bs-td-cmp"><t t-esc="formatBsVal(bsCmp('total_equity'))"/></td>
-                                    <td t-if="state.bsCompareMode">
-                                        <span t-att-class="bsChangeClass(state.bsData.total_equity, bsCmp('total_equity'))">
-                                            <t t-esc="bsChangePct(state.bsData.total_equity, bsCmp('total_equity'))"/>
-                                        </span>
+                                    <td t-attf-class="anx-pl-sub-val {{ state.bsData.total_equity &lt; 0 ? 'anx-pl-neg' : '' }}">
+                                        <t t-esc="formatBsVal(state.bsData.total_equity)"/>
                                     </td>
                                 </tr>
 
                                 <!-- Total Liabilities & Equity -->
-                                <tr class="anx-bs-total-row">
+                                <tr class="anx-pl-total anx-bs-total-row">
                                     <td class="anx-pl-total-lbl">Total Liabilities &amp; Equity</td>
-                                    <td><t t-esc="formatBsVal(state.bsData.total_liabilities_equity)"/></td>
-                                    <td t-if="state.bsCompareMode" class="anx-bs-td-cmp"><t t-esc="formatBsVal(bsCmp('total_liabilities_equity'))"/></td>
-                                    <td t-if="state.bsCompareMode">
-                                        <span t-att-class="bsChangeClass(state.bsData.total_liabilities_equity, bsCmp('total_liabilities_equity'))">
-                                            <t t-esc="bsChangePct(state.bsData.total_liabilities_equity, bsCmp('total_liabilities_equity'))"/>
-                                        </span>
+                                    <td t-attf-class="anx-pl-total-val {{ state.bsData.total_liabilities_equity &lt; 0 ? 'anx-pl-neg' : '' }}">
+                                        <t t-esc="formatBsVal(state.bsData.total_liabilities_equity)"/>
                                     </td>
                                 </tr>
 
@@ -2376,7 +1992,6 @@
                     </div>
                 </div>
             </div>
-        </div>
 
             <!-- VAT SUMMARY MODAL -->
             <div t-if="state.showVatModal" class="anx-pl-overlay anx-tb-overlay" t-on-click.self="closeVatModal">
@@ -2929,183 +2544,6 @@
                     </div>
                 </div>
             </t>
-
-            <!-- ── Account Validation Dialog Modal ────────────────────────────── -->
-            <t t-if="state.showAccountValidationModal">
-                <div class="anx-val-overlay" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(6, 9, 15, 0.88); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); display: flex; align-items: center; justify-content: center; z-index: 10050; padding: 20px;">
-                    <div class="anx-val-card" style="width: 100%; max-width: 780px; background: #111827 !important; border: 1px solid #1e293b !important; border-radius: 18px; padding: 26px; color: #ffffff !important; box-shadow: 0 25px 60px rgba(0,0,0,0.85); animation: anxBsModalFadeIn 0.25s ease-out; max-height: 90vh; overflow-y: auto;">
-                        
-                        <!-- Modal Header -->
-                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; border-bottom: 1px solid #1e293b; padding-bottom: 16px;">
-                            <div style="display: flex; align-items: center; gap: 12px;">
-                                <div style="width: 42px; height: 42px; border-radius: 12px; background: rgba(0, 160, 157, 0.15); border: 1px solid rgba(0, 160, 157, 0.4); display: flex; align-items: center; justify-content: center;">
-                                    <i class="fa fa-file-text-o" style="color: #00a09d; font-size: 20px;"/>
-                                </div>
-                                <div>
-                                    <h3 style="font-size: 17.5px; font-weight: 700; color: #ffffff !important; margin: 0; line-height: 1.2;">
-                                        Document Inspection &amp; Account Resolution
-                                    </h3>
-                                    <span style="font-size: 12px; color: #94a3b8 !important; font-weight: 500;">
-                                        Review extracted PDF details and configure GL accounts before creating Odoo Entry
-                                    </span>
-                                </div>
-                            </div>
-                            <button t-on-click="closeAccountValidationModal" style="background: rgba(255,255,255,0.06); border: 1px solid #334155; color: #94a3b8; width: 34px; height: 34px; border-radius: 9px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s;">
-                                <i class="fa fa-times" style="font-size: 14px; color: #cbd5e1;"/>
-                            </button>
-                        </div>
-
-                        <!-- Extracted PDF Summary Card -->
-                        <div style="background: #1e293b !important; border: 1px solid #334155 !important; border-radius: 14px; padding: 16px; margin-bottom: 18px;">
-                            <div style="font-size: 11px; font-weight: 700; color: #38bdf8 !important; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;">
-                                <span style="display: flex; align-items: center; gap: 6px;">
-                                    <i class="fa fa-search"/> Extracted PDF Summary
-                                </span>
-                                <span class="badge" t-attf-style="background: {{ state.accountValData.doc_type === 'expense_bill' ? 'rgba(239, 108, 0, 0.2)' : (state.accountValData.doc_type === 'bill' ? 'rgba(245, 158, 11, 0.2)' : 'rgba(16, 185, 129, 0.2)') }}; color: {{ state.accountValData.doc_type === 'expense_bill' ? '#ff9800' : (state.accountValData.doc_type === 'bill' ? '#fbbf24' : '#34d399') }}; border: 1px solid {{ state.accountValData.doc_type === 'expense_bill' ? '#e65100' : (state.accountValData.doc_type === 'bill' ? '#d97706' : '#059669') }}; font-size: 11px; padding: 3px 8px; border-radius: 6px;">
-                                    <t t-esc="state.accountValData.doc_type === 'expense_bill' ? 'Expense Bill (Journal Entry)' : (state.accountValData.doc_type === 'bill' ? 'Purchase Bill (Vendor Bill)' : 'Sales Invoice (Income)')"/>
-                                </span>
-                            </div>
-
-                            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 14px;">
-                                <div style="background: #0f172a; padding: 10px 14px; border-radius: 10px; border: 1px solid #1e293b;">
-                                    <div style="font-size: 11px; color: #64748b; font-weight: 600; margin-bottom: 2px;">Document Name</div>
-                                    <div style="font-size: 13px; font-weight: 700; color: #f8fafc; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" t-esc="state.accountValData.doc_name"/>
-                                </div>
-                                <div style="background: #0f172a; padding: 10px 14px; border-radius: 10px; border: 1px solid #1e293b;">
-                                    <div style="font-size: 11px; color: #64748b; font-weight: 600; margin-bottom: 2px;">Reference #</div>
-                                    <div style="font-size: 13px; font-weight: 700; color: #38bdf8; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" t-esc="state.accountValData.ref || 'Auto / None'"/>
-                                </div>
-                                <div style="background: #0f172a; padding: 10px 14px; border-radius: 10px; border: 1px solid #1e293b;">
-                                    <div style="font-size: 11px; color: #64748b; font-weight: 600; margin-bottom: 2px;">Partner (Vendor / Customer)</div>
-                                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
-                                        <span style="font-size: 13px; font-weight: 700; color: #f8fafc; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" t-esc="state.accountValData.partner_name"/>
-                                        <span t-if="state.accountValData.partner_exists" class="badge" style="background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid #059669; font-size: 10px; padding: 2px 6px; border-radius: 4px; flex-shrink: 0;">Matched</span>
-                                        <span t-if="!state.accountValData.partner_exists" class="badge" style="background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid #d97706; font-size: 10px; padding: 2px 6px; border-radius: 4px; flex-shrink: 0;">New Partner</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Financial Totals Strip -->
-                            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; background: #0f172a; padding: 10px 14px; border-radius: 10px; border: 1px solid #1e293b;">
-                                <div>
-                                    <span style="font-size: 11px; color: #64748b; font-weight: 600; display: block;">Subtotal</span>
-                                    <span style="font-size: 13.5px; font-weight: 700; color: #e2e8f0;">
-                                        <t t-esc="state.accountValData.currency"/> <t t-esc="state.accountValData.subtotal"/>
-                                    </span>
-                                </div>
-                                <div>
-                                    <span style="font-size: 11px; color: #64748b; font-weight: 600; display: block;">Tax Amount</span>
-                                    <span style="font-size: 13.5px; font-weight: 700; color: #38bdf8;">
-                                        <t t-esc="state.accountValData.currency"/> <t t-esc="state.accountValData.tax_amount"/>
-                                    </span>
-                                </div>
-                                <div>
-                                    <span style="font-size: 11px; color: #64748b; font-weight: 600; display: block;">Total Amount</span>
-                                    <span style="font-size: 14px; font-weight: 800; color: #34d399;">
-                                        <t t-esc="state.accountValData.currency"/> <t t-esc="state.accountValData.total"/>
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Tax-Inclusive Auto-Adjustment Verification Banner -->
-                        <div t-if="state.accountValData.is_tax_inclusive_detected" style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.35); border-radius: 10px; padding: 10px 14px; margin-bottom: 16px; display: flex; align-items: center; gap: 10px;">
-                            <i class="fa fa-check-circle" style="color: #10b981; font-size: 16px; flex-shrink: 0;"/>
-                            <span style="font-size: 12.5px; color: #6ee7b7 !important; font-weight: 500;">
-                                <strong>Tax-Inclusive Calculation Verified:</strong> Line item prices were automatically normalized to untaxed rates so Odoo's tax matching (<t t-esc="state.accountValData.currency"/> <t t-esc="state.accountValData.total"/>) matches the receipt 100% exactly.
-                            </span>
-                        </div>
-
-                        <!-- Missing Config Warning Banner -->
-                        <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 10px; padding: 10px 14px; margin-bottom: 16px; display: flex; align-items: center; gap: 10px;">
-                            <i class="fa fa-exclamation-triangle" style="color: #f59e0b; font-size: 16px; flex-shrink: 0;"/>
-                            <span style="font-size: 12.5px; color: #fcd34d !important; font-weight: 500;">
-                                <strong><t t-esc="state.accountValData.unconfigured_count"/> Product Line(s)</strong> require account selection. Select target GL accounts below to complete creation.
-                            </span>
-                        </div>
-
-                        <!-- Global Quick Batch Selector -->
-                        <div style="background: #0f172a; border: 1px dashed #334155; border-radius: 10px; padding: 10px 14px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px;">
-                            <span style="font-size: 12px; font-weight: 600; color: #38bdf8 !important; display: flex; align-items: center; gap: 6px; white-space: nowrap;">
-                                <i class="fa fa-bolt"/> Batch Set All Items To:
-                            </span>
-                            <select t-on-change="applyGlobalAccountToAllLines" style="background: #1e293b !important; color: #ffffff !important; border: 1px solid #334155 !important; border-radius: 8px; padding: 6px 12px; font-size: 12.5px; font-weight: 600; outline: none; flex: 1; max-width: 340px; cursor: pointer;">
-                                <t t-foreach="state.accountValData.available_accounts" t-as="acc" t-key="acc.id">
-                                    <option t-att-value="acc.id" style="background: #1e293b !important; color: #ffffff !important;" t-esc="acc.display_name"/>
-                                </t>
-                            </select>
-                        </div>
-
-                        <!-- Dedicated Tax GL Account Assignment Box (when Tax Amount > 0 or Expense Bill) -->
-                        <t t-if="state.accountValData.tax_amount &gt; 0 || state.accountValData.doc_type === 'expense_bill'">
-                            <div style="background: rgba(14, 165, 233, 0.08) !important; border: 1px solid rgba(14, 165, 233, 0.35) !important; border-radius: 12px; padding: 14px; margin-bottom: 16px;">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                                    <div style="display: flex; align-items: center; gap: 8px;">
-                                        <i class="fa fa-percent" style="color: #38bdf8; font-size: 14px;"/>
-                                        <span style="color: #38bdf8 !important; font-weight: 700; font-size: 13.5px;">
-                                            Tax Amount GL Account Selection
-                                        </span>
-                                    </div>
-                                    <span class="badge" style="background: rgba(56, 189, 248, 0.2) !important; color: #38bdf8 !important; border: 1px solid #0284c7 !important; font-size: 11px; padding: 3px 8px; border-radius: 6px;">
-                                        Tax Amount: <t t-esc="state.accountValData.currency"/> <t t-esc="state.accountValData.tax_amount"/>
-                                    </span>
-                                </div>
-                                <div style="display: flex; align-items: center; gap: 12px;">
-                                    <span style="font-size: 12px; color: #94a3b8 !important; font-weight: 600; white-space: nowrap;">
-                                        Target Tax Account:
-                                    </span>
-                                    <select t-on-change="onTaxAccountSelect" style="background: #1e293b !important; color: #ffffff !important; border: 1px solid #0284c7 !important; border-radius: 8px; padding: 7px 12px; font-size: 12.5px; font-weight: 600; outline: none; flex: 1; cursor: pointer;">
-                                        <t t-foreach="state.accountValData.available_tax_accounts || state.accountValData.available_accounts" t-as="tacc" t-key="tacc.id">
-                                            <option t-att-value="tacc.id" t-att-selected="state.selectedTaxAccountId == tacc.id" style="background: #1e293b !important; color: #ffffff !important;" t-esc="tacc.display_name"/>
-                                        </t>
-                                    </select>
-                                </div>
-                            </div>
-                        </t>
-
-                        <!-- Extracted Per-Line Items Box -->
-                        <div style="background: #0f172a !important; border: 1px solid #1e293b !important; border-radius: 12px; padding: 14px; margin-bottom: 20px; max-height: 280px; overflow-y: auto;">
-                            <div style="font-size: 11px; font-weight: 700; color: #94a3b8 !important; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
-                                <i class="fa fa-list-ul"/> Product Line GL Account Assignments
-                            </div>
-                            <t t-foreach="state.accountValData.unconfigured_lines" t-as="item" t-key="item.index !== undefined ? item.index : item_index">
-                                <t t-set="lineKey" t-value="item.index !== undefined ? item.index : item_index"/>
-                                <div style="background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 12px; margin-bottom: 10px;">
-                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                                        <div style="display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0;">
-                                            <span style="color: #ffffff !important; font-weight: 700; font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" t-esc="item.product_name || item.description"/>
-                                            <span t-if="item.product_exists" class="badge" style="background: rgba(14, 165, 233, 0.2) !important; color: #38bdf8 !important; border: 1px solid #0284c7 !important; font-size: 10px; padding: 2px 6px; border-radius: 4px; flex-shrink: 0;">Product Matched</span>
-                                            <span t-if="!item.product_exists" class="badge" style="background: rgba(245, 158, 11, 0.18) !important; color: #fbbf24 !important; border: 1px solid #d97706 !important; font-size: 10px; padding: 2px 6px; border-radius: 4px; flex-shrink: 0;">Custom / Unlisted Item</span>
-                                        </div>
-                                        <div style="color: #34d399 !important; font-weight: 700; font-size: 13px; flex-shrink: 0; margin-left: 10px;">
-                                            <t t-esc="item.qty"/> &#215; <t t-esc="item.price"/>
-                                        </div>
-                                    </div>
-                                    <div style="display: flex; align-items: center; gap: 10px;">
-                                        <span style="font-size: 12px; font-weight: 600; color: #94a3b8 !important; white-space: nowrap;">Account:</span>
-                                        <select t-model="state.lineAccountMap[lineKey]" style="width: 100%; background: #0f172a !important; color: #ffffff !important; border: 1px solid #334155 !important; border-radius: 8px; padding: 7px 10px; font-size: 13px; font-weight: 600; outline: none; cursor: pointer;">
-                                            <t t-foreach="state.accountValData.available_accounts" t-as="acc" t-key="acc.id">
-                                                <option t-att-value="acc.id" t-att-selected="acc.id == state.lineAccountMap[lineKey]" style="background: #1e293b !important; color: #ffffff !important;" t-esc="acc.display_name"/>
-                                            </t>
-                                        </select>
-                                    </div>
-                                </div>
-                            </t>
-                        </div>
-
-                        <!-- Footer Actions -->
-                        <div style="display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid #1e293b; padding-top: 16px;">
-                            <button t-on-click="closeAccountValidationModal" style="background: #1e293b !important; color: #cbd5e1 !important; border: 1px solid #334155 !important; padding: 10px 22px; border-radius: 9px; font-weight: 600; font-size: 13.5px; cursor: pointer; transition: all 0.2s;">
-                                Cancel
-                            </button>
-                            <button t-on-click="confirmAccountValidationAndCreate" style="background: linear-gradient(135deg, #00a09d 0%, #0284c7 100%) !important; color: #ffffff !important; border: none !important; padding: 10px 26px; border-radius: 9px; font-weight: 700; font-size: 13.5px; cursor: pointer; box-shadow: 0 4px 15px rgba(0, 160, 157, 0.4); transition: all 0.2s;">
-                                <i class="fa fa-check-circle me-1"/> Confirm &amp; Create Entry
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </t>
-
         </div>
     </div>
 </t>

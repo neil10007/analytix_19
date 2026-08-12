@@ -155,11 +155,6 @@ export class AnalytixFinanceDashboard extends Component {
             previewDocUrl:    '',
             previewDocId:     null,
             analyzingDocId:   null,
-            // ── Account Validation Dialog Modal State
-            showAccountValidationModal: false,
-            accountValData:             null,
-            selectedValidationAccountId: '',
-            lineAccountMap:             {},
             // ── Floating Chat Widget State ──────────────────────────────
             chatPos: {
                 x: parseInt(localStorage.getItem('anx_chat_pos_x')) || (typeof window !== 'undefined' ? window.innerWidth - 90 : 800),
@@ -172,12 +167,6 @@ export class AnalytixFinanceDashboard extends Component {
             chatSearchResults: [],
             chatSearchLoading: false,
             chatPolling: false,
-            // ── Inventory Tab State
-            invProducts:        null,
-            invProductsLoading: false,
-            invProductSearch:   '',
-            invProductSortCol:  'name',
-            invProductSortDir:  'asc',
         });
 
         this.chartRef1 = useRef("revExpChart");
@@ -186,20 +175,18 @@ export class AnalytixFinanceDashboard extends Component {
 
         onWillStart(async () => {
             await loadJS("/web/static/lib/Chart/Chart.js");
-            // Restore filters (activeTab resets to 'overview', or restores the return tab if
-            // user is coming back from a record opened inside the dashboard)
+            // Restore last active filters and tab from session
             this.restoreFilterState();
+            const savedTab = this.state.activeTab || 'overview';
             await this.fetchData();
-            // Pre-fetch data for whichever tab will be shown on load
-            const tab = this.state.activeTab;
-            if (tab === 'invoices')      await this.fetchInvoiceData();
-            if (tab === 'expenses')      await this.fetchExpenseData();
-            if (tab === 'vat')           await this.fetchVatData();
-            if (tab === 'journals')      await this.fetchJournalData();
-            if (tab === 'trial_balance') await this.fetchTrialBalanceData();
-            if (tab === 'documents')     await this.fetchDocumentData();
-            if (tab === 'inventory')     await this.fetchInventoryData();
-            if (tab === 'chat')          this.store.discuss.isActive = true;
+            // Also fetch the saved tab's data
+            if (savedTab === 'invoices')      await this.fetchInvoiceData();
+            if (savedTab === 'expenses')      await this.fetchExpenseData();
+            if (savedTab === 'vat')           await this.fetchVatData();
+            if (savedTab === 'journals')      await this.fetchJournalData();
+            if (savedTab === 'trial_balance') await this.fetchTrialBalanceData();
+            if (savedTab === 'documents')     await this.fetchDocumentData();
+            if (savedTab === 'chat')          this.store.discuss.isActive = true;
 
             // Pre-fetch discuss channels so chat widget is immediately ready
             if (this.store && this.store.channels && this.store.channels.fetch) {
@@ -261,7 +248,7 @@ export class AnalytixFinanceDashboard extends Component {
                 customFrom:       this.state.customFrom,
                 customTo:         this.state.customTo,
                 showCustomPicker: this.state.showCustomPicker,
-                // activeTab is intentionally NOT saved — dashboard always opens on Overview
+                activeTab:        this.state.activeTab,
                 invTypeFilter:    this.state.invTypeFilter,
                 invStatusFilter:  this.state.invStatusFilter,
                 invCompanyFilter: this.state.invCompanyFilter,
@@ -275,7 +262,7 @@ export class AnalytixFinanceDashboard extends Component {
                 tbCompanyFilter:  this.state.tbCompanyFilter,
             };
             sessionStorage.setItem('anx_dashboard_filters', JSON.stringify(filterState));
-            // Do NOT persist active tab — always reset to overview on re-entry
+            sessionStorage.setItem('anx_active_tab', this.state.activeTab);
         } catch (e) {
             console.error("Failed to save filter state:", e);
         }
@@ -290,7 +277,7 @@ export class AnalytixFinanceDashboard extends Component {
                 if (p.customFrom !== undefined) this.state.customFrom = p.customFrom;
                 if (p.customTo !== undefined)   this.state.customTo   = p.customTo;
                 if (p.showCustomPicker !== undefined) this.state.showCustomPicker = p.showCustomPicker;
-                // activeTab is intentionally NOT restored — always open on Overview
+                if (p.activeTab)        this.state.activeTab        = p.activeTab;
                 if (p.invTypeFilter)    this.state.invTypeFilter    = p.invTypeFilter;
                 if (p.invStatusFilter)  this.state.invStatusFilter  = p.invStatusFilter;
                 if (p.invCompanyFilter) this.state.invCompanyFilter = p.invCompanyFilter;
@@ -302,29 +289,13 @@ export class AnalytixFinanceDashboard extends Component {
                 if (p.jrnCompanyFilter) this.state.jrnCompanyFilter = p.jrnCompanyFilter;
                 if (p.tbTypeFilter)     this.state.tbTypeFilter     = p.tbTypeFilter;
                 if (p.tbCompanyFilter)  this.state.tbCompanyFilter  = p.tbCompanyFilter;
-            }
-            // If user came back from a record opened INSIDE the dashboard, restore that tab.
-            // Otherwise (navigating from a different module) always show Overview.
-            const returnTab = sessionStorage.getItem('anx_return_tab');
-            if (returnTab) {
-                this.state.activeTab = returnTab;
-                sessionStorage.removeItem('anx_return_tab');
             } else {
-                this.state.activeTab = 'overview';
+                const savedTab = sessionStorage.getItem('anx_active_tab');
+                if (savedTab) this.state.activeTab = savedTab;
             }
-            // Clean up any stale legacy tab keys
-            sessionStorage.removeItem('anx_active_tab');
         } catch (e) {
             console.error("Failed to restore filter state:", e);
         }
-    }
-
-    // ── Save the current tab so Back button restores it ──────────────
-    // Call this BEFORE any doAction that navigates away from within the dashboard.
-    _saveReturnTab() {
-        try {
-            sessionStorage.setItem('anx_return_tab', this.state.activeTab);
-        } catch (e) { /* ignore */ }
     }
 
     // ── Data ──────────────────────────────────────────────────────────
@@ -367,7 +338,6 @@ export class AnalytixFinanceDashboard extends Component {
         if (this.state.activeTab === 'journals')      await this.fetchJournalData();
         if (this.state.activeTab === 'trial_balance') await this.fetchTrialBalanceData();
         if (this.state.activeTab === 'documents')     await this.fetchDocumentData();
-        if (this.state.activeTab === 'inventory')     await this.fetchInventoryData();
     }
 
     // ── Custom date range change ──────────────────────────────────────
@@ -403,7 +373,6 @@ export class AnalytixFinanceDashboard extends Component {
         if (this.state.activeTab === 'journals')      await this.fetchJournalData();
         if (this.state.activeTab === 'trial_balance') await this.fetchTrialBalanceData();
         if (this.state.activeTab === 'documents')     await this.fetchDocumentData();
-        if (this.state.activeTab === 'inventory')     await this.fetchInventoryData();
     }
 
     // ── Tab click — reads data-tab attribute ──────────────────────────
@@ -433,9 +402,6 @@ export class AnalytixFinanceDashboard extends Component {
         if (tab === 'documents') {
             await this.fetchDocumentData();
         }
-        if (tab === 'inventory') {
-            await this.fetchInventoryData();
-        }
         if (tab === 'chat') {
             this.store.discuss.isActive = true;
             if (this.store && this.store.channels && this.store.channels.fetch) {
@@ -448,92 +414,6 @@ export class AnalytixFinanceDashboard extends Component {
 
     toggleTopPartners() {
         this.state.topPartnerMode = this.state.topPartnerMode === 'customers' ? 'vendors' : 'customers';
-    }
-
-    // ── Inventory data fetch ──────────────────────────────────────────
-    async fetchInventoryData() {
-        this.state.invProductsLoading = true;
-        try {
-            const fields = ['id', 'name', 'default_code', 'list_price', 'standard_price',
-                            'qty_available', 'virtual_available', 'uom_id', 'type',
-                            'active', 'barcode', 'categ_id'];
-            const records = await this.orm.searchRead(
-                'product.template',
-                [['active', '=', true]],
-                fields,
-                { limit: 200, order: 'name asc' }
-            );
-            this.state.invProducts = records;
-        } catch (e) {
-            console.error("Failed to load inventory data:", e);
-            this.notification.add('Failed to load product list.', { type: 'danger' });
-        } finally {
-            this.state.invProductsLoading = false;
-        }
-    }
-
-    // ── Inventory search / sort ───────────────────────────────────────
-    onInvProductSearch(ev) { this.state.invProductSearch = ev.target.value; }
-    onInvProductSort(ev) {
-        const col = ev.currentTarget.dataset.col;
-        if (!col) return;
-        if (this.state.invProductSortCol === col) {
-            this.state.invProductSortDir = this.state.invProductSortDir === 'asc' ? 'desc' : 'asc';
-        } else {
-            this.state.invProductSortCol = col;
-            this.state.invProductSortDir = 'asc';
-        }
-    }
-
-    get filteredProducts() {
-        if (!this.state.invProducts) return [];
-        let rows = this.state.invProducts;
-        const q = this.state.invProductSearch.trim().toLowerCase();
-        if (q) {
-            rows = rows.filter(r =>
-                (r.name || '').toLowerCase().includes(q) ||
-                (r.default_code || '').toLowerCase().includes(q) ||
-                (r.barcode || '').toLowerCase().includes(q) ||
-                (r.categ_id && r.categ_id[1] && r.categ_id[1].toLowerCase().includes(q))
-            );
-        }
-        const col = this.state.invProductSortCol;
-        const dir = this.state.invProductSortDir === 'asc' ? 1 : -1;
-        return [...rows].sort((a, b) => {
-            let av = a[col] ?? '', bv = b[col] ?? '';
-            if (Array.isArray(av)) av = av[1] || '';
-            if (Array.isArray(bv)) bv = bv[1] || '';
-            if (typeof av === 'string') { av = av.toLowerCase(); bv = (bv + '').toLowerCase(); }
-            if (av < bv) return -1 * dir;
-            if (av > bv) return 1 * dir;
-            return 0;
-        });
-    }
-
-    // ── Open product form view ────────────────────────────────────────
-    openProduct(ev) {
-        const id = parseInt(ev.currentTarget.dataset.id, 10);
-        if (!id) return;
-        this._saveReturnTab();
-        this.action.doAction({
-            type: 'ir.actions.act_window',
-            res_model: 'product.template',
-            res_id: id,
-            views: [[false, 'form']],
-            target: 'current',
-        });
-    }
-
-    // ── Create new Product ────────────────────────────────────────────
-    createNewProduct() {
-        this._saveReturnTab();
-        this.action.doAction({
-            type: 'ir.actions.act_window',
-            name: 'New Product',
-            res_model: 'product.template',
-            views: [[false, 'form']],
-            target: 'current',
-        });
     }
 
     // ── Invoice data fetch ────────────────────────────────────────────
@@ -626,7 +506,6 @@ export class AnalytixFinanceDashboard extends Component {
     openInvoice(ev) {
         const id = parseInt(ev.currentTarget.dataset.id, 10);
         if (!id) return;
-        this._saveReturnTab(); // restore Invoices tab on Back
         this.action.doAction({
             type: 'ir.actions.act_window',
             res_model: 'account.move',
@@ -640,7 +519,6 @@ export class AnalytixFinanceDashboard extends Component {
     createNewInvoice() {
         const isVendor = this.state.invTypeFilter === 'vendor';
         const moveType = isVendor ? 'in_invoice' : 'out_invoice';
-        this._saveReturnTab(); // restore Invoices tab on Back
         this.action.doAction({
             type: 'ir.actions.act_window',
             name: isVendor ? 'New Vendor Bill' : 'New Customer Invoice',
@@ -716,13 +594,11 @@ export class AnalytixFinanceDashboard extends Component {
     openExpense(ev) {
         const id = parseInt(ev.currentTarget.dataset.id, 10);
         if (!id) return;
-        this._saveReturnTab(); // restore Expenses tab on Back
         this.action.doAction({ type: 'ir.actions.act_window', res_model: 'account.move', res_id: id, views: [[false, 'form']], target: 'current' });
     }
 
     // ── Create new Vendor Bill ─────────────────────────────────────────
     createNewBill() {
-        this._saveReturnTab(); // restore Expenses tab on Back
         this.action.doAction({
             type: 'ir.actions.act_window',
             name: 'New Vendor Bill',
@@ -786,7 +662,6 @@ export class AnalytixFinanceDashboard extends Component {
     openVatDoc(ev) {
         const id = parseInt(ev.currentTarget.dataset.id, 10);
         if (!id) return;
-        this._saveReturnTab(); // restore VAT tab on Back
         this.action.doAction({ type: 'ir.actions.act_window', res_model: 'account.move', res_id: id, views: [[false, 'form']], target: 'current' });
     }
 
@@ -841,7 +716,6 @@ export class AnalytixFinanceDashboard extends Component {
     openJournal(ev) {
         const id = parseInt(ev.currentTarget.dataset.id, 10);
         if (!id) return;
-        this._saveReturnTab(); // restore Journals tab on Back
         this.action.doAction({ type: 'ir.actions.act_window', res_model: 'account.move', res_id: id, views: [[false, 'form']], target: 'current' });
     }
     // ── Trial Balance data fetch ──────────────────────────────────────
@@ -907,7 +781,6 @@ export class AnalytixFinanceDashboard extends Component {
     openTrialBalanceAccount(ev) {
         const id = parseInt(ev.currentTarget.dataset.id, 10);
         if (!id) return;
-        this._saveReturnTab(); // restore Trial Balance tab on Back
         this.action.doAction({
             type:       'ir.actions.act_window',
             name:       'Account Entries',
@@ -922,7 +795,6 @@ export class AnalytixFinanceDashboard extends Component {
         ev.stopPropagation();
         const id = parseInt(ev.currentTarget.dataset.id, 10);
         if (!id) return;
-        this._saveReturnTab(); // restore Journals tab on Back
         this.action.doAction({ type: 'ir.actions.act_window', res_model: 'account.move', domain: [['journal_id','=',id],['state','=','posted']], views: [[false,'list'],[false,'form']], target: 'current', name: 'Journal Entries' });
     }
 
@@ -1201,105 +1073,27 @@ export class AnalytixFinanceDashboard extends Component {
 
     // ── P&L Modal ───────────────────────────────────────────────
     async openPlStatement() {
-        this.state.showPlModal       = true;
-        this.state.plDateOption      = this.state.filter || 'this_month';
-        this.state.plCustomFrom      = this.state.customFrom || '';
-        this.state.plCustomTo        = this.state.customTo || '';
-        this.state.plShowDateDrop    = false;
-        this.state.plCompareMode     = false;
-        this.state.plCompareFromIso  = '';
-        this.state.plCompareToIso    = '';
+        this.state.showPlModal    = true;
+        this.state.plDateOption   = this.state.filter || 'this_month';
+        this.state.plCustomFrom   = this.state.customFrom || '';
+        this.state.plCustomTo     = this.state.customTo || '';
+        this.state.plShowDateDrop = false;
         await this._refreshPlData();
     }
 
     async _refreshPlData() {
         this.state.plLoading = true;
         try {
-            const cmpFrom = this.state.plCompareMode ? (this.state.plCompareFromIso || this._getPlDefaultCmpFrom()) : '';
-            const cmpTo   = this.state.plCompareMode ? (this.state.plCompareToIso   || this._getPlDefaultCmpTo())   : '';
             this.state.plData = await this.orm.call(
                 'account.move', 'get_analytix_pl_data',
-                [this.state.plDateOption, this.state.plCustomFrom, this.state.plCustomTo, cmpFrom, cmpTo]
+                [this.state.plDateOption, this.state.plCustomFrom, this.state.plCustomTo]
             );
-            if (this.state.plCompareMode && this.state.plData) {
-                if (!this.state.plCompareFromIso && this.state.plData.compare_from_iso) {
-                    this.state.plCompareFromIso = this.state.plData.compare_from_iso;
-                }
-                if (!this.state.plCompareToIso && this.state.plData.compare_to_iso) {
-                    this.state.plCompareToIso = this.state.plData.compare_to_iso;
-                }
-            }
         } catch (e) {
             this.notification.add('Failed to load P&L data.', { type: 'danger' });
             this.state.showPlModal = false;
         } finally {
             this.state.plLoading = false;
         }
-    }
-
-    _getPlDefaultCmpFrom() {
-        if (this.state.plData && this.state.plData.period_from_iso) {
-            const d = new Date(this.state.plData.period_from_iso);
-            d.setFullYear(d.getFullYear() - 1);
-            return this._isoDate(d);
-        }
-        const today = new Date();
-        today.setFullYear(today.getFullYear() - 1);
-        today.setDate(1);
-        return this._isoDate(today);
-    }
-
-    _getPlDefaultCmpTo() {
-        if (this.state.plData && this.state.plData.period_to_iso) {
-            const d = new Date(this.state.plData.period_to_iso);
-            d.setFullYear(d.getFullYear() - 1);
-            return this._isoDate(d);
-        }
-        const today = new Date();
-        today.setFullYear(today.getFullYear() - 1);
-        return this._isoDate(today);
-    }
-
-    async togglePlComparison() {
-        this.state.plCompareMode = !this.state.plCompareMode;
-        if (this.state.plCompareMode) {
-            this.state.plCompareFromIso = this._getPlDefaultCmpFrom();
-            this.state.plCompareToIso   = this._getPlDefaultCmpTo();
-        }
-        await this._refreshPlData();
-    }
-
-    async onPlCompareFromChange(ev) {
-        const val = ev.target.value;
-        if (!val) return;
-        this.state.plCompareFromIso = val;
-        await this._refreshPlData();
-    }
-
-    async onPlCompareToChange(ev) {
-        const val = ev.target.value;
-        if (!val) return;
-        this.state.plCompareToIso = val;
-        await this._refreshPlData();
-    }
-
-    plChangePct(curr, comp) {
-        const c = parseFloat(curr) || 0;
-        const p = parseFloat(comp) || 0;
-        if (p === 0) {
-            if (c === 0) return 'n/a';
-            return c > 0 ? '+100.0%' : '-100.0%';
-        }
-        const pct = ((c - p) / Math.abs(p)) * 100;
-        const sign = pct > 0 ? '+' : '';
-        return sign + pct.toFixed(1) + '%';
-    }
-
-    plChangeClass(curr, comp) {
-        const c = parseFloat(curr) || 0;
-        const p = parseFloat(comp) || 0;
-        if (c === p) return 'anx-bs-pct-na';
-        return c >= p ? 'anx-bs-pct-green' : 'anx-bs-pct-red';
     }
 
     closePlModal() {
@@ -1464,12 +1258,7 @@ export class AnalytixFinanceDashboard extends Component {
 
     async selectBsDateOption(key) {
         this.state.bsDateOption = key;
-        if (key === 'specific') {
-            if (!this.state.bsSpecificDate) {
-                this.state.bsSpecificDate = this.state.bsAsOfIso || this._isoDate(new Date());
-            }
-            return;
-        }
+        if (key === 'specific') return; // keep dropdown open for input
         const opt = this.getBsDateOptions().find(o => o.key === key);
         if (opt && opt.iso) {
             this.state.bsAsOfIso      = opt.iso;
@@ -1482,25 +1271,15 @@ export class AnalytixFinanceDashboard extends Component {
     async applyBsSpecificDate(ev) {
         const val = ev.target.value;
         if (!val) return;
-        this.state.bsSpecificDate = val;
-        this.state.bsAsOfIso      = val;
-        this.state.bsCompareIso   = this._subtractYear(val);
+        const today = this._isoDate(new Date());
+        this.state.bsAsOfIso      = val > today ? today : val;
+        this.state.bsCompareIso   = this._subtractYear(this.state.bsAsOfIso);
         this.state.bsShowDateDrop = false;
-        await this._refreshBsData();
-    }
-
-    async onBsCompareDateChange(ev) {
-        const val = ev.target.value;
-        if (!val) return;
-        this.state.bsCompareIso = val;
         await this._refreshBsData();
     }
 
     async toggleBsComparison() {
         this.state.bsCompareMode = !this.state.bsCompareMode;
-        if (this.state.bsCompareMode && !this.state.bsCompareIso) {
-            this.state.bsCompareIso = this._subtractYear(this.state.bsAsOfIso || this._isoDate(new Date()));
-        }
         await this._refreshBsData();
     }
 
@@ -1526,32 +1305,6 @@ export class AnalytixFinanceDashboard extends Component {
         const c = this.state.bsData && this.state.bsData.compare;
         if (!c) return 0;
         return (typeof c[key] === 'object' && c[key] !== null) ? c[key].total : (c[key] || 0);
-    }
-
-    /** Get comparison balance for a specific account inside section */
-    bsAccCmp(sectionKey, accId) {
-        const c = this.state.bsData && this.state.bsData.compare;
-        if (!c || !c[sectionKey] || !c[sectionKey].accounts) return 0;
-        const acc = c[sectionKey].accounts.find(a => a.id === accId);
-        return acc ? acc.balance : 0;
-    }
-
-    /** Calculate percentage change between current balance (c1) and comparison balance (c2) */
-    bsChangePct(currVal, compVal) {
-        const c1 = Number(currVal) || 0;
-        const c2 = Number(compVal) || 0;
-        if (c1 === 0 && c2 === 0) return 'n/a';
-        if (c2 === 0) return c1 > 0 ? '+100.0%' : '-100.0%';
-        const pct = ((c1 - c2) / Math.abs(c2)) * 100;
-        const sign = pct > 0 ? '+' : '';
-        return `${sign}${pct.toFixed(1)}%`;
-    }
-
-    /** Class for change percentage text styling */
-    bsChangeClass(currVal, compVal) {
-        const str = this.bsChangePct(currVal, compVal);
-        if (str === 'n/a') return 'anx-bs-pct-na';
-        return str.startsWith('-') ? 'anx-bs-pct-green' : 'anx-bs-pct-red';
     }
 
     printBsReport() {
@@ -1799,11 +1552,6 @@ export class AnalytixFinanceDashboard extends Component {
 
     /** Read the file, store metadata, and attempt text extraction */
     _processFile(file) {
-        const MAX_SIZE = 5 * 1024 * 1024; // 5 MB
-        if (file && file.size > MAX_SIZE) {
-            this.notification.add('The document size is more than 5 MB', { type: 'danger' });
-            return;
-        }
         const allowed = ['application/pdf', 'image/png', 'image/jpeg', 'image/gif', 'image/bmp', 'image/tiff'];
         if (!allowed.includes(file.type) && !file.name.match(/\.(pdf|png|jpe?g|gif|bmp|tiff?)$/i)) {
             this.notification.add('Unsupported file type. Please upload a PDF or image.', { type: 'warning' });
@@ -1909,7 +1657,7 @@ export class AnalytixFinanceDashboard extends Component {
      */
     async submitUploadedDocument() {
         if (!this.state.uploadDocType) {
-            this.notification.add('Please select Sales Invoice, Purchase Bill, or Expense Bill before creating.', { type: 'warning' });
+            this.notification.add('Please select Invoice or Bill before creating.', { type: 'warning' });
             return;
         }
         if (!this.state.uploadFile) {
@@ -1920,12 +1668,7 @@ export class AnalytixFinanceDashboard extends Component {
         this.state.uploadSubmitting = true;
         try {
             const ext = this.state.uploadExtracted;
-            let moveType = 'in_invoice';
-            if (this.state.uploadDocType === 'invoice') {
-                moveType = 'out_invoice';
-            } else if (this.state.uploadDocType === 'expense_bill') {
-                moveType = 'entry';
-            }
+            const moveType = this.state.uploadDocType === 'invoice' ? 'out_invoice' : 'in_invoice';
 
             // ── 1. Resolve or create the partner ───────────────────────
             let partnerId = false;
@@ -1942,7 +1685,7 @@ export class AnalytixFinanceDashboard extends Component {
                     // Create a new partner — orm.create returns [id] in Odoo 19
                     const partnerResult = await this.orm.create('res.partner', [{
                         name: ext.partner.trim(),
-                        company_type: moveType === 'out_invoice' ? 'person' : 'company',
+                        company_type: moveType === 'in_invoice' ? 'company' : 'person',
                     }]);
                     partnerId = Array.isArray(partnerResult) ? partnerResult[0] : partnerResult;
                 }
@@ -1951,45 +1694,25 @@ export class AnalytixFinanceDashboard extends Component {
             // ── 2. Build move values ────────────────────────────────────
             const moveVals = {
                 move_type:    moveType,
-                ref:          ext.ref || false,
+                ref:          ext.ref   || false,
                 narration:    ext.narration || false,
             };
             if (partnerId) moveVals.partner_id = partnerId;
+            if (ext.date)     moveVals.invoice_date      = ext.date;
+            if (ext.due_date) moveVals.invoice_date_due  = ext.due_date;
 
-            if (moveType === 'entry') {
-                if (ext.date) moveVals.date = ext.date;
-                if (parseFloat(ext.amount) > 0) {
-                    const amt = parseFloat(ext.amount);
-                    const debitLine = {
-                        name: ext.narration || 'Expense Bill Line',
-                        debit: amt,
-                        credit: 0.0,
-                    };
-                    if (partnerId) debitLine.partner_id = partnerId;
-
-                    const creditLine = {
-                        name: ext.ref || ext.narration || 'Expense Bill',
-                        debit: 0.0,
-                        credit: amt,
-                    };
-                    if (partnerId) creditLine.partner_id = partnerId;
-
-                    moveVals.line_ids = [[0, 0, debitLine], [0, 0, creditLine]];
-                }
-            } else {
-                if (ext.date)     moveVals.invoice_date      = ext.date;
-                if (ext.due_date) moveVals.invoice_date_due  = ext.due_date;
-                if (parseFloat(ext.amount) > 0) {
-                    const lineVals = {
-                        name: ext.narration || (this.state.uploadDocType === 'invoice' ? 'Sales Invoice line' : 'Purchase Bill line'),
-                        quantity: 1,
-                        price_unit: parseFloat(ext.amount),
-                    };
-                    moveVals.invoice_line_ids = [[0, 0, lineVals]];
-                }
+            // Add a single line if amount is given
+            if (parseFloat(ext.amount) > 0) {
+                const lineVals = {
+                    name: ext.narration || (this.state.uploadDocType === 'invoice' ? 'Invoice line' : 'Bill line'),
+                    quantity: 1,
+                    price_unit: parseFloat(ext.amount),
+                };
+                moveVals.invoice_line_ids = [[0, 0, lineVals]];
             }
 
             // ── 3. Create the move ──────────────────────────────────────
+            // orm.create() in Odoo 19 returns [id] (a list) — extract the integer
             const moveResult = await this.orm.create('account.move', [moveVals]);
             const moveId = Array.isArray(moveResult) ? moveResult[0] : moveResult;
 
@@ -1999,7 +1722,7 @@ export class AnalytixFinanceDashboard extends Component {
                 await this.orm.create('ir.attachment', [{
                     name:      this.state.uploadFile.name,
                     res_model: 'account.move',
-                    res_id:    moveId,
+                    res_id:    moveId,          // guaranteed integer now
                     datas:     base64Data,
                     mimetype:  this.state.uploadFile.type || 'application/octet-stream',
                     type:      'binary',
@@ -2007,7 +1730,7 @@ export class AnalytixFinanceDashboard extends Component {
             }
 
             // ── 5. Show success and open the form ──────────────────────
-            const label = this.state.uploadDocType === 'invoice' ? 'Sales Invoice' : (this.state.uploadDocType === 'expense_bill' ? 'Expense Bill Entry' : 'Purchase Bill');
+            const label = this.state.uploadDocType === 'invoice' ? 'Invoice' : 'Bill';
             this.notification.add(
                 `${label} created successfully! Opening form…`,
                 { type: 'success', sticky: false }
@@ -2100,11 +1823,6 @@ export class AnalytixFinanceDashboard extends Component {
     }
 
     _processDocFile(file) {
-        const MAX_SIZE = 5 * 1024 * 1024; // 5 MB
-        if (file && file.size > MAX_SIZE) {
-            this.notification.add('The document size is more than 5 MB', { type: 'danger' });
-            return;
-        }
         const reader = new FileReader();
         reader.onload = (e) => {
             this.state.docUploadFile = {
@@ -2150,11 +1868,6 @@ export class AnalytixFinanceDashboard extends Component {
 
     async submitDocUpload() {
         if (!this.state.docUploadFile || this.state.docUploading) return;
-        const MAX_SIZE = 5 * 1024 * 1024; // 5 MB
-        if (this.state.docUploadFile.size > MAX_SIZE) {
-            this.notification.add('The document size is more than 5 MB', { type: 'danger' });
-            return;
-        }
         // Validate required fields
         let hasError = false;
         if (!this.state.docDescription.trim()) {
@@ -2433,71 +2146,27 @@ export class AnalytixFinanceDashboard extends Component {
         }
     }
 
-    async analyzeAndCreateDocument(ev, overrideAccountId = null, targetDocId = null, overrideLineAccounts = null, overrideTaxAccountId = null) {
-        const docId = targetDocId || (ev && ev.currentTarget ? parseInt(ev.currentTarget.dataset.id, 10) : null);
+    async analyzeAndCreateDocument(ev) {
+        const docId = parseInt(ev.currentTarget.dataset.id, 10);
         if (!docId || this.state.analyzingDocId) return;
-
-        // Check if document is approved
-        if (this.state.docList && this.state.docList.records) {
-            const rec = this.state.docList.records.find(r => r.id === docId);
-            if (rec && rec.status !== 'approved') {
-                this.notification.add(
-                    "AI Entry creation is only allowed for approved documents. Please approve the document first.",
-                    { type: "warning", sticky: false }
-                );
-                return;
-            }
-        }
         
         this.state.analyzingDocId = docId;
-        this.notification.add("Processing document with AI & product lookup...", { type: "info", sticky: false });
+        this.notification.add("Processing document with AI...", { type: "info", sticky: false });
         
         try {
-            const kwargs = {};
-            if (overrideLineAccounts) {
-                kwargs.override_line_accounts = overrideLineAccounts;
-            } else if (overrideAccountId) {
-                kwargs.override_account_id = parseInt(overrideAccountId, 10);
-            }
-            if (overrideTaxAccountId) {
-                kwargs.override_tax_account_id = parseInt(overrideTaxAccountId, 10);
-            }
-
             const action = await this.orm.call(
                 'analytix.document',
                 'action_analyze_and_create_entry',
-                [[docId]],
-                kwargs
+                [docId]
             );
-
-            // Intercept requirement for account validation
-            if (action && action.requires_account_selection) {
-                this.state.accountValData = action;
-                const defaultAccId = action.available_accounts && action.available_accounts.length ? String(action.available_accounts[0].id) : '';
-                this.state.selectedValidationAccountId = defaultAccId;
-
-                const taxAccs = action.available_tax_accounts || action.available_accounts || [];
-                const matchedTaxAcc = taxAccs.find(a => (a.code && a.code.startsWith('131')) || (a.name && a.name.toLowerCase().includes('tax'))) || taxAccs[0];
-                this.state.selectedTaxAccountId = matchedTaxAcc ? String(matchedTaxAcc.id) : defaultAccId;
-
-                const map = {};
-                (action.unconfigured_lines || []).forEach((line, idx) => {
-                    const lineKey = line.index !== undefined ? line.index : idx;
-                    map[lineKey] = defaultAccId;
-                });
-                this.state.lineAccountMap = map;
-                this.state.showAccountValidationModal = true;
-                return;
-            }
             
-            this.closeAccountValidationModal();
             this.notification.add("AI entry created successfully!", { type: "success", sticky: false });
             
             // Reload the list to update button state
             await this.fetchDocumentData();
             
             // Open the created move record
-            if (action && action.type === 'ir.actions.act_window') {
+            if (action) {
                 this.action.doAction(action);
             }
         } catch (e) {
@@ -2519,45 +2188,6 @@ export class AnalytixFinanceDashboard extends Component {
         } finally {
             this.state.analyzingDocId = null;
         }
-    }
-
-    closeAccountValidationModal() {
-        this.state.showAccountValidationModal = false;
-        this.state.accountValData = null;
-        this.state.selectedValidationAccountId = '';
-        this.state.selectedTaxAccountId = '';
-        this.state.lineAccountMap = {};
-    }
-
-    onLineAccountChange(lineIndex, ev) {
-        if (!this.state.lineAccountMap) {
-            this.state.lineAccountMap = {};
-        }
-        this.state.lineAccountMap[lineIndex] = ev.target.value;
-    }
-
-    onTaxAccountSelect(ev) {
-        this.state.selectedTaxAccountId = ev.target.value;
-    }
-
-    applyGlobalAccountToAllLines(ev) {
-        const val = ev.target.value;
-        this.state.selectedValidationAccountId = val;
-        if (this.state.lineAccountMap) {
-            for (const key in this.state.lineAccountMap) {
-                this.state.lineAccountMap[key] = val;
-            }
-        }
-    }
-
-    async confirmAccountValidationAndCreate() {
-        const docId = this.state.accountValData ? this.state.accountValData.doc_id : null;
-        if (!docId) return;
-
-        const lineMap = this.state.lineAccountMap || {};
-        const taxAccId = this.state.selectedTaxAccountId ? parseInt(this.state.selectedTaxAccountId, 10) : null;
-        this.state.showAccountValidationModal = false;
-        await this.analyzeAndCreateDocument(null, null, docId, lineMap, taxAccId);
     }
 
     openCreatedMove(ev) {
