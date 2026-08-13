@@ -444,28 +444,6 @@ class AccountMove(models.Model):
         }
 
     @api.model
-    def get_analytix_inventory_data(self):
-        """Return product list and company currency symbol for the Inventory tab."""
-        self = self.sudo()
-        company_currency = self.env.company.currency_id
-        sym = self._get_currency_symbol(company_currency)
-
-        fields = ['id', 'name', 'default_code', 'list_price', 'standard_price',
-                  'qty_available', 'virtual_available', 'uom_id', 'type',
-                  'active', 'barcode', 'categ_id']
-        products = self.env['product.template'].search_read(
-            [('active', '=', True)],
-            fields=fields,
-            limit=200,
-            order='name asc'
-        )
-
-        return {
-            'records': products,
-            'currency_sym': sym,
-        }
-
-    @api.model
     def get_analytix_invoices_data(self, filter_name='this_month', move_type='customer', date_from=None, date_to=None):
         """Return invoice list data for the Invoices tab."""
         self = self.sudo()
