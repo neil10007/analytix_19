@@ -178,6 +178,7 @@ export class AnalytixFinanceDashboard extends Component {
             invProductSearch:   '',
             invProductSortCol:  'name',
             invProductSortDir:  'asc',
+            invCurrencySym:     '',
         });
 
         this.chartRef1 = useRef("revExpChart");
@@ -454,16 +455,13 @@ export class AnalytixFinanceDashboard extends Component {
     async fetchInventoryData() {
         this.state.invProductsLoading = true;
         try {
-            const fields = ['id', 'name', 'default_code', 'list_price', 'standard_price',
-                            'qty_available', 'virtual_available', 'uom_id', 'type',
-                            'active', 'barcode', 'categ_id'];
-            const records = await this.orm.searchRead(
-                'product.template',
-                [['active', '=', true]],
-                fields,
-                { limit: 200, order: 'name asc' }
+            const data = await this.orm.call(
+                'account.move',
+                'get_analytix_inventory_data',
+                []
             );
-            this.state.invProducts = records;
+            this.state.invProducts = data.records;
+            this.state.invCurrencySym = data.currency_sym;
         } catch (e) {
             console.error("Failed to load inventory data:", e);
             this.notification.add('Failed to load product list.', { type: 'danger' });

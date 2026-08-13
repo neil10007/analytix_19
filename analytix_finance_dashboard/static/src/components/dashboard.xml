@@ -1465,10 +1465,10 @@
                                                 <t t-esc="prod.categ_id and prod.categ_id[1] or '—'"/>
                                             </td>
                                             <td class="anx-inv-td anx-inv-td-right">
-                                                <t t-esc="'$ ' + prod.list_price.toFixed(2)"/>
+                                                <t t-esc="(state.invCurrencySym || getCurrencySymbol(state.data &amp;&amp; state.data.currency) || '') + ' ' + (prod.list_price != null ? prod.list_price.toFixed(2) : '0.00')"/>
                                             </td>
                                             <td class="anx-inv-td anx-inv-td-right">
-                                                <t t-esc="'$ ' + prod.standard_price.toFixed(2)"/>
+                                                <t t-esc="(state.invCurrencySym || getCurrencySymbol(state.data &amp;&amp; state.data.currency) || '') + ' ' + (prod.standard_price != null ? prod.standard_price.toFixed(2) : '0.00')"/>
                                             </td>
                                             <td class="anx-inv-td anx-inv-td-right">
                                                 <t t-esc="prod.qty_available != null ? prod.qty_available.toFixed(2) : '—'"/>
