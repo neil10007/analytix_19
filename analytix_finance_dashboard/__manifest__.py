@@ -7,9 +7,10 @@
         Analytix 360 Finance Dashboard.
         Provides a comprehensive overview of the company's financial situation.
     """,
-    'depends': ['account', 'web', 'l10n_sa', 'mail', 'proforma_invoice'],
+    'depends': ['account', 'web', 'l10n_sa', 'mail', 'proforma_invoice', 'spreadsheet_dashboard'],
     'data': [
         'security/security_groups.xml',
+        'security/security_rules.xml',
         'security/ir.model.access.csv',
         'views/dashboard_action.xml',
         'views/finance_alert_views.xml',
@@ -21,6 +22,7 @@
         # 'views/report_vat_invoice.xml',
         'views/zatca_settings.xml',
         'views/groq_settings_views.xml',
+        'views/ai_gl_config_views.xml',
     ],
 
     'assets': {

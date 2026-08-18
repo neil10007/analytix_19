@@ -11,6 +11,7 @@
                     <field name="groq_api_key" password="True" string="Groq API Key"/>
                     <field name="open_router_key" password="True" string="OpenRouter API Key"/>
                     <field name="openrouter_model" string="OpenRouter Model"/>
+                    <field name="chatting_model" string="Chatting Model"/>
                 </xpath>
             </field>
         </record>
@@ -30,6 +31,7 @@
                             <field name="groq_api_key" password="True" placeholder="Enter Groq API Key..."/>
                             <field name="open_router_key" password="True" placeholder="Enter OpenRouter API Key..."/>
                             <field name="openrouter_model" placeholder="e.g. google/gemini-2.5-flash (Optional)"/>
+                            <field name="chatting_model" string="Chatting Model"/>
                         </group>
                     </group>
                 </xpath>

@@ -28,6 +28,7 @@
                     <field name="partner_country_id" placeholder="Country" class="o_address_country" options="{'no_open': True, 'no_create': True}" readonly="state == 'posted'"/>
                     <field name="partner_vat" placeholder="Tax ID / VAT" class="w-100 mt-1" readonly="state == 'posted'"/>
                 </div>
+                <field name="expense_bills_type" readonly="state == 'posted'" invisible="move_type not in ('in_invoice', 'in_refund', 'entry') or not expense_bills_type" options="{'no_open': True}"/>
             </xpath>
 
             <xpath expr="//field[@name='partner_shipping_id']" position="attributes">
@@ -35,6 +36,36 @@
             </xpath>
             <xpath expr="//field[@name='partner_bank_id']" position="attributes">
                 <attribute name="readonly">state == 'posted'</attribute>
+            </xpath>
+
+            <!-- Force both Product and Description (name) columns to be visible side-by-side without conditional suppression -->
+            <xpath expr="//field[@name='invoice_line_ids']//list//field[@name='product_id']" position="attributes">
+                <attribute name="optional">show</attribute>
+                <attribute name="widget">many2one</attribute>
+            </xpath>
+            <xpath expr="//field[@name='invoice_line_ids']//list//field[@name='name']" position="attributes">
+                <attribute name="string">Description / Item Name</attribute>
+                <attribute name="optional">show</attribute>
+                <attribute name="widget">char</attribute>
+            </xpath>
+
+            <!-- Render AI Document Validation Warnings & Mismatches Box after Invoice Lines table -->
+            <xpath expr="//field[@name='invoice_line_ids']" position="after">
+                <field name="ai_validation_status" invisible="1"/>
+                <div class="alert alert-warning mt-2 mb-2 p-3 border rounded" role="alert" invisible="not ai_validation_notes or ai_validation_status != 'warning'">
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="fa fa-exclamation-triangle text-warning fs-4 me-2"/>
+                        <strong class="fs-6 text-dark">AI Document Validation &amp; Mismatch Alert Box:</strong>
+                    </div>
+                    <field name="ai_validation_notes" readonly="1" class="w-100 bg-transparent border-0 text-dark fw-bold text-wrap" style="white-space: pre-wrap; font-family: inherit;"/>
+                </div>
+                <div class="alert alert-success mt-2 mb-2 p-3 border rounded" role="alert" invisible="not ai_validation_notes or ai_validation_status == 'warning'">
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="fa fa-check-circle text-success fs-4 me-2"/>
+                        <strong class="fs-6 text-dark">AI Document Validation Status:</strong>
+                    </div>
+                    <field name="ai_validation_notes" readonly="1" class="w-100 bg-transparent border-0 text-success text-wrap" style="white-space: pre-wrap; font-family: inherit;"/>
+                </div>
             </xpath>
         </field>
     </record>
