@@ -7,6 +7,8 @@ class ResUsers(models.Model):
     groq_api_key = fields.Char(string='Groq API Key')
     open_router_key = fields.Char(string='OpenRouter API Key')
     openrouter_model = fields.Char(string='OpenRouter Model', help="Custom OpenRouter AI model ID. If empty, falls back to backend default.")
+    chatting_model = fields.Char(string='Chatting Model', help="Custom OpenRouter model ID for Chatting AI.")
+    chatting_system_prompt = fields.Text(string='Chatting System Prompt', help="Custom system prompt to guide AI response logic for chat interaction.")
 
 
     @api.model_create_multi
