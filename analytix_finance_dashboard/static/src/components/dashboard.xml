@@ -335,6 +335,55 @@
                             </div>
                             <i class="fa fa-chevron-right anx-report-arrow"></i>
                         </div>
+                        <!-- UPLOAD CARD (occupies the 4th column in the row) -->
+                        <div t-attf-class="anx-report-card anx-panel anx-upload-card {{ state.uploadDragOver ? 'anx-upload-drag-over' : '' }} {{ state.uploadFile ? 'active-file' : '' }}">
+                            <input type="file" id="anx-file-input" class="anx-upload-file-input"
+                                   accept=".pdf,.png,.jpg,.jpeg,.gif,.bmp,.tiff"
+                                   t-on-change="onFileSelected"/>
+                            
+                            <!-- If no file is selected -->
+                            <t t-if="!state.uploadFile">
+                                <div class="anx-report-card-inner" t-on-click="triggerFileInput" style="display: flex; align-items: center; gap: 12px; width: 100%;">
+                                    <div class="anx-report-icon anx-icon-blue">
+                                        <i class="fa fa-cloud-upload"></i>
+                                    </div>
+                                    <div class="anx-report-info">
+                                        <div class="anx-report-title">Upload document</div>
+                                        <div class="anx-report-sub">Drag or click to upload</div>
+                                    </div>
+                                    <i class="fa fa-chevron-right anx-report-arrow"></i>
+                                </div>
+                            </t>
+
+                            <!-- If a file is selected and not submitting -->
+                            <t t-if="state.uploadFile &amp;&amp; !state.uploadSubmitting">
+                                <div class="anx-upload-card-active" style="width: 100%;">
+                                    <div class="anx-upload-card-file">
+                                        <i t-attf-class="fa {{ state.uploadFile.type === 'application/pdf' ? 'fa-file-pdf-o' : 'fa-file-image-o' }} anx-upload-card-file-icon"/>
+                                        <span class="anx-upload-card-filename" t-att-title="state.uploadFile.name">
+                                            <t t-esc="state.uploadFile.name"/>
+                                        </span>
+                                        <button class="anx-upload-card-remove" t-on-click="clearUpload">✕</button>
+                                    </div>
+                                    <div class="anx-upload-card-buttons">
+                                        <button class="anx-upload-card-btn active-invoice" data-dtype="invoice" t-on-click="setUploadDocType">
+                                            Invoice
+                                        </button>
+                                        <button class="anx-upload-card-btn active-bill" data-dtype="bill" t-on-click="setUploadDocType">
+                                            Bill
+                                        </button>
+                                    </div>
+                                </div>
+                            </t>
+
+                            <!-- If submitting -->
+                            <t t-if="state.uploadSubmitting">
+                                <div class="anx-upload-card-creating" style="width: 100%;">
+                                    <i class="fa fa-spinner fa-spin"></i>
+                                    <span>Creating...</span>
+                                </div>
+                            </t>
+                        </div>
                     </div>
 
 

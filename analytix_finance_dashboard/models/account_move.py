@@ -1,14 +1,8 @@
+# -*- coding: utf-8 -*-
 from odoo import models, fields
-from .ai_gl_config import EXPENSE_BILLS_TYPES
 
 class AccountMove(models.Model):
     _inherit = 'account.move'
-
-    expense_bills_type = fields.Selection(
-        selection=EXPENSE_BILLS_TYPES,
-        string='AI Expense Type',
-        help='Expense Category detected by AI Document Processor'
-    )
 
     partner_street = fields.Char(
         string='Street',
@@ -46,14 +40,4 @@ class AccountMove(models.Model):
         string='Tax ID',
         related='partner_id.vat',
         readonly=False,
-    )
-
-    ai_validation_status = fields.Selection([
-        ('matched', 'Fully Matched'),
-        ('warning', 'Mismatch / Warning Detected'),
-    ], string='AI Validation Status', default='matched')
-
-    ai_validation_notes = fields.Text(
-        string='AI Validation Details & Mismatches',
-        help='Summarizes inventory, tax, and total mismatches detected during AI document parsing.'
     )

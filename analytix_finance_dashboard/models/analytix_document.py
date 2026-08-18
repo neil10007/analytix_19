@@ -21,102 +21,6 @@ except ImportError:
 
 _logger = logging.getLogger(__name__)
 
-EXPENSE_KEYWORDS_MAP = {
-    'RENT_EXPENSE': ['rent', 'rental', 'lease', 'leasing', 'tenancy', 'office rent', 'warehouse rent', 'shop rent', 'showroom rent', 'accommodation rent', 'staff accommodation', 'premises rent', 'building rent', 'commercial rent', 'property rental', 'annual rent', 'monthly rent', 'إيجار'],
-    'UTILITIES_EXPENSE': ['electricity', 'electric bill', 'power', 'utility', 'utilities', 'water', 'sewage', 'electricity consumption', 'sec', 'saudi electricity', 'national water company', 'nwc', 'كهرباء', 'مياه'],
-    'TELECOMMUNICATION_EXPENSE': ['telephone', 'telecom', 'mobile', 'sim', 'internet', 'broadband', 'fibre', 'fiber', 'data package', 'communication', 'stc', 'mobily', 'zain', 'salam', 'phone bill', 'هاتف', 'إنترنت', 'اتصالات'],
-    'PROFESSIONAL_FEES': ['consulting', 'consultancy', 'consultant', 'advisory', 'professional services', 'management consulting', 'business advisory', 'feasibility study', 'strategy consulting', 'corporate advisory', 'استشارات'],
-    'ACCOUNTING_FEES': ['accounting', 'bookkeeping', 'accountant', 'monthly accounting', 'financial reporting', 'management accounts', 'account maintenance', 'مسك الدفاتر', 'محاسبة'],
-    'AUDIT_FEES': ['audit', 'external audit', 'statutory audit', 'financial statement audit', 'auditor', 'audit support', 'مراجعة', 'تدقيق'],
-    'TAX_AND_COMPLIANCE_FEES': ['vat filing', 'vat return', 'vat advisory', 'tax filing', 'tax return', 'tax consulting', 'corporate tax', 'withholding tax', 'wht', 'zakat', 'zatca', 'tax compliance', 'tax assessment', 'tax appeal', 'transfer pricing', 'الزكاة', 'ضريبة'],
-    'LEGAL_FEES': ['legal', 'lawyer', 'attorney', 'legal consultation', 'legal advisory', 'court', 'litigation', 'arbitration', 'contract drafting', 'legal notice', 'debt recovery', 'law firm', 'محامي', 'قانوني'],
-    'GOVERNMENT_FEES': ['government fee', 'government service', 'ministry fee', 'municipality', 'balady', 'misa', 'ministry of commerce', 'moc', 'qiwa', 'muqeem', 'absher business', 'chamber of commerce', 'cr renewal', 'commercial registration', 'licence', 'license renewal', 'permit', 'government portal', 'رسوم حكومية'],
-    'VISA_AND_IMMIGRATION_EXPENSE': ['visa', 'work visa', 'business visa', 'visit visa', 'exit re-entry', 'final exit', 'immigration', 'iqama', 'residency', 'work permit', 'muqeem', 'jawazat', 'border number', 'إقامة', 'تأشيرة', 'رخصة عمل'],
-    'HR_COMPLIANCE_EXPENSE': ['saudization', 'nitaqat', 'qiwa', 'mudad', 'gosi', 'social insurance', 'hrsd', 'ministry of human resources', 'labour office', 'labor office', 'employee registration', 'التأمينات', 'قوى', 'مدد'],
-    'SALARY_AND_WAGES': ['salary', 'salaries', 'wages', 'payroll', 'overtime', 'bonus', 'allowance', 'commission', 'employee remuneration', 'راتب', 'رواتب', 'أجور'],
-    'EMPLOYEE_BENEFITS': ['medical insurance', 'employee insurance', 'staff benefit', 'employee welfare', 'end-of-service', 'eosb', 'leave salary', 'staff welfare'],
-    'RECRUITMENT_EXPENSE': ['recruitment', 'hiring', 'placement fee', 'recruitment agency', 'candidate sourcing', 'job advertisement', 'linkedin recruitment', 'manpower recruitment'],
-    'TRAINING_EXPENSE': ['training', 'seminar', 'workshop', 'executive education', 'certification', 'professional course', 'conference registration', 'employee development'],
-    'AIR_TRAVEL_EXPENSE': ['airline', 'flight', 'flights', 'airfare', 'air ticket', 'air travel', 'boarding', 'boarding pass', 'pnr', 'flyadeal', 'flynas', 'saudia', 'saudi airlines', 'emirates', 'qatar airways', 'etihad', 'air arabia', 'ruh-med', 'med-ruh', 'jed-ruh', 'ruh-jed', 'ticket', 'airport', 'passage', 'رحلة', 'رحلات', 'تذكرة', 'طيران', 'طيران أديل', 'طيران ناس', 'الخطوط السعودية'],
-    'HOTEL_AND_ACCOMMODATION': ['hotel', 'accommodation', 'room charge', 'lodging', 'hotel stay', 'booking', 'serviced apartment'],
-    'LOCAL_TRANSPORTATION': ['taxi', 'uber', 'careem', 'transportation', 'transport', 'limousine', 'bus', 'train', 'riyadh metro'],
-    'FUEL_EXPENSE': ['fuel', 'petrol', 'gasoline', 'diesel', 'fuel station', 'sasco', 'aldrees', 'petromin'],
-    'VEHICLE_REPAIR_AND_MAINTENANCE': ['vehicle repair', 'car repair', 'car service', 'tyre', 'tire', 'battery', 'spare parts', 'garage', 'oil change', 'vehicle inspection'],
-    'VEHICLE_RENTAL_EXPENSE': ['car rental', 'vehicle rental', 'rent a car', 'fleet rental', 'monthly vehicle rental', 'leasing vehicle'],
-    'OFFICE_SUPPLIES': ['office supplies', 'stationery', 'paper', 'pen', 'file', 'folder', 'toner', 'cartridge', 'printer supplies'],
-    'PRINTING_AND_STATIONERY': ['printing', 'photocopy', 'business card', 'letterhead', 'envelope', 'brochure', 'flyer', 'banner', 'signage'],
-    'SOFTWARE_AND_SUBSCRIPTIONS': ['software', 'saas', 'software licence', 'software license', 'subscription', 'erp', 'crm', 'odoo', 'microsoft 365', 'adobe', 'zoom', 'slack', 'antivirus'],
-    'IT_AND_CLOUD_EXPENSE': ['aws', 'amazon web services', 'azure', 'google cloud', 'cloud hosting', 'vps', 'server', 'hosting', 'domain', 'ssl', 'data centre', 'data center'],
-    'IT_EQUIPMENT': ['computer', 'laptop', 'desktop', 'monitor', 'router', 'switch', 'firewall', 'keyboard', 'mouse', 'it equipment'],
-    'FIXED_ASSET_REVIEW_REQUIRED': ['furniture', 'office furniture', 'machinery', 'equipment', 'air conditioner', 'fit-out', 'leasehold improvement', 'generator'],
-    'MARKETING_AND_ADVERTISING': ['advertising', 'advertisement', 'marketing', 'promotion', 'campaign', 'google ads', 'meta ads', 'facebook ads', 'instagram ads', 'linkedin ads', 'billboard', 'outdoor advertising'],
-    'DIGITAL_MARKETING_EXPENSE': ['seo', 'ppc', 'social media management', 'content marketing', 'digital campaign', 'influencer', 'lead generation', 'search engine optimisation', 'search engine optimization'],
-    'WEBSITE_AND_DIGITAL_EXPENSE': ['website development', 'web development', 'website maintenance', 'website amc', 'web design'],
-    'REPAIRS_AND_MAINTENANCE': ['repair', 'maintenance', 'amc', 'annual maintenance', 'service contract', 'servicing', 'maintenance contract'],
-    'CLEANING_EXPENSE': ['cleaning', 'housekeeping', 'janitorial', 'cleaning materials', 'pest control', 'sanitation'],
-    'SECURITY_EXPENSE': ['security', 'security guard', 'cctv monitoring', 'guarding', 'surveillance service'],
-    'INSURANCE_EXPENSE': ['insurance', 'premium', 'policy', 'property insurance', 'vehicle insurance', 'professional indemnity', 'liability insurance'],
-    'BANK_CHARGES': ['bank fee', 'bank charge', 'transfer charge', 'remittance charge', 'swift fee', 'processing fee', 'account maintenance fee'],
-    'PAYMENT_PROCESSING_FEES': ['merchant fee', 'payment gateway', 'card processing', 'pos commission', 'transaction fee', 'mada fee', 'visa fee', 'mastercard fee'],
-    'COURIER_AND_POSTAGE': ['courier', 'postage', 'delivery', 'shipping document', 'dhl', 'fedex', 'aramex', 'smsa'],
-    'FREIGHT_AND_LOGISTICS': ['freight', 'shipping', 'cargo', 'logistics', 'transportation of goods', 'customs clearance', 'port charge', 'airway bill', 'bill of lading'],
-    'CUSTOMS_AND_IMPORT_COST': ['customs', 'customs duty', 'import duty', 'zatca customs', 'port fees', 'import charges'],
-    'MEALS_AND_ENTERTAINMENT': ['restaurant', 'food', 'meal', 'lunch', 'dinner', 'catering', 'refreshments', 'coffee', 'client meal'],
-    'EMPLOYEE_WELFARE': ['staff welfare', 'employee event', 'staff refreshments', 'office refreshments', 'team event', 'staff party'],
-    'MEMBERSHIP_AND_SUBSCRIPTIONS': ['membership', 'annual membership', 'chamber membership', 'professional membership', 'association fee'],
-    'WAREHOUSING_EXPENSE': ['warehouse', 'storage', 'warehousing', 'storage fee'],
-    'PACKAGING_EXPENSE': ['packaging', 'packing material', 'carton', 'box', 'label', 'wrapping', 'packing supplies'],
-    'UNIFORM_AND_PPE_EXPENSE': ['uniform', 'safety shoes', 'helmet', 'ppe', 'protective equipment', 'staff uniform'],
-}
-
-CATEGORY_ACCOUNT_SEARCH_TERMS = {
-    'AIR_TRAVEL_EXPENSE': ['travel', 'flight', 'airfare', 'airline', 'air ticket', 'air travel', 'passage'],
-    'RENT_EXPENSE': ['rent', 'lease', 'tenancy', 'premises'],
-    'UTILITIES_EXPENSE': ['utility', 'utilities', 'electric', 'water', 'sewage', 'power'],
-    'TELECOMMUNICATION_EXPENSE': ['telephone', 'telecom', 'internet', 'communication', 'mobile', 'phone'],
-    'PROFESSIONAL_FEES': ['consulting', 'professional', 'advisory'],
-    'ACCOUNTING_FEES': ['accounting', 'bookkeeping', 'accountant'],
-    'AUDIT_FEES': ['audit', 'auditor'],
-    'TAX_AND_COMPLIANCE_FEES': ['tax', 'vat', 'zakat', 'compliance'],
-    'LEGAL_FEES': ['legal', 'lawyer', 'attorney'],
-    'GOVERNMENT_FEES': ['government', 'license', 'licence', 'permit', 'municipal'],
-    'VISA_AND_IMMIGRATION_EXPENSE': ['visa', 'iqama', 'immigration', 'residency'],
-    'HR_COMPLIANCE_EXPENSE': ['hr', 'gosi', 'saudization', 'social insurance'],
-    'SALARY_AND_WAGES': ['salary', 'salaries', 'wage', 'wages', 'payroll'],
-    'EMPLOYEE_BENEFITS': ['benefit', 'welfare', 'medical insurance', 'eosb'],
-    'RECRUITMENT_EXPENSE': ['recruitment', 'hiring'],
-    'TRAINING_EXPENSE': ['training', 'seminar', 'course'],
-    'HOTEL_AND_ACCOMMODATION': ['hotel', 'accommodation', 'lodging'],
-    'LOCAL_TRANSPORTATION': ['transport', 'transportation', 'taxi', 'car'],
-    'FUEL_EXPENSE': ['fuel', 'petrol', 'gasoline', 'diesel'],
-    'VEHICLE_REPAIR_AND_MAINTENANCE': ['vehicle', 'car repair', 'maintenance'],
-    'VEHICLE_RENTAL_EXPENSE': ['vehicle rental', 'car rental'],
-    'OFFICE_SUPPLIES': ['office supply', 'office supplies', 'stationery'],
-    'PRINTING_AND_STATIONERY': ['printing', 'stationery'],
-    'SOFTWARE_AND_SUBSCRIPTIONS': ['software', 'subscription', 'saas', 'license'],
-    'IT_AND_CLOUD_EXPENSE': ['cloud', 'hosting', 'it', 'server'],
-    'IT_EQUIPMENT': ['equipment', 'computer', 'it equipment'],
-    'FIXED_ASSET_REVIEW_REQUIRED': ['asset', 'fixed asset', 'equipment'],
-    'MARKETING_AND_ADVERTISING': ['marketing', 'advertising', 'advertisement', 'promotion'],
-    'DIGITAL_MARKETING_EXPENSE': ['digital marketing', 'seo', 'ppc'],
-    'WEBSITE_AND_DIGITAL_EXPENSE': ['website', 'web'],
-    'REPAIRS_AND_MAINTENANCE': ['repair', 'repairs', 'maintenance'],
-    'CLEANING_EXPENSE': ['cleaning', 'janitorial', 'sanitation'],
-    'SECURITY_EXPENSE': ['security', 'guard'],
-    'INSURANCE_EXPENSE': ['insurance', 'premium'],
-    'BANK_CHARGES': ['bank charge', 'bank fees', 'bank fee', 'bank charges'],
-    'PAYMENT_PROCESSING_FEES': ['processing fee', 'gateway', 'merchant', 'pos'],
-    'COURIER_AND_POSTAGE': ['courier', 'postage', 'delivery', 'shipping'],
-    'FREIGHT_AND_LOGISTICS': ['freight', 'logistics', 'shipping', 'cargo'],
-    'CUSTOMS_AND_IMPORT_COST': ['customs', 'duty', 'import'],
-    'MEALS_AND_ENTERTAINMENT': ['meal', 'meals', 'entertainment', 'food', 'restaurant'],
-    'EMPLOYEE_WELFARE': ['welfare', 'staff welfare'],
-    'MEMBERSHIP_AND_SUBSCRIPTIONS': ['membership', 'subscription'],
-    'WAREHOUSING_EXPENSE': ['warehouse', 'storage', 'warehousing'],
-    'PACKAGING_EXPENSE': ['packaging', 'packing'],
-    'UNIFORM_AND_PPE_EXPENSE': ['uniform', 'ppe', 'safety'],
-}
-
 
 class AnalytixDocument(models.Model):
     """General-purpose document store for the Analytix Finance Dashboard."""
@@ -496,21 +400,20 @@ class AnalytixDocument(models.Model):
             '  "tax": number,\n'
             '  "total": number,\n'
             '  "items": [\n'
-            '    {"description": "string", "quantity": number, "unit_price": number, "discount": number, "tax_rate": number}\n'
+            '    {"description": "string", "quantity": number, "unit_price": number, "tax_rate": number}\n'
             "  ]\n"
             "}\n"
             "Rules:\n"
             "- Extract full partner details for both vendor and customer including street, city, zip, country, and vat (tax ID).\n"
             "- tax_rate must be the tax percentage applied (e.g. 15 for 15%, 5 for 5%). If no tax, use 0.\n"
-            "- discount must be the discount percentage (0 to 100) applied on the line item. If discount is listed as an amount, convert it to the discount percentage (0 to 100). If no discount, use 0.\n"
             "- tax must be the total tax/VAT amount.\n"
             "- subtotal must be the total amount before tax.\n"
             "- total must be the final amount including tax.\n"
             "- numbers should be numeric without currency symbols.\n"
             "- CRITICAL FOR LINE ITEM UNIT PRICES & AMOUNTS:\n"
-            "  1. The sum of (quantity * unit_price * (1 - discount/100)) across all items MUST be consistent with the document subtotal.\n"
+            "  1. The sum of (quantity * unit_price) across all items MUST be consistent with the document subtotal. If subtotal is 8000, item unit prices CANNOT be in millions.\n"
             "  2. Do NOT misread formatting commas or period delimiters as extra zeros (e.g. 20.23 is not 20230450).\n"
-            "  3. unit_price must be the single unit rate before discount if a discount percentage is extracted, or net rate if no discount.\n"
+            "  3. unit_price must be the actual single unit rate.\n"
         )
 
         # ── OpenRouter Model Selection: Use Frontend Field if configured, else Fallback to Backend Default ──
@@ -535,41 +438,27 @@ class AnalytixDocument(models.Model):
 
         _logger.info("Calling OpenRouter with model: %s (User configured: %s, Company configured: %s)", model_name, user_model, company_model)
 
-        try:
-            response = client.chat.completions.create(
-                model=model_name,
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {
-                        "role": "user",
-                        "content": [
-                            {"type": "text", "text": "Extract the document data as JSON."},
-                            {
-                                "type": "image_url",
-                                "image_url": {
-                                    "url": f"data:image/jpeg;base64,{image_b64}"
-                                },
+        response = client.chat.completions.create(
+            model=model_name,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": "Extract the document data as JSON."},
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:image/jpeg;base64,{image_b64}"
                             },
-                        ],
-                    },
-                ],
-                response_format={"type": "json_object"},
-                temperature=0,
-                max_tokens=4096,
-            )
-        except Exception as conn_err:
-            _logger.exception("OpenRouter AI Connection Error: %s", conn_err)
-            err_str = str(conn_err)
-            if "Connection error" in err_str or "connect" in err_str.lower() or "timeout" in err_str.lower():
-                raise UserError(
-                    f"Connection Error while connecting to OpenRouter API (https://openrouter.ai/api/v1).\n\n"
-                    f"Possible Live Server issues:\n"
-                    f"1. Outbound Firewall: Ensure port 443 is allowed for external connections.\n"
-                    f"2. Network/DNS: Check if live server can reach openrouter.ai (run: curl -v https://openrouter.ai/api/v1/models).\n"
-                    f"3. SSL Certificates: Update CA certs on server (run: pip install --upgrade certifi).\n"
-                    f"Original Error: {err_str}"
-                )
-            raise UserError(f"AI Service Error: {err_str}")
+                        },
+                    ],
+                },
+            ],
+            response_format={"type": "json_object"},
+            temperature=0,
+            max_tokens=4096,
+        )
 
         content = response.choices[0].message.content or "{}"
         cleaned = content.strip()
@@ -832,15 +721,9 @@ class AnalytixDocument(models.Model):
                 "Please run: pip install pymupdf openai pillow"
             )
 
-        base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url')
         client = OpenAI(
             base_url="https://openrouter.ai/api/v1",
             api_key=api_key.strip(),
-            default_headers={
-                "HTTP-Referer": base_url,
-                "X-Title": "Analytix Finance Dashboard",
-            },
-            timeout=90.0,
         )
 
         file_bytes = self._get_decoded_file_bytes()
@@ -856,11 +739,7 @@ class AnalytixDocument(models.Model):
             # Process PDF via PyMuPDF
             try:
                 doc = fitz.open(stream=file_bytes, filetype="pdf")
-            except Exception as e_fitz:
-                raise UserError(f"Could not open/read PDF file format: {e_fitz}")
-
-            results = []
-            try:
+                results = []
                 for page_index in range(len(doc)):
                     page = doc.load_page(page_index)
                     pix = page.get_pixmap(dpi=150, alpha=False)
@@ -868,11 +747,11 @@ class AnalytixDocument(models.Model):
                     image_b64 = self._image_to_base64(image)
                     result = self._call_openrouter(client, image_b64)
                     results.append(result)
-            finally:
                 doc.close()
-
-            output = results[0] if len(results) == 1 else results
-            _logger.info("Processed document as PDF via PyMuPDF for doc ID %s", self.id)
+                output = results[0] if len(results) == 1 else results
+                _logger.info("Processed document as PDF via PyMuPDF for doc ID %s", self.id)
+            except Exception as e_fitz:
+                raise UserError(f"Could not parse PDF document: {e_fitz}")
         else:
             # Process image formats (PNG, JPG, WEBP, GIF, BMP, TIFF) via Pillow & fitz fallback
             image = None
@@ -942,8 +821,8 @@ class AnalytixDocument(models.Model):
 
         if effective_doc_type == 'invoice':
             move_type = 'out_invoice'
-        elif effective_doc_type in ('bill', 'expense_bill'):
-            move_type = 'in_invoice'
+        elif effective_doc_type == 'expense_bill':
+            move_type = 'entry'
         else:
             move_type = 'in_invoice'
         _logger.info("Selected move_type '%s' for effective_doc_type '%s'", move_type, effective_doc_type)
@@ -1095,41 +974,9 @@ class AnalytixDocument(models.Model):
                 % company.name
             )
 
-        # ── Fetch AI GL Configuration for current Document Type and Company ──
-        config_type_map = {
-            'invoice': 'sales_invoice',
-            'sales_invoice': 'sales_invoice',
-            'out_invoice': 'sales_invoice',
-            'bill': 'purchase_bill',
-            'purchase_bill': 'purchase_bill',
-            'in_invoice': 'purchase_bill',
-            'expense_bill': 'expense_bill',
-        }
-        cfg_type = config_type_map.get(effective_doc_type, 'sales_invoice')
-        ai_config = self.env['ai.gl.config'].get_config_for_type(cfg_type, company_id=company.id)
-
-        config_account = None
-        config_tax = None
-        config_tax_account = None
-
-        if ai_config:
-            if cfg_type == 'sales_invoice':
-                config_account = ai_config.income_account_id
-                config_tax = ai_config.sale_tax_id
-                config_tax_account = ai_config.sale_tax_account_id
-            elif cfg_type == 'purchase_bill':
-                config_account = ai_config.expense_account_id
-                config_tax = ai_config.purchase_tax_id
-                config_tax_account = ai_config.tax_account_id
-            elif cfg_type == 'expense_bill':
-                config_account = ai_config.expense_bill_account_id
-                config_tax = ai_config.expense_bill_tax_id
-                config_tax_account = ai_config.expense_bill_tax_account_id
-
         account_types = ['income', 'income_other'] if move_type in ('out_invoice', 'out_refund') else ['expense', 'expense_depreciation', 'expense_direct_cost']
         default_account = (
-            config_account
-            or journal.default_account_id
+            journal.default_account_id
             or self.env['account.account'].search(
                 [
                     ('account_type', 'in', account_types),
@@ -1142,6 +989,7 @@ class AnalytixDocument(models.Model):
         # Build lines, perform product search, & resolve account
         items = data.get('items') or []
         invoice_line_vals = []
+        unconfigured_lines = []
 
         global_tax_rate = 0.0
         json_subtotal = self._clean_float(data.get('subtotal'))
@@ -1186,376 +1034,94 @@ class AnalytixDocument(models.Model):
                         orig_p = self._clean_float(item.get('unit_price'))
                         item['unit_price'] = round(orig_p * ratio, 4)
 
-        validation_warnings = []
-        detected_expense_type = False
+        for idx, item in enumerate(items):
+            desc = (item.get('description') or 'Item').strip()
+            qty = self._clean_float(item.get('quantity')) or 1.0
+            price = self._clean_float(item.get('unit_price'))
+            tax_rate = self._clean_float(item.get('tax_rate'))
 
-        if cfg_type == 'expense_bill':
-            # ── 1. Comprehensive Document Keyword Text Scanner ──
-            search_text_parts = [
-                str(data.get('summary') or ''),
-                str(data.get('description') or ''),
-                str(data.get('document_title') or ''),
-                str(data.get('vendor_name') or ''),
-                str(data.get('partner_name') or ''),
-                str(data.get('notes') or ''),
-                str(self.name or ''),
-                partner.name if partner else '',
-            ]
-            for it in items:
-                search_text_parts.append(str(it.get('product_name') or ''))
-                search_text_parts.append(str(it.get('name') or ''))
-                search_text_parts.append(str(it.get('description') or ''))
-                search_text_parts.append(str(it.get('category') or ''))
-                search_text_parts.append(str(it.get('expense_type') or ''))
+            if not tax_rate and global_tax_rate:
+                tax_rate = global_tax_rate
 
-            full_text_lower = " ".join(search_text_parts).lower()
+            tax = self._resolve_tax(move_type, tax_rate, tax_amount=json_tax)
 
-            # ── 2. Strict Keyword Classifier for Configured Expense Lines (Built-in + Custom Line Keywords) ──
-            from .ai_gl_config import EXPENSE_BILLS_TYPES
-            type_dict = dict(EXPENSE_BILLS_TYPES)
-
-            # Check for duplicate keyword conflicts across different GL accounts
-            if ai_config and ai_config.expense_line_ids:
-                keyword_acc_map = {}
-                for eline in ai_config.expense_line_ids:
-                    if not eline.keywords or not eline.expense_account_id:
-                        continue
-                    acc_label = f"{eline.expense_account_id.code or ''} {eline.expense_account_id.name or ''}".strip()
-                    cat_label = type_dict.get(eline.expense_bills_type, eline.expense_bills_type)
-                    kws = [k.strip().lower() for k in re.split(r'[,;\n]', eline.keywords) if k.strip()]
-                    for kw in kws:
-                        if kw in keyword_acc_map:
-                            prev_acc_id, prev_acc_label, prev_cat_label = keyword_acc_map[kw]
-                            if eline.expense_account_id.id != prev_acc_id:
-                                raise UserError(
-                                    f"AI GL Configuration Conflict!\n\n"
-                                    f"The duplicate keyword '{kw}' is mapped to two different GL Expense Accounts:\n"
-                                    f" 1. Line Category: '{prev_cat_label}' → Account: '{prev_acc_label}'\n"
-                                    f" 2. Line Category: '{cat_label}' → Account: '{acc_label}'\n\n"
-                                    f"Please open Configuration > AI GL Configuration and remove or adjust the duplicate keyword '{kw}' before creating the bill entry."
-                                )
-                        else:
-                            keyword_acc_map[kw] = (eline.expense_account_id.id, acc_label, cat_label)
-
-            configured_categories = []
-            custom_line_keywords = {}
-            if ai_config and ai_config.expense_line_ids:
-                configured_categories = [eline.expense_bills_type for eline in ai_config.expense_line_ids if eline.expense_bills_type]
-                for eline in ai_config.expense_line_ids:
-                    if eline.expense_bills_type and eline.keywords:
-                        # Extract custom keywords (comma, semicolon or newline separated)
-                        kws = [k.strip().lower() for k in re.split(r'[,;\n]', eline.keywords) if k.strip()]
-                        if kws:
-                            custom_line_keywords[eline.expense_bills_type] = kws
-
-            category_scores = {}
-            # Evaluate base dictionary keywords (+1 weight per match)
-            for cat_key, keywords in EXPENSE_KEYWORDS_MAP.items():
-                match_count = sum(1 for kw in keywords if kw in full_text_lower)
-                if match_count > 0:
-                    category_scores[cat_key] = category_scores.get(cat_key, 0) + match_count
-
-            # Evaluate custom user-configured line keywords (+3 weight per match for high precision)
-            for cat_key, c_keywords in custom_line_keywords.items():
-                c_match_count = sum(1 for kw in c_keywords if kw in full_text_lower)
-                if c_match_count > 0:
-                    category_scores[cat_key] = category_scores.get(cat_key, 0) + (c_match_count * 3)
-
-            raw_detected_category = None
-            if category_scores:
-                raw_detected_category = max(category_scores, key=category_scores.get)
-
-            # Strictly check if detected category is configured in ai.gl.config
-            if raw_detected_category and raw_detected_category in configured_categories:
-                detected_category = raw_detected_category
-                _logger.info("Category '%s' matched and is configured in ai.gl.config", detected_category)
-            else:
-                detected_category = 'OTHER_ACCOUNT'
-                _logger.info("Raw detected category '%s' is not mapped in ai.gl.config. Falling back to 'OTHER_ACCOUNT'", raw_detected_category)
-
-            detected_expense_type = detected_category
-
-            print("\n================ AI EXPENSE BILL PROCESSOR LOG ================")
-            print(f"[AI BILL DEBUG] Active Company: {company.name} (ID: {company.id})")
-            print(f"[AI BILL DEBUG] AI GL Config Record Found: {ai_config} (ID: {ai_config.id if ai_config else 'None'})")
-            if ai_config:
-                print(f"[AI BILL DEBUG] Configured Expense Category Mapping Lines: {configured_categories}")
-                print(f"[AI BILL DEBUG] Custom Line Keywords Configured: {custom_line_keywords}")
-                for eline in ai_config.expense_line_ids:
-                    print(f"   -> Line: Type='{eline.expense_bills_type}', Keywords='{eline.keywords or ''}', Account='{eline.expense_account_id.code if eline.expense_account_id else ''} {eline.expense_account_id.name if eline.expense_account_id else 'None'}', Tax='{eline.tax_id.name if eline.tax_id else 'None'}'")
-            print(f"[AI BILL DEBUG] Keyword Scanner Match Scores: {category_scores}")
-            print(f"[AI BILL DEBUG] Keyword Scanner Raw Match: '{raw_detected_category}'")
-            print(f"[AI BILL DEBUG] Final Enforced Category: '{detected_category}'")
-
-            # ── 3. Resolve GL Account & Tax Strictly from ai.gl.config Mappings ──
-            line_account = None
-            line_tax = None
-
-            # Priority 1: Direct line match in ai.gl.config.expense.line for detected_category
-            if ai_config and ai_config.expense_line_ids:
-                matched_line = ai_config.expense_line_ids.filtered(lambda l: l.expense_bills_type == detected_category)
-                if matched_line and matched_line[0].expense_account_id:
-                    line_account = matched_line[0].expense_account_id
-                    print(f"[AI BILL DEBUG] Priority 1 Success: Found line mapping for '{detected_category}' -> Account: {line_account.code} {line_account.name}")
-                    if (json_tax > 0 or global_tax_rate > 0) and matched_line[0].tax_id:
-                        line_tax = matched_line[0].tax_id
-                        print(f"[AI BILL DEBUG] Priority 1 Tax: Found line tax -> {line_tax.name}")
-
-                # If detected_category wasn't OTHER_ACCOUNT but has no account mapped, try OTHER_ACCOUNT line
-                if (not line_account or not line_account.exists()) and detected_category != 'OTHER_ACCOUNT':
-                    other_line = ai_config.expense_line_ids.filtered(lambda l: l.expense_bills_type == 'OTHER_ACCOUNT')
-                    if other_line and other_line[0].expense_account_id:
-                        line_account = other_line[0].expense_account_id
-                        detected_category = 'OTHER_ACCOUNT'
-                        detected_expense_type = 'OTHER_ACCOUNT'
-                        print(f"[AI BILL DEBUG] Fallback to OTHER_ACCOUNT line mapping -> Account: {line_account.code} {line_account.name}")
-                        if (json_tax > 0 or global_tax_rate > 0) and other_line[0].tax_id:
-                            line_tax = other_line[0].tax_id
-
-            # Priority 2: Use Default Expense Account from ai.gl.config Settings (expense_bill_account_id)
-            if not line_account or not line_account.exists():
-                if ai_config and ai_config.expense_bill_account_id and ai_config.expense_bill_account_id.exists():
-                    line_account = ai_config.expense_bill_account_id
-                    print(f"[AI BILL DEBUG] Priority 2 Fallback: Used Default Expense Bill Account from Config -> {line_account.code} {line_account.name}")
-                    if not line_tax and (json_tax > 0 or global_tax_rate > 0) and ai_config.expense_bill_tax_id:
-                        line_tax = ai_config.expense_bill_tax_id
-
-            # Priority 3: System Journal Default Account Fallback
-            if not line_account or not line_account.exists():
-                line_account = default_account
-                print(f"[AI BILL DEBUG] Priority 3 Fallback: Used System Default Account -> {line_account.code if line_account else ''} {line_account.name if line_account else 'None'}")
-
-            print(f"[AI BILL DEBUG] FINAL ASSIGNED EXPENSE ACCOUNT -> {line_account.code if line_account else ''} {line_account.name if line_account else 'None'}")
-            print(f"[AI BILL DEBUG] FINAL ASSIGNED EXPENSE TAX -> {line_tax.name if line_tax else 'None'}")
-            print("=================================================================\n")
-
-            if not line_tax and (json_tax > 0 or global_tax_rate > 0):
-                line_tax = config_tax or self._resolve_tax(move_type, global_tax_rate, tax_amount=json_tax)
-
-            # ── 4. Calculate Subtotal Price Unit for Consolidated Single Line ──
-            exp_price_unit = json_subtotal if json_subtotal > 0 else (
-                (json_total - json_tax) if (json_total > json_tax and json_tax > 0) else json_total
-            )
-            if exp_price_unit <= 0 and items:
-                exp_price_unit = sum(
-                    (self._clean_float(it.get('quantity')) or 1.0) * self._clean_float(it.get('unit_price'))
-                    for it in items
-                )
-
-            # Construct summary description
-            exp_desc = data.get('summary') or data.get('description') or (partner and f"Expense Bill - {partner.name}") or "Expense Bill Summary"
-            if items:
-                item_names = [ (it.get('product_name') or it.get('name') or it.get('description') or '').strip() for it in items if (it.get('name') or it.get('description') or it.get('product_name')) ]
-                if item_names:
-                    exp_desc = f"Expense Summary: {', '.join(item_names[:5])}"
-
-            single_line_vals = {
-                'name': exp_desc,
-                'quantity': 1.0,
-                'price_unit': exp_price_unit,
-            }
-            if line_account and line_account.exists():
-                single_line_vals['account_id'] = line_account.id
-            if line_tax:
-                single_line_vals['tax_ids'] = [(6, 0, [line_tax.id])]
-
-            invoice_line_vals.append((0, 0, single_line_vals))
-            _logger.info("Created 1 consolidated single line entry for Expense Bill (category=%s, account=%s, price_unit=%.2f)",
-                         detected_category, line_account.name if line_account else 'None', exp_price_unit)
-
-            # ── 5. AI Validation & Product Line Audit Details ──
-            from .ai_gl_config import EXPENSE_BILLS_TYPES
-            cat_display_dict = dict(EXPENSE_BILLS_TYPES)
-            cat_label = cat_display_dict.get(detected_category, detected_category)
-            acc_label = f"{line_account.code} {line_account.name}" if (line_account and line_account.code) else (line_account.name if line_account else "Default Expense")
-
-            validation_warnings.append(f"• Expense Category Detected: {cat_label} [{detected_category}]")
-            validation_warnings.append(f"• Applied GL Expense Account: {acc_label}")
-
-            if items:
-                validation_warnings.append(f"• Extracted PDF Item Lines ({len(items)} items consolidated into single bill line):")
-                for idx, it in enumerate(items):
-                    it_name = (it.get('product_name') or it.get('name') or it.get('description') or f"Item {idx+1}").strip()
-                    it_qty = self._clean_float(it.get('quantity')) or 1.0
-                    it_price = self._clean_float(it.get('unit_price')) or 0.0
-                    it_total = round(it_qty * it_price, 2)
-                    validation_warnings.append(f"   - Line {idx+1}: {it_name} (Qty: {it_qty:g}, Unit Price: {it_price:.2f}, Line Total: {it_total:.2f})")
-
-        else:
-            # ── Multi-Line Item Processing for Sales Invoices and Purchase Bills ──
-            for idx, item in enumerate(items):
-                desc = (item.get('description') or 'Item').strip()
-                qty = self._clean_float(item.get('quantity')) or 1.0
-                price = self._clean_float(item.get('unit_price'))
-                tax_rate = self._clean_float(item.get('tax_rate'))
-                discount = self._clean_float(
-                    item.get('discount')
-                    or item.get('discount_percentage')
-                    or item.get('disc')
-                    or item.get('discount_pct')
-                    or item.get('discount_rate')
-                )
-                discount_amount = self._clean_float(
-                    item.get('discount_amount')
-                    or item.get('disc_amount')
-                    or item.get('discount_val')
-                )
-
-                if discount <= 0 and discount_amount > 0 and price > 0 and qty > 0:
-                    total_before_disc = price * qty
-                    discount = round((discount_amount / total_before_disc) * 100, 4)
-
-                if not tax_rate and global_tax_rate:
-                    tax_rate = global_tax_rate
-
-                # Only apply tax if PDF explicitly specifies tax > 0 or tax_rate > 0
-                if (json_tax > 0 or tax_rate > 0):
-                    tax = config_tax or self._resolve_tax(move_type, tax_rate, tax_amount=json_tax)
-                else:
-                    tax = None
-
-                # ── Product Search in Odoo (Multi-stage Code & Name Matching) ──
-                product = None
-
-                # Extract explicit JSON product fields if present
-                raw_code = (
-                    item.get('product_code')
-                    or item.get('code')
-                    or item.get('sku')
-                    or item.get('item_code')
-                    or item.get('default_code')
-                    or ''
-                ).strip()
-                raw_name = (
-                    item.get('product_name')
-                    or item.get('name')
-                    or item.get('item_name')
-                    or ''
-                ).strip()
-
-                code_candidates = []
-                name_candidates = []
-
-                if raw_code:
-                    code_candidates.append(raw_code)
-
-                if raw_name:
-                    name_candidates.append(raw_name)
-
-                if desc:
-                    name_candidates.append(desc)
-                    # Split embedded code/sku if present: e.g. "P00001: laptop" or "P00001 - laptop" or "[P00001] laptop"
-                    if ':' in desc:
-                        parts = desc.split(':', 1)
-                        if parts[0].strip():
-                            code_candidates.append(parts[0].strip())
-                        if parts[1].strip():
-                            name_candidates.append(parts[1].strip())
-                    elif '-' in desc:
-                        parts = desc.split('-', 1)
-                        if parts[0].strip():
-                            code_candidates.append(parts[0].strip())
-                        if parts[1].strip():
-                            name_candidates.append(parts[1].strip())
-                    elif '[' in desc and ']' in desc:
-                        c_part = desc[desc.find('[')+1:desc.find(']')]
-                        n_part = desc[desc.find(']')+1:]
-                        if c_part.strip():
-                            code_candidates.append(c_part.strip())
-                        if n_part.strip():
-                            name_candidates.append(n_part.strip())
-
-                # 1. Search by Code / SKU candidates
-                for c_code in code_candidates:
-                    if not product and c_code:
-                        product = self.env['product.product'].sudo().search([
-                            '|', '|',
-                            ('default_code', '=ilike', c_code),
-                            ('barcode', '=', c_code),
-                            ('default_code', 'ilike', c_code)
-                        ], limit=1)
-                    if product:
-                        break
-
-                # 2. Search by exact or full Name candidates
-                for n_name in name_candidates:
-                    if not product and n_name and len(n_name) >= 3:
-                        product = self.env['product.product'].sudo().search([
-                            '|',
-                            ('name', '=ilike', n_name),
-                            ('name', 'ilike', n_name)
-                        ], limit=1)
-                    if product:
-                        break
-
-                # Record product validation warning if missing in inventory catalog
+            # ── Product Search in Odoo ──
+            product = None
+            if desc:
+                # 1. Search by SKU / Barcode / Name exact
+                product = self.env['product.product'].search([
+                    '|', '|',
+                    ('default_code', '=ilike', desc),
+                    ('barcode', '=', desc),
+                    ('name', '=ilike', desc),
+                ], limit=1)
+                
+                # 2. Search by Name ilike
                 if not product:
-                    validation_warnings.append(
-                        f"• Line {idx + 1}: Product '{desc}' not found in inventory catalog (added with description only)."
-                    )
+                    product = self.env['product.product'].search([
+                        ('name', 'ilike', desc)
+                    ], limit=1)
 
-                # Record tax mismatch warning if extracted tax differs from applied tax
-                if (json_tax > 0 or tax_rate > 0) and tax:
-                    ext_rate = tax_rate or global_tax_rate
-                    applied_rate = abs(tax.amount) if tax.amount_type == 'percent' else 0.0
-                    if ext_rate > 0 and applied_rate > 0 and abs(ext_rate - applied_rate) > 0.5:
-                        validation_warnings.append(
-                            f"• Line {idx + 1} Tax Mismatch: Extracted PDF tax rate is {ext_rate:.1f}%, but applied configuration tax '{tax.name}' rate is {applied_rate:.1f}%."
-                        )
-                elif (json_tax > 0 or tax_rate > 0) and not tax:
-                    validation_warnings.append(
-                        f"• Line {idx + 1} Tax Warning: Document specifies tax, but no tax rule was applied."
-                    )
+            line_account = None
 
-                line_account = None
+            # 1. Check per-line override account
+            specific_acc_id = None
+            if override_line_accounts and isinstance(override_line_accounts, dict):
+                specific_acc_id = override_line_accounts.get(str(idx)) or override_line_accounts.get(idx)
 
-                # 1. Check per-line override account
-                specific_acc_id = None
-                if not line_account and override_line_accounts and isinstance(override_line_accounts, dict):
-                    specific_acc_id = override_line_accounts.get(str(idx)) or override_line_accounts.get(idx)
+            if specific_acc_id:
+                line_account = self.env['account.account'].browse(int(specific_acc_id))
+            elif override_account_id:
+                line_account = self.env['account.account'].browse(int(override_account_id))
+            elif product:
+                # Product exists in master: get income/expense account from product or category
+                if move_type in ('out_invoice', 'out_refund'):
+                    line_account = product.property_account_income_id or product.categ_id.property_account_income_categ_id
+                else:
+                    line_account = product.property_account_expense_id or product.categ_id.property_account_expense_categ_id
 
-                if specific_acc_id:
-                    line_account = self.env['account.account'].browse(int(specific_acc_id))
-                elif not line_account and override_account_id:
-                    line_account = self.env['account.account'].browse(int(override_account_id))
-                elif not line_account and product:
-                    # Product exists in master: get income/expense account from product or category
-                    if move_type in ('out_invoice', 'out_refund'):
-                        line_account = product.property_account_income_id or product.categ_id.property_account_income_categ_id
-                    else:
-                        line_account = product.property_account_expense_id or product.categ_id.property_account_expense_categ_id
+            # If no account resolved (product not in master or missing product account), add to unconfigured lines
+            if not line_account or not line_account.exists():
+                unconfigured_lines.append({
+                    'index': idx,
+                    'description': desc,
+                    'product_name': product.name if product else False,
+                    'product_exists': bool(product),
+                    'qty': qty,
+                    'price': price,
+                })
 
-                if not line_account or not line_account.exists():
-                    line_account = default_account
+            line_vals = {
+                'name': desc,
+                'quantity': qty,
+                'price_unit': price,
+            }
+            if product:
+                line_vals['product_id'] = product.id
+            if line_account and line_account.exists():
+                line_vals['account_id'] = line_account.id
+            if tax:
+                line_vals['tax_ids'] = [(6, 0, [tax.id])]
 
-                item_display_name = raw_name or desc
-                line_vals = {
-                    'name': item_display_name,
-                    'quantity': qty,
-                    'price_unit': price,
-                }
-                if discount > 0:
-                    line_vals['discount'] = discount
-                if product:
-                    line_vals['product_id'] = product.id
-                if line_account and line_account.exists():
-                    line_vals['account_id'] = line_account.id
-                if tax:
-                    line_vals['tax_ids'] = [(6, 0, [tax.id])]
-
-                invoice_line_vals.append((0, 0, line_vals))
+            invoice_line_vals.append((0, 0, line_vals))
 
         if not invoice_line_vals:
             total = json_total or json_subtotal
             price_unit = json_subtotal if json_subtotal > 0 else total
-            tax = config_tax or self._resolve_tax(move_type, global_tax_rate, tax_amount=json_tax)
+            tax = self._resolve_tax(move_type, global_tax_rate, tax_amount=json_tax)
 
             line_account = None
             if override_account_id:
                 line_account = self.env['account.account'].browse(int(override_account_id))
 
             if not line_account or not line_account.exists():
-                line_account = default_account
+                unconfigured_lines.append({
+                    'description': self.name or 'Document',
+                    'product_name': False,
+                    'product_exists': False,
+                    'qty': 1.0,
+                    'price': price_unit,
+                })
 
             line_vals = {
                 'name': self.name or 'Document',
@@ -1568,13 +1134,31 @@ class AnalytixDocument(models.Model):
                 line_vals['tax_ids'] = [(6, 0, [tax.id])]
             invoice_line_vals.append((0, 0, line_vals))
 
-        # Check document total mismatch vs lines sum
-        if json_total > 0 and items:
-            lines_total = sum((self._clean_float(it.get('quantity')) or 1.0) * self._clean_float(it.get('unit_price')) for it in items)
-            if json_subtotal > 0 and abs(lines_total - json_subtotal) > 0.5 and abs(lines_total - json_total) > 0.5:
-                validation_warnings.append(
-                    f"• Amount Discrepancy: Extracted document subtotal ({json_subtotal:.2f}) / total ({json_total:.2f}) differs from lines sum ({lines_total:.2f})."
-                )
+        # Check if validation dialog is required for unconfigured accounts
+        if unconfigured_lines and not override_account_id and not override_line_accounts:
+            available_accounts = self.get_analytix_accounts_list(doc_type=effective_doc_type)
+            available_tax_accounts = self.get_analytix_tax_accounts_list()
+            return {
+                'requires_account_selection': True,
+                'doc_id': self.id,
+                'doc_name': self.name or self.file_name or 'Document',
+                'doc_type': effective_doc_type,
+                'ref': seq_ref or '',
+                'partner_name': partner.name if partner else (partner_name or 'Unassigned Partner'),
+                'partner_exists': bool(partner),
+                'invoice_date': str(invoice_date or ''),
+                'currency': currency_code or 'USD',
+                'subtotal': json_subtotal or 0.0,
+                'tax_amount': json_tax or 0.0,
+                'total': json_total or (json_subtotal + json_tax),
+                'total_lines_count': len(items) if items else len(unconfigured_lines),
+                'unconfigured_count': len(unconfigured_lines),
+                'unconfigured_lines': unconfigured_lines,
+                'available_accounts': available_accounts,
+                'available_tax_accounts': available_tax_accounts,
+                'is_tax_inclusive_detected': is_tax_inclusive_detected,
+                'message': 'Account configuration required for extracted document items.',
+            }
 
         invoice_ref = seq_ref or self._get_next_sequence_number(move_type, journal)
 
@@ -1625,8 +1209,6 @@ class AnalytixDocument(models.Model):
             actual_tax_amt = json_tax if json_tax > 0 else total_tax_debit
             if actual_tax_amt > 0:
                 tax_acc_id = override_tax_account_id
-                if not tax_acc_id and config_tax_account and config_tax_account.exists():
-                    tax_acc_id = config_tax_account.id
                 if not tax_acc_id:
                     # Find default Tax Paid account (e.g. 131000 Tax Paid or tax/asset_current account)
                     tax_acc = self.env['account.account'].search([
@@ -1698,16 +1280,6 @@ class AnalytixDocument(models.Model):
             move_vals['partner_id'] = partner.id
         if currency_id:
             move_vals['currency_id'] = currency_id
-        if detected_expense_type:
-            move_vals['expense_bills_type'] = detected_expense_type
-
-        # Assign AI Validation notes and status
-        if validation_warnings:
-            move_vals['ai_validation_status'] = 'warning'
-            move_vals['ai_validation_notes'] = "\n".join(validation_warnings)
-        else:
-            move_vals['ai_validation_status'] = 'matched'
-            move_vals['ai_validation_notes'] = "✓ All extracted line items, products, taxes, and totals match system configuration perfectly."
 
         _logger.info("Creating draft entry %s with %d lines for partner %s", move_type, len(invoice_line_vals), partner.name if partner else 'None')
 

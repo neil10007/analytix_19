@@ -5,6 +5,5 @@ from . import res_users
 from . import finance_alert
 from . import account_move
 from . import res_partner
-from . import ai_gl_config
 
 

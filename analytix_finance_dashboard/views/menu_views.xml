@@ -30,17 +30,6 @@
         <field name="active" eval="False"/>
     </record>
 
-    <!-- Permanently disable spreadsheet dashboard menus -->
-    <record id="spreadsheet_dashboard.spreadsheet_dashboard_menu_dashboard" model="ir.ui.menu">
-        <field name="active" eval="False"/>
-    </record>
-    <record id="spreadsheet_dashboard.spreadsheet_dashboard_menu_configuration_dashboards" model="ir.ui.menu">
-        <field name="active" eval="False"/>
-    </record>
-    <record id="spreadsheet_dashboard.spreadsheet_dashboard_menu_root" model="ir.ui.menu">
-        <field name="active" eval="False"/>
-    </record>
-
     <!-- Restrict the Apps menu strictly to the Super Admin (User ID = 2) -->
     <record id="base.menu_management" model="ir.ui.menu">
         <field name="group_ids" eval="[(6, 0, [ref('analytix_finance_dashboard.group_groq_super_admin')])]"/>

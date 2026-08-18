@@ -29,42 +29,11 @@ def _set_dashboard_home_action(env):
         )
 
 
-def _disable_spreadsheet_dashboard_menus(env):
-    """
-    Permanently disable spreadsheet dashboard menus.
-    """
-    menu_xml_ids = [
-        'spreadsheet_dashboard.spreadsheet_dashboard_menu_dashboard',
-        'spreadsheet_dashboard.spreadsheet_dashboard_menu_configuration_dashboards',
-        'spreadsheet_dashboard.spreadsheet_dashboard_menu_root',
-    ]
-    for xml_id in menu_xml_ids:
-        menu = env.ref(xml_id, raise_if_not_found=False)
-        if menu:
-            menu.write({'active': False})
-            _logger.info("✅ Disabled menu: %s", xml_id)
-
-
-def _ensure_ai_gl_configs_all_companies(env):
-    """
-    Ensure AI GL Configuration records exist for every company in the system.
-    """
-    companies = env['res.company'].sudo().search([])
-    ai_config_obj = env['ai.gl.config'].sudo()
-    for company in companies:
-        ai_config_obj._create_default_configs_for_company(company.id)
-    _logger.info("✅ Analytix: Verified AI GL Configurations for %d companies.", len(companies))
-
-
 def post_init_hook(env):
     """Runs on first install."""
     _set_dashboard_home_action(env)
-    _disable_spreadsheet_dashboard_menus(env)
-    _ensure_ai_gl_configs_all_companies(env)
 
 
 def post_migrate_hook(env):
     """Runs on every upgrade."""
     _set_dashboard_home_action(env)
-    _disable_spreadsheet_dashboard_menus(env)
-    _ensure_ai_gl_configs_all_companies(env)
