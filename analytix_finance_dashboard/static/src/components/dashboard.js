@@ -238,7 +238,11 @@ export class AnalytixFinanceDashboard extends Component {
                 this.updateUnreadCount();
             }, 5000);
         });
-        useEffect(() => this.renderCharts(), () => [this.state.data]);
+        useEffect(() => {
+            if (this.state.activeTab === 'overview') {
+                this.renderCharts();
+            }
+        }, () => [this.state.data, this.state.activeTab]);
         useEffect(() => {
             if (this.messageFeedRef.el) {
                 this.messageFeedRef.el.scrollTop = this.messageFeedRef.el.scrollHeight;
@@ -416,6 +420,9 @@ export class AnalytixFinanceDashboard extends Component {
         }
         this.state.activeTab = tab;
         this.saveFilterState();
+        if (tab === 'overview') {
+            this.renderCharts();
+        }
         if (tab === 'invoices') {
             await this.fetchInvoiceData();
         }
@@ -944,64 +951,85 @@ export class AnalytixFinanceDashboard extends Component {
 
     // ── Chart ─────────────────────────────────────────────────────────
     renderCharts() {
-        if (!this.state.data || !this.chartRef1.el) return;
-        if (this.chart1) { this.chart1.destroy(); this.chart1 = null; }
-
-        const revData  = this.state.data.chart.revenue;
-        const expData  = this.state.data.chart.expenses;
-        const sym      = (this.state.data && this.state.data.currency) || '';
-
-        const ctx = this.chartRef1.el.getContext('2d');
-        this.chart1 = new window.Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: this.state.data.chart.labels,
-                datasets: [
-                    {
-                        label: 'Revenue',
-                        data: revData,
-                        backgroundColor: '#00d4c8',
-                        borderRadius: 4,
-                        yAxisID: 'yRev',
-                    },
-                    {
-                        label: 'Expenses',
-                        data: expData,
-                        backgroundColor: 'rgba(0,212,200,0.30)',
-                        borderRadius: 4,
-                        yAxisID: 'yExp',
-                    },
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        callbacks: {
-                            label: (c) => ` ${c.dataset.label}: ${sym} ${Number(c.raw).toLocaleString()}`
-                        }
-                    }
-                },
-                scales: {
-                    x: {
-                        grid: { display: false },
-                        ticks: { font: { size: 11 }, color: '#8a93a4' },
-                    },
-                    yRev: {
-                        display: false,
-                        beginAtZero: true,
-                        position: 'left',
-                    },
-                    yExp: {
-                        display: false,
-                        beginAtZero: true,
-                        position: 'right',
-                    },
+        if (this.state.activeTab !== 'overview') return;
+        setTimeout(async () => {
+            if (this.state.activeTab !== 'overview') return;
+            if (typeof window.Chart === 'undefined') {
+                try {
+                    await loadJS("/web/static/lib/Chart/Chart.js");
+                } catch (e) {
+                    console.error("Error loading Chart.js:", e);
                 }
             }
-        });
+            if (!this.state.data || !this.chartRef1.el) return;
+            const canvas = this.chartRef1.el;
+            if (!canvas || !canvas.isConnected) return;
+
+            if (this.chart1) {
+                try { this.chart1.destroy(); } catch (e) {}
+                this.chart1 = null;
+            }
+
+            const revData = (this.state.data.chart && this.state.data.chart.revenue) || [];
+            const expData = (this.state.data.chart && this.state.data.chart.expenses) || [];
+            const labels  = (this.state.data.chart && this.state.data.chart.labels) || [];
+            const sym     = (this.state.data && this.state.data.currency) || '';
+
+            const ctx = canvas.getContext('2d');
+            if (!ctx) return;
+
+            this.chart1 = new window.Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Revenue',
+                            data: revData,
+                            backgroundColor: '#00d4c8',
+                            borderRadius: 4,
+                            yAxisID: 'yRev',
+                        },
+                        {
+                            label: 'Expenses',
+                            data: expData,
+                            backgroundColor: 'rgba(0,212,200,0.30)',
+                            borderRadius: 4,
+                            yAxisID: 'yExp',
+                        },
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: { duration: 300 },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: (c) => ` ${c.dataset.label}: ${sym} ${Number(c.raw).toLocaleString()}`
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            ticks: { font: { size: 11 }, color: '#8a93a4' },
+                        },
+                        yRev: {
+                            display: false,
+                            beginAtZero: true,
+                            position: 'left',
+                        },
+                        yExp: {
+                            display: false,
+                            beginAtZero: true,
+                            position: 'right',
+                        },
+                    }
+                }
+            });
+        }, 50);
     }
 
     getCurrencySymbol(codeOrSym) {
@@ -1390,6 +1418,201 @@ export class AnalytixFinanceDashboard extends Component {
 
     closeVatModal() {
         this.state.showVatModal = false;
+    }
+
+    // ── Print VAT Summary PDF ─────────────────────────────────────────
+    printVatReport() {
+        if (!this.state.vatData) return;
+        const d = this.state.vatData;
+        const sym = d.currency_sym || '';
+
+        const fmtN = v => {
+            const num = Number(v) || 0;
+            const neg = num < 0;
+            const s = Math.abs(num).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            return neg ? `<span style="color:#e53935">-${sym} ${s}</span>` : `${sym} ${s}`;
+        };
+
+        const outRows = (this.filteredOutputVat || []).map(r => `
+            <tr>
+                <td style="padding:8px 12px;border-bottom:1px solid #f0f1f5;font-weight:600;color:#1e88e5;">${r.move_name}</td>
+                <td style="padding:8px 12px;border-bottom:1px solid #f0f1f5;">${r.partner}</td>
+                <td style="padding:8px 12px;border-bottom:1px solid #f0f1f5;"><span style="background:#e3f2fd;color:#1565c0;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;">${r.tax_name}</span></td>
+                <td style="padding:8px 12px;border-bottom:1px solid #f0f1f5;">${r.company_name}</td>
+                <td style="padding:8px 12px;border-bottom:1px solid #f0f1f5;">${r.invoice_date}</td>
+                <td style="padding:8px 12px;border-bottom:1px solid #f0f1f5;text-align:right;font-weight:600;">${r.total_display}</td>
+                <td style="padding:8px 12px;border-bottom:1px solid #f0f1f5;text-align:right;font-weight:600;">${r.tax_display}</td>
+            </tr>
+        `).join('') || `<tr><td colspan="7" style="padding:12px;text-align:center;color:#8a93a4;">No Output VAT entries found.</td></tr>`;
+
+        const inRows = (this.filteredInputVat || []).map(r => `
+            <tr>
+                <td style="padding:8px 12px;border-bottom:1px solid #f0f1f5;font-weight:600;color:#e53935;">${r.move_name}</td>
+                <td style="padding:8px 12px;border-bottom:1px solid #f0f1f5;">${r.partner}</td>
+                <td style="padding:8px 12px;border-bottom:1px solid #f0f1f5;"><span style="background:#fce4ec;color:#c2185b;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;">${r.tax_name}</span></td>
+                <td style="padding:8px 12px;border-bottom:1px solid #f0f1f5;">${r.company_name}</td>
+                <td style="padding:8px 12px;border-bottom:1px solid #f0f1f5;">${r.invoice_date}</td>
+                <td style="padding:8px 12px;border-bottom:1px solid #f0f1f5;text-align:right;font-weight:600;">${r.total_display}</td>
+                <td style="padding:8px 12px;border-bottom:1px solid #f0f1f5;text-align:right;font-weight:600;">${r.tax_display}</td>
+            </tr>
+        `).join('') || `<tr><td colspan="7" style="padding:12px;text-align:center;color:#8a93a4;">No Input VAT entries found.</td></tr>`;
+
+        const companyName = (this.state.data && this.state.data.companies) || 'All Companies';
+
+        const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>VAT Summary Report</title>
+<style>
+  body { font-family: Inter, Arial, sans-serif; padding: 32px; color: #1f2937; line-height: 1.5; }
+  .hdr-box { text-align: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 16px; margin-bottom: 24px; }
+  h2 { margin: 0 0 4px; font-size: 24px; color: #0f172a; letter-spacing: -0.5px; }
+  p.sub { color: #64748b; margin: 0; font-size: 13px; font-weight: 500; }
+  .kpi-row { display: flex; gap: 16px; margin-bottom: 28px; justify-content: space-between; }
+  .kpi-card { flex: 1; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px; text-align: center; }
+  .kpi-lbl { font-size: 11px; text-transform: uppercase; font-weight: 700; color: #64748b; margin-bottom: 4px; }
+  .kpi-val { font-size: 18px; font-weight: 800; color: #0f172a; }
+  .kpi-val.output { color: #1e88e5; }
+  .kpi-val.input { color: #e53935; }
+  .kpi-val.net { color: #2e7d32; }
+  .sec-hdr { font-size: 14px; font-weight: 700; padding: 10px 14px; background: #0f1729; color: #fff; border-radius: 6px 6px 0 0; margin-top: 24px; display: flex; justify-content: space-between; align-items: center; }
+  .sec-hdr.input { background: #7f1d1d; }
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; margin-bottom: 24px; border: 1px solid #e2e8f0; }
+  th { text-align: left; padding: 10px 12px; background: #f1f5f9; border-bottom: 2px solid #cbd5e1; color: #475569; font-weight: 700; text-transform: uppercase; font-size: 10.5px; }
+  tr.tot-row { background: #f8fafc; font-weight: 700; }
+  tr.tot-row td { padding: 10px 12px; border-top: 2px solid #cbd5e1; font-size: 13px; }
+  .net-box { background: #f0fdf4; border: 2px solid #86efac; border-radius: 8px; padding: 16px; display: flex; justify-content: space-between; align-items: center; margin-top: 24px; }
+  .net-lbl { font-weight: 800; font-size: 15px; color: #166534; }
+  .net-val { font-weight: 800; font-size: 20px; color: #15803d; }
+  @media print { button { display:none } body { padding: 15px; } }
+</style></head><body>
+<div class="hdr-box">
+  <h2>VAT Summary Report</h2>
+  <p class="sub">${companyName} &mdash; Period: ${d.date_range.start} &rarr; ${d.date_range.end}</p>
+</div>
+
+<div class="kpi-row">
+  <div class="kpi-card">
+    <div class="kpi-lbl">Output VAT (Sales)</div>
+    <div class="kpi-val output">${fmtN(d.output_vat)}</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-lbl">Input VAT (Bills)</div>
+    <div class="kpi-val input">${fmtN(d.input_vat)}</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-lbl">Net VAT Payable</div>
+    <div class="kpi-val net">${fmtN(d.net_vat)}</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-lbl">Total Tax Lines</div>
+    <div class="kpi-val">${d.total_count}</div>
+  </div>
+</div>
+
+<div class="sec-hdr">
+  <span>OUTPUT VAT &mdash; CUSTOMER INVOICES</span>
+  <span>Total: ${fmtN(d.output_vat)}</span>
+</div>
+<table>
+  <thead>
+    <tr>
+      <th style="width:18%">Document</th>
+      <th style="width:22%">Customer</th>
+      <th style="width:14%">Tax</th>
+      <th style="width:18%">Company</th>
+      <th style="width:10%">Date</th>
+      <th style="width:9%;text-align:right;">Total Amount</th>
+      <th style="width:9%;text-align:right;">VAT Amount</th>
+    </tr>
+  </thead>
+  <tbody>
+    ${outRows}
+    <tr class="tot-row">
+      <td colspan="6" style="text-align:right;color:#0f172a;">Total Output VAT:</td>
+      <td style="text-align:right;color:#1e88e5;">${fmtN(d.output_vat)}</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="sec-hdr input">
+  <span>INPUT VAT &mdash; VENDOR BILLS</span>
+  <span>Total: ${fmtN(d.input_vat)}</span>
+</div>
+<table>
+  <thead>
+    <tr>
+      <th style="width:18%">Document</th>
+      <th style="width:22%">Vendor</th>
+      <th style="width:14%">Tax</th>
+      <th style="width:18%">Company</th>
+      <th style="width:10%">Date</th>
+      <th style="width:9%;text-align:right;">Total Amount</th>
+      <th style="width:9%;text-align:right;">VAT Amount</th>
+    </tr>
+  </thead>
+  <tbody>
+    ${inRows}
+    <tr class="tot-row">
+      <td colspan="6" style="text-align:right;color:#0f172a;">Total Input VAT:</td>
+      <td style="text-align:right;color:#e53935;">${fmtN(d.input_vat)}</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="net-box">
+  <span class="net-lbl">NET VAT PAYABLE / (CLAIMABLE)</span>
+  <span class="net-val">${fmtN(d.net_vat)}</span>
+</div>
+
+</body></html>`;
+
+        const win = window.open('', '_blank', 'width=1000,height=750');
+        win.document.write(html);
+        win.document.close();
+        setTimeout(() => win.print(), 400);
+    }
+
+    // ── Export VAT Summary Excel (XLSX) ───────────────────────────────
+    async exportVatExcel() {
+        if (!this.state.vatData) return;
+        try {
+            const filterName = this.state.selectedVatFilter || 'custom';
+            const fromDate = this.state.vatFilterFrom || '';
+            const toDate = this.state.vatFilterTo || '';
+
+            const res = await this.orm.call(
+                'account.move',
+                'export_analytix_vat_xlsx',
+                [filterName, fromDate, toDate]
+            );
+
+            if (res && res.file_content) {
+                const byteCharacters = atob(res.file_content);
+                const byteNumbers = new Array(byteCharacters.length);
+                for (let i = 0; i < byteCharacters.length; i++) {
+                    byteNumbers[i] = byteCharacters.charCodeAt(i);
+                }
+                const byteArray = new Uint8Array(byteNumbers);
+                const blob = new Blob([byteArray], {
+                    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = res.filename || 'VAT_Summary.xlsx';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            } else {
+                if (this.notification) {
+                    this.notification.add('Could not generate Excel file.', { type: 'danger' });
+                }
+            }
+        } catch (err) {
+            console.error('Error exporting VAT XLSX:', err);
+            if (this.notification) {
+                this.notification.add('Error exporting VAT Excel report.', { type: 'danger' });
+            }
+        }
     }
 
     // ── Balance Sheet Modal ─────────────────────────────────────────

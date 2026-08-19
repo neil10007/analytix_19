@@ -73,7 +73,7 @@
                 </button>
                 <button t-attf-class="anx-tab {{ state.activeTab === 'vat'       ? 'active' : '' }}"
                         data-tab="vat"       t-on-click="onTabClick">
-                    <i class="fa fa-percent"></i> VAT
+                    <i class="fa fa-percent"></i> Tax
                 </button>
                 <button t-attf-class="anx-tab {{ state.activeTab === 'journals'  ? 'active' : '' }}"
                         data-tab="journals"  t-on-click="onTabClick">
@@ -330,7 +330,7 @@
                         <div class="anx-report-card anx-panel" data-action="vat_summary"   t-on-click="onActionClick">
                             <div class="anx-report-icon anx-icon-orange"><i class="fa fa-percent"></i></div>
                             <div class="anx-report-info">
-                                <div class="anx-report-title">VAT summary</div>
+                                <div class="anx-report-title">Tax summary</div>
                                 <div class="anx-report-sub">ZATCA filing ready</div>
                             </div>
                             <i class="fa fa-chevron-right anx-report-arrow"></i>
@@ -591,19 +591,29 @@
                     <t t-if="!state.vatLoading">
                         
                         <!-- VAT Custom Date Filter -->
-                        <div class="anx-vat-modal-filters">
-                            <span class="anx-vat-filter-title"><i class="fa fa-calendar"/> Custom Date Range:</span>
-                            <div class="anx-vat-filter-group">
-                                <label class="anx-vat-filter-lbl">From</label>
-                                <input type="date" class="anx-vat-date-input" data-field="from" t-att-value="state.vatFilterFrom" t-on-change="onVatFilterDateChange" />
+                        <div class="anx-vat-modal-filters" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+                            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                                <span class="anx-vat-filter-title"><i class="fa fa-calendar"/> Custom Date Range:</span>
+                                <div class="anx-vat-filter-group">
+                                    <label class="anx-vat-filter-lbl">From</label>
+                                    <input type="date" class="anx-vat-date-input" data-field="from" t-att-value="state.vatFilterFrom" t-on-change="onVatFilterDateChange" />
+                                </div>
+                                <div class="anx-vat-filter-group">
+                                    <label class="anx-vat-filter-lbl">To</label>
+                                    <input type="date" class="anx-vat-date-input" data-field="to" t-att-value="state.vatFilterTo" t-on-change="onVatFilterDateChange" />
+                                </div>
+                                <button class="anx-vat-filter-btn" t-on-click="applyVatFilter">
+                                    <i class="fa fa-filter"/> Filter
+                                </button>
                             </div>
-                            <div class="anx-vat-filter-group">
-                                <label class="anx-vat-filter-lbl">To</label>
-                                <input type="date" class="anx-vat-date-input" data-field="to" t-att-value="state.vatFilterTo" t-on-change="onVatFilterDateChange" />
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <button class="anx-vat-filter-btn" t-on-click="printVatReport" t-if="state.vatData" style="background: linear-gradient(135deg, #1e88e5 0%, #1565c0 100%); border: none; color: #fff; padding: 6px 14px; border-radius: 6px; font-weight: 600; font-size: 13px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(30, 136, 229, 0.3);">
+                                    <i class="fa fa-print"/> Print PDF
+                                </button>
+                                <button class="anx-vat-filter-btn" t-on-click="exportVatExcel" t-if="state.vatData" style="background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%); border: none; color: #fff; padding: 6px 14px; border-radius: 6px; font-weight: 600; font-size: 13px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(46, 125, 50, 0.3);">
+                                    <i class="fa fa-file-excel-o"/> Export Excel
+                                </button>
                             </div>
-                            <button class="anx-vat-filter-btn" t-on-click="applyVatFilter">
-                                <i class="fa fa-filter"/> Filter
-                            </button>
                         </div>
 
                         <!-- KPI bar -->
@@ -656,13 +666,14 @@
                                         <th class="anx-inv-th anx-inv-th-sort" data-col="tax_name"     t-on-click="onVatSort">Tax <i t-attf-class="fa {{ state.vatSortCol==='tax_name'?(state.vatSortDir==='asc'?'fa-sort-asc':'fa-sort-desc'):'fa-sort' }} anx-inv-sort-icon"/></th>
                                         <th class="anx-inv-th">Company</th>
                                         <th class="anx-inv-th anx-inv-th-sort" data-col="invoice_date" t-on-click="onVatSort">Date <i t-attf-class="fa {{ state.vatSortCol==='invoice_date'?(state.vatSortDir==='asc'?'fa-sort-asc':'fa-sort-desc'):'fa-sort' }} anx-inv-sort-icon"/></th>
+                                        <th class="anx-inv-th anx-inv-th-right anx-inv-th-sort" data-col="total_amount" t-on-click="onVatSort">Total Amount <i t-attf-class="fa {{ state.vatSortCol==='total_amount'?(state.vatSortDir==='asc'?'fa-sort-asc':'fa-sort-desc'):'fa-sort' }} anx-inv-sort-icon"/></th>
                                         <th class="anx-inv-th anx-inv-th-right anx-inv-th-sort" data-col="tax_amount" t-on-click="onVatSort">VAT Amount <i t-attf-class="fa {{ state.vatSortCol==='tax_amount'?(state.vatSortDir==='asc'?'fa-sort-asc':'fa-sort-desc'):'fa-sort' }} anx-inv-sort-icon"/></th>
                                         <th class="anx-inv-th anx-inv-th-center"></th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <t t-if="filteredOutputVat.length === 0">
-                                        <tr><td colspan="7" class="anx-inv-empty">No output VAT lines found.</td></tr>
+                                        <tr><td colspan="8" class="anx-inv-empty">No output VAT lines found.</td></tr>
                                     </t>
                                     <t t-foreach="filteredOutputVat" t-as="vl" t-key="vl_index">
                                         <tr class="anx-inv-row anx-vat-row-output" t-att-data-id="vl.id" t-on-click="openVatDoc">
@@ -671,6 +682,7 @@
                                             <td class="anx-inv-td"><span class="anx-vat-tax-badge"><t t-esc="vl.tax_name"/></span></td>
                                             <td class="anx-inv-td"><span class="anx-inv-company-badge" t-attf-style="background:{{ vl.company_color.bg }};color:{{ vl.company_color.text }};"><span class="anx-inv-co-dot-sm" t-attf-style="background:{{ vl.company_color.dot }};"></span><t t-esc="vl.company_name"/></span></td>
                                             <td class="anx-inv-td anx-inv-td-date"><t t-esc="vl.invoice_date"/></td>
+                                            <td class="anx-inv-td anx-inv-td-amount"><t t-esc="vl.total_display"/></td>
                                             <td class="anx-inv-td anx-inv-td-amount"><t t-esc="vl.tax_display"/></td>
                                             <td class="anx-inv-td anx-inv-td-center"><button class="anx-inv-open-btn" t-att-data-id="vl.id" t-on-click.stop="openVatDoc"><i class="fa fa-external-link"/></button></td>
                                         </tr>
@@ -695,13 +707,14 @@
                                         <th class="anx-inv-th anx-inv-th-sort" data-col="tax_name"     t-on-click="onVatSort">Tax <i t-attf-class="fa {{ state.vatSortCol==='tax_name'?(state.vatSortDir==='asc'?'fa-sort-asc':'fa-sort-desc'):'fa-sort' }} anx-inv-sort-icon"/></th>
                                         <th class="anx-inv-th">Company</th>
                                         <th class="anx-inv-th anx-inv-th-sort" data-col="invoice_date" t-on-click="onVatSort">Date <i t-attf-class="fa {{ state.vatSortCol==='invoice_date'?(state.vatSortDir==='asc'?'fa-sort-asc':'fa-sort-desc'):'fa-sort' }} anx-inv-sort-icon"/></th>
+                                        <th class="anx-inv-th anx-inv-th-right anx-inv-th-sort" data-col="total_amount" t-on-click="onVatSort">Total Amount <i t-attf-class="fa {{ state.vatSortCol==='total_amount'?(state.vatSortDir==='asc'?'fa-sort-asc':'fa-sort-desc'):'fa-sort' }} anx-inv-sort-icon"/></th>
                                         <th class="anx-inv-th anx-inv-th-right anx-inv-th-sort" data-col="tax_amount" t-on-click="onVatSort">VAT Amount <i t-attf-class="fa {{ state.vatSortCol==='tax_amount'?(state.vatSortDir==='asc'?'fa-sort-asc':'fa-sort-desc'):'fa-sort' }} anx-inv-sort-icon"/></th>
                                         <th class="anx-inv-th anx-inv-th-center"></th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <t t-if="filteredInputVat.length === 0">
-                                        <tr><td colspan="7" class="anx-inv-empty">No input VAT lines found for this period.</td></tr>
+                                        <tr><td colspan="8" class="anx-inv-empty">No input VAT lines found for this period.</td></tr>
                                     </t>
                                     <t t-foreach="filteredInputVat" t-as="vl" t-key="vl_index">
                                         <tr class="anx-inv-row anx-vat-row-input" t-att-data-id="vl.id" t-on-click="openVatDoc">
@@ -710,6 +723,7 @@
                                             <td class="anx-inv-td"><span class="anx-vat-tax-badge anx-vat-tax-input"><t t-esc="vl.tax_name"/></span></td>
                                             <td class="anx-inv-td"><span class="anx-inv-company-badge" t-attf-style="background:{{ vl.company_color.bg }};color:{{ vl.company_color.text }};"><span class="anx-inv-co-dot-sm" t-attf-style="background:{{ vl.company_color.dot }};"></span><t t-esc="vl.company_name"/></span></td>
                                             <td class="anx-inv-td anx-inv-td-date"><t t-esc="vl.invoice_date"/></td>
+                                            <td class="anx-inv-td anx-inv-td-amount"><t t-esc="vl.total_display"/></td>
                                             <td class="anx-inv-td anx-inv-td-amount"><t t-esc="vl.tax_display"/></td>
                                             <td class="anx-inv-td anx-inv-td-center"><button class="anx-inv-open-btn" t-att-data-id="vl.id" t-on-click.stop="openVatDoc"><i class="fa fa-external-link"/></button></td>
                                         </tr>
@@ -2337,13 +2351,19 @@
                         <div class="anx-pl-mhdr-left">
                             <i class="fa fa-percent anx-pl-mhdr-icon anx-tb-mhdr-icon"/>
                             <div>
-                                <div class="anx-pl-mhdr-title">VAT Summary</div>
+                                <div class="anx-pl-mhdr-title">Tax Summary</div>
                                 <div class="anx-pl-mhdr-sub" t-if="state.vatData">
                                     <t t-esc="state.vatData.date_range.start"/> → <t t-esc="state.vatData.date_range.end"/>
                                 </div>
                             </div>
                         </div>
-                        <div class="anx-pl-mhdr-right">
+                        <div class="anx-pl-mhdr-right" style="display: flex; align-items: center; gap: 8px;">
+                            <button class="anx-pl-print-btn" t-on-click="printVatReport" t-if="state.vatData" style="background: linear-gradient(135deg, #1e88e5 0%, #1565c0 100%); border: none; color: #fff; padding: 6px 14px; border-radius: 6px; font-weight: 600; font-size: 13px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(30, 136, 229, 0.3);">
+                                <i class="fa fa-print"/> Print PDF
+                            </button>
+                            <button class="anx-pl-print-btn" t-on-click="exportVatExcel" t-if="state.vatData" style="background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%); border: none; color: #fff; padding: 6px 14px; border-radius: 6px; font-weight: 600; font-size: 13px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(46, 125, 50, 0.3);">
+                                <i class="fa fa-file-excel-o"/> Export Excel
+                            </button>
                             <button class="anx-pl-close-btn" t-on-click="closeVatModal">
                                 <i class="fa fa-times"/>
                             </button>
@@ -2360,19 +2380,29 @@
                     <div t-if="!state.vatLoading and state.vatData" class="anx-pl-body" style="padding: 24px; background-color: #0d1117; overflow-y: auto;">
                         
                         <!-- VAT Custom Date Filter -->
-                        <div class="anx-vat-modal-filters">
-                            <span class="anx-vat-filter-title"><i class="fa fa-calendar"/> Custom Date Range:</span>
-                            <div class="anx-vat-filter-group">
-                                <label class="anx-vat-filter-lbl">From</label>
-                                <input type="date" class="anx-vat-date-input" data-field="from" t-att-value="state.vatFilterFrom" t-on-change="onVatFilterDateChange" />
+                        <div class="anx-vat-modal-filters" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+                            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                                <span class="anx-vat-filter-title"><i class="fa fa-calendar"/> Custom Date Range:</span>
+                                <div class="anx-vat-filter-group">
+                                    <label class="anx-vat-filter-lbl">From</label>
+                                    <input type="date" class="anx-vat-date-input" data-field="from" t-att-value="state.vatFilterFrom" t-on-change="onVatFilterDateChange" />
+                                </div>
+                                <div class="anx-vat-filter-group">
+                                    <label class="anx-vat-filter-lbl">To</label>
+                                    <input type="date" class="anx-vat-date-input" data-field="to" t-att-value="state.vatFilterTo" t-on-change="onVatFilterDateChange" />
+                                </div>
+                                <button class="anx-vat-filter-btn" t-on-click="applyVatFilter">
+                                    <i class="fa fa-filter"/> Filter
+                                </button>
                             </div>
-                            <div class="anx-vat-filter-group">
-                                <label class="anx-vat-filter-lbl">To</label>
-                                <input type="date" class="anx-vat-date-input" data-field="to" t-att-value="state.vatFilterTo" t-on-change="onVatFilterDateChange" />
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <button class="anx-vat-filter-btn" t-on-click="printVatReport" t-if="state.vatData" style="background: linear-gradient(135deg, #1e88e5 0%, #1565c0 100%); border: none; color: #fff; padding: 6px 14px; border-radius: 6px; font-weight: 600; font-size: 13px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(30, 136, 229, 0.3);">
+                                    <i class="fa fa-print"/> Print PDF
+                                </button>
+                                <button class="anx-vat-filter-btn" t-on-click="exportVatExcel" t-if="state.vatData" style="background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%); border: none; color: #fff; padding: 6px 14px; border-radius: 6px; font-weight: 600; font-size: 13px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(46, 125, 50, 0.3);">
+                                    <i class="fa fa-file-excel-o"/> Export Excel
+                                </button>
                             </div>
-                            <button class="anx-vat-filter-btn" t-on-click="applyVatFilter">
-                                <i class="fa fa-filter"/> Filter
-                            </button>
                         </div>
 
                         <!-- KPI bar -->
@@ -2425,13 +2455,14 @@
                                         <th class="anx-inv-th anx-inv-th-sort" data-col="tax_name"     t-on-click="onVatSort">Tax <i t-attf-class="fa {{ state.vatSortCol==='tax_name'?(state.vatSortDir==='asc'?'fa-sort-asc':'fa-sort-desc'):'fa-sort' }} anx-inv-sort-icon"/></th>
                                         <th class="anx-inv-th">Company</th>
                                         <th class="anx-inv-th anx-inv-th-sort" data-col="invoice_date" t-on-click="onVatSort">Date <i t-attf-class="fa {{ state.vatSortCol==='invoice_date'?(state.vatSortDir==='asc'?'fa-sort-asc':'fa-sort-desc'):'fa-sort' }} anx-inv-sort-icon"/></th>
+                                        <th class="anx-inv-th anx-inv-th-right anx-inv-th-sort" data-col="total_amount" t-on-click="onVatSort">Total Amount <i t-attf-class="fa {{ state.vatSortCol==='total_amount'?(state.vatSortDir==='asc'?'fa-sort-asc':'fa-sort-desc'):'fa-sort' }} anx-inv-sort-icon"/></th>
                                         <th class="anx-inv-th anx-inv-th-right anx-inv-th-sort" data-col="tax_amount" t-on-click="onVatSort">VAT Amount <i t-attf-class="fa {{ state.vatSortCol==='tax_amount'?(state.vatSortDir==='asc'?'fa-sort-asc':'fa-sort-desc'):'fa-sort' }} anx-inv-sort-icon"/></th>
                                         <th class="anx-inv-th anx-inv-th-center"></th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <t t-if="filteredOutputVat.length === 0">
-                                        <tr><td colspan="7" class="anx-inv-empty">No output VAT lines found.</td></tr>
+                                        <tr><td colspan="8" class="anx-inv-empty">No output VAT lines found.</td></tr>
                                     </t>
                                     <t t-foreach="filteredOutputVat" t-as="vl" t-key="vl_index">
                                         <tr class="anx-inv-row anx-vat-row-output" t-att-data-id="vl.id" t-on-click="openVatDoc">
@@ -2440,6 +2471,7 @@
                                             <td class="anx-inv-td"><span class="anx-vat-tax-badge"><t t-esc="vl.tax_name"/></span></td>
                                             <td class="anx-inv-td"><span class="anx-inv-company-badge" t-attf-style="background:{{ vl.company_color.bg }};color:{{ vl.company_color.text }};"><span class="anx-inv-co-dot-sm" t-attf-style="background:{{ vl.company_color.dot }};"></span><t t-esc="vl.company_name"/></span></td>
                                             <td class="anx-inv-td anx-inv-td-date"><t t-esc="vl.invoice_date"/></td>
+                                            <td class="anx-inv-td anx-inv-td-amount"><t t-esc="vl.total_display"/></td>
                                             <td class="anx-inv-td anx-inv-td-amount"><t t-esc="vl.tax_display"/></td>
                                             <td class="anx-inv-td anx-inv-td-center"><button class="anx-inv-open-btn" t-att-data-id="vl.id" t-on-click.stop="openVatDoc"><i class="fa fa-external-link"/></button></td>
                                         </tr>
@@ -2464,13 +2496,14 @@
                                         <th class="anx-inv-th anx-inv-th-sort" data-col="tax_name"     t-on-click="onVatSort">Tax <i t-attf-class="fa {{ state.vatSortCol==='tax_name'?(state.vatSortDir==='asc'?'fa-sort-asc':'fa-sort-desc'):'fa-sort' }} anx-inv-sort-icon"/></th>
                                         <th class="anx-inv-th">Company</th>
                                         <th class="anx-inv-th anx-inv-th-sort" data-col="invoice_date" t-on-click="onVatSort">Date <i t-attf-class="fa {{ state.vatSortCol==='invoice_date'?(state.vatSortDir==='asc'?'fa-sort-asc':'fa-sort-desc'):'fa-sort' }} anx-inv-sort-icon"/></th>
+                                        <th class="anx-inv-th anx-inv-th-right anx-inv-th-sort" data-col="total_amount" t-on-click="onVatSort">Total Amount <i t-attf-class="fa {{ state.vatSortCol==='total_amount'?(state.vatSortDir==='asc'?'fa-sort-asc':'fa-sort-desc'):'fa-sort' }} anx-inv-sort-icon"/></th>
                                         <th class="anx-inv-th anx-inv-th-right anx-inv-th-sort" data-col="tax_amount" t-on-click="onVatSort">VAT Amount <i t-attf-class="fa {{ state.vatSortCol==='tax_amount'?(state.vatSortDir==='asc'?'fa-sort-asc':'fa-sort-desc'):'fa-sort' }} anx-inv-sort-icon"/></th>
                                         <th class="anx-inv-th anx-inv-th-center"></th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <t t-if="filteredInputVat.length === 0">
-                                        <tr><td colspan="7" class="anx-inv-empty">No input VAT lines found for this period.</td></tr>
+                                        <tr><td colspan="8" class="anx-inv-empty">No input VAT lines found for this period.</td></tr>
                                     </t>
                                     <t t-foreach="filteredInputVat" t-as="vl" t-key="vl_index">
                                         <tr class="anx-inv-row anx-vat-row-input" t-att-data-id="vl.id" t-on-click="openVatDoc">
@@ -2479,6 +2512,7 @@
                                             <td class="anx-inv-td"><span class="anx-vat-tax-badge anx-vat-tax-input"><t t-esc="vl.tax_name"/></span></td>
                                             <td class="anx-inv-td"><span class="anx-inv-company-badge" t-attf-style="background:{{ vl.company_color.bg }};color:{{ vl.company_color.text }};"><span class="anx-inv-co-dot-sm" t-attf-style="background:{{ vl.company_color.dot }};"></span><t t-esc="vl.company_name"/></span></td>
                                             <td class="anx-inv-td anx-inv-td-date"><t t-esc="vl.invoice_date"/></td>
+                                            <td class="anx-inv-td anx-inv-td-amount"><t t-esc="vl.total_display"/></td>
                                             <td class="anx-inv-td anx-inv-td-amount"><t t-esc="vl.tax_display"/></td>
                                             <td class="anx-inv-td anx-inv-td-center"><button class="anx-inv-open-btn" t-att-data-id="vl.id" t-on-click.stop="openVatDoc"><i class="fa fa-external-link"/></button></td>
                                         </tr>
