@@ -560,6 +560,10 @@ class AnalytixDocument(models.Model):
         except Exception as conn_err:
             _logger.exception("OpenRouter AI Connection Error: %s", conn_err)
             err_str = str(conn_err)
+            if "401" in err_str or "unauthorized" in err_str.lower() or "user not found" in err_str.lower():
+                raise UserError(
+                    "Authentication failed with OpenRouter API. Please verify that the OpenRouter API Key is correctly set in your user or company settings."
+                )
             if "Connection error" in err_str or "connect" in err_str.lower() or "timeout" in err_str.lower():
                 raise UserError(
                     f"Connection Error while connecting to OpenRouter API (https://openrouter.ai/api/v1).\n\n"
@@ -816,7 +820,11 @@ class AnalytixDocument(models.Model):
         if not self.file_data:
             raise UserError("No file uploaded for this document record.")
 
-        api_key = self.env.user.open_router_key or getattr(self.env.user, 'openrouter_api_key', False) or self.env.company.open_router_key or getattr(self.env.company, 'openrouter_api_key', False)
+        api_key = (self.env.user.open_router_key or self.env.company.open_router_key)
+        if api_key:
+            api_key = api_key.strip()
+        else:
+            api_key = False
         if not api_key:
             raise UserError("Please configure an OpenRouter API Key on your User profile or Company settings.")
 
