@@ -308,11 +308,23 @@ body.kr_sp_global_mode.modal-open {
     justify-self: center;
     width: fit-content;
     max-width: 760px;
-    padding: 0 6px;
+    min-height: 46px;
+    padding: 3px 10px;
     overflow: hidden;
     position: relative;
     z-index: 30;
     pointer-events: auto;
+    border-radius: 999px;
+    border: 1px solid #dcdfe6;
+    background: #ffffff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    box-sizing: border-box;
+
+    &:empty,
+    &.is-empty,
+    &:not(:has(.kr_sp_tabs > *)) {
+        display: none !important;
+    }
 }
 
 .kr_sp_tabs_cluster {
@@ -325,6 +337,11 @@ body.kr_sp_global_mode.modal-open {
     position: relative;
     z-index: 30;
     pointer-events: auto;
+
+    &.is-empty,
+    &:not(:has(.kr_sp_tabs > *)) {
+        display: none !important;
+    }
 }
 
 .kr_sp_tabs_viewport {
@@ -332,7 +349,24 @@ body.kr_sp_global_mode.modal-open {
     align-items: center;
     overflow: hidden;
     max-width: 100%;
+    width: 100%;
     pointer-events: auto;
+    transition: mask-image 0.2s ease, -webkit-mask-image 0.2s ease;
+}
+
+.kr_sp_tabs_cluster.is-overflowing-left:not(.is-overflowing-right) .kr_sp_tabs_viewport {
+    mask-image: linear-gradient(to right, transparent 0%, black 20px, black 100%);
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, black 20px, black 100%);
+}
+
+.kr_sp_tabs_cluster.is-overflowing-right:not(.is-overflowing-left) .kr_sp_tabs_viewport {
+    mask-image: linear-gradient(to left, transparent 0%, black 20px, black 100%);
+    -webkit-mask-image: linear-gradient(to left, transparent 0%, black 20px, black 100%);
+}
+
+.kr_sp_tabs_cluster.is-overflowing-left.is-overflowing-right .kr_sp_tabs_viewport {
+    mask-image: linear-gradient(to right, transparent 0%, black 20px, black calc(100% - 20px), transparent 100%);
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, black 20px, black calc(100% - 20px), transparent 100%);
 }
 
 .kr_sp_tabs {
@@ -341,14 +375,43 @@ body.kr_sp_global_mode.modal-open {
     gap: 6px;
     overflow-x: auto;
     overflow-y: hidden;
-    scrollbar-width: none;
+    scrollbar-width: thin;
+    scrollbar-color: #00d4c8 rgba(0, 0, 0, 0.04);
     scroll-behavior: smooth;
-    padding: 0 2px;
+    padding: 3px 4px 5px 4px;
     pointer-events: auto;
+    width: 100%;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x;
+}
+
+.kr_sp_tabs > * {
+    flex-shrink: 0 !important;
 }
 
 .kr_sp_tabs::-webkit-scrollbar {
-    display: none;
+    height: 4px;
+    display: block;
+}
+
+.kr_sp_tabs::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.04);
+    border-radius: 999px;
+    margin: 0 16px;
+}
+
+.kr_sp_tabs::-webkit-scrollbar-thumb {
+    background: linear-gradient(90deg, #00d4c8, #00b4d8);
+    border-radius: 999px;
+    box-shadow: 0 0 6px rgba(0, 212, 200, 0.4);
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.kr_sp_tabs::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(90deg, #00e5d9, #00c6ff);
+    box-shadow: 0 0 10px rgba(0, 212, 200, 0.7);
 }
 
 .kr_sp_tabs span,
@@ -368,6 +431,7 @@ body.kr_sp_global_mode.modal-open {
     background: transparent;
     cursor: pointer;
     pointer-events: auto;
+    flex-shrink: 0 !important;
 }
 
 .kr_sp_tabs .kr_sp_submenu_btn:hover {
@@ -517,33 +581,7 @@ body.kr_sp_global_mode.modal-open {
 }
 
 .kr_sp_tabs_scroll {
-    display: none;
-    align-items: center;
-    justify-content: center;
-    width: 18px;
-    height: 18px;
-    opacity: 1;
-    padding: 0;
-    border: 0;
-    border-radius: 999px;
-    background: #e9edf3;
-    color: #566273;
-    pointer-events: none;
-    transition: background-color 0.15s ease;
-}
-
-.kr_sp_tabs_cluster.is-overflowing.is-maxed .kr_sp_tabs_scroll {
-    display: inline-flex;
-    pointer-events: auto;
-}
-
-.kr_sp_tabs_scroll:hover:not(:disabled) {
-    background: #dde4ed;
-}
-
-.kr_sp_tabs_scroll:disabled {
-    opacity: 0.35;
-    cursor: default;
+    display: none !important;
 }
 
 .kr_sp_right_section {
@@ -1435,7 +1473,7 @@ body {
     color: #fbbf24;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1024px) {
     .o_web_client.kr_sp_global_mode .o_navbar,
     .o_web_client.kr_sp_global_mode .o_main_navbar {
         display: flex !important;
@@ -1494,15 +1532,59 @@ body {
     }
 
     .kr_sp_topbar {
-        grid-template-columns: 1fr;
-        gap: 8px;
+        display: grid;
+        grid-template-columns: auto 1fr;
+        grid-template-rows: auto auto;
+        gap: 8px 10px;
+        margin: 2px 0 8px;
     }
 
-    .kr_sp_tabs_section {
-        max-width: 100%;
+    .kr_sp_brand_section {
+        grid-column: 1;
+        grid-row: 1;
+        justify-self: start;
+        min-width: auto;
+        max-width: 240px;
+        min-height: 44px;
+        padding: 0 12px;
     }
 
     .kr_sp_brand_name {
-        font-size: 15px;
+        font-size: 14px;
+    }
+
+    .kr_sp_right_section {
+        grid-column: 2;
+        grid-row: 1;
+        justify-self: end;
+        min-height: 44px;
+    }
+
+    .kr_sp_tabs_cluster {
+        grid-column: 1 / -1;
+        grid-row: 2;
+        width: 100%;
+        max-width: 100%;
+        justify-self: stretch;
+    }
+
+    .kr_sp_tabs_section {
+        width: 100%;
+        max-width: 100%;
+        min-height: 44px;
+        padding: 0 8px;
+    }
+
+    .kr_sp_tabs_viewport {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .kr_sp_tabs {
+        width: 100%;
+        gap: 6px;
+        padding: 0 4px;
+        -webkit-overflow-scrolling: touch;
+        touch-action: pan-x;
     }
 }

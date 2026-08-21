@@ -54,14 +54,14 @@
                 <field name="ai_validation_status" invisible="1"/>
                 <div class="alert alert-warning mt-2 mb-2 p-3 border rounded" role="alert" invisible="not ai_validation_notes or ai_validation_status != 'warning'">
                     <div class="d-flex align-items-center mb-2">
-                        <i class="fa fa-exclamation-triangle text-warning fs-4 me-2"/>
+                        <i class="fa fa-exclamation-triangle text-warning fs-4 me-2" title="Warning"/>
                         <strong class="fs-6 text-dark">AI Document Validation &amp; Mismatch Alert Box:</strong>
                     </div>
                     <field name="ai_validation_notes" readonly="1" class="w-100 bg-transparent border-0 text-dark fw-bold text-wrap" style="white-space: pre-wrap; font-family: inherit;"/>
                 </div>
                 <div class="alert alert-success mt-2 mb-2 p-3 border rounded" role="alert" invisible="not ai_validation_notes or ai_validation_status == 'warning'">
                     <div class="d-flex align-items-center mb-2">
-                        <i class="fa fa-check-circle text-success fs-4 me-2"/>
+                        <i class="fa fa-check-circle text-success fs-4 me-2" title="Success"/>
                         <strong class="fs-6 text-dark">AI Document Validation Status:</strong>
                     </div>
                     <field name="ai_validation_notes" readonly="1" class="w-100 bg-transparent border-0 text-success text-wrap" style="white-space: pre-wrap; font-family: inherit;"/>

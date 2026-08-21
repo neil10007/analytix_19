@@ -3170,19 +3170,6 @@ export class AnalytixFinanceDashboard extends Component {
                     }
                 }
             }
-
-            if (this.orm) {
-                try {
-                    const unreadDb = await this.orm.searchCount('discuss.channel', [
-                        ['is_member', '=', true],
-                        ['message_needaction_counter', '>', 0]
-                    ]);
-                    if (unreadDb > total) {
-                        total = unreadDb;
-                    }
-                } catch (e) {}
-            }
-
             this.state.chatUnreadCount = total;
         } catch (e) {
             console.error("Error in updateUnreadCount:", e);

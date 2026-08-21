@@ -1,5 +1,6 @@
 {
     'name': 'Analytix 360 Finance Dashboard',
+    'author': 'Analytix 360',
     'version': '1.4',
     'category': 'Accounting/Accounting',
     'summary': 'All in all dashboard for financial overview',

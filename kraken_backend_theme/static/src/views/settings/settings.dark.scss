@@ -91,11 +91,11 @@
     }
 
     .o_base_settings_view .o_input,
-    .o_base_settings_view input,
+    .o_base_settings_view input:not([type="checkbox"]):not([type="radio"]),
     .o_base_settings_view select,
     .o_base_settings_view textarea,
     .o_base_settings_view .form-control,
-    .o_base_settings_view .o_field_widget:not(.o_field_boolean) {
+    .o_base_settings_view .o_field_widget:not(.o_field_boolean):not(.o_field_radio) {
         border-color: var(--kr-dark-border) !important;
         background: #111827 !important;
         color: var(--kr-dark-text) !important;

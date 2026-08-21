@@ -19,6 +19,8 @@ let currentTopSections = new Map();
 let activeSubmenuState = null;
 let boundEnvBus = null;
 let boundRouteEvents = false;
+let lastKnownAppId = null;
+let tabsRenderScheduledAt = 0;
 let footerLastLoadedAt = 0;
 let footerRefreshPromise = null;
 let systrayMountRetryTimer = null;
@@ -252,11 +254,11 @@ select:focus {
 .form-check-input:checked,
 .o_checkbox input:checked + span,
 .o_field_boolean .o_checkbox:checked {
-    background-color: ${p} !important;
-    border-color: ${p} !important;
+    background-color: ${palette.accent || p} !important;
+    border-color: ${palette.accent || p} !important;
 }
 .form-check-input:focus {
-    border-color: ${p} !important;
+    border-color: ${palette.accent || p} !important;
     box-shadow: 0 0 0 0.2rem ${soft} !important;
 }
 
@@ -502,7 +504,26 @@ function getMenuChildren(menuService, menu) {
     if (!menu?.id) {
         return [];
     }
-    return menuService?.getMenuAsTree?.(menu.id)?.childrenTree || menu.childrenTree || [];
+    const tree = menuService?.getMenuAsTree?.(menu.id);
+    if (tree?.childrenTree && tree.childrenTree.length > 0) {
+        return tree.childrenTree;
+    }
+    if (menu.childrenTree && menu.childrenTree.length > 0) {
+        return menu.childrenTree;
+    }
+    // Fallback: search all menus in menuService for direct children of this app/menu
+    const allMenus = menuService?.getAll?.() || [];
+    const directChildren = allMenus.filter(
+        (m) => m && m.id !== menu.id && (m.parentID === menu.id || m.parentId === menu.id)
+    );
+    if (directChildren.length > 0) {
+        return directChildren;
+    }
+    // Secondary fallback: search for top sections belonging to this app
+    const appChildren = allMenus.filter(
+        (m) => m && m.id !== menu.id && (m.appID === menu.id || m.appId === menu.id) && (!m.parentID || m.parentID === menu.id)
+    );
+    return appChildren;
 }
 
 function findDashboardApp(menuService) {
@@ -1797,17 +1818,29 @@ async function mountUserMenu() {
 
 function buildTabsElement(menuService) {
     const currentApp = resolveCurrentAppForTabs(menuService);
-    const sections = getMenuChildren(menuService, currentApp).slice(0, 10);
+    const sections = getMenuChildren(menuService, currentApp);
     const currentMenu = resolveCurrentMenu(menuService);
     const activeSection = findActiveTopSection(sections, currentMenu);
+
+    // Always rebuild the sections cache — never carry over stale data from a previous app
     currentTopSections = new Map(sections.map((section) => [String(section.id), section]));
+
+    // Track app changes: if the app changed, reset lastKnownAppId so we force a full re-render
+    const resolvedAppId = currentApp?.id ? String(currentApp.id) : null;
+    const appChanged = resolvedAppId !== lastKnownAppId;
+    if (appChanged) {
+        lastKnownAppId = resolvedAppId;
+    }
 
     const tabs = document.createElement("div");
     tabs.className = "kr_sp_tabs";
     const signatureParts = [`app:${currentApp?.id || 0}`];
 
     if (!sections.length) {
-        tabs.dataset.krTabsSignature = "empty";
+        // If app changed but no sections yet, mark as empty but tag with appId
+        // so we don't cache the wrong app's "empty" state
+        tabs.dataset.krTabsSignature = `empty:${resolvedAppId || 0}`;
+        tabs.dataset.krAppId = resolvedAppId || "";
         return tabs;
     }
 
@@ -1860,8 +1893,25 @@ function buildTabsElement(menuService) {
 
     signatureParts.push(`active:${activeSection?.id || 0}`);
     tabs.dataset.krTabsSignature = signatureParts.join("|");
+    tabs.dataset.krAppId = resolvedAppId || "";
 
     return tabs;
+}
+
+function updateTabsContainerVisibility(viewport) {
+    if (!viewport) return;
+    const cluster = viewport.closest(".kr_sp_tabs_cluster");
+    const section = viewport.closest(".kr_sp_tabs_section");
+    const tabs = viewport.querySelector(".kr_sp_tabs");
+    const hasItems = tabs && tabs.children && tabs.children.length > 0;
+    if (cluster) {
+        cluster.classList.toggle("d-none", !hasItems);
+        cluster.classList.toggle("is-empty", !hasItems);
+    }
+    if (section) {
+        section.classList.toggle("d-none", !hasItems);
+        section.classList.toggle("is-empty", !hasItems);
+    }
 }
 
 function renderTabsInViewport(viewport, menuService) {
@@ -1870,25 +1920,47 @@ function renderTabsInViewport(viewport, menuService) {
     }
     const nextTabs = buildTabsElement(menuService);
     const currentTabs = viewport.querySelector(":scope > .kr_sp_tabs");
-    if (nextTabs.dataset.krTabsSignature === "empty") {
+    const nextSig = nextTabs.dataset.krTabsSignature || "";
+    const nextAppId = nextTabs.dataset.krAppId || "";
+
+    // If the incoming tabs are empty, schedule a retry but also wipe any stale
+    // tabs that belong to a DIFFERENT app — never show old app's menus
+    if (nextSig.startsWith("empty")) {
         scheduleTabsRender();
         if (!currentTabs) {
             viewport.replaceChildren(nextTabs);
-        } else if (currentTabs.dataset.krTabsSignature !== "empty") {
-            viewport.replaceChildren(nextTabs);
+        } else {
+            const currentAppId = currentTabs.dataset.krAppId || "";
+            // Clear stale tabs when the app has changed
+            if (currentAppId !== nextAppId) {
+                viewport.replaceChildren(nextTabs);
+            }
         }
+        updateTabsContainerVisibility(viewport);
         return false;
     }
     if (!currentTabs) {
         viewport.replaceChildren(nextTabs);
+        updateTabsContainerVisibility(viewport);
         return true;
     }
-    if (currentTabs.dataset.krTabsSignature === nextTabs.dataset.krTabsSignature) {
+    // Always force replace if the app id changed, regardless of signature match
+    const currentAppId = currentTabs.dataset.krAppId || "";
+    if (currentAppId !== nextAppId) {
+        closeSubmenuPopover();
+        viewport.replaceChildren(nextTabs);
+        updateTabsContainerVisibility(viewport);
+        return true;
+    }
+    if (currentTabs.dataset.krTabsSignature === nextSig) {
+        updateTabsContainerVisibility(viewport);
         return true;
     }
     closeSubmenuPopover();
     currentTabs.replaceChildren(...nextTabs.childNodes);
-    currentTabs.dataset.krTabsSignature = nextTabs.dataset.krTabsSignature || "";
+    currentTabs.dataset.krTabsSignature = nextSig;
+    currentTabs.dataset.krAppId = nextAppId;
+    updateTabsContainerVisibility(viewport);
     return true;
 }
 
@@ -1918,16 +1990,10 @@ function buildTopbarMarkup(context = "global") {
                 <img src="${companyLogoSrc}" alt="Company" class="kr_sp_brand_logo"/>
                 <span class="kr_sp_brand_name"></span>
             </div>
-            <div class="kr_sp_tabs_cluster">
-                <button type="button" class="kr_sp_tabs_scroll is-left" title="Scroll left" aria-label="Scroll left">
-                    <i class="fa fa-angle-left"></i>
-                </button>
-                <div class="kr_sp_tabs_section">
+            <div class="kr_sp_tabs_cluster is-empty d-none">
+                <div class="kr_sp_tabs_section is-empty d-none">
                     <div class="kr_sp_tabs_viewport"></div>
                 </div>
-                <button type="button" class="kr_sp_tabs_scroll is-right" title="Scroll right" aria-label="Scroll right">
-                    <i class="fa fa-angle-right"></i>
-                </button>
             </div>
             <div class="kr_sp_right_section">
                 <div class="kr_sp_topbar_icons">
@@ -2933,60 +2999,129 @@ function setupTabsScroller(cluster) {
         return;
     }
     const viewport = section.querySelector(".kr_sp_tabs_viewport");
-    const tabs = section.querySelector(".kr_sp_tabs");
-    const leftButton = cluster.querySelector(".kr_sp_tabs_scroll.is-left");
-    const rightButton = cluster.querySelector(".kr_sp_tabs_scroll.is-right");
-    if (!viewport || !tabs || !leftButton || !rightButton) {
+    if (!viewport) {
         return;
     }
 
     cluster.dataset.krScrollerReady = "1";
 
-    const getIsMaxed = () => {
-        const maxWidth = Number.parseFloat(getComputedStyle(section).maxWidth);
-        if (!Number.isFinite(maxWidth) || maxWidth <= 0) {
-            return false;
-        }
-        const currentWidth = Math.max(section.clientWidth, section.offsetWidth);
-        return currentWidth >= maxWidth - 2;
-    };
+    const getTabs = () => section.querySelector(".kr_sp_tabs");
 
     const updateState = () => {
-        const maxOffset = Math.max(0, tabs.scrollWidth - viewport.clientWidth);
-        const isOverflowing = maxOffset > 2;
-        const isMaxed = getIsMaxed();
-        const showButtons = isOverflowing && isMaxed;
-        cluster.classList.toggle("is-overflowing", isOverflowing);
-        cluster.classList.toggle("is-maxed", isMaxed);
-
-        if (!showButtons) {
-            tabs.scrollLeft = 0;
+        const tabs = getTabs();
+        if (!tabs) {
+            return;
         }
+        const maxOffset = Math.max(0, tabs.scrollWidth - viewport.clientWidth);
+        const isOverflowing = maxOffset > 1;
+        const canScrollLeft = isOverflowing && tabs.scrollLeft > 1;
+        const canScrollRight = isOverflowing && tabs.scrollLeft < maxOffset - 1;
 
-        leftButton.disabled = !showButtons || tabs.scrollLeft <= 1;
-        rightButton.disabled = !showButtons || tabs.scrollLeft >= maxOffset - 1;
+        cluster.classList.toggle("is-overflowing", isOverflowing);
+        cluster.classList.toggle("is-overflowing-left", canScrollLeft);
+        cluster.classList.toggle("is-overflowing-right", canScrollRight);
     };
 
-    const scrollTabs = (direction) => {
-        const step = Math.max(80, Math.round(viewport.clientWidth * 0.65));
-        tabs.scrollBy({
-            left: direction * step,
-            behavior: "smooth",
-        });
+    const scrollToActive = () => {
+        const tabs = getTabs();
+        if (!tabs) {
+            return;
+        }
+        const activeTab = tabs.querySelector(".is-active");
+        if (activeTab) {
+            const tabLeft = activeTab.offsetLeft;
+            const tabWidth = activeTab.offsetWidth;
+            const viewWidth = viewport.clientWidth;
+            const scrollLeft = tabs.scrollLeft;
+
+            if (tabLeft < scrollLeft) {
+                tabs.scrollTo({ left: Math.max(0, tabLeft - 16), behavior: "smooth" });
+            } else if (tabLeft + tabWidth > scrollLeft + viewWidth) {
+                tabs.scrollTo({ left: tabLeft + tabWidth - viewWidth + 16, behavior: "smooth" });
+            }
+        }
     };
 
-    leftButton.addEventListener("click", () => scrollTabs(-1));
-    rightButton.addEventListener("click", () => scrollTabs(1));
-    tabs.addEventListener("scroll", updateState, { passive: true });
+    section.addEventListener("wheel", (ev) => {
+        const tabs = getTabs();
+        if (!tabs) {
+            return;
+        }
+        const maxOffset = Math.max(0, tabs.scrollWidth - viewport.clientWidth);
+        if (maxOffset > 2) {
+            const delta = ev.deltaY || ev.deltaX;
+            if (delta !== 0) {
+                tabs.scrollLeft += delta;
+                ev.preventDefault();
+            }
+        }
+    }, { passive: false });
 
-    const resizeObserver = new ResizeObserver(updateState);
+    let isPointerDown = false;
+    let pointerStartX = 0;
+    let pointerScrollStart = 0;
+    let hasDragged = false;
+
+    section.addEventListener("pointerdown", (ev) => {
+        const tabs = getTabs();
+        if (!tabs || (ev.pointerType === "mouse" && ev.button !== 0)) {
+            return;
+        }
+        isPointerDown = true;
+        hasDragged = false;
+        pointerStartX = ev.clientX;
+        pointerScrollStart = tabs.scrollLeft;
+    });
+
+    window.addEventListener("pointermove", (ev) => {
+        if (!isPointerDown) {
+            return;
+        }
+        const tabs = getTabs();
+        if (!tabs) {
+            return;
+        }
+        const deltaX = ev.clientX - pointerStartX;
+        if (Math.abs(deltaX) > 4) {
+            hasDragged = true;
+            tabs.scrollLeft = pointerScrollStart - (deltaX * 1.3);
+        }
+    });
+
+    window.addEventListener("pointerup", (ev) => {
+        if (hasDragged && ev.target) {
+            const preventClick = (e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                window.removeEventListener("click", preventClick, true);
+            };
+            window.addEventListener("click", preventClick, true);
+        }
+        isPointerDown = false;
+        hasDragged = false;
+    });
+
+    window.addEventListener("pointercancel", () => {
+        isPointerDown = false;
+        hasDragged = false;
+    });
+
+    viewport.addEventListener("scroll", updateState, { capture: true, passive: true });
+
+    const resizeObserver = new ResizeObserver(() => {
+        updateState();
+        scrollToActive();
+    });
     resizeObserver.observe(viewport);
-    resizeObserver.observe(tabs);
 
-    const mutationObserver = new MutationObserver(updateState);
-    mutationObserver.observe(tabs, { childList: true, subtree: true, attributes: true });
+    const mutationObserver = new MutationObserver(() => {
+        updateState();
+        scrollToActive();
+    });
+    mutationObserver.observe(viewport, { childList: true, subtree: true, attributes: true });
 
     updateState();
+    scrollToActive();
 }
 
 function mountScrollers() {
@@ -3018,28 +3153,66 @@ function syncActiveSidebarApp() {
     });
 }
 
+function flushStaleTabs() {
+    // Immediately wipe cached section data and mark all viewports as
+    // belonging to "no app" so the next render forces a full rebuild
+    currentTopSections = new Map();
+    document.querySelectorAll(".kr_sp_tabs_viewport .kr_sp_tabs").forEach((tabs) => {
+        tabs.dataset.krAppId = "";
+        tabs.dataset.krTabsSignature = "stale";
+    });
+}
+
 function bindNavigationRefresh(scheduleRunFeatures) {
     const resetAndSchedule = () => {
         tabsRenderRetryCount = 0;
         scheduleRunFeatures();
     };
 
+    // On ROUTE_CHANGE: immediately flush stale tabs, then schedule a
+    // delayed render so Odoo's menuService has time to settle getCurrentApp()
+    const onRouteChange = () => {
+        closeSubmenuPopover();
+        flushStaleTabs();
+        tabsRenderRetryCount = 0;
+        // Render immediately (catches fast navigations)
+        scheduleRunFeatures();
+        // Also schedule a delayed render in case the menu service
+        // hasn't updated getCurrentApp() yet on the first rAF tick
+        const stamp = Date.now();
+        tabsRenderScheduledAt = stamp;
+        window.setTimeout(() => {
+            if (tabsRenderScheduledAt === stamp) {
+                tabsRenderRetryCount = 0;
+                scheduleRunFeatures();
+            }
+        }, 120);
+        window.setTimeout(() => {
+            if (tabsRenderScheduledAt === stamp) {
+                tabsRenderRetryCount = 0;
+                scheduleRunFeatures();
+            }
+        }, 350);
+    };
+
+    const onAppChanged = () => {
+        flushStaleTabs();
+        resetAndSchedule();
+    };
+
     if (!boundRouteEvents) {
-        routerBus.addEventListener("ROUTE_CHANGE", () => {
-            closeSubmenuPopover();
-            resetAndSchedule();
-        });
+        routerBus.addEventListener("ROUTE_CHANGE", onRouteChange);
         boundRouteEvents = true;
     }
 
     const envBus = getWebclientBus();
     if (envBus && envBus !== boundEnvBus) {
         if (boundEnvBus) {
-            boundEnvBus.removeEventListener("MENUS:APP-CHANGED", resetAndSchedule);
+            boundEnvBus.removeEventListener("MENUS:APP-CHANGED", onAppChanged);
             boundEnvBus.removeEventListener("ACTION_MANAGER:UI-UPDATED", resetAndSchedule);
         }
         boundEnvBus = envBus;
-        boundEnvBus.addEventListener("MENUS:APP-CHANGED", resetAndSchedule);
+        boundEnvBus.addEventListener("MENUS:APP-CHANGED", onAppChanged);
         boundEnvBus.addEventListener("ACTION_MANAGER:UI-UPDATED", resetAndSchedule);
     }
 }

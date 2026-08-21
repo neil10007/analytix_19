@@ -75,13 +75,14 @@
 }
 
 .o_list_view .o_list_renderer .o_list_table .form-check-input {
-    border-color: #64748b;
-    background-color: #111827;
+    border: 2px solid #64748b !important;
+    background-color: #18212f !important;
 }
 
 .o_list_view .o_list_renderer .o_list_table .form-check-input:checked {
-    border-color: #00d4c8;
-    background-color: #00d4c8;
+    border-color: #00d4c8 !important;
+    background-color: #00d4c8 !important;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23111827' stroke-linecap='round' stroke-linejoin='round' stroke-width='3.5' d='m6 10 3 3 6-6'/%3e%3c/svg%3e") !important;
 }
 
 .o_list_view .o_list_renderer .o_list_table tfoot td {

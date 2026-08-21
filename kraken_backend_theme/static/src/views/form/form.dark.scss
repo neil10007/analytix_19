@@ -69,9 +69,9 @@
     font-weight: 500 !important;
 }
 
-.o_form_view :is(input, select, textarea, .o_input, .form-control, .form-select):is(:disabled, [disabled], [readonly], :read-only, .disabled, .o_disabled),
-.o_form_view .o_readonly_modifier :is(input, select, textarea, .o_input, span, div, a, .o_form_uri),
-.o_form_view .o_field_widget:is(.o_readonly_modifier, .o_disabled, [disabled]) :is(input, select, textarea, .o_input, span, div, a, .o_form_uri) {
+.o_form_view :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea, .o_input, .form-control, .form-select):is(:disabled, [disabled], [readonly], :read-only, .disabled, .o_disabled),
+.o_form_view .o_readonly_modifier :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea, .o_input, span, div, a, .o_form_uri),
+.o_form_view .o_field_widget:is(.o_readonly_modifier, .o_disabled, [disabled]) :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea, .o_input, span, div, a, .o_form_uri) {
     --o-input-text-color: #ffffff !important;
     color: #ffffff !important;
     -webkit-text-fill-color: #ffffff !important;

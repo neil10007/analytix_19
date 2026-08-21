@@ -169,6 +169,24 @@ body.kr_sp_theme_dark,
     color: #f8fafc;
 }
 
+.kr_sp_tabs {
+    scrollbar-color: #00f2fe rgba(255, 255, 255, 0.05);
+}
+
+.kr_sp_tabs::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.kr_sp_tabs::-webkit-scrollbar-thumb {
+    background: linear-gradient(90deg, #00f2fe, #4facfe);
+    box-shadow: 0 0 8px rgba(0, 242, 254, 0.5);
+}
+
+.kr_sp_tabs::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(90deg, #38ef7d, #11998e);
+    box-shadow: 0 0 12px rgba(56, 239, 125, 0.7);
+}
+
 .kr_sp_tabs span,
 .kr_sp_tabs a,
 .kr_sp_tabs .kr_sp_submenu_btn,
@@ -195,12 +213,13 @@ body.kr_sp_theme_dark,
 }
 
 .kr_sp_tabs_scroll {
-    background: #202b3a;
-    color: #cbd5e1;
+    background: transparent;
+    color: #9ca3af;
 }
 
 .kr_sp_tabs_scroll:hover:not(:disabled) {
-    background: #2b3647;
+    background: #202b3a;
+    color: #ffffff;
 }
 
 .kr_sp_submenu_popover_wrap,
