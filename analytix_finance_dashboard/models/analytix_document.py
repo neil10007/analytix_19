@@ -555,7 +555,7 @@ class AnalytixDocument(models.Model):
                 ],
                 response_format={"type": "json_object"},
                 temperature=0,
-                max_tokens=4096,
+                max_tokens=6000,
             )
         except Exception as conn_err:
             _logger.exception("OpenRouter AI Connection Error: %s", conn_err)
@@ -848,7 +848,7 @@ class AnalytixDocument(models.Model):
                 "HTTP-Referer": base_url,
                 "X-Title": "Analytix Finance Dashboard",
             },
-            timeout=90.0,
+            timeout=300,
         )
 
         file_bytes = self._get_decoded_file_bytes()
