@@ -128,11 +128,11 @@
                                     <t t-esc="formatPct(state.data.revenue.percentage)"/>
                                 </span>
                             </div>
-                            <div class="anx-kpi-value"><t t-esc="formatCurrency(state.data.revenue.value)"/></div>
+                            <div class="anx-kpi-value"><span class="anx-currency-sym"><t t-esc="getCurrencySymbol(state.data.currency)"/></span>&#160;<t t-esc="formatShort(state.data.revenue.value)"/></div>
                             <div class="anx-kpi-label">Revenue this period</div>
                             <div class="anx-kpi-sub">
                                 <i class="fa fa-diamond" style="color:#1e88e5;"></i>
-                                &#160;<t t-esc="formatCurrency(state.data.revenue.today)"/> today
+                                &#160;<span class="anx-currency-sym"><t t-esc="getCurrencySymbol(state.data.currency)"/></span>&#160;<t t-esc="formatShort(state.data.revenue.today)"/> today
                             </div>
                         </div>
 
@@ -161,11 +161,11 @@
                                     <t t-esc="formatPct(state.data.expenses.percentage)"/>
                                 </span>
                             </div>
-                            <div class="anx-kpi-value"><t t-esc="formatCurrency(state.data.expenses.value)"/></div>
+                            <div class="anx-kpi-value"><span class="anx-currency-sym"><t t-esc="getCurrencySymbol(state.data.currency)"/></span>&#160;<t t-esc="formatShort(state.data.expenses.value)"/></div>
                             <div class="anx-kpi-label">Expenses this period</div>
                             <div class="anx-kpi-sub">
                                 <i class="fa fa-money" style="color:#e53935;"></i>
-                                &#160;<t t-esc="formatCurrency(state.data.expenses.today)"/> today
+                                &#160;<span class="anx-currency-sym"><t t-esc="getCurrencySymbol(state.data.currency)"/></span>&#160;<t t-esc="formatShort(state.data.expenses.today)"/> today
                             </div>
                         </div>
 
@@ -177,7 +177,7 @@
                                     <t t-esc="formatPct(state.data.net_profit.percentage)"/>
                                 </span>
                             </div>
-                            <div class="anx-kpi-value"><t t-esc="formatCurrency(state.data.net_profit.value)"/></div>
+                            <div class="anx-kpi-value"><span class="anx-currency-sym"><t t-esc="getCurrencySymbol(state.data.currency)"/></span>&#160;<t t-esc="formatShort(state.data.net_profit.value)"/></div>
                             <div class="anx-kpi-label">Net profit this period</div>
                             <div class="anx-kpi-sub">
                                 <i class="fa fa-percent" style="color:#8a93a4;"></i>
@@ -192,7 +192,7 @@
                                     <t t-esc="state.data.receivables.clients"/> overdue
                                 </span>
                             </div>
-                            <div class="anx-kpi-value"><t t-esc="formatCurrency(state.data.receivables.value)"/></div>
+                            <div class="anx-kpi-value"><span class="anx-currency-sym"><t t-esc="getCurrencySymbol(state.data.currency)"/></span>&#160;<t t-esc="formatShort(state.data.receivables.value)"/></div>
                             <div class="anx-kpi-label">Unpaid receivables</div>
                             <div class="anx-kpi-sub">
                                 <i class="fa fa-users" style="color:#f57c00;"></i>
@@ -245,7 +245,7 @@
                                                 </div>
                                             </div>
                                             <span class="anx-customer-amt">
-                                                <t t-esc="getCurrencySymbol(state.data.currency)"/>&#160;<t t-esc="formatShort(cust.revenue)"/>
+                                                <span class="anx-currency-sym"><t t-esc="getCurrencySymbol(state.data.currency)"/></span>&#160;<t t-esc="formatShort(cust.revenue)"/>
                                             </span>
                                         </div>
                                     </t>
@@ -265,7 +265,7 @@
                                                 </div>
                                             </div>
                                             <span class="anx-customer-amt">
-                                                <t t-esc="getCurrencySymbol(state.data.currency)"/>&#160;<t t-esc="formatShort(vend.expense)"/>
+                                                <span class="anx-currency-sym"><t t-esc="getCurrencySymbol(state.data.currency)"/></span>&#160;<t t-esc="formatShort(vend.expense)"/>
                                             </span>
                                         </div>
                                     </t>
@@ -375,15 +375,15 @@
                             </div>
                             <div class="anx-inv-kpi-pill anx-inv-kpi-amount">
                                 <span class="anx-inv-kpi-pill-label">Total Amount</span>
-                                <span class="anx-inv-kpi-pill-val"><t t-esc="state.invoices.currency_sym"/>&#160;<t t-esc="formatExact(state.invoices.total_amount)"/></span>
+                                <span class="anx-inv-kpi-pill-val"><span class="anx-currency-sym"><t t-esc="state.invoices.currency_sym"/></span>&#160;<t t-esc="formatExact(state.invoices.total_amount)"/></span>
                             </div>
                             <div class="anx-inv-kpi-pill anx-inv-kpi-paid">
                                 <span class="anx-inv-kpi-pill-label">Paid</span>
-                                <span class="anx-inv-kpi-pill-val"><t t-esc="state.invoices.currency_sym"/>&#160;<t t-esc="formatExact(state.invoices.paid_amount)"/></span>
+                                <span class="anx-inv-kpi-pill-val"><span class="anx-currency-sym"><t t-esc="state.invoices.currency_sym"/></span>&#160;<t t-esc="formatExact(state.invoices.paid_amount)"/></span>
                             </div>
                             <div class="anx-inv-kpi-pill anx-inv-kpi-unpaid">
                                 <span class="anx-inv-kpi-pill-label">Outstanding</span>
-                                <span class="anx-inv-kpi-pill-val"><t t-esc="state.invoices.currency_sym"/>&#160;<t t-esc="formatExact(state.invoices.unpaid_amount)"/></span>
+                                <span class="anx-inv-kpi-pill-val"><span class="anx-currency-sym"><t t-esc="state.invoices.currency_sym"/></span>&#160;<t t-esc="formatExact(state.invoices.unpaid_amount)"/></span>
                             </div>
                             <div class="anx-inv-company-legend" t-if="state.invoices.companies.length > 1">
                                 <t t-foreach="state.invoices.companies" t-as="comp" t-key="comp.id">
@@ -491,15 +491,15 @@
                             </div>
                             <div class="anx-inv-kpi-pill anx-inv-kpi-amount">
                                 <span class="anx-inv-kpi-pill-label">Total Amount</span>
-                                <span class="anx-inv-kpi-pill-val"><t t-esc="state.expenses.currency_sym"/>&#160;<t t-esc="formatExact(state.expenses.total_amount)"/></span>
+                                <span class="anx-inv-kpi-pill-val"><span class="anx-currency-sym"><t t-esc="state.expenses.currency_sym"/></span>&#160;<t t-esc="formatExact(state.expenses.total_amount)"/></span>
                             </div>
                             <div class="anx-inv-kpi-pill anx-inv-kpi-paid">
                                 <span class="anx-inv-kpi-pill-label">Paid</span>
-                                <span class="anx-inv-kpi-pill-val"><t t-esc="state.expenses.currency_sym"/>&#160;<t t-esc="formatExact(state.expenses.paid_amount)"/></span>
+                                <span class="anx-inv-kpi-pill-val"><span class="anx-currency-sym"><t t-esc="state.expenses.currency_sym"/></span>&#160;<t t-esc="formatExact(state.expenses.paid_amount)"/></span>
                             </div>
                             <div class="anx-inv-kpi-pill anx-inv-kpi-unpaid">
                                 <span class="anx-inv-kpi-pill-label">Outstanding</span>
-                                <span class="anx-inv-kpi-pill-val"><t t-esc="state.expenses.currency_sym"/>&#160;<t t-esc="formatExact(state.expenses.unpaid_amount)"/></span>
+                                <span class="anx-inv-kpi-pill-val"><span class="anx-currency-sym"><t t-esc="state.expenses.currency_sym"/></span>&#160;<t t-esc="formatExact(state.expenses.unpaid_amount)"/></span>
                             </div>
                             <!-- Company legend -->
                             <div class="anx-inv-company-legend" t-if="state.expenses.companies.length > 1">
@@ -620,15 +620,15 @@
                         <div class="anx-inv-kpi-bar" t-if="state.vatData">
                             <div class="anx-inv-kpi-pill anx-vat-kpi-output">
                                 <span class="anx-inv-kpi-pill-label">Output VAT (Sales)</span>
-                                <span class="anx-inv-kpi-pill-val"><t t-esc="state.vatData.currency_sym"/>&#160;<t t-esc="formatShort(state.vatData.output_vat)"/></span>
+                                <span class="anx-inv-kpi-pill-val"><span class="anx-currency-sym"><t t-esc="state.vatData.currency_sym"/></span>&#160;<t t-esc="formatShort(state.vatData.output_vat)"/></span>
                             </div>
                             <div class="anx-inv-kpi-pill anx-vat-kpi-input">
                                 <span class="anx-inv-kpi-pill-label">Input VAT (Bills)</span>
-                                <span class="anx-inv-kpi-pill-val"><t t-esc="state.vatData.currency_sym"/>&#160;<t t-esc="formatShort(state.vatData.input_vat)"/></span>
+                                <span class="anx-inv-kpi-pill-val"><span class="anx-currency-sym"><t t-esc="state.vatData.currency_sym"/></span>&#160;<t t-esc="formatShort(state.vatData.input_vat)"/></span>
                             </div>
                             <div class="anx-inv-kpi-pill anx-vat-kpi-net">
                                 <span class="anx-inv-kpi-pill-label">Net VAT Payable</span>
-                                <span class="anx-inv-kpi-pill-val"><t t-esc="state.vatData.currency_sym"/>&#160;<t t-esc="formatShort(state.vatData.net_vat)"/></span>
+                                <span class="anx-inv-kpi-pill-val"><span class="anx-currency-sym"><t t-esc="state.vatData.currency_sym"/></span>&#160;<t t-esc="formatShort(state.vatData.net_vat)"/></span>
                             </div>
                             <div class="anx-inv-kpi-pill anx-inv-kpi-total">
                                 <span class="anx-inv-kpi-pill-label">Total Tax Lines</span>
@@ -752,7 +752,7 @@
                             </div>
                             <div class="anx-inv-kpi-pill anx-inv-kpi-amount">
                                 <span class="anx-inv-kpi-pill-label">Period Volume</span>
-                                <span class="anx-inv-kpi-pill-val"><t t-esc="state.jrnData.currency_sym"/>&#160;<t t-esc="formatShort(state.jrnData.total_amount)"/></span>
+                                <span class="anx-inv-kpi-pill-val"><span class="anx-currency-sym"><t t-esc="state.jrnData.currency_sym"/></span>&#160;<t t-esc="formatShort(state.jrnData.total_amount)"/></span>
                             </div>
                             <div class="anx-inv-company-legend" t-if="state.jrnData.companies.length > 1">
                                 <t t-foreach="state.jrnData.companies" t-as="comp" t-key="comp.id">
@@ -1301,11 +1301,11 @@
                                                     </t>
                                                     <t t-else="">
                                                         <button class="anx-doc-btn-preview" 
-                                                                t-attf-style="background: {{ doc.status === 'approved' ? '#1565c0' : '#78909c' }}; color:#fff; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; border: none; cursor: {{ doc.status === 'approved' ? 'pointer' : 'not-allowed' }}; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; opacity: {{ doc.status === 'approved' ? '1' : '0.75' }};" 
+                                                                style="background:#1565c0; color:#fff; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; opacity: 1;" 
                                                                 t-att-data-id="doc.id" 
                                                                 t-on-click="analyzeAndCreateDocument" 
                                                                 t-att-disabled="state.analyzingDocId === doc.id" 
-                                                                t-att-title="doc.status === 'approved' ? 'Process with OpenRouter / Gemini AI to create draft entry' : 'Only approved documents can be created with AI'">
+                                                                title="Process document with AI &amp; product lookup to create entry">
                                                             <t t-if="state.analyzingDocId === doc.id">
                                                                  <i class="fa fa-spinner fa-spin"/> Processing...
                                                             </t>
@@ -2409,15 +2409,15 @@
                         <div class="anx-inv-kpi-bar" t-if="state.vatData">
                             <div class="anx-inv-kpi-pill anx-vat-kpi-output">
                                 <span class="anx-inv-kpi-pill-label">Output VAT (Sales)</span>
-                                <span class="anx-inv-kpi-pill-val"><t t-esc="state.vatData.currency_sym"/>&#160;<t t-esc="formatShort(state.vatData.output_vat)"/></span>
+                                <span class="anx-inv-kpi-pill-val"><span class="anx-currency-sym"><t t-esc="state.vatData.currency_sym"/></span>&#160;<t t-esc="formatShort(state.vatData.output_vat)"/></span>
                             </div>
                             <div class="anx-inv-kpi-pill anx-vat-kpi-input">
                                 <span class="anx-inv-kpi-pill-label">Input VAT (Bills)</span>
-                                <span class="anx-inv-kpi-pill-val"><t t-esc="state.vatData.currency_sym"/>&#160;<t t-esc="formatShort(state.vatData.input_vat)"/></span>
+                                <span class="anx-inv-kpi-pill-val"><span class="anx-currency-sym"><t t-esc="state.vatData.currency_sym"/></span>&#160;<t t-esc="formatShort(state.vatData.input_vat)"/></span>
                             </div>
                             <div class="anx-inv-kpi-pill anx-vat-kpi-net">
                                 <span class="anx-inv-kpi-pill-label">Net VAT Payable</span>
-                                <span class="anx-inv-kpi-pill-val"><t t-esc="state.vatData.currency_sym"/>&#160;<t t-esc="formatShort(state.vatData.net_vat)"/></span>
+                                <span class="anx-inv-kpi-pill-val"><span class="anx-currency-sym"><t t-esc="state.vatData.currency_sym"/></span>&#160;<t t-esc="formatShort(state.vatData.net_vat)"/></span>
                             </div>
                             <div class="anx-inv-kpi-pill anx-inv-kpi-total">
                                 <span class="anx-inv-kpi-pill-label">Total Tax Lines</span>

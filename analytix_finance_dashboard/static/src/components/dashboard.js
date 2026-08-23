@@ -213,6 +213,13 @@ export class AnalytixFinanceDashboard extends Component {
         });
 
         onMounted(() => {
+            if (!document.getElementById("anx-inter-font")) {
+                const link = document.createElement("link");
+                link.id = "anx-inter-font";
+                link.rel = "stylesheet";
+                link.href = "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap";
+                document.head.appendChild(link);
+            }
             this.renderCharts();
             const activeTabEl = document.querySelector('.anx-tabs .anx-tab.active');
             if (activeTabEl) {
@@ -2658,18 +2665,6 @@ export class AnalytixFinanceDashboard extends Component {
         const docId = targetDocId || (ev && ev.currentTarget ? parseInt(ev.currentTarget.dataset.id, 10) : null);
         if (!docId || this.state.analyzingDocId) return;
 
-        // Check if document is approved
-        if (this.state.docList && this.state.docList.records) {
-            const rec = this.state.docList.records.find(r => r.id === docId);
-            if (rec && rec.status !== 'approved') {
-                this.notification.add(
-                    "AI Entry creation is only allowed for approved documents. Please approve the document first.",
-                    { type: "warning", sticky: false }
-                );
-                return;
-            }
-        }
-        
         this.state.analyzingDocId = docId;
         this.notification.add("Processing document with AI & product lookup...", { type: "info", sticky: false });
         
@@ -3212,7 +3207,7 @@ export class AnalytixFinanceDashboard extends Component {
                 'mail.message',
                 [['model', '=', 'discuss.channel'], ['res_id', '=', thread.id]],
                 ['id', 'body', 'date', 'author_id', 'message_type', 'attachment_ids'],
-                { order: 'id ascii', limit: 200 }
+                { order: 'id asc', limit: 200 }
             );
             if (rawMsgs && rawMsgs.length > 0) {
                 const currentUserId = this.store.self?.main_user_id?.id || false;

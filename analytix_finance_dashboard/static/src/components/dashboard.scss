@@ -7,7 +7,8 @@
 }
 
 .anx-wrap {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-family: 'Inter', 'Spline Sans', 'Roboto', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: 15px;
     background: #080d18;
     width: 100%;
     max-width: 100vw;
@@ -18,6 +19,18 @@
     overflow-x: hidden;
     overflow-y: hidden;
     -webkit-overflow-scrolling: touch;
+}
+
+/* ── Universal Font Family Override (Excluding Icon Glyphs & Currency Symbols) ── */
+.anx-wrap *:not(i):not(.fa):not([class*="fa-"]):not(.oi):not([class*="oi-"]):not(.anx-currency-sym):not(.icon-sr):not(.o_sar_symbol):not([class*="sr_symbol"]) {
+    font-family: 'Inter', 'Spline Sans', 'Roboto', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+}
+
+
+/* Dedicated currency symbol glyph styling */
+.anx-currency-sym, .icon-sr, .o_sar_symbol, [class*="sr_symbol"] {
+    font-family: 'sr_symbol' !important;
+    display: inline-block;
 }
 
 

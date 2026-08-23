@@ -71,17 +71,18 @@
 
 .o_form_view .oe_title>h1,
 .o_form_view .oe_title>h1 .o_input {
-    font-size: 34px;
+    font-size: 26px;
     font-weight: 700;
     color: #111827;
 }
 
 .o_form_view .oe_title>h2 {
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 600;
     color: var(--tt-form-primary, #1e3a8a);
     margin-top: 4px;
 }
+
 
 .o_form_view .oe_avatar img,
 .o_form_view .oe_avatar .img {
@@ -257,8 +258,9 @@
     border: none !important;
     background: transparent;
     color: var(--tt-form-muted, #6b7280) !important;
-    font-size: 16px !important;
-    font-weight: 500 !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+
     padding: 12px 0;
     position: relative;
     margin-bottom: -1px;
@@ -301,3 +303,109 @@
         padding: 24px;
     }
 }
+
+/* -- Modal Dialogs & Report Wizards ------------------------ */
+.modal-dialog .modal-content,
+.o_dialog .modal-content,
+body:not(.kr_sp_theme_dark) .modal-content,
+body:not(.kr_sp_theme_dark) .o_dialog .modal-content {
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 12px !important;
+    box-shadow: 0 20px 45px rgba(0, 0, 0, 0.14) !important;
+}
+
+body:not(.kr_sp_theme_dark) :is(.modal-header, .modal-footer, .o_dialog .modal-header, .o_dialog .modal-footer) {
+    background-color: #ffffff !important;
+    border-color: #e2e8f0 !important;
+    color: #0f172a !important;
+}
+
+body:not(.kr_sp_theme_dark) :is(.modal-title, .modal-header h1, .modal-header h2, .modal-header h5, .modal-header span) {
+    color: #0f172a !important;
+    font-weight: 700 !important;
+}
+
+body:not(.kr_sp_theme_dark) .modal-body,
+body:not(.kr_sp_theme_dark) .o_dialog .modal-body {
+    background-color: #ffffff !important;
+    color: #1e293b !important;
+
+    .o_form_label,
+    label {
+        color: #334155 !important;
+        font-weight: 600 !important;
+        font-size: 13px !important;
+    }
+
+    /* Standard inputs, datepickers, selections in wizard modals */
+    :is(.o_input, input:not([type="checkbox"]):not([type="radio"]), select, textarea, .form-control, .form-select, .o_datepicker_input) {
+        background-color: #ffffff !important;
+        border: 1px solid #cbd5e1 !important;
+        color: #0f172a !important;
+        -webkit-text-fill-color: #0f172a !important;
+        border-radius: 6px !important;
+        padding: 6px 10px !important;
+        font-size: 13px !important;
+        opacity: 1 !important;
+        box-shadow: none !important;
+
+        &:focus, &:focus-within {
+            border-color: #0f172a !important;
+            box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.08) !important;
+        }
+
+        &::placeholder {
+            color: #94a3b8 !important;
+            -webkit-text-fill-color: #94a3b8 !important;
+        }
+    }
+
+    /* Checkbox & Radio inputs */
+    input[type="checkbox"],
+    input[type="radio"],
+    .form-check-input {
+        background-color: #ffffff !important;
+        border: 1px solid #94a3b8 !important;
+        width: 16px !important;
+        height: 16px !important;
+        cursor: pointer;
+
+        &:checked {
+            background-color: #0f172a !important;
+            border-color: #0f172a !important;
+        }
+    }
+
+    /* Fix line section / Many2many tag badges in modals */
+    .o_field_many2many_selection,
+    .o_field_many2many,
+    .o_field_widget {
+        .badge,
+        .o_tag,
+        .badge.o_tag_color_0,
+        .o_tag.o_tag_color_0 {
+            background-color: #f1f5f9 !important;
+            color: #1e293b !important;
+            border: 1px solid #cbd5e1 !important;
+            border-radius: 6px !important;
+            padding: 4px 10px !important;
+            font-size: 12px !important;
+            font-weight: 500 !important;
+            margin: 2px 4px 2px 0 !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+
+            .o_delete, .fa-times {
+                color: #64748b !important;
+                cursor: pointer;
+                &:hover {
+                    color: #ef4444 !important;
+                }
+            }
+        }
+    }
+}
+

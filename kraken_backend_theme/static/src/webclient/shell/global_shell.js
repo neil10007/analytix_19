@@ -376,9 +376,18 @@ select:focus {
 /* -- Odoo "o-color" system -------------------------------- */
 .o_tag.o_tag_color_0,
 .badge.o_tag_color_0 {
-    background-color: ${p} !important;
-    color: ${pt} !important;
+    background-color: #f1f5f9 !important;
+    color: #1e293b !important;
+    border: 1px solid #cbd5e1 !important;
+    font-weight: 500 !important;
 }
+body.kr_sp_theme_dark .o_tag.o_tag_color_0,
+body.kr_sp_theme_dark .badge.o_tag_color_0 {
+    background-color: #1e293b !important;
+    color: #cbd5e1 !important;
+    border: 1px solid #334155 !important;
+}
+
 `.trim();
 }
 
@@ -1076,17 +1085,21 @@ function setupModalViewportGuard() {
 
 function isDashboardContext() {
     const activeDashboard = document.querySelector(
-        ".o_web_client > .o_action_manager > *:not(.d-none):not([style*='display: none']) .kr_sp_action_shell, .o_web_client > .o_action_manager > .kr_sp_action_shell:not(.d-none)"
+        ".o_web_client > .o_action_manager > *:not(.d-none):not([style*='display: none']) .kr_sp_pending_dashboard_content, " +
+        ".o_web_client > .o_action_manager > *:not(.d-none):not([style*='display: none']) .anx-wrap, " +
+        ".o_web_client > .o_action_manager > *:not(.d-none):not([style*='display: none']) [data-kr-dashboard], " +
+        ".o_web_client > .o_action_manager > *:not(.d-none):not([style*='display: none']) .o_dashboard_view"
     );
     if (activeDashboard) {
         return true;
     }
     const path = window.location.pathname.replace(/\/+$/, "") || "/";
-    if (path === "/odoo/dashboard" || path === "/odoo/dashboards" || path.startsWith("/odoo/dashboard/")) {
+    if (path === "/odoo/dashboard" || path === "/odoo/dashboards" || path === "/dashboard" || path.startsWith("/odoo/dashboard/")) {
         return true;
     }
     return false;
 }
+
 
 function isPendingDashboardNavigation() {
     const path = window.location.pathname.replace(/\/+$/, "") || "/";
@@ -3141,7 +3154,7 @@ function syncActiveSidebarApp() {
         const title = (button.title || "").toLowerCase();
 
         let isActive = false;
-        if (isDashboard && action === "open-dashboard") {
+        if (isDashboard && (action === "open-dashboard" || isDashboardMenuLabel(title))) {
             isActive = true;
         } else if (!isDashboard && currentAppId && menuId === currentAppId) {
             isActive = true;
@@ -3152,6 +3165,7 @@ function syncActiveSidebarApp() {
         button.classList.toggle("is-active", isActive);
     });
 }
+
 
 function flushStaleTabs() {
     // Immediately wipe cached section data and mark all viewports as

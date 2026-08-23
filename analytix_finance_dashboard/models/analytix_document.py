@@ -440,7 +440,7 @@ class AnalytixDocument(models.Model):
         vendor_name = _extract_str('vendor_name') or _extract_str('name')
         customer_name = _extract_str('customer_name')
         invoice_date = _extract_str('invoice_date')
-        currency = _extract_str('currency') or 'USD'
+        currency = _extract_str('currency') or None
         subtotal = _extract_num('subtotal')
         tax = _extract_num('tax')
         total = _extract_num('total') or (subtotal + tax)
@@ -501,6 +501,10 @@ class AnalytixDocument(models.Model):
             "}\n"
             "Rules:\n"
             "- Extract full partner details for both vendor and customer including street, city, zip, country, and vat (tax ID).\n"
+            "- CRITICAL FOR CURRENCY EXTRACTION:\n"
+            "  1. Look carefully everywhere on the document (headers, table column headers like 'Taxable Amount (AED)', totals like 'AED 4,730.00' or 'SAR 500', currency labels, bank details, tax summary section, etc.).\n"
+            "  2. Extract the exact currency mentioned on the document and convert it to its 3-letter ISO 4217 code (e.g., 'AED' for AED/Dirham/Dhs, 'SAR' for SAR/SR/Saudi Riyal, 'USD' for $, 'EUR' for €, 'GBP' for £, 'QAR', 'KWD', 'BHD', 'OMR', 'EGP', etc.).\n"
+            "  3. If ANY currency is present or indicated anywhere on the document, return that 3-letter ISO code in 'currency'. ONLY if absolutely NO currency is mentioned or implied on the document, set 'currency' to null.\n"
             "- tax_rate must be the tax percentage applied (e.g. 15 for 15%, 5 for 5%). If no tax, use 0.\n"
             "- discount must be the discount percentage (0 to 100) applied on the line item. If discount is listed as an amount, convert it to the discount percentage (0 to 100). If no discount, use 0.\n"
             "- tax must be the total tax/VAT amount.\n"
@@ -555,7 +559,7 @@ class AnalytixDocument(models.Model):
                 ],
                 response_format={"type": "json_object"},
                 temperature=0,
-                max_tokens=6000,
+                max_tokens=4096,
             )
         except Exception as conn_err:
             _logger.exception("OpenRouter AI Connection Error: %s", conn_err)
@@ -609,56 +613,75 @@ class AnalytixDocument(models.Model):
 
         return parsed_data
 
-    def _resolve_tax(self, move_type, tax_rate, tax_amount=0.0):
-        """Find an account.tax record matching the given percentage or tax amount."""
+    def _resolve_tax(self, move_type, tax_rate=0.0, tax_amount=0.0, subtotal=0.0, total=0.0):
+        """
+        Find an account.tax record in Odoo matching the PDF tax percentage.
+        1. If tax_rate > 0, use tax_rate.
+        2. If tax_rate is missing or 0 but tax_amount > 0, calculate percentage = (tax_amount / subtotal) * 100.
+        3. Search account.tax in Odoo for matching percentage.
+        4. If a matching Odoo tax is found, return it.
+        5. If NO matching Odoo tax exists for that percentage (or if tax is 0), return empty account.tax recordset (leave BLANK).
+        """
         rate_val = self._clean_float(tax_rate)
         amt_val = self._clean_float(tax_amount)
+        subtotal_val = self._clean_float(subtotal)
+        total_val = self._clean_float(total)
         company = self.env.company
         tax_type = 'sale' if move_type in ('out_invoice', 'out_refund') else 'purchase'
 
-        if rate_val > 0:
-            rate = round(rate_val, 2)
-            tax = self.env['account.tax'].search([
+        # If tax_rate is missing or 0, but tax_amount > 0, calculate percentage from PDF tax amount & subtotal/total
+        if rate_val <= 0 and amt_val > 0:
+            if subtotal_val > 0:
+                rate_val = (amt_val / subtotal_val) * 100.0
+            elif total_val > amt_val:
+                subtotal_calc = total_val - amt_val
+                rate_val = (amt_val / subtotal_calc) * 100.0
+
+        if rate_val <= 0 and amt_val <= 0:
+            return self.env['account.tax']
+
+        rate = round(rate_val, 2)
+        _logger.info("Resolving tax for type '%s': target percentage = %.2f%% (tax_amount=%.2f, subtotal=%.2f)", tax_type, rate, amt_val, subtotal_val)
+
+        # 1. Search exact percentage match for tax_type and company
+        tax = self.env['account.tax'].search([
+            ('type_tax_use', '=', tax_type),
+            ('amount', '=', rate),
+            ('amount_type', '=', 'percent'),
+            ('company_id', 'in', [company.id, False]),
+            ('active', '=', True),
+        ], limit=1)
+
+        # 2. Search with floating point tolerance (e.g. 4.99% -> 5.0%)
+        if not tax:
+            taxes = self.env['account.tax'].search([
                 ('type_tax_use', '=', tax_type),
-                ('amount', '=', rate),
                 ('amount_type', '=', 'percent'),
                 ('company_id', 'in', [company.id, False]),
                 ('active', '=', True),
-            ], limit=1)
+            ])
+            for t in taxes:
+                if abs(t.amount - rate) < 0.15:
+                    tax = t
+                    break
 
-            if not tax:
-                taxes = self.env['account.tax'].search([
-                    ('type_tax_use', '=', tax_type),
-                    ('amount_type', '=', 'percent'),
-                    ('company_id', 'in', [company.id, False]),
-                    ('active', '=', True),
-                ])
-                for t in taxes:
-                    if abs(t.amount - rate) < 0.1:
-                        tax = t
-                        break
-
-            if not tax:
-                tax = self.env['account.tax'].search([
-                    ('amount', '=', rate),
-                    ('amount_type', '=', 'percent'),
-                    ('company_id', 'in', [company.id, False]),
-                    ('active', '=', True),
-                ], limit=1)
-
-            if tax:
-                return tax
-
-        # If rate was 0 or not found, but tax_amount > 0, fallback to standard sale/purchase tax for company
-        if amt_val > 0 or rate_val > 0:
-            default_tax = self.env['account.tax'].search([
-                ('type_tax_use', '=', tax_type),
+        # 3. Search across all active percent taxes for company
+        if not tax:
+            taxes = self.env['account.tax'].search([
+                ('amount_type', '=', 'percent'),
                 ('company_id', 'in', [company.id, False]),
                 ('active', '=', True),
-            ], order='sequence, id', limit=1)
-            if default_tax:
-                return default_tax
+            ])
+            for t in taxes:
+                if abs(t.amount - rate) < 0.15:
+                    tax = t
+                    break
 
+        if tax:
+            _logger.info("Matched PDF tax percentage %.2f%% to Odoo tax '%s' (ID: %s, Amount: %.2f%%)", rate, tax.name, tax.id, tax.amount)
+            return tax
+
+        _logger.info("No Odoo tax found matching percentage %.2f%% for company %s. Leaving tax BLANK.", rate, company.name)
         return self.env['account.tax']
 
     def _get_next_sequence_number(self, move_type, journal):
@@ -815,8 +838,6 @@ class AnalytixDocument(models.Model):
     def action_analyze_and_create_entry(self, override_account_id=None, override_line_accounts=None, override_tax_account_id=None):
         """Process the document file with OpenRouter (Gemini) and create corresponding accounting entry with product search & account validation."""
         self.ensure_one()
-        if self.status != 'approved':
-            raise UserError("AI Entry creation is only allowed for approved documents. Please approve the document first.")
         if not self.file_data:
             raise UserError("No file uploaded for this document record.")
 
@@ -848,7 +869,7 @@ class AnalytixDocument(models.Model):
                 "HTTP-Referer": base_url,
                 "X-Title": "Analytix Finance Dashboard",
             },
-            timeout=300,
+            timeout=90.0,
         )
 
         file_bytes = self._get_decoded_file_bytes()
@@ -1061,15 +1082,42 @@ class AnalytixDocument(models.Model):
         except (ValueError, TypeError):
             invoice_date = today_str
 
-        # Resolve Currency
+        # Resolve Currency: Extract from PDF or Fallback to Current Company Currency
+        raw_currency_code = (data.get('currency') or '').strip().upper()
+
+        CURRENCY_MAP = {
+            'AED': 'AED', 'DIRHAM': 'AED', 'DIRHAMS': 'AED', 'DHS': 'AED', 'DH': 'AED', 'د.إ': 'AED',
+            'SAR': 'SAR', 'SR': 'SAR', 'RIYAL': 'SAR', 'RIYALS': 'SAR', 'SAUDI RIYAL': 'SAR', 'ر.س': 'SAR',
+            'USD': 'USD', '$': 'USD', 'US DOLLAR': 'USD', 'DOLLAR': 'USD',
+            'EUR': 'EUR', '€': 'EUR', 'EURO': 'EUR',
+            'GBP': 'GBP', '£': 'GBP', 'POUND': 'GBP',
+            'QAR': 'QAR', 'KWD': 'KWD', 'BHD': 'BHD', 'OMR': 'OMR', 'EGP': 'EGP', 'INR': 'INR', '₹': 'INR',
+        }
+
+        currency_code = CURRENCY_MAP.get(raw_currency_code, raw_currency_code)
+
         currency_id = False
-        currency_code = (data.get('currency') or '').strip().upper()
+        currency = False
+
         if currency_code:
-            currency = self.env['res.currency'].search(
-                [('name', '=', currency_code)], limit=1
-            )
-            if currency:
-                currency_id = currency.id
+            # Search with active_test=False to find currency even if inactive in database
+            currency = self.env['res.currency'].with_context(active_test=False).search([
+                '|', ('name', '=ilike', currency_code), ('symbol', '=ilike', currency_code)
+            ], limit=1)
+
+        if currency:
+            if not currency.active:
+                currency.sudo().write({'active': True})
+            currency_id = currency.id
+            currency_code = currency.name
+            _logger.info("Using document extracted currency '%s' (ID: %s)", currency_code, currency_id)
+        else:
+            # Fallback: Call current company's currency if not mentioned in PDF or not found in system
+            company_currency = self.env.company.currency_id
+            if company_currency:
+                currency_id = company_currency.id
+                currency_code = company_currency.name
+                _logger.info("Currency not mentioned in PDF or not found in system. Calling current company's currency '%s' (ID: %s)", currency_code, currency_id)
 
         company = self.env.company
 
@@ -1337,8 +1385,16 @@ class AnalytixDocument(models.Model):
             print(f"[AI BILL DEBUG] FINAL ASSIGNED EXPENSE TAX -> {line_tax.name if line_tax else 'None'}")
             print("=================================================================\n")
 
-            if not line_tax and (json_tax > 0 or global_tax_rate > 0):
-                line_tax = config_tax or self._resolve_tax(move_type, global_tax_rate, tax_amount=json_tax)
+            if json_tax > 0 or global_tax_rate > 0:
+                line_tax = self._resolve_tax(
+                    move_type,
+                    tax_rate=global_tax_rate,
+                    tax_amount=json_tax,
+                    subtotal=json_subtotal,
+                    total=json_total
+                )
+            else:
+                line_tax = None
 
             # ── 4. Calculate Subtotal Price Unit for Consolidated Single Line ──
             exp_price_unit = json_subtotal if json_subtotal > 0 else (
@@ -1416,9 +1472,16 @@ class AnalytixDocument(models.Model):
                 if not tax_rate and global_tax_rate:
                     tax_rate = global_tax_rate
 
-                # Only apply tax if PDF explicitly specifies tax > 0 or tax_rate > 0
+                item_subtotal = (qty * price) if (qty > 0 and price > 0) else 0.0
                 if (json_tax > 0 or tax_rate > 0):
-                    tax = config_tax or self._resolve_tax(move_type, tax_rate, tax_amount=json_tax)
+                    resolved_tax = self._resolve_tax(
+                        move_type,
+                        tax_rate=tax_rate,
+                        tax_amount=json_tax if not tax_rate else 0.0,
+                        subtotal=item_subtotal or json_subtotal,
+                        total=json_total
+                    )
+                    tax = resolved_tax if resolved_tax else None
                 else:
                     tax = None
 
@@ -1556,7 +1619,17 @@ class AnalytixDocument(models.Model):
         if not invoice_line_vals:
             total = json_total or json_subtotal
             price_unit = json_subtotal if json_subtotal > 0 else total
-            tax = config_tax or self._resolve_tax(move_type, global_tax_rate, tax_amount=json_tax)
+            if (json_tax > 0 or global_tax_rate > 0):
+                resolved_tax = self._resolve_tax(
+                    move_type,
+                    tax_rate=global_tax_rate,
+                    tax_amount=json_tax,
+                    subtotal=json_subtotal,
+                    total=json_total
+                )
+                tax = resolved_tax if resolved_tax else None
+            else:
+                tax = None
 
             line_account = None
             if override_account_id:

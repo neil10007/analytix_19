@@ -384,148 +384,130 @@
     color: var(--kr-dark-text);
 }
 
-body:has(.o_web_client) .modal:not(.s_popup),
-body:has(.o_web_client) .o_dialog,
-body:has(.o_web_client) .o_technical_modal {
+body.kr_sp_theme_dark .modal:not(.s_popup),
+body.kr_sp_theme_dark .o_dialog,
+body.kr_sp_theme_dark .o_technical_modal {
     color: #e5e7eb;
 }
 
-body:has(.o_web_client) .modal-backdrop,
-body:has(.o_web_client) .modal:not([data-bs-backdrop="false"]) {
+body.kr_sp_theme_dark .modal-backdrop,
+body.kr_sp_theme_dark .modal:not([data-bs-backdrop="false"]) {
     background-color: rgba(2, 6, 23, 0.72) !important;
 }
 
-.modal-content,
-body:has(.o_web_client) .modal-content,
-body:has(.o_web_client) .o_dialog .modal-content,
-body:has(.o_web_client) .o_technical_modal .modal-content,
-body:has(.o_web_client) .o_error_dialog .modal-content,
-body:has(.o_web_client) .o_install_prompt {
+body.kr_sp_theme_dark .modal-content,
+body.kr_sp_theme_dark .o_dialog .modal-content,
+body.kr_sp_theme_dark .o_technical_modal .modal-content,
+body.kr_sp_theme_dark .o_error_dialog .modal-content,
+body.kr_sp_theme_dark .o_install_prompt {
     border: 1px solid #2b3647 !important;
     background: #18212f !important;
     color: #e5e7eb !important;
     box-shadow: 0 22px 60px rgba(0, 0, 0, 0.42) !important;
 }
 
-.modal-header,
-.modal-footer,
-.modal-content > .modal-header,
-.modal-content > .modal-footer,
-.modal-header.bg-white,
-.modal-header.bg-light,
-.modal-header.bg-body,
-.modal-header.bg-100,
-.modal-footer.bg-white,
-.modal-footer.bg-light,
-.modal-footer.bg-body,
-.modal-footer.bg-100,
-body:has(.o_web_client) .modal-header,
-body:has(.o_web_client) .modal-footer,
-body:has(.o_web_client) .o_dialog .modal-header,
-body:has(.o_web_client) .o_dialog .modal-footer {
+body.kr_sp_theme_dark .modal-header,
+body.kr_sp_theme_dark .modal-footer,
+body.kr_sp_theme_dark .modal-content > .modal-header,
+body.kr_sp_theme_dark .modal-content > .modal-footer,
+body.kr_sp_theme_dark .o_dialog .modal-header,
+body.kr_sp_theme_dark .o_dialog .modal-footer {
     border-color: #2b3647 !important;
     background: #18212f !important;
     background-color: #18212f !important;
     color: #e5e7eb !important;
 }
 
-.modal-header :is(.modal-title, h1, h2, h3, h4, h5, h6, label, span, p),
-.modal-footer :is(.modal-title, h1, h2, h3, h4, h5, h6, label, span, p),
-body:has(.o_web_client) .modal-header :is(.modal-title, h1, h2, h3, h4, h5, h6, label, span, p),
-body:has(.o_web_client) .modal-footer :is(.modal-title, h1, h2, h3, h4, h5, h6, label, span, p) {
+body.kr_sp_theme_dark .modal-header :is(.modal-title, h1, h2, h3, h4, h5, h6, label, span, p),
+body.kr_sp_theme_dark .modal-footer :is(.modal-title, h1, h2, h3, h4, h5, h6, label, span, p) {
     color: inherit !important;
 }
 
-.modal-body,
-body:has(.o_web_client) .modal-body,
-body:has(.o_web_client) .o_dialog .modal-body,
-.modal-title,
-body:has(.o_web_client) .modal-title,
-body:has(.o_web_client) .o_dialog .modal-title,
-body:has(.o_web_client) .o_error_dialog,
-body:has(.o_web_client) .o_error_dialog :is(pre, code, p, div, span, label) {
+body.kr_sp_theme_dark .modal-body,
+body.kr_sp_theme_dark .o_dialog .modal-body,
+body.kr_sp_theme_dark .modal-title,
+body.kr_sp_theme_dark .o_dialog .modal-title,
+body.kr_sp_theme_dark .o_error_dialog,
+body.kr_sp_theme_dark .o_error_dialog :is(pre, code, p, div, span, label) {
     color: #e5e7eb !important;
 }
 
-.modal-body :is(.text-dark, .text-body, .text-black, .text-reset),
-body:has(.o_web_client) .modal-body :is(.text-dark, .text-body, .text-black, .text-reset),
-body:has(.o_web_client) .o_dialog :is(.text-dark, .text-body, .text-black, .text-reset) {
+body.kr_sp_theme_dark .modal-body :is(.text-dark, .text-body, .text-black, .text-reset),
+body.kr_sp_theme_dark .o_dialog :is(.text-dark, .text-body, .text-black, .text-reset) {
     color: #e5e7eb !important;
 }
 
-.modal-body :is(.text-muted, .text-secondary, .text-body-secondary),
-body:has(.o_web_client) .modal-body :is(.text-muted, .text-secondary, .text-body-secondary),
-body:has(.o_web_client) .o_dialog :is(.text-muted, .text-secondary, .text-body-secondary) {
+body.kr_sp_theme_dark .modal-body :is(.text-muted, .text-secondary, .text-body-secondary),
+body.kr_sp_theme_dark .o_dialog :is(.text-muted, .text-secondary, .text-body-secondary) {
     color: #9ca3af !important;
 }
 
-.modal-body :is(.bg-white, .bg-light, .bg-body, .bg-view, .bg-100, .text-bg-light, .text-bg-100),
-.modal-header :is(.bg-white, .bg-light, .bg-body, .bg-view, .bg-100, .text-bg-light, .text-bg-100),
-.modal-footer :is(.bg-white, .bg-light, .bg-body, .bg-view, .bg-100, .text-bg-light, .text-bg-100),
-body:has(.o_web_client) .modal-body :is(.bg-white, .bg-light, .bg-body, .bg-view, .bg-100),
-body:has(.o_web_client) .o_dialog :is(.bg-white, .bg-light, .bg-body, .bg-view, .bg-100) {
+body.kr_sp_theme_dark .modal-body :is(.bg-white, .bg-light, .bg-body, .bg-view, .bg-100),
+body.kr_sp_theme_dark .modal-header :is(.bg-white, .bg-light, .bg-body, .bg-view, .bg-100),
+body.kr_sp_theme_dark .modal-footer :is(.bg-white, .bg-light, .bg-body, .bg-view, .bg-100),
+body.kr_sp_theme_dark .o_dialog :is(.bg-white, .bg-light, .bg-body, .bg-view, .bg-100) {
     background: #111827 !important;
     color: #e5e7eb !important;
 }
 
-.modal :is(.card, .card-header, .card-body, .card-footer, .list-group, .list-group-item, .table, table, thead, tbody, tr, th, td),
-.o_dialog :is(.card, .card-header, .card-body, .card-footer, .list-group, .list-group-item, .table, table, thead, tbody, tr, th, td),
-.o_error_dialog :is(pre, code, .card, .table, table, thead, tbody, tr, th, td),
-.o_modal_changes,
-.o_modal_changes :is(thead, tbody, tr, th, td),
-.o_export_data_dialog :is(.o_export_tree_item, .o_export_field_sortable > *:not(.o_remove_field), .o_exported_lists, .o_exported_lists_select),
-.o_kanban_examples_dialog :is(.o_kanban_examples_ghost, .card, .bg-white, .bg-100),
-.o_kanban_cover_container,
-.o_kanban_cover_image,
-.o_barcode_mobile_container,
-.o_barcode_video,
-.o_translation_dialog,
-.o_translation_dialog :is(.o_field_translate, .o_translation_value, .table, table, tr, td, th),
-.o_domain_selector_debug_container,
-.o_expression_editor_debug_container,
-.o_modal_container,
-.o_act_window.modal-body {
+body.kr_sp_theme_dark .modal :is(.card, .card-header, .card-body, .card-footer, .list-group, .list-group-item, .table, table, thead, tbody, tr, th, td),
+body.kr_sp_theme_dark .o_dialog :is(.card, .card-header, .card-body, .card-footer, .list-group, .list-group-item, .table, table, thead, tbody, tr, th, td),
+body.kr_sp_theme_dark .o_error_dialog :is(pre, code, .card, .table, table, thead, tbody, tr, th, td),
+body.kr_sp_theme_dark .o_modal_changes,
+body.kr_sp_theme_dark .o_modal_changes :is(thead, tbody, tr, th, td),
+body.kr_sp_theme_dark .o_export_data_dialog :is(.o_export_tree_item, .o_export_field_sortable > *:not(.o_remove_field), .o_exported_lists, .o_exported_lists_select),
+body.kr_sp_theme_dark .o_kanban_examples_dialog :is(.o_kanban_examples_ghost, .card, .bg-white, .bg-100),
+body.kr_sp_theme_dark .o_kanban_cover_container,
+body.kr_sp_theme_dark .o_kanban_cover_image,
+body.kr_sp_theme_dark .o_barcode_mobile_container,
+body.kr_sp_theme_dark .o_barcode_video,
+body.kr_sp_theme_dark .o_translation_dialog,
+body.kr_sp_theme_dark .o_translation_dialog :is(.o_field_translate, .o_translation_value, .table, table, tr, td, th),
+body.kr_sp_theme_dark .o_domain_selector_debug_container,
+body.kr_sp_theme_dark .o_expression_editor_debug_container,
+body.kr_sp_theme_dark .o_modal_container,
+body.kr_sp_theme_dark .o_act_window.modal-body {
     border-color: #2b3647 !important;
     background: #111827 !important;
     background-color: #111827 !important;
     color: #e5e7eb !important;
 }
 
-.modal :is(.table-striped > tbody > tr:nth-of-type(odd) > *, .table-hover > tbody > tr:hover > *),
-.o_dialog :is(.table-striped > tbody > tr:nth-of-type(odd) > *, .table-hover > tbody > tr:hover > *),
-.o_modal_changes :is(.table-striped > tbody > tr:nth-of-type(odd) > *, tr:hover > *) {
+body.kr_sp_theme_dark .modal :is(.table-striped > tbody > tr:nth-of-type(odd) > *, .table-hover > tbody > tr:hover > *),
+body.kr_sp_theme_dark .o_dialog :is(.table-striped > tbody > tr:nth-of-type(odd) > *, .table-hover > tbody > tr:hover > *),
+body.kr_sp_theme_dark .o_modal_changes :is(.table-striped > tbody > tr:nth-of-type(odd) > *, tr:hover > *) {
     --bs-table-bg-type: #18212f;
     --bs-table-hover-bg: #202b3a;
     background-color: #18212f !important;
     color: #e5e7eb !important;
 }
 
-.modal :is(pre, code, .font-monospace),
-.o_dialog :is(pre, code, .font-monospace),
-.o_error_dialog :is(pre, code),
-.o_domain_selector_debug_container,
-.o_expression_editor_debug_container {
+body.kr_sp_theme_dark .modal :is(pre, code, .font-monospace),
+body.kr_sp_theme_dark .o_dialog :is(pre, code, .font-monospace),
+body.kr_sp_theme_dark .o_error_dialog :is(pre, code),
+body.kr_sp_theme_dark .o_domain_selector_debug_container,
+body.kr_sp_theme_dark .o_expression_editor_debug_container {
     border-color: #2b3647 !important;
     background: #0f172a !important;
     color: #cbd5e1 !important;
 }
 
-body:has(.o_web_client) .modal .btn-close,
-body:has(.o_web_client) .o_dialog .btn-close,
-body:has(.o_web_client) .o_notification_close {
+body.kr_sp_theme_dark .modal .btn-close,
+body.kr_sp_theme_dark .o_dialog .btn-close,
+body.kr_sp_theme_dark .o_notification_close {
     filter: invert(1) grayscale(1);
     opacity: 0.78;
 }
 
-body:has(.o_web_client) .modal .btn-close:hover,
-body:has(.o_web_client) .o_dialog .btn-close:hover,
-body:has(.o_web_client) .o_notification_close:hover {
+body.kr_sp_theme_dark .modal .btn-close:hover,
+body.kr_sp_theme_dark .o_dialog .btn-close:hover,
+body.kr_sp_theme_dark .o_notification_close:hover {
     opacity: 1;
 }
 
-body:has(.o_web_client) .modal :is(.form-control, .form-select, .o_input, input:not([type="checkbox"]):not([type="radio"]), textarea, select),
-body:has(.o_web_client) .o_dialog :is(.form-control, .form-select, .o_input, input:not([type="checkbox"]):not([type="radio"]), textarea, select),
-.o_web_client :is(.form-control, .form-select, .o_input, input:not([type="checkbox"]):not([type="radio"]), textarea, select, .o_field_monetary, .o_field_number, .o_field_float, .o_field_many2one, .o_field_selection, .o_field_char, .o_field_text) {
+body.kr_sp_theme_dark .modal :is(.form-control, .form-select, .o_input, input:not([type="checkbox"]):not([type="radio"]), textarea, select),
+body.kr_sp_theme_dark .o_dialog :is(.form-control, .form-select, .o_input, input:not([type="checkbox"]):not([type="radio"]), textarea, select),
+body.kr_sp_theme_dark .o_web_client :is(.form-control, .form-select, .o_input, input:not([type="checkbox"]):not([type="radio"]), textarea, select, .o_field_monetary, .o_field_number, .o_field_float, .o_field_many2one, .o_field_selection, .o_field_char, .o_field_text) {
     --o-input-text-color: #ffffff !important;
     --o-input-bg: #111827 !important;
     --o-input-border-color: #2b3647 !important;
@@ -536,9 +518,9 @@ body:has(.o_web_client) .o_dialog :is(.form-control, .form-select, .o_input, inp
     opacity: 1 !important;
 }
 
-.o_web_client :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea, .form-control, .form-select, .o_input):is(:disabled, [disabled], [readonly], :read-only, .disabled, .o_disabled),
-.o_web_client .o_readonly_modifier :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea, .o_input, span, div, a),
-.o_web_client .o_field_widget:is(.o_readonly_modifier, .o_disabled, [disabled]) :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea, .o_input, span, div, a) {
+body.kr_sp_theme_dark .o_web_client :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea, .form-control, .form-select, .o_input):is(:disabled, [disabled], [readonly], :read-only, .disabled, .o_disabled),
+body.kr_sp_theme_dark .o_web_client .o_readonly_modifier :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea, .o_input, span, div, a),
+body.kr_sp_theme_dark .o_web_client .o_field_widget:is(.o_readonly_modifier, .o_disabled, [disabled]) :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea, .o_input, span, div, a) {
     --o-input-text-color: #ffffff !important;
     color: #ffffff !important;
     -webkit-text-fill-color: #ffffff !important;
@@ -546,47 +528,48 @@ body:has(.o_web_client) .o_dialog :is(.form-control, .form-select, .o_input, inp
     background-color: #18212f !important;
 }
 
-.o_web_client :is(.o_field_monetary, .o_field_number, .o_field_float, .o_field_many2one, .o_field_selection, .o_field_widget) :is(input, .o_input, span, div, a, p, .o_monetary_currency, .input-group-text) {
+body.kr_sp_theme_dark .o_web_client :is(.o_field_monetary, .o_field_number, .o_field_float, .o_field_many2one, .o_field_selection, .o_field_widget) :is(input, .o_input, span, div, a, p, .o_monetary_currency, .input-group-text) {
     color: #ffffff !important;
     -webkit-text-fill-color: #ffffff !important;
     opacity: 1 !important;
 }
 
-.o_web_client :is(.text-danger, .text-danger-emphasis, .invalid-feedback) {
+body.kr_sp_theme_dark .o_web_client :is(.text-danger, .text-danger-emphasis, .invalid-feedback) {
     color: #fecaca !important;
     -webkit-text-fill-color: #fecaca !important;
 }
 
-body:has(.o_web_client) .modal :is(.form-control, .form-select, .o_input, input, textarea, select)::placeholder,
-body:has(.o_web_client) .o_dialog :is(.form-control, .form-select, .o_input, input, textarea, select)::placeholder {
+body.kr_sp_theme_dark .modal :is(.form-control, .form-select, .o_input, input, textarea, select)::placeholder,
+body.kr_sp_theme_dark .o_dialog :is(.form-control, .form-select, .o_input, input, textarea, select)::placeholder {
     color: #9ca3af !important;
     -webkit-text-fill-color: #9ca3af !important;
 }
 
-body:has(.o_web_client) .modal .btn:not(.btn-primary):not(.btn-link):not(.btn-danger):not(.btn-success),
-body:has(.o_web_client) .o_dialog .btn:not(.btn-primary):not(.btn-link):not(.btn-danger):not(.btn-success),
-body:has(.o_web_client) .popover .btn:not(.btn-primary):not(.btn-link):not(.btn-danger):not(.btn-success),
-body:has(.o_web_client) .o_popover .btn:not(.btn-primary):not(.btn-link):not(.btn-danger):not(.btn-success) {
+body.kr_sp_theme_dark .modal .btn:not(.btn-primary):not(.btn-link):not(.btn-danger):not(.btn-success),
+body.kr_sp_theme_dark .o_dialog .btn:not(.btn-primary):not(.btn-link):not(.btn-danger):not(.btn-success),
+body.kr_sp_theme_dark .popover .btn:not(.btn-primary):not(.btn-link):not(.btn-danger):not(.btn-success),
+body.kr_sp_theme_dark .o_popover .btn:not(.btn-primary):not(.btn-link):not(.btn-danger):not(.btn-success) {
     border-color: #2b3647;
     background: #202b3a;
     color: #e5e7eb;
 }
 
-body:has(.o_web_client) .modal .btn:not(.btn-primary):not(.btn-link):not(.btn-danger):not(.btn-success):hover,
-body:has(.o_web_client) .o_dialog .btn:not(.btn-primary):not(.btn-link):not(.btn-danger):not(.btn-success):hover,
-body:has(.o_web_client) .popover .btn:not(.btn-primary):not(.btn-link):not(.btn-danger):not(.btn-success):hover,
-body:has(.o_web_client) .o_popover .btn:not(.btn-primary):not(.btn-link):not(.btn-danger):not(.btn-success):hover {
+body.kr_sp_theme_dark .modal .btn:not(.btn-primary):not(.btn-link):not(.btn-danger):not(.btn-success):hover,
+body.kr_sp_theme_dark .o_dialog .btn:not(.btn-primary):not(.btn-link):not(.btn-danger):not(.btn-success):hover,
+body.kr_sp_theme_dark .popover .btn:not(.btn-primary):not(.btn-link):not(.btn-danger):not(.btn-success):hover,
+body.kr_sp_theme_dark .o_popover .btn:not(.btn-primary):not(.btn-link):not(.btn-danger):not(.btn-success):hover {
     border-color: rgba(0, 212, 200, 0.48);
     background: #263244;
     color: #ffffff;
 }
 
-body:has(.o_web_client) .modal .btn-primary,
-body:has(.o_web_client) .o_dialog .btn-primary {
+body.kr_sp_theme_dark .modal .btn-primary,
+body.kr_sp_theme_dark .o_dialog .btn-primary {
     border-color: transparent;
     background: #00d4c8;
     color: #080d18;
 }
+
 
 .dropdown-menu,
 .o-dropdown--menu,
@@ -605,12 +588,12 @@ body:has(.o_web_client) .o_dialog .btn-primary {
 .o_record_selector,
 .o_bottom_sheet,
 .o_bottom_sheet_body,
-body:has(.o_web_client) .popover,
-body:has(.o_web_client) .o_popover,
-body:has(.o_web_client) .o_model_field_selector_popover,
-body:has(.o_web_client) .o-autocomplete--dropdown-menu,
-body:has(.o_web_client) .ui-autocomplete,
-body:has(.o_web_client) .tooltip-inner {
+body.kr_sp_theme_dark .popover,
+body.kr_sp_theme_dark .o_popover,
+body.kr_sp_theme_dark .o_model_field_selector_popover,
+body.kr_sp_theme_dark .o-autocomplete--dropdown-menu,
+body.kr_sp_theme_dark .ui-autocomplete,
+body.kr_sp_theme_dark .tooltip-inner {
     border-color: #2b3647 !important;
     background: #18212f !important;
     color: #e5e7eb !important;
@@ -624,9 +607,9 @@ body:has(.o_web_client) .tooltip-inner {
 .o_time_picker_dropdown :is(.btn, button, span, label),
 .o_web_sign_name_and_signature :is(label, span, p, div),
 .o_tree_editor :is(.bg-100, .bg-white, .bg-light),
-body:has(.o_web_client) .dropdown-menu :is(.dropdown-item, .o-dropdown-item, .btn, a, span, label),
-body:has(.o_web_client) .o-dropdown--menu :is(.dropdown-item, .o-dropdown-item, .btn, a, span, label),
-body:has(.o_web_client) .o_select_menu_menu :is(.dropdown-item, .o-dropdown-item, .o_select_menu_item, .btn, a, span, label) {
+body.kr_sp_theme_dark .dropdown-menu :is(.dropdown-item, .o-dropdown-item, .btn, a, span, label),
+body.kr_sp_theme_dark .o-dropdown--menu :is(.dropdown-item, .o-dropdown-item, .btn, a, span, label),
+body.kr_sp_theme_dark .o_select_menu_menu :is(.dropdown-item, .o-dropdown-item, .o_select_menu_item, .btn, a, span, label) {
     color: #e5e7eb !important;
 }
 
@@ -641,15 +624,15 @@ body:has(.o_web_client) .o_select_menu_menu :is(.dropdown-item, .o-dropdown-item
 .o_select_menu_menu :is(.dropdown-item, .o-dropdown-item, .o_select_menu_item).active,
 .o_datetime_picker :is(.btn, button):hover,
 .o_datetime_picker :is(.btn, button).active,
-body:has(.o_web_client) .dropdown-menu :is(.dropdown-item, .o-dropdown-item):hover,
-body:has(.o_web_client) .o-dropdown--menu :is(.dropdown-item, .o-dropdown-item):hover,
-body:has(.o_web_client) .o_select_menu_menu :is(.dropdown-item, .o-dropdown-item, .o_select_menu_item):hover {
+body.kr_sp_theme_dark .dropdown-menu :is(.dropdown-item, .o-dropdown-item):hover,
+body.kr_sp_theme_dark .o-dropdown--menu :is(.dropdown-item, .o-dropdown-item):hover,
+body.kr_sp_theme_dark .o_select_menu_menu :is(.dropdown-item, .o-dropdown-item, .o_select_menu_item):hover {
     background: #202b3a !important;
     color: #ffffff !important;
 }
 
-body:has(.o_web_client) .modal :is(.border, .border-top, .border-bottom, .border-start, .border-end),
-body:has(.o_web_client) .o_dialog :is(.border, .border-top, .border-bottom, .border-start, .border-end),
+body.kr_sp_theme_dark .modal :is(.border, .border-top, .border-bottom, .border-start, .border-end),
+body.kr_sp_theme_dark .o_dialog :is(.border, .border-top, .border-bottom, .border-start, .border-end),
 .modal :is(.border, .border-top, .border-bottom, .border-start, .border-end),
 .o_dialog :is(.border, .border-top, .border-bottom, .border-start, .border-end),
 .dropdown-menu :is(.border, .border-top, .border-bottom, .border-start, .border-end),
@@ -658,52 +641,52 @@ body:has(.o_web_client) .o_dialog :is(.border, .border-top, .border-bottom, .bor
     border-color: #2b3647 !important;
 }
 
-body:has(.o_web_client) .popover-header,
-body:has(.o_web_client) .popover-body,
-body:has(.o_web_client) .o_popover .popover-header,
-body:has(.o_web_client) .o_popover .popover-body,
-body:has(.o_web_client) .o_model_field_selector_popover_title,
-body:has(.o_web_client) .o_model_field_selector_popover_footer {
+body.kr_sp_theme_dark .popover-header,
+body.kr_sp_theme_dark .popover-body,
+body.kr_sp_theme_dark .o_popover .popover-header,
+body.kr_sp_theme_dark .o_popover .popover-body,
+body.kr_sp_theme_dark .o_model_field_selector_popover_title,
+body.kr_sp_theme_dark .o_model_field_selector_popover_footer {
     border-color: #2b3647 !important;
     background: #18212f !important;
     color: #e5e7eb !important;
 }
 
-body:has(.o_web_client) .popover-arrow::before,
-body:has(.o_web_client) .popover-arrow::after,
-body:has(.o_web_client) .o_popover > .popover-arrow::before,
-body:has(.o_web_client) .o_popover > .popover-arrow::after {
+body.kr_sp_theme_dark .popover-arrow::before,
+body.kr_sp_theme_dark .popover-arrow::after,
+body.kr_sp_theme_dark .o_popover > .popover-arrow::before,
+body.kr_sp_theme_dark .o_popover > .popover-arrow::after {
     border-top-color: #18212f !important;
     border-right-color: #18212f !important;
     border-bottom-color: #18212f !important;
     border-left-color: #18212f !important;
 }
 
-body:has(.o_web_client) .o_model_field_selector_popover_item,
-body:has(.o_web_client) .o_model_field_selector_popover_item .btn,
-body:has(.o_web_client) .o-autocomplete--dropdown-item,
-body:has(.o_web_client) .ui-menu-item,
-body:has(.o_web_client) .ui-menu-item-wrapper {
+body.kr_sp_theme_dark .o_model_field_selector_popover_item,
+body.kr_sp_theme_dark .o_model_field_selector_popover_item .btn,
+body.kr_sp_theme_dark .o-autocomplete--dropdown-item,
+body.kr_sp_theme_dark .ui-menu-item,
+body.kr_sp_theme_dark .ui-menu-item-wrapper {
     border-color: #2b3647 !important;
     background: #18212f !important;
     color: #e5e7eb !important;
 }
 
-body:has(.o_web_client) .o_model_field_selector_popover_item:hover,
-body:has(.o_web_client) .o_model_field_selector_popover_item.active,
-body:has(.o_web_client) .o-autocomplete--dropdown-item:hover,
-body:has(.o_web_client) .ui-menu-item-wrapper:hover,
-body:has(.o_web_client) .ui-state-active {
+body.kr_sp_theme_dark .o_model_field_selector_popover_item:hover,
+body.kr_sp_theme_dark .o_model_field_selector_popover_item.active,
+body.kr_sp_theme_dark .o-autocomplete--dropdown-item:hover,
+body.kr_sp_theme_dark .ui-menu-item-wrapper:hover,
+body.kr_sp_theme_dark .ui-state-active {
     background: #202b3a !important;
     color: #ffffff !important;
 }
 
-body:has(.o_web_client) .toast,
-body:has(.o_web_client) .toast-header,
-body:has(.o_web_client) .o_notification,
-body:has(.o_web_client) .o_notification_content,
-body:has(.o_web_client) .o_notification_body,
-body:has(.o_web_client) .o_notification_title {
+body.kr_sp_theme_dark .toast,
+body.kr_sp_theme_dark .toast-header,
+body.kr_sp_theme_dark .o_notification,
+body.kr_sp_theme_dark .o_notification_content,
+body.kr_sp_theme_dark .o_notification_body,
+body.kr_sp_theme_dark .o_notification_title {
     border-color: #2b3647 !important;
     background: #18212f !important;
     background-color: #18212f !important;
@@ -711,56 +694,56 @@ body:has(.o_web_client) .o_notification_title {
     box-shadow: 0 18px 42px rgba(0, 0, 0, 0.34) !important;
 }
 
-body:has(.o_web_client) .o_notification:is(.bg-100, .bg-white, .bg-light, .bg-body, .bg-view, .text-bg-light, .text-bg-100),
-body:has(.o_web_client) .o_notification :is(.bg-100, .bg-white, .bg-light, .bg-body, .bg-view, .text-bg-light, .text-bg-100) {
+body.kr_sp_theme_dark .o_notification:is(.bg-100, .bg-white, .bg-light, .bg-body, .bg-view, .text-bg-light, .text-bg-100),
+body.kr_sp_theme_dark .o_notification :is(.bg-100, .bg-white, .bg-light, .bg-body, .bg-view, .text-bg-light, .text-bg-100) {
     background: #18212f !important;
     background-color: #18212f !important;
     color: #ffffff !important;
 }
 
-body:has(.o_web_client) .o_notification :is(.o_notification_content, .o_notification_title, .o_notification_body, span, p, div, a, strong, small, pre, code),
-body:has(.o_web_client) .toast-body {
+body.kr_sp_theme_dark .o_notification :is(.o_notification_content, .o_notification_title, .o_notification_body, span, p, div, a, strong, small, pre, code),
+body.kr_sp_theme_dark .toast-body {
     color: #ffffff !important;
 }
 
-body:has(.o_web_client) .o_notification_buttons .btn {
+body.kr_sp_theme_dark .o_notification_buttons .btn {
     border-color: #2b3647 !important;
     background: #202b3a !important;
     color: #ffffff !important;
 }
 
-body:has(.o_web_client) .alert {
+body.kr_sp_theme_dark .alert {
     border-color: #2b3647;
     background: #18212f;
     color: #e5e7eb;
 }
 
-body:has(.o_web_client) .alert-warning {
+body.kr_sp_theme_dark .alert-warning {
     border-color: rgba(245, 158, 11, 0.38);
     background: rgba(245, 158, 11, 0.16);
     color: #fde68a;
 }
 
-body:has(.o_web_client) .alert-danger {
+body.kr_sp_theme_dark .alert-danger {
     border-color: rgba(248, 113, 113, 0.42);
     background: rgba(127, 29, 29, 0.48);
     color: #fecaca;
 }
 
-body:has(.o_web_client) .alert-info {
+body.kr_sp_theme_dark .alert-info {
     border-color: rgba(56, 189, 248, 0.38);
     background: rgba(12, 74, 110, 0.48);
     color: #bae6fd;
 }
 
-body:has(.o_web_client) .alert-success {
+body.kr_sp_theme_dark .alert-success {
     border-color: rgba(74, 222, 128, 0.38);
     background: rgba(20, 83, 45, 0.44);
     color: #bbf7d0;
 }
 
 :root:has(.o_web_client),
-body:has(.o_web_client) {
+body.kr_sp_theme_dark {
     --kr-command-palette-bg: #111827;
     --kr-command-palette-header-bg: rgba(24, 33, 47, 0.96);
     --kr-command-palette-list-bg: #111827;
@@ -783,26 +766,26 @@ body:has(.o_web_client) {
 }
 
 .o_command_palette,
-body:has(.o_web_client) .o_command_palette,
+body.kr_sp_theme_dark .o_command_palette,
 .o_command_palette_search,
-body:has(.o_web_client) .o_command_palette_search,
+body.kr_sp_theme_dark .o_command_palette_search,
 .o_command,
-body:has(.o_web_client) .o_command,
+body.kr_sp_theme_dark .o_command,
 .o_command_default,
-body:has(.o_web_client) .o_command_default {
+body.kr_sp_theme_dark .o_command_default {
     border-color: #2b3647 !important;
     background: #18212f !important;
     color: #e5e7eb !important;
 }
 
 .o_command:hover,
-body:has(.o_web_client) .o_command:hover,
+body.kr_sp_theme_dark .o_command:hover,
 .o_command.focused,
-body:has(.o_web_client) .o_command.focused,
+body.kr_sp_theme_dark .o_command.focused,
 .o_command_default:hover,
-body:has(.o_web_client) .o_command_default:hover,
+body.kr_sp_theme_dark .o_command_default:hover,
 .o_command_default.focused,
-body:has(.o_web_client) .o_command_default.focused {
+body.kr_sp_theme_dark .o_command_default.focused {
     background: #202b3a !important;
     color: #ffffff !important;
 }
@@ -811,9 +794,9 @@ body:has(.o_web_client) .o_command_default.focused {
 .modal-body.o_command_palette,
 .o_command_palette.modal-body,
 .o_command_palette:has(.o_command_palette_search),
-body:has(.o_web_client) .modal-content:has(.o_command_palette_search),
-body:has(.o_web_client) .modal-body:has(.o_command_palette_search),
-body:has(.o_web_client) main.modal-body:has(.o_command_palette_search) {
+body.kr_sp_theme_dark .modal-content:has(.o_command_palette_search),
+body.kr_sp_theme_dark .modal-body:has(.o_command_palette_search),
+body.kr_sp_theme_dark main.modal-body:has(.o_command_palette_search) {
     border-color: #2b3647 !important;
     border-radius: 16px !important;
     background: #111827 !important;
@@ -823,16 +806,16 @@ body:has(.o_web_client) main.modal-body:has(.o_command_palette_search) {
 }
 
 .o_command_palette > div,
-body:has(.o_web_client) .o_command_palette > div,
+body.kr_sp_theme_dark .o_command_palette > div,
 .o_command_palette:has(.o_command_palette_search) > div,
-body:has(.o_web_client) main.modal-body:has(.o_command_palette_search) > div {
+body.kr_sp_theme_dark main.modal-body:has(.o_command_palette_search) > div {
     overflow: hidden !important;
     border-radius: inherit !important;
     background: #111827 !important;
 }
 
 .o_command_palette .o_command_palette_search,
-body:has(.o_web_client) main.modal-body:has(.o_command_palette_search) .o_command_palette_search {
+body.kr_sp_theme_dark main.modal-body:has(.o_command_palette_search) .o_command_palette_search {
     border-bottom-color: #2b3647 !important;
     background: rgba(24, 33, 47, 0.96) !important;
     color: #e5e7eb !important;
@@ -842,15 +825,15 @@ body:has(.o_web_client) main.modal-body:has(.o_command_palette_search) .o_comman
 .o_command_palette .border-bottom,
 .o_command_palette .border-start,
 .o_command_palette .border-end,
-body:has(.o_web_client) main.modal-body:has(.o_command_palette_search) .border-top,
-body:has(.o_web_client) main.modal-body:has(.o_command_palette_search) .border-bottom,
-body:has(.o_web_client) main.modal-body:has(.o_command_palette_search) .border-start,
-body:has(.o_web_client) main.modal-body:has(.o_command_palette_search) .border-end {
+body.kr_sp_theme_dark main.modal-body:has(.o_command_palette_search) .border-top,
+body.kr_sp_theme_dark main.modal-body:has(.o_command_palette_search) .border-bottom,
+body.kr_sp_theme_dark main.modal-body:has(.o_command_palette_search) .border-start,
+body.kr_sp_theme_dark main.modal-body:has(.o_command_palette_search) .border-end {
     border-color: #2b3647 !important;
 }
 
 .o_command_palette .o_command_palette_search .form-control,
-body:has(.o_web_client) main.modal-body:has(.o_command_palette_search) .o_command_palette_search .form-control {
+body.kr_sp_theme_dark main.modal-body:has(.o_command_palette_search) .o_command_palette_search .form-control {
     background: transparent !important;
     color: #e5e7eb !important;
     caret-color: #00d4c8;
@@ -860,35 +843,35 @@ body:has(.o_web_client) main.modal-body:has(.o_command_palette_search) .o_comman
 .o_command_palette .o_command_palette_search .input-group-text,
 .o_command_palette .o_command_category .text-muted,
 .o_command_palette .o_command_palette_listbox_empty,
-body:has(.o_web_client) main.modal-body:has(.o_command_palette_search) .o_command_palette_search .form-control::placeholder,
-body:has(.o_web_client) main.modal-body:has(.o_command_palette_search) .o_command_palette_search .input-group-text,
-body:has(.o_web_client) main.modal-body:has(.o_command_palette_search) .o_command_category .text-muted,
-body:has(.o_web_client) main.modal-body:has(.o_command_palette_search) .o_command_palette_listbox_empty {
+body.kr_sp_theme_dark main.modal-body:has(.o_command_palette_search) .o_command_palette_search .form-control::placeholder,
+body.kr_sp_theme_dark main.modal-body:has(.o_command_palette_search) .o_command_palette_search .input-group-text,
+body.kr_sp_theme_dark main.modal-body:has(.o_command_palette_search) .o_command_category .text-muted,
+body.kr_sp_theme_dark main.modal-body:has(.o_command_palette_search) .o_command_palette_listbox_empty {
     color: #9ca3af !important;
 }
 
 .o_command_palette .o_command_palette_listbox,
-body:has(.o_web_client) main.modal-body:has(.o_command_palette_search) .o_command_palette_listbox {
+body.kr_sp_theme_dark main.modal-body:has(.o_command_palette_search) .o_command_palette_listbox {
     background: #111827 !important;
     color: #e5e7eb !important;
     scrollbar-color: #475569 transparent;
 }
 
 .o_command_palette .o_command_palette_listbox::-webkit-scrollbar-thumb,
-body:has(.o_web_client) main.modal-body:has(.o_command_palette_search) .o_command_palette_listbox::-webkit-scrollbar-thumb {
+body.kr_sp_theme_dark main.modal-body:has(.o_command_palette_search) .o_command_palette_listbox::-webkit-scrollbar-thumb {
     background: #475569;
 }
 
 .o_command_palette .o_command_palette_listbox hr,
-body:has(.o_web_client) main.modal-body:has(.o_command_palette_search) .o_command_palette_listbox hr {
+body.kr_sp_theme_dark main.modal-body:has(.o_command_palette_search) .o_command_palette_listbox hr {
     opacity: 1 !important;
     border-color: #2b3647 !important;
 }
 
 .o_command_palette .o_command_default,
 .o_command_palette .o_command_hotkey,
-body:has(.o_web_client) main.modal-body:has(.o_command_palette_search) .o_command_default,
-body:has(.o_web_client) main.modal-body:has(.o_command_palette_search) .o_command_hotkey {
+body.kr_sp_theme_dark main.modal-body:has(.o_command_palette_search) .o_command_default,
+body.kr_sp_theme_dark main.modal-body:has(.o_command_palette_search) .o_command_hotkey {
     border-color: transparent !important;
     background: transparent !important;
     color: #e5e7eb !important;
@@ -897,8 +880,8 @@ body:has(.o_web_client) main.modal-body:has(.o_command_palette_search) .o_comman
 
 .o_command_palette .o_command > a,
 .o_command_palette .o_command_name,
-body:has(.o_web_client) main.modal-body:has(.o_command_palette_search) .o_command > a,
-body:has(.o_web_client) main.modal-body:has(.o_command_palette_search) .o_command_name {
+body.kr_sp_theme_dark main.modal-body:has(.o_command_palette_search) .o_command > a,
+body.kr_sp_theme_dark main.modal-body:has(.o_command_palette_search) .o_command_name {
     color: #e5e7eb !important;
 }
 
@@ -908,12 +891,12 @@ body:has(.o_web_client) main.modal-body:has(.o_command_palette_search) .o_comman
 .o_command_palette .o_command.focused .o_command_hotkey,
 .o_command_palette .o_command[aria-selected="true"] .o_command_default,
 .o_command_palette .o_command[aria-selected="true"] .o_command_hotkey,
-body:has(.o_web_client) main.modal-body:has(.o_command_palette_search) .o_command:hover .o_command_default,
-body:has(.o_web_client) main.modal-body:has(.o_command_palette_search) .o_command:hover .o_command_hotkey,
-body:has(.o_web_client) main.modal-body:has(.o_command_palette_search) .o_command.focused .o_command_default,
-body:has(.o_web_client) main.modal-body:has(.o_command_palette_search) .o_command.focused .o_command_hotkey,
-body:has(.o_web_client) main.modal-body:has(.o_command_palette_search) .o_command[aria-selected="true"] .o_command_default,
-body:has(.o_web_client) main.modal-body:has(.o_command_palette_search) .o_command[aria-selected="true"] .o_command_hotkey {
+body.kr_sp_theme_dark main.modal-body:has(.o_command_palette_search) .o_command:hover .o_command_default,
+body.kr_sp_theme_dark main.modal-body:has(.o_command_palette_search) .o_command:hover .o_command_hotkey,
+body.kr_sp_theme_dark main.modal-body:has(.o_command_palette_search) .o_command.focused .o_command_default,
+body.kr_sp_theme_dark main.modal-body:has(.o_command_palette_search) .o_command.focused .o_command_hotkey,
+body.kr_sp_theme_dark main.modal-body:has(.o_command_palette_search) .o_command[aria-selected="true"] .o_command_default,
+body.kr_sp_theme_dark main.modal-body:has(.o_command_palette_search) .o_command[aria-selected="true"] .o_command_hotkey {
     border-color: #3c4a60 !important;
     background: #202b3a !important;
     color: #ffffff !important;
@@ -921,7 +904,7 @@ body:has(.o_web_client) main.modal-body:has(.o_command_palette_search) .o_comman
 }
 
 .o_command_palette .o_command kbd,
-body:has(.o_web_client) main.modal-body:has(.o_command_palette_search) .o_command kbd {
+body.kr_sp_theme_dark main.modal-body:has(.o_command_palette_search) .o_command kbd {
     border-color: #3c4a60 !important;
     border-bottom-color: #475569 !important;
     background: #18212f !important;
@@ -932,9 +915,9 @@ body:has(.o_web_client) main.modal-body:has(.o_command_palette_search) .o_comman
 .o_command_palette .o_command_palette_footer,
 .o_command_palette .o_command_palette_footer.bg-100,
 .o_command_palette .o_command_palette_footer.text-muted,
-body:has(.o_web_client) .o_command_palette .o_command_palette_footer,
-body:has(.o_web_client) .o_command_palette .o_command_palette_footer.bg-100,
-body:has(.o_web_client) main.modal-body:has(.o_command_palette_search) .o_command_palette_footer {
+body.kr_sp_theme_dark .o_command_palette .o_command_palette_footer,
+body.kr_sp_theme_dark .o_command_palette .o_command_palette_footer.bg-100,
+body.kr_sp_theme_dark main.modal-body:has(.o_command_palette_search) .o_command_palette_footer {
     border-top-color: #2b3647 !important;
     background: #111827 !important;
     background-color: #111827 !important;
@@ -944,9 +927,9 @@ body:has(.o_web_client) main.modal-body:has(.o_command_palette_search) .o_comman
 .o_command_palette .o_command_palette_footer .text-primary,
 .o_command_palette .o_command_palette_footer .btn-link,
 .o_command_palette .o_command_palette_footer .o_namespace,
-body:has(.o_web_client) main.modal-body:has(.o_command_palette_search) .o_command_palette_footer .text-primary,
-body:has(.o_web_client) main.modal-body:has(.o_command_palette_search) .o_command_palette_footer .btn-link,
-body:has(.o_web_client) main.modal-body:has(.o_command_palette_search) .o_command_palette_footer .o_namespace {
+body.kr_sp_theme_dark main.modal-body:has(.o_command_palette_search) .o_command_palette_footer .text-primary,
+body.kr_sp_theme_dark main.modal-body:has(.o_command_palette_search) .o_command_palette_footer .btn-link,
+body.kr_sp_theme_dark main.modal-body:has(.o_command_palette_search) .o_command_palette_footer .o_namespace {
     color: #00d4c8 !important;
 }
 
