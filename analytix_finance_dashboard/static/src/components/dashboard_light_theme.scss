@@ -184,6 +184,14 @@ html:not([data-color-scheme="dark"]):not(.o_dark) body:not(.kr_sp_theme_dark) {
 
     /* ── Alerts Row & Dividers ── */
     .anx-alert-row:hover { background: #f8fafc !important; }
+    .anx-alert-row-overdue {
+        background: #fef2f2 !important;
+        border-left: 4px solid #dc2626 !important;
+        .anx-alert-title { color: #991b1b !important; font-weight: 700 !important; }
+        .anx-alert-detail { color: #b91c1c !important; font-weight: 500 !important; }
+        .anx-alert-cta { color: #dc2626 !important; font-weight: 700 !important; }
+        &:hover { background: #fee2e2 !important; }
+    }
     .anx-alert-divider { border-top: 1px solid #f1f5f9 !important; }
 
     /* ── Invoices / Expenses / Journals / Trial Balance / Documents Toolbars ── */

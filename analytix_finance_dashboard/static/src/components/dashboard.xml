@@ -342,7 +342,7 @@
                         <div class="anx-section-label">ALERTS</div>
                         <div class="anx-alerts-panel anx-panel">
                             <t t-foreach="state.data.alerts" t-as="alert" t-key="alert_index">
-                                <div t-attf-class="anx-alert-row {{ alert_index > 0 ? 'anx-alert-divider' : '' }}"
+                                <div t-attf-class="anx-alert-row {{ (alert.is_overdue || alert.type === 'danger') ? 'anx-alert-row-overdue' : '' }} {{ alert_index > 0 ? 'anx-alert-divider' : '' }}"
                                      t-att-data-alert="alert.action"
                                      t-on-click="onAlertClick">
                                     <div t-attf-class="anx-alert-stripe anx-alert-stripe-{{ alert.type }}"></div>
@@ -2736,7 +2736,7 @@
                                             </div>
                                             <t t-set="hasBody" t-value="msg.body &amp;&amp; msg.body.trim() &amp;&amp; msg.body !== '&lt;div class=&quot;o-paragraph&quot;&gt;&lt;br&gt;&lt;/div&gt;' &amp;&amp; msg.body !== '&lt;p&gt;&lt;br&gt;&lt;/p&gt;'"/>
                                             <div t-if="hasBody" class="anx-chat-msg-body">
-                                                <t t-out="msg.body"/>
+                                                <t t-out="formatMessageBody(msg.body)"/>
                                             </div>
                                             <t t-if="msg.attachments &amp;&amp; msg.attachments.length">
                                                 <div class="anx-chat-attachments">

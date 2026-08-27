@@ -602,6 +602,14 @@
     transition: background 0.15s;
 }
 .anx-alert-row:hover { background: rgba(255,255,255,0.04); }
+.anx-alert-row-overdue {
+    background: rgba(229, 57, 53, 0.14) !important;
+    border-left: 4px solid #ef4444 !important;
+    .anx-alert-title { color: #ff6b6b !important; font-weight: 700 !important; }
+    .anx-alert-detail { color: #fca5a5 !important; font-weight: 500 !important; }
+    .anx-alert-cta { color: #ff6b6b !important; font-weight: 700 !important; }
+    &:hover { background: rgba(229, 57, 53, 0.22) !important; }
+}
 .anx-alert-divider { border-top: 1px solid rgba(255,255,255,0.06); }
 .anx-alert-stripe {
     width: 4px;

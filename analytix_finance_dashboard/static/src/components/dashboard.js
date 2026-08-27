@@ -1,5 +1,5 @@
 /** @odoo-module */
-import { Component, useState, onWillStart, onMounted, useRef, useEffect, onWillUnmount, xml, useSubEnv } from "@odoo/owl";
+import { Component, useState, onWillStart, onMounted, useRef, useEffect, onWillUnmount, xml, useSubEnv, markup } from "@odoo/owl";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
 import { loadJS } from "@web/core/assets";
@@ -3472,6 +3472,31 @@ export class AnalytixFinanceDashboard extends Component {
         } catch (e) {
             return "";
         }
+    }
+
+    formatMessageBody(body) {
+        if (!body) return "";
+        let str = typeof body === 'string' ? body : String(body);
+        if (str.includes('&lt;') || str.includes('&gt;')) {
+            try {
+                const doc = new DOMParser().parseFromString(str, 'text/html');
+                str = doc.body.textContent || str;
+            } catch (e) {
+                const txt = document.createElement('textarea');
+                txt.innerHTML = str;
+                str = txt.value;
+            }
+        }
+        str = str.replace(/^\s*<p[^>]*>/gi, '')
+                 .replace(/<\/p>\s*$/gi, '')
+                 .replace(/<p[^>]*>/gi, '<br/>')
+                 .replace(/<\/p>/gi, '');
+        str = str.replace(/^\s*<div[^>]*>/gi, '')
+                 .replace(/<\/div>\s*$/gi, '')
+                 .replace(/<div[^>]*>/gi, '<br/>')
+                 .replace(/<\/div>/gi, '');
+
+        return markup(str);
     }
 
     async sendMessage(ev) {

@@ -48,27 +48,60 @@ class FinanceAlert(models.Model):
     trigger_type = fields.Selection([
         ('scheduled', 'Scheduled'),
         ('event', 'Event Driven'),
-    ], string='Trigger Type', required=True, default='scheduled')
+    ], string='Trigger Type', default='scheduled')
     check_frequency = fields.Selection([
         ('hourly', 'Hourly'),
         ('daily', 'Daily'),
         ('weekly', 'Weekly'),
         ('monthly', 'Monthly'),
-    ], string='Check Frequency', required=True, default='daily')
-    execution_time = fields.Float(string='Time', required=True, default=8.0)
+    ], string='Check Frequency', default='daily')
+    execution_time = fields.Float(string='Time', default=8.0)
     run_for = fields.Selection([
         ('all_companies', 'All Companies'),
         ('specific_company', 'Specific Company'),
-    ], string='Run For', required=True, default='all_companies')
+    ], string='Run For', default='all_companies')
     start_from = fields.Date(string='Start From')
     next_execution = fields.Datetime(string='Next Execution', readonly=True)
     stop_after = fields.Date(string='Stop After')
 
+    # Recurrence Configuration (One Time / Recurring)
+    recurring_type = fields.Selection([
+        ('one_time', 'One Time'),
+        ('recurring', 'Recurring'),
+    ], string='Recurrence Type', default='one_time')
+    is_recurring = fields.Boolean(string='Is Recurring', default=False)
+    repeat_interval = fields.Integer(string='Repeat Every', default=1)
+    repeat_unit = fields.Selection([
+        ('day', 'Days'),
+        ('week', 'Weeks'),
+        ('month', 'Months'),
+        ('year', 'Years'),
+    ], string='Repeat Unit', default='week')
+    repeat_type = fields.Selection([
+        ('forever', 'Forever'),
+        ('until', 'Until Date'),
+        ('count', 'Number of Repetitions'),
+    ], string='Repeat Type', default='forever')
+    repeat_until = fields.Date(string='End Date')
+    repeat_number = fields.Integer(string='Number of Repetitions', default=1)
+
+    @api.onchange('is_recurring')
+    def _onchange_is_recurring(self):
+        if self.is_recurring:
+            self.recurring_type = 'recurring'
+        else:
+            self.recurring_type = 'one_time'
+
+    @api.onchange('recurring_type')
+    def _onchange_recurring_type(self):
+        self.is_recurring = (self.recurring_type == 'recurring')
+
     # 3. Rule Configuration
     model_id = fields.Many2one('ir.model', string='Model',  ondelete='cascade')
     domain_condition = fields.Char(string='Domain / Condition')
-    due_date_field_id = fields.Many2one('ir.model.fields', string='Due Date Field', domain="[('model_id', '=', model_id), ('ttype', 'in', ('date', 'datetime'))]", required=True, ondelete='cascade')
-    warning_days = fields.Integer(string='Warning Days', required=True, default=30)
+    due_date_field_id = fields.Many2one('ir.model.fields', string='Due Date Field', domain="[('model_id', '=', model_id), ('ttype', 'in', ('date', 'datetime'))]", ondelete='cascade')
+    due_date = fields.Date(string='Due Date')
+    warning_days = fields.Integer(string='Warning Days', default=30)
     trigger_when = fields.Selection([
         ('within_warning', 'Due Date is within Warning Days'),
         ('overdue', 'Is Overdue'),
@@ -80,13 +113,15 @@ class FinanceAlert(models.Model):
     auto_close = fields.Selection([
         ('when_filed', 'When VAT Return is Filed'),
         ('manual', 'Manual'),
-    ], string='Auto Close', required=True, default='when_filed')
+    ], string='Auto Close', default='when_filed')
     rule_description = fields.Text(string='Rule Description', compute='_compute_rule_description')
 
-    @api.depends('warning_days', 'trigger_when', 'due_date_field_id')
+    @api.depends('warning_days', 'trigger_when', 'due_date_field_id', 'due_date')
     def _compute_rule_description(self):
         for rec in self:
-            if rec.warning_days and rec.due_date_field_id:
+            if rec.due_date:
+                rec.rule_description = f"Rule trigger due date: {rec.due_date}"
+            elif rec.warning_days and rec.due_date_field_id:
                 rec.rule_description = f"Rule will trigger when {rec.due_date_field_id.field_description} is within {rec.warning_days} days."
             else:
                 rec.rule_description = ""

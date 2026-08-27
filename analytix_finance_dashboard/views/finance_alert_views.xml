@@ -33,33 +33,28 @@
                         </group>
                     </group>
 
-                    <group>
-                        <group string="2. Trigger Configuration">
-                            <field name="trigger_type"/>
-                            <field name="check_frequency"/>
-                            <field name="execution_time" widget="float_time"/>
-                            <field name="run_for"/>
+                    <group string="2. Recurrence Configuration">
+                        <group>
+                            <field name="recurring_type" widget="radio" options="{'horizontal': true}"/>
                         </group>
-                        <group string=" ">
-                            <field name="start_from"/>
-                            <field name="next_execution"/>
-                            <field name="stop_after"/>
+                        <group invisible="recurring_type != 'recurring'">
+                            <label for="repeat_interval" string="Repeat Every"/>
+                            <div class="o_row">
+                                <field name="repeat_interval" style="width: 60px !important;"/>
+                                <field name="repeat_unit"/>
+                                <field name="repeat_type"/>
+                            </div>
+                            <field name="repeat_until" invisible="repeat_type != 'until'"/>
+                            <field name="repeat_number" invisible="repeat_type != 'count'"/>
                         </group>
                     </group>
 
                     <group>
                         <group string="3. Rule Configuration">
-                             <field name="trigger_when"/>
+                            <field name="trigger_when"/>
                             <field name="create_alert"/>
-                            <field name="auto_close"/>
-<!--                            <field name="model_id"/>-->
-<!--                            <field name="domain_condition"/>-->
-                            <field name="due_date_field_id"/>
-                            <field name="warning_days"/>
+                            <field name="due_date"/>
                         </group>
-<!--                        <group string=" ">-->
-
-<!--                        </group>-->
                     </group>
                     <div>
                         <p class="text-muted"><field name="rule_description"/></p>
@@ -69,10 +64,6 @@
                         <group string="4. Alert Message">
                             <field name="alert_title"/>
                             <field name="alert_description"/>
-                        </group>
-                        <group string="Action Buttons (CTA)">
-                            <field name="action_button_label"/>
-                            <field name="action_button_link"/>
                         </group>
                     </group>
 

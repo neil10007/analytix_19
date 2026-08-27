@@ -302,6 +302,7 @@ class AccountMove(models.Model):
                 'action': 'overdue_invoices',
                 'cta': 'View all',
                 'total': overdue_total,
+                'is_overdue': True,
             })
 
         # 2. Vendor bills due within the next 7 days (unpaid)
@@ -386,19 +387,56 @@ class AccountMove(models.Model):
             ('state', '!=', 'completed'),
         ])
         for ca in custom_alerts:
+            # Exclude completed state
+            if ca.state == 'completed':
+                continue
+
+            # Validate Recurrence Expiration
+            if ca.recurring_type == 'recurring':
+                if ca.repeat_type == 'until' and ca.repeat_until and today > ca.repeat_until:
+                    continue
+
+            # Validate Start Date
+            if ca.start_from and today < ca.start_from:
+                continue
+
+            # Validate Due Date & Trigger Condition
+            is_overdue = False
+            if ca.due_date:
+                if today > ca.due_date:
+                    is_overdue = True
+                elif ca.trigger_when == 'overdue':
+                    continue
+
+            # Alert Color & Formatting
             color_map = {
                 'critical': 'danger',
                 'high': 'orange',
                 'medium': 'warning',
                 'low': 'info',
             }
+            # Automatically assign danger (Red) if due date is over
+            alert_type = 'danger' if is_overdue else color_map.get(ca.priority, 'info')
+
+            title = ca.alert_title or ca.name
+            detail_text = ca.alert_description or ca.rule_description or ca.name
+            if is_overdue and not detail_text.startswith('Overdue'):
+                detail = f"Overdue ({ca.due_date.strftime('%d %b %Y')}) · {detail_text}"
+            else:
+                detail = detail_text
+
             alerts.append({
-                'type': color_map.get(ca.priority, 'info'),
-                'title': ca.name,
-                'detail': ca.alert_description or ca.rule_description or 'Custom Alert',
+                'type': alert_type,
+                'title': title,
+                'detail': detail,
                 'action': f'custom_alert_{ca.id}',
                 'cta': ca.action_button_label or 'Review',
+                'is_overdue': is_overdue,
             })
+
+        # Sort alerts: Overdue / Danger alerts appear at the VERY TOP of the alerts section
+        priority_order = {'danger': 0, 'orange': 1, 'warning': 2, 'info': 3}
+        alerts.sort(key=lambda a: (0 if (a.get('is_overdue') or a.get('type') == 'danger') else 1, priority_order.get(a.get('type'), 4)))
 
         return {
             'currency': self._get_currency_symbol(company_currency),
