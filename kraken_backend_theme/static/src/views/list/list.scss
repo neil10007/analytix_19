@@ -1,5 +1,11 @@
 .badge {
-    border-radius: 5px !important;
+    border-radius: 50rem !important;
+    padding: 0.35em 0.75em !important;
+    font-weight: 500 !important;
+    font-size: 0.85em;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .o_list_view .o_list_renderer {

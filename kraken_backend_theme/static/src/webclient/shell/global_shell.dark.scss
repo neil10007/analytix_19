@@ -169,6 +169,29 @@ body.kr_sp_theme_dark,
     color: #f8fafc;
 }
 
+body.kr_sp_theme_dark .kr_sp_back_btn,
+.o_web_client.kr_sp_theme_dark .kr_sp_back_btn {
+    background: #18212f;
+    border-color: #2b3647;
+    color: #e2e8f0;
+
+    i {
+        color: #9ca3af;
+    }
+
+    &:hover {
+        background: #00d4c8;
+        border-color: #00d4c8;
+        color: #000000;
+        box-shadow: 0 2px 10px rgba(0, 212, 200, 0.45);
+
+        i {
+            color: #000000;
+        }
+    }
+}
+
+
 .kr_sp_tabs {
     scrollbar-color: #00f2fe rgba(255, 255, 255, 0.05);
 }

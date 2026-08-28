@@ -692,6 +692,75 @@ function resolveTopSectionById(menuService, menuIdValue) {
     return section || null;
 }
 
+function trackNavigationHistory() {
+    try {
+        const currentUrl = window.location.href;
+        let historyStack = [];
+        const raw = window.sessionStorage.getItem("kr_navigation_history");
+        if (raw) {
+            historyStack = JSON.parse(raw);
+        }
+        if (!Array.isArray(historyStack)) {
+            historyStack = [];
+        }
+
+        const len = historyStack.length;
+        if (len > 1 && historyStack[len - 2] === currentUrl) {
+            historyStack.pop();
+        } else if (len === 0 || historyStack[len - 1] !== currentUrl) {
+            if (len >= 30) {
+                historyStack.shift();
+            }
+            historyStack.push(currentUrl);
+        }
+        window.sessionStorage.setItem("kr_navigation_history", JSON.stringify(historyStack));
+    } catch (error) {
+        // Safe fail on storage access error
+    }
+}
+
+function handleGlobalBack() {
+    runSafely("close submenu popover", closeSubmenuPopover);
+
+    const currentUrl = window.location.href;
+    let historyStack = [];
+    try {
+        const raw = window.sessionStorage.getItem("kr_navigation_history");
+        if (raw) {
+            historyStack = JSON.parse(raw);
+        }
+    } catch (error) {}
+
+    // Check if referrer is from same host & browser history exists
+    if (window.history.length > 1 && document.referrer && document.referrer.includes(window.location.host)) {
+        window.history.back();
+        return;
+    }
+
+    // Check session navigation history stack
+    if (Array.isArray(historyStack) && historyStack.length > 1) {
+        if (historyStack[historyStack.length - 1] === currentUrl) {
+            historyStack.pop();
+        }
+        const previousUrl = historyStack.pop();
+        if (previousUrl && previousUrl !== currentUrl) {
+            window.sessionStorage.setItem("kr_navigation_history", JSON.stringify(historyStack));
+            window.location.assign(previousUrl);
+            return;
+        }
+    }
+
+    // Fallback to browser history back if available
+    if (window.history.length > 1) {
+        window.history.back();
+        return;
+    }
+
+    // Default fallback to dashboard
+    window.location.assign("/odoo/dashboard");
+}
+
+
 function getCurrentActionContext() {
     const route = router?.current || {};
     const actionService = getWebclientActionService();
@@ -2000,6 +2069,10 @@ function buildTopbarMarkup(context = "global") {
     return `
         <section class="kr_sp_topbar ${modifier} kr_sp_pending_shell" id="kr_sp_topbar">
             <div class="kr_sp_brand_section">
+                <button type="button" class="kr_sp_back_btn" data-kr-action="global-back" title="Go back to previous page" aria-label="Go Back">
+                    <i class="fa fa-arrow-left"></i>
+                    <span>Back</span>
+                </button>
                 <img src="${companyLogoSrc}" alt="Company" class="kr_sp_brand_logo"/>
                 <span class="kr_sp_brand_name"></span>
             </div>
@@ -2709,6 +2782,12 @@ function setupControlButtons() {
             }
 
             const action = button.dataset.krAction;
+            if (action === "global-back") {
+                ev.preventDefault();
+                ev.stopPropagation();
+                handleGlobalBack();
+            }
+
             if (action === "theme-light") {
                 ev.preventDefault();
                 setThemeMode("light");
@@ -3188,6 +3267,7 @@ function bindNavigationRefresh(scheduleRunFeatures) {
     const onRouteChange = () => {
         closeSubmenuPopover();
         flushStaleTabs();
+        trackNavigationHistory();
         tabsRenderRetryCount = 0;
         // Render immediately (catches fast navigations)
         scheduleRunFeatures();
@@ -3234,6 +3314,12 @@ function bindNavigationRefresh(scheduleRunFeatures) {
 function start() {
     if (!document.body) {
         return;
+    }
+    trackNavigationHistory();
+    if (!window.__kr_history_events_bound) {
+        window.__kr_history_events_bound = true;
+        window.addEventListener("popstate", trackNavigationHistory);
+        window.addEventListener("hashchange", trackNavigationHistory);
     }
     const runFeatures = () => {
         renderScheduled = false;

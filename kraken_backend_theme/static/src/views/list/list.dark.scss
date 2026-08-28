@@ -1,77 +1,175 @@
-.o_list_view .o_list_renderer {
+.o_list_view .o_list_renderer,
+.o_list_renderer {
     --ListRenderer-thead-bg-color: #18212f;
     --ListRenderer-thead-bg-active-color: #202b3a;
     --ListRenderer-table-background-color: #111827;
-    background-color: #18212f;
+    background-color: #18212f !important;
     border-color: #2b3647;
     color: #e5e7eb;
 }
 
 .o_content:has(.o_list_view),
+.o_content:has(.o_list_renderer),
 .o_list_view,
 .o_list_view .o_content,
-.o_list_view .o_renderer {
+.o_list_view .o_renderer,
+.o_view_controller:has(.o_list_renderer),
+.o_view_controller > .o_content > .o_list_renderer {
     background: #111827 !important;
     color: #e5e7eb;
 }
 
-.o_list_view .o_list_renderer .o_list_table {
-    border-color: #2b3647;
-    background: #111827;
-    color: #e5e7eb;
+.o_list_view .o_list_renderer .o_list_table,
+.o_list_renderer .o_list_table,
+table.o_list_table {
+    border-color: #2b3647 !important;
+    background: #111827 !important;
+    color: #e5e7eb !important;
 }
 
 .o_list_view .o_list_renderer .o_list_table thead,
 .o_list_view .o_list_renderer .o_list_table thead tr,
-.o_list_view .o_list_renderer .o_list_table thead th {
-    border-color: #2b3647;
-    color: #cbd5e1;
-    background: #111827;
+.o_list_view .o_list_renderer .o_list_table thead th,
+.o_list_renderer .o_list_table thead,
+.o_list_renderer .o_list_table thead tr,
+.o_list_renderer .o_list_table thead th {
+    border-color: #2b3647 !important;
+    color: #cbd5e1 !important;
+    background: #111827 !important;
 }
 
 .o_list_view .o_list_renderer .o_list_table thead th:hover,
 .o_list_view .o_list_renderer .o_list_table thead th:active,
-.o_list_view .o_list_renderer .o_list_table thead th:focus-within {
-    background-color: #202b3a;
+.o_list_view .o_list_renderer .o_list_table thead th:focus-within,
+.o_list_renderer .o_list_table thead th:hover,
+.o_list_renderer .o_list_table thead th:active,
+.o_list_renderer .o_list_table thead th:focus-within {
+    background-color: #202b3a !important;
 }
 
-.o_list_view .o_list_renderer .o_list_table thead th .o_list_sortable_icon {
-    color: #94a3b8;
+.o_list_view .o_list_renderer .o_list_table thead th .o_list_sortable_icon,
+.o_list_renderer .o_list_table thead th .o_list_sortable_icon {
+    color: #94a3b8 !important;
 }
 
-.o_list_view .o_list_renderer .o_list_table tbody td {
-    background-color: #18212f;
-    border-color: #2b3647;
-    color: #ffffff;
-    -webkit-text-fill-color: #ffffff;
+.o_list_view .o_list_renderer .o_list_table tbody td,
+.o_list_renderer .o_list_table tbody td {
+    background-color: #18212f !important;
+    border-color: #2b3647 !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
 }
 
-.o_list_view .o_list_renderer .o_list_table tbody td :is(input, select, textarea, .o_input, span, div, a, .o_field_widget) {
+.o_list_view .o_list_renderer .o_list_table tbody td :is(input, select, textarea, .o_input, span:not(.badge):not(.text-bg-success):not(.text-bg-info):not(.text-bg-warning):not(.text-bg-danger):not(.text-bg-primary):not(.text-bg-secondary), div, a, .o_field_widget),
+.o_list_renderer .o_list_table tbody td :is(input, select, textarea, .o_input, span:not(.badge):not(.text-bg-success):not(.text-bg-info):not(.text-bg-warning):not(.text-bg-danger):not(.text-bg-primary):not(.text-bg-secondary), div, a, .o_field_widget) {
     color: #ffffff !important;
     -webkit-text-fill-color: #ffffff !important;
     opacity: 1 !important;
 }
 
+.o_list_view .o_list_renderer .o_list_table tbody td :is(.badge, .badge.text-bg-success, .badge.text-bg-info, .badge.text-bg-warning, .badge.text-bg-danger, .badge.text-bg-primary, .badge.text-bg-secondary),
+.o_list_renderer .o_list_table tbody td :is(.badge, .badge.text-bg-success, .badge.text-bg-info, .badge.text-bg-warning, .badge.text-bg-danger, .badge.text-bg-primary, .badge.text-bg-secondary) {
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+}
+
+.o_list_view .o_list_renderer .o_list_table tbody td :is(.badge:not(.text-bg-success):not(.text-bg-info):not(.text-bg-warning):not(.text-bg-danger):not(.text-bg-primary):not(.text-bg-secondary), .text-bg-secondary, .text-bg-light),
+.o_list_renderer .o_list_table tbody td :is(.badge:not(.text-bg-success):not(.text-bg-info):not(.text-bg-warning):not(.text-bg-danger):not(.text-bg-primary):not(.text-bg-secondary), .text-bg-secondary, .text-bg-light) {
+    background-color: rgba(148, 163, 184, 0.25) !important;
+    color: #cbd5e1 !important;
+    -webkit-text-fill-color: #cbd5e1 !important;
+    border: 1px solid rgba(148, 163, 184, 0.4);
+}
+
+.o_list_view .o_list_renderer .o_list_table tbody td .badge.text-bg-success,
+.o_list_renderer .o_list_table tbody td .badge.text-bg-success {
+    background-color: rgba(34, 215, 123, 0.25) !important;
+    color: #22d77b !important;
+    -webkit-text-fill-color: #22d77b !important;
+    border: 1px solid rgba(34, 215, 123, 0.4);
+}
+
+.o_list_view .o_list_renderer .o_list_table tbody td .badge.text-bg-info,
+.o_list_renderer .o_list_table tbody td .badge.text-bg-info {
+    background-color: rgba(56, 189, 248, 0.25) !important;
+    color: #38bdf8 !important;
+    -webkit-text-fill-color: #38bdf8 !important;
+    border: 1px solid rgba(56, 189, 248, 0.4);
+}
+
+.o_list_view .o_list_renderer .o_list_table tbody td .badge.text-bg-warning,
+.o_list_renderer .o_list_table tbody td .badge.text-bg-warning {
+    background-color: rgba(250, 204, 21, 0.25) !important;
+    color: #facc15 !important;
+    -webkit-text-fill-color: #facc15 !important;
+    border: 1px solid rgba(250, 204, 21, 0.4);
+}
+
+.o_list_view .o_list_renderer .o_list_table tbody td .badge.text-bg-danger,
+.o_list_renderer .o_list_table tbody td .badge.text-bg-danger {
+    background-color: rgba(248, 113, 113, 0.25) !important;
+    color: #f87171 !important;
+    -webkit-text-fill-color: #f87171 !important;
+    border: 1px solid rgba(248, 113, 113, 0.4);
+}
+
+.o_list_view .o_list_renderer .o_list_table tbody td .badge.text-bg-primary,
+.o_list_renderer .o_list_table tbody td .badge.text-bg-primary {
+    background-color: rgba(0, 212, 200, 0.25) !important;
+    color: #00d4c8 !important;
+    -webkit-text-fill-color: #00d4c8 !important;
+    border: 1px solid rgba(0, 212, 200, 0.4);
+}
+
 .o_list_view .o_list_renderer .o_list_table tbody,
-.o_list_view .o_list_renderer .o_list_table tbody tr {
-    border-color: #2b3647;
-    background: #111827;
-    color: #ffffff;
+.o_list_view .o_list_renderer .o_list_table tbody tr,
+.o_list_renderer .o_list_table tbody,
+.o_list_renderer .o_list_table tbody tr {
+    border-color: #2b3647 !important;
+    background: #111827 !important;
+    color: #ffffff !important;
+}
+
+/* Prevent double-box for badges by making sure wrapper divs are fully transparent */
+.o_list_view .o_list_renderer .o_list_table tbody td div.o_field_widget:has(.badge),
+.o_list_renderer .o_list_table tbody td div.o_field_widget:has(.badge),
+.o_list_view .o_list_renderer .o_list_table tbody td div.o_field_widget.o_field_badge,
+.o_list_renderer .o_list_table tbody td div.o_field_widget.o_field_badge {
+    background-color: transparent !important;
+    border: none !important;
+    padding: 0 !important;
 }
 
 .o_list_view .o_list_renderer .o_list_table tbody tr.o_data_row > td:first-child,
-.o_list_view .o_list_renderer .o_list_table tbody tr.o_data_row > td:last-child {
-    border-color: #2b3647;
+.o_list_view .o_list_renderer .o_list_table tbody tr.o_data_row > td:last-child,
+.o_list_renderer .o_list_table tbody tr.o_data_row > td:first-child,
+.o_list_renderer .o_list_table tbody tr.o_data_row > td:last-child {
+    border-color: #2b3647 !important;
 }
 
-.o_list_view .o_list_renderer .o_list_table tbody tr:hover td {
-    background-color: #202b3a;
+.o_list_view .o_list_renderer .o_list_table tbody tr:hover td,
+.o_list_renderer .o_list_table tbody tr:hover td {
+    background-color: #202b3a !important;
 }
 
 .o_list_view .o_list_renderer .o_list_table tbody tr.table-info td,
-.o_list_view .o_list_renderer .o_list_table tbody tr.o_data_row_selected td {
-    background-color: rgba(0, 212, 200, 0.16);
-    color: #ffffff;
+.o_list_renderer .o_list_table tbody tr.table-info td,
+.o_list_view .o_list_renderer .o_list_table tbody tr.o_data_row_selected td,
+.o_list_renderer .o_list_table tbody tr.o_data_row_selected td {
+    background-color: rgba(0, 212, 200, 0.16) !important;
+    color: #ffffff !important;
+}
+
+.o_list_view .o_list_renderer .o_list_table tbody tr.o_selected_row td,
+.o_list_renderer .o_list_table tbody tr.o_selected_row td,
+.o_list_view .o_list_renderer .o_list_table tbody tr:focus-within td,
+.o_list_renderer .o_list_table tbody tr:focus-within td,
+.o_list_view .o_list_renderer .o_list_table tbody tr.o_keyboard_focused td,
+.o_list_renderer .o_list_table tbody tr.o_keyboard_focused td,
+.o_list_view .o_list_renderer .o_list_table tbody tr.table-active td,
+.o_list_renderer .o_list_table tbody tr.table-active td {
+    background-color: #202b3a !important;
+    color: #ffffff !important;
 }
 
 .o_list_view .o_list_renderer .o_list_table .form-check-input {

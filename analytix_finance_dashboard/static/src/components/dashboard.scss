@@ -853,7 +853,12 @@
     border-bottom: 1px solid rgba(255,255,255,0.05);
     cursor: pointer; transition: background .12s;
 }
-.anx-inv-row:hover { background: rgba(255,255,255,0.04); }
+.anx-inv-row:hover,
+.anx-inv-row:active,
+.anx-inv-row:focus,
+.anx-inv-row:focus-within,
+.anx-inv-row.table-active,
+.anx-inv-row.table-info { background: rgba(255,255,255,0.06) !important; outline: none !important; }
 .anx-inv-row:last-child { border-bottom: none; }
 .anx-inv-row-overdue { background: rgba(229,57,53,0.08); }
 .anx-inv-row-overdue:hover { background: rgba(229,57,53,0.12); }

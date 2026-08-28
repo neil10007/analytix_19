@@ -277,12 +277,60 @@ body.kr_sp_global_mode.modal-open {
 .kr_sp_brand_section {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 0 18px 0 14px;
-    min-width: 180px;
-    max-width: 340px;
+    gap: 10px;
+    padding: 0 14px 0 10px;
+    min-width: 220px;
+    max-width: 420px;
     flex-shrink: 0;
 }
+
+.kr_sp_back_btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    height: 32px;
+    padding: 0 12px 0 10px;
+    border-radius: 999px;
+    border: 1px solid #dcdfe6;
+    background: #f8fafc;
+    color: #334155;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+    outline: none;
+
+    i {
+        font-size: 13px;
+        color: #475569;
+        transition: transform 0.2s ease, color 0.2s ease;
+    }
+
+    span {
+        font-size: 12px;
+        font-weight: 600;
+        line-height: 1;
+    }
+
+    &:hover {
+        background: #00d4c8;
+        border-color: #00d4c8;
+        color: #000000;
+        box-shadow: 0 2px 8px rgba(0, 212, 200, 0.35);
+
+        i {
+            transform: translateX(-3px);
+            color: #000000;
+        }
+    }
+
+    &:active {
+        transform: scale(0.96);
+    }
+}
+
 
 .kr_sp_brand_logo {
     height: 30px;
