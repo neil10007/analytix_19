@@ -283,12 +283,12 @@
                     <div class="anx-actions-row">
                         <div class="anx-action-card anx-panel" data-action="new_invoice"    t-on-click="onActionClick">
                             <div class="anx-action-icon anx-icon-blue"><i class="fa fa-file-text-o"></i></div>
-                            <div class="anx-action-title">New invoice</div>
+                            <div class="anx-action-title">New Invoice</div>
                             <div class="anx-action-sub">Bill a customer</div>
                         </div>
                         <div class="anx-action-card anx-panel" data-action="new_bill"       t-on-click="onActionClick">
                             <div class="anx-action-icon anx-icon-red"><i class="fa fa-file-text"></i></div>
-                            <div class="anx-action-title">New bill</div>
+                            <div class="anx-action-title">New Bill</div>
                             <div class="anx-action-sub">Record an expense</div>
                         </div>
                         <div class="anx-action-card anx-panel" data-action="proforma_list"  t-on-click="onActionClick">
@@ -298,12 +298,12 @@
                         </div>
                         <div class="anx-action-card anx-panel" data-action="new_journal"    t-on-click="onActionClick">
                             <div class="anx-action-icon anx-icon-green"><i class="fa fa-pencil"></i></div>
-                            <div class="anx-action-title">New journal entry</div>
+                            <div class="anx-action-title">New Journal Entry</div>
                             <div class="anx-action-sub">Manual accounting</div>
                         </div>
                         <div class="anx-action-card anx-panel" data-action="record_payment" t-on-click="onActionClick">
                             <div class="anx-action-icon anx-icon-orange"><i class="fa fa-check-circle-o"></i></div>
-                            <div class="anx-action-title">Record payment</div>
+                            <div class="anx-action-title">Record Payment</div>
                             <div class="anx-action-sub">Mark invoice paid</div>
                         </div>
                     </div>
@@ -1091,13 +1091,27 @@
                         </div>
 
                         <!-- Search + filter toolbar -->
-                        <div class="anx-inv-toolbar" style="margin-top:14px;margin-bottom:12px;">
+                        <div class="anx-inv-toolbar" style="margin-top:14px;margin-bottom:12px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
                             <div class="anx-inv-search-wrap" style="max-width:420px;">
                                 <i class="fa fa-search anx-inv-search-icon"/>
                                 <input class="anx-inv-search" type="text"
                                        placeholder="Search by name, description, file type…"
                                        t-on-input="onDocSearch"/>
                             </div>
+                            <t t-if="state.docList and state.docList.is_validator">
+                                <button
+                                    t-attf-class="anx-doc-batch-ai-btn {{ state.batchAnalyzing ? 'loading' : '' }}"
+                                    t-on-click="analyzeAndCreateBatch"
+                                    t-att-disabled="state.batchAnalyzing"
+                                    title="AI Create entries for all selected documents at once">
+                                    <t t-if="state.batchAnalyzing">
+                                        <i class="fa fa-spinner fa-spin"/> Processing...
+                                    </t>
+                                    <t t-else="">
+                                        <i class="fa fa-magic"/> AI Create Selected
+                                    </t>
+                                </button>
+                            </t>
                         </div>
 
                         <!-- Document list table -->
@@ -1105,6 +1119,10 @@
                             <table class="anx-inv-table anx-doc-table">
                                 <thead>
                                     <tr>
+                                        <th class="anx-inv-th" style="width:36px;text-align:center;">
+                                            <input type="checkbox" title="Select all"
+                                                   t-on-change="onDocSelectAll"/>
+                                        </th>
                                         <th class="anx-inv-th anx-doc-th-icon" style="width:44px;"></th>
                                         <th class="anx-inv-th anx-doc-th-name" style="width:200px;">Document Name</th>
                                         <th class="anx-inv-th anx-doc-th-desc" style="width:170px;">Description</th>
@@ -1136,6 +1154,12 @@
                                     </t>
                                     <t t-foreach="filteredDocuments" t-as="doc" t-key="doc.id">
                                         <tr class="anx-inv-row anx-doc-row">
+                                            <td class="anx-inv-td anx-inv-td-center" style="width:36px;">
+                                                <input type="checkbox"
+                                                       t-att-checked="state.selectedDocIds and state.selectedDocIds[doc.id]"
+                                                       t-att-data-id="doc.id"
+                                                       t-on-change="onDocSelectOne"/>
+                                            </td>
                                             <td class="anx-inv-td anx-inv-td-center">
                                                 <span class="anx-doc-type-icon">
                                                     <i t-attf-class="fa {{ docFileIconByName(doc.file_name) }}"/>
@@ -1304,9 +1328,9 @@
                                                                 style="background:#1565c0; color:#fff; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; opacity: 1;" 
                                                                 t-att-data-id="doc.id" 
                                                                 t-on-click="analyzeAndCreateDocument" 
-                                                                t-att-disabled="state.analyzingDocId === doc.id" 
+                                                                t-att-disabled="state.analyzingDocIds and state.analyzingDocIds[doc.id]" 
                                                                 title="Process document with AI &amp; product lookup to create entry">
-                                                            <t t-if="state.analyzingDocId === doc.id">
+                                                            <t t-if="state.analyzingDocIds and state.analyzingDocIds[doc.id]">
                                                                  <i class="fa fa-spinner fa-spin"/> Processing...
                                                             </t>
                                                             <t t-else="">

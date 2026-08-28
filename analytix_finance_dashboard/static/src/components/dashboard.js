@@ -155,6 +155,7 @@ export class AnalytixFinanceDashboard extends Component {
             previewDocUrl:    '',
             previewDocId:     null,
             analyzingDocId:   null,
+            analyzingDocIds:  {},  // { [docId]: true } — per-doc concurrent lock
             // ── Account Validation Dialog Modal State
             showAccountValidationModal: false,
             accountValData:             null,
@@ -179,6 +180,9 @@ export class AnalytixFinanceDashboard extends Component {
             invProductSortCol:  'name',
             invProductSortDir:  'asc',
             invCurrencySym:     '',
+            // ── Batch Document Selection ──────────────────────────────────
+            selectedDocIds:     {},   // { [docId]: true|false }
+            batchAnalyzing:     false,
         });
 
         this.chartRef1 = useRef("revExpChart");
@@ -1041,7 +1045,11 @@ export class AnalytixFinanceDashboard extends Component {
 
     getCurrencySymbol(codeOrSym) {
         if (!codeOrSym) return '';
-        return String(codeOrSym).trim();
+        const clean = String(codeOrSym).trim();
+        if (/^(SAR|SR|﷼|ر\.?س\.?|\uE900|)$/i.test(clean) || clean.includes('\uE900') || clean.includes('')) {
+            return '\uE900';
+        }
+        return clean;
     }
 
     // ── Formatters ────────────────────────────────────────────────────
@@ -1432,12 +1440,14 @@ export class AnalytixFinanceDashboard extends Component {
         if (!this.state.vatData) return;
         const d = this.state.vatData;
         const sym = d.currency_sym || '';
+        const isSar = /^(SAR|SR|﷼|ر\.?س\.?|\uE900|)$/i.test(String(sym).trim()) || String(sym).includes('\uE900') || String(sym).includes('');
+        const symSpan = isSar ? `<span class="anx-currency-sym" style="font-family:'sr_symbol' !important;">&#xe900;</span>` : `<span>${sym}</span>`;
 
         const fmtN = v => {
             const num = Number(v) || 0;
             const neg = num < 0;
             const s = Math.abs(num).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            return neg ? `<span style="color:#e53935">-${sym} ${s}</span>` : `${sym} ${s}`;
+            return neg ? `<span style="color:#e53935">-${symSpan} ${s}</span>` : `${symSpan} ${s}`;
         };
 
         const outRows = (this.filteredOutputVat || []).map(r => `
@@ -1466,9 +1476,16 @@ export class AnalytixFinanceDashboard extends Component {
 
         const companyName = (this.state.data && this.state.data.companies) || 'All Companies';
 
-        const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>VAT Summary Report</title>
+        const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Tax Summary Report</title>
 <style>
-  body { font-family: Inter, Arial, sans-serif; padding: 32px; color: #1f2937; line-height: 1.5; }
+  @font-face {
+      font-family: "sr_symbol";
+      src: url("/iwesabe_sar_currency_symbol/static/src/fonts/sr.ttf") format("truetype"),
+           url("data:font/truetype;base64,AAEAAAALAIAAAwAwT1MvMg8SBTgAAAC8AAAAYGNtYXAXVtKIAAABHAAAAFRnYXNwAAAAEAAAAXAAAAAIZ2x5ZjrqSMoAAAF4AAAYDGhlYWQqn96bAAAZhAAAADZoaGVhB1YDxwAAGbwAAAAkaG10eA0oAAAAABngAAAAGGxvY2EMLgwGAAAZ+AAAAA5tYXhwAAkLQQAAGggAAAAgbmFtZZlKCfsAABooAAABhnBvc3QAAwAAAAAbsAAAACAAAwMNAZAABQAAApkCzAAAAI8CmQLMAAAB6wAzAQkAAAAAAAAAAAAAAAAAAAABEAAAAAAAAAAAAAAAAAAAAABAAADpAQPA/8AAQAPAAEAAAAABAAAAAAAAAAAAAAAgAAAAAAADAAAAAwAAABwAAQADAAAAHAADAAEAAAAcAAQAOAAAAAoACAACAAIAAQAg6QH//f//AAAAAAAg6QD//f//AAH/4xcEAAMAAQAAAAAAAAAAAAAAAQAB//8ADwABAAD/wAAAA8AAAgAANzkBAAAAAAEAAP/AAAADwAACAAA3OQEAAAAAAQAA/8AAAAPAAAIAADc5AQAAAAACAAD/wAOUA8AItQs+AAABDgEjDgEVIgYHFAYHDgExOAExMCIxMAYxDgExMCIVIgYxDgEHMAYxIgYxOAExMAYxDgExIgYxDgEHIgYHFCIxMCIVMAYHDgEHDgEHMAYxMAYVIgYPARUcATEiMCMwBgcqASMwBiMGIiMUIjEwBiMiBiMOASMGIgcwIiMwBjEwIiMwIgciBiMiBgcqATEwBiMGIjEwBiMiBiMwIjEiBiMUIiMiBiMiBiMwBiMwIhUqATEqAQciBjEqAQcwIiMiBiMwIjEiBiMqASMGIiMwIjEwIgcwIgcqATEOASMiBgciBiMwBiMiBiMwBiMGIjEGIiMiBgcwIjEUMCMUMDEUBjEOARUwFAccATEwBhUOATEwFDEUBhUOATEwBhUUBjEOAQcUBgcGFBUwBhUUBhUwFDEUBjEcATEGFDEcASMwFBUwFCMcATEUBjEcARUUBhUUBhUcARUGMjMwNjMyNjMyNjEyNjMyNjcwMjM+ATM6ATEwNjMyNjc6ATMyNjMyNjMyNjM+ATMyNjMyNjMwMjM+ATM6ATc6ATU6ATU6ATMyNjE6ATEwMjUyNjMyNjM6ATcwMjMwNhUwNjMwMjcyNjcyNjE6ATcyNjM6ATEwNjMwNjM+ATMyNjMyNjMyNjMyNjMyNjc6ATcwMjcyNjMwMjcwMjM2MjE2MjM+ATE6ATEyNjMwMjM3FRwBIzAGBzAGIw4BIyoBByoBMQYiIzAiIzAGIyIGBzAiMTAiIxQGIzAGIwYiMSIGMSoBIxQiMTAiByoBMSIGIyoBIzAGIyIGIyIGIyoBBzAiByoBByIGIyIGIyIGIyIGMSIGIwYiMTAGIyIGBw4BIwYiByoBIzAGMSIGMSIGIwYiMQYiIzAGIzAiMTAiFSoBIw4BIyoBIzAGMSIGByIGIwYiByIGIyIGByoBBzAiBw4BIw4BFTAUMQYUMTAGFRQGMTAGBzAUBxQGMRQGMTAGMTAGBw4BFQ4BBwYUBzAGMRwBBxwBMRQGFQ4BFRQGFRQGFRQGFTAUFRQGFQYUFRQGFRQWNzYyMzA2MzYyMTYyNzI2MzoBNzI2MzoBNTAyMzA2Mz4BMzA2MTI2Mz4BMTAyNzoBMzA2MzAyNz4BMzAyNzoBMTI0MzAyMzAyMTA2MzYyNzYyMTI2MzYyMzI2MzoBNToBMTI2MToBMTI2MToBMTI2Mz4BMzI2MzI2MzYyMzI2MzoBMTgBNzAyMz4BMzI2MzoBMTYyMzA2MzAyMzA2MzYyMTI2MTAyNzI2MzI2MzAyMTAyNzoBNzI2MzoBNzoBNzA2MzI2MTI2NzI2MzoBNzAyMTYyMTAyMzYyNzI2MzAyMzA2MzoBMTI2MzoBMT4BMzoBNzI2MzoBNzQ2NTA2NTA0MTA0MzQ2NTQ2MTQ2NTQ2MTI0MTA0NTI4MTwBMT4BNTA0MzA0MTA2NTQ2NTA0MzQ2MTA2NzwBNTI0NTQ2NTQ2NTQ2MTQ2NTA2NTwBMTA2NTwBNTY0MTAGIwGsAQMBAQMBCwICAQECAQEBAQEBAQEFAQIBAQEBAQEBAQEBAQIBAQECAgMYAQECAQEBAQIBAgEBBgEBAQEDAgIDAQEDAgIEAQEFAgMDAQIBAgEBAgEBBAIBAwMBAgEBAgEBAQEBAQEDAgIEAQEFAgMDAQIBAgEBAgEBBAIBAwMBAgQBAgMCAQIFAQECAgQCAQECAQEDAQMBAgEBAQEBAgUBAQECAQEBAQEBAQEBAQEBAQEBAQECAQEDBAcBAQUCAwQBAgICCwMDAgEEAQEBAQgDAQEBAQIBAQEBAgEBAQEBAQEBAQEBAQEBAQECAQEBAQIDAQEDAQECAgQCAQQCAgECBAEBAQcBAQQCAQEBAQYCAQIBAQQCAgQBAQMBAQIBAgEBBAIBAQEBAwECAgEBAQECAQECAQQBAQMBAQEBAgEBAQECAQMEAwIDAQMBAgMBAQEGAgMCAgUBAQIBAQIBAgMCAQMBAQQCAQMBBAIBAwECAQMBAgIBAgEDBAEBAQEBAQEBAQYCBAMCBQEBAgEBAgEBAQEBAgEBBAMCAQEFAwMCAgMBAQECAQIBAQECAQUBAQEBAgEBBAEBAQEBAgEDAQEDAQEDAQEDAQEDAQICAQMBBAICAQMEBAYHAwIDAQEBAQICBQEDAgEEAQEBAQECAgECAQIEAQEBAQIBBQQBBAIBBAEBAwECBAQBAQEEAwIGAQMDAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBBQMDAQMBAgMBAwIBAwEDBgIDAQECAgEDAQQGAQICBAIBBgIBAQEBAQEEAwIEAgICAQEBAQEBAgEBAwEBAwEEAwEBAQIBAQMBAQMBAQEBAQEBAQIBBAIEAwIBAgIBAwEDBgEBAgECAwEDAgIDAQIBAgMCBAYBAwEFAwIFAQMDCAECAQMCAQMBAgIBAgEBAgEBAgEBAwECBAECAwEBAwECAgEBAgEBAQECAQIJAQECAQIBAQMBAQMCAgMBBQICAQIBAgECBAECBAECAQMDAQEBAgEFAwIEAQEEAQEBAQECAQMGAwIBAgECAQEBAQEBAgEDAQEBAQEBAQEBAQEBAgEFAQEBAgEBAQEBAQMBAgEBAQEBAwEBAQEBAQEDAQEBAQICAwEBAQEBAQEBAQECAQIBAQMCAgQFAwECBAEBAQIBAQEBAQIBAQECAQICAQEDAQEBAQECAQEBAQEBAQEDAwECAQMCAQMBDQEBAQEBAQEBCwECBQEDAQEDAQMCAgQBAgEBAgEBBQIBAgECAQECAQMCAgUBAgIBAgEDAgQEAQEBAQMCAgMDAgIDAwIBBAEBBAICBAECBgEBAQEBAQECAQEBAgEBAQEBAQIBAgEBAgECAQEBAQEBAgEBAQECAQIBAQMCCgIBAgEBAQkBAgICBgIBAQEDAgIFAQEBAQIBAgEBAQIBAwEBAwECAwEBAQIBAQEBAQECAgQBAQIBAgIBAQEBAwEBAQEBAQEBAQIBAQEBAQEBAQECAQEBAQECAQO/AQIBAQEHAQEBAQEBAQEBAQEBAwECAQEBAQEBAQECAQEBAgEDGAIBAgEBAQEDAQLXa2sBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQIBAQEBAwEBAQIBAQEBAQIEAQEBAQEBAQEDAQEDAQIDAgEBAgMFAgEEAgIDAQEBAQIBAQEBAQIBAgEBAgEDAQIBCAEBAQEDAQIEAQICAQEBAQEBAQEBAQIBAQIBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQFGMRQBAQEBAQEBAQEBAQEBAQEBAQIBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQECAgEBAQEBAQIDAQEBAQIBAQQEAgIEAQEEBQEDAQMBAgEBAQEDAgEEAQEDAgEDAQEBAQICAQQCAgMBAQMCAwEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQECAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQIBAQEBAQEBAQEBAgEBAQEBBwEBAQEEAQEBAQEBAQEFAQECAQIBAgEBBAEBAQEBAQEBAQEBAQQCAgEDAwQBAgEBAgEBAQECAQEBBAEBBQIEFDAaJQEBAQEBAQEBAQEBAQEBAQEBAQMBH09uAwEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQECAQECAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQIBAQIBAQEBAgEBAQEBCwMCAgEBAQEBAQECAQMCAgUCAwQBAgUFAQIBBAQBAQICAQQCBAUBAQIBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBARsbNwEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQECAgMBAQEBAQUCAgEBAgEBAQQCAwMBAgEBAgEBAwEDCwUBAwEBAQEBAgEBBgIBAwECAQgJAQEBAQEBAQEBAQEBAQECAgEBAQEBAQEBAQEBAQEBAQEBAQIBAQEBAQEBAgEBAQEBAgEBAQHGZGIBAQEBAQEEAQEBAQEBAQEBAQEFAQEBAQECAQECAQECBAEFBgYDBQIBAQIBAQIBAQIBAgKkpQEBAQIBAQEBAQEBAQEBAQEBAQIB95VjAfy/AQEBAQEBAQEBAQEBAQEBAQEBAQQBAQEBAQEBAQEBAQEBAQEBAQEBAQIBAQECAQEBAQEBAQEBAgEBAQEBAQEBAQEBAgEBAQICAQEJAQEBAQEBAQEBAQEBAQEBAQEBAgEDAgMDAgEDAgEKBAECAQMCAgMBAgEDDgMCAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQIBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBBgEBAQEBAQEBAQEBAQIBAgEBAQEBAQEFAgIBAgEBAgEBAgQEAgEBAQEBAQIBAgYCAQIBBgIDAQECAgEBAwECCAEAAAEAAP/AAjIDwAAIAAABBzc+ATEwBgcCMAICAQEBAQNIAgIBAQEBAAABAAAAAAAAsksaaV8PPPUACwQAAAAAAOP2zQ8AAAAA4/bNDwAA/8ADlAPAAAAACAACAAAAAAAAAAEAAAPA/8AAAAQAAAAAAAOUAAEAAAAAAAAAAAAAAAAAAAAGBAAAAAAAAAAAAAAAAgAAAAOUAAADlAAAAAAAAAAKABQAHgvyDAYAAAABAAAABgs/AAIAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAADgCuAAEAAAAAAAEABwAAAAEAAAAAAAIABwBgAAEAAAAAAAMABwA2AAEAAAAAAAQABwB1AAEAAAAAAAUACwAVAAEAAAAAAAYABwBLAAEAAAAAAAoAGgCKAAMAAQQJAAEADgAHAAMAAQQJAAIADgBnAAMAAQQJAAMADgA9AAMAAQQJAAQADgB8AAMAAQQJAAUAFgAgAAMAAQQJAAYADgBSAAMAAQQJAAoANACkaWNvbW9vbgBpAGMAbwBtAG8AbwBuVmVyc2lvbiAxLjAAVgBlAHIAcwBpAG8AbgAgADEALgAwaWNvbW9vbgBpAGMAbwBtAG8AbwBuUmVndWxhcgBSAGUAZwB1AGwAYQByaWNvbW9vbgBpAGMAbwBtAG8AbwBuRm9udCBnZW5lcmF0ZWQgYnkgSWNvTW9vbi4ARgBvAG4AdAAgAGcAZQBuAGUAcgBhAHQAZQBk ACAAYgB5 ACAASQBjAG8ATQBvAG8AbnAuAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==") format("truetype");
+      font-weight: normal; font-style: normal; unicode-range: U+E900;
+  }
+  .anx-currency-sym, .o_sar_symbol, .icon-sr, [class*="sr_symbol"] { font-family: 'sr_symbol' !important; display: inline-block; }
+  body { font-family: 'sr_symbol', Inter, Arial, sans-serif; padding: 32px; color: #1f2937; line-height: 1.5; }
   .hdr-box { text-align: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 16px; margin-bottom: 24px; }
   h2 { margin: 0 0 4px; font-size: 24px; color: #0f172a; letter-spacing: -0.5px; }
   p.sub { color: #64748b; margin: 0; font-size: 13px; font-weight: 500; }
@@ -1491,25 +1508,25 @@ export class AnalytixFinanceDashboard extends Component {
   @media print { button { display:none } body { padding: 15px; } }
 </style></head><body>
 <div class="hdr-box">
-  <h2>VAT Summary Report</h2>
-  <p class="sub">${companyName} &mdash; Period: ${d.date_range.start} &rarr; ${d.date_range.end}</p>
+  <h2>Tax Summary Report &mdash; ${companyName}</h2>
+  <p class="sub">Date Range: ${this.state.vatFilterFrom || 'Beginning'} to ${this.state.vatFilterTo || 'Present'}</p>
 </div>
 
 <div class="kpi-row">
   <div class="kpi-card">
-    <div class="kpi-lbl">Output VAT (Sales)</div>
+    <div class="kpi-lbl">Total Output VAT</div>
     <div class="kpi-val output">${fmtN(d.output_vat)}</div>
   </div>
   <div class="kpi-card">
-    <div class="kpi-lbl">Input VAT (Bills)</div>
+    <div class="kpi-lbl">Total Input VAT</div>
     <div class="kpi-val input">${fmtN(d.input_vat)}</div>
   </div>
   <div class="kpi-card">
-    <div class="kpi-lbl">Net VAT Payable</div>
+    <div class="kpi-lbl">Net VAT</div>
     <div class="kpi-val net">${fmtN(d.net_vat)}</div>
   </div>
   <div class="kpi-card">
-    <div class="kpi-lbl">Total Tax Lines</div>
+    <div class="kpi-lbl">Transactions</div>
     <div class="kpi-val">${d.total_count}</div>
   </div>
 </div>
@@ -1574,10 +1591,17 @@ export class AnalytixFinanceDashboard extends Component {
         const win = window.open('', '_blank', 'width=1000,height=750');
         win.document.write(html);
         win.document.close();
-        setTimeout(() => win.print(), 400);
+        if (win.document.fonts && win.document.fonts.load) {
+            win.document.fonts.load("12px sr_symbol", "\uE900").then(() => {
+                setTimeout(() => win.print(), 100);
+            }).catch(() => {
+                setTimeout(() => win.print(), 400);
+            });
+        } else {
+            setTimeout(() => win.print(), 400);
+        }
     }
 
-    // ── Export VAT Summary Excel (XLSX) ───────────────────────────────
     async exportVatExcel() {
         if (!this.state.vatData) return;
         try {
@@ -1785,12 +1809,14 @@ export class AnalytixFinanceDashboard extends Component {
     printBsReport() {
         if (!this.state.bsData) return;
         const d = this.state.bsData;
-        const sym = d.currency_sym;
+        const sym = d.currency_sym || '';
         const hasCmp = this.state.bsCompareMode && d.compare;
+        const isSar = /^(SAR|SR|﷼|ر\.?س\.?|\uE900|)$/i.test(String(sym).trim()) || String(sym).includes('\uE900') || String(sym).includes('');
+        const symSpan = isSar ? `<span class="anx-currency-sym" style="font-family:'sr_symbol' !important;">&#xe900;</span>` : `<span>${sym}</span>`;
         const fmtN = v => {
             const neg = Number(v) < 0;
             const s = Math.abs(Number(v)).toLocaleString(undefined, { minimumFractionDigits:2, maximumFractionDigits:2 });
-            return neg ? `<span style="color:#e53935">-${sym} ${s}</span>` : `${sym} ${s}`;
+            return neg ? `<span style="color:#e53935">-${symSpan} ${s}</span>` : `${symSpan} ${s}`;
         };
         const cols = hasCmp ? 3 : 2;
         const hdr = hasCmp
@@ -1815,7 +1841,15 @@ export class AnalytixFinanceDashboard extends Component {
         }).join('');
         const c = d.compare || {};
         const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Balance Sheet</title>`
-            + `<style>body{font-family:Inter,sans-serif;padding:32px;}table{width:100%;border-collapse:collapse;}@media print{button{display:none}}</style></head><body>`
+            + `<style>
+  @font-face {
+      font-family: "sr_symbol";
+      src: url("/iwesabe_sar_currency_symbol/static/src/fonts/sr.ttf") format("truetype"),
+           url("data:font/truetype;base64,AAEAAAALAIAAAwAwT1MvMg8SBTgAAAC8AAAAYGNtYXAXVtKIAAABHAAAAFRnYXNwAAAAEAAAAXAAAAAIZ2x5ZjrqSMoAAAF4AAAYDGhlYWQqn96bAAAZhAAAADZoaGVhB1YDxwAAGbwAAAAkaG10eA0oAAAAABngAAAAGGxvY2EMLgwGAAAZ+AAAAA5tYXhwAAkLQQAAGggAAAAgbmFtZZlKCfsAABooAAABhnBvc3QAAwAAAAAbsAAAACAAAwMNAZAABQAAApkCzAAAAI8CmQLMAAAB6wAzAQkAAAAAAAAAAAAAAAAAAAABEAAAAAAAAAAAAAAAAAAAAABAAADpAQPA/8AAQAPAAEAAAAABAAAAAAAAAAAAAAAgAAAAAAADAAAAAwAAABwAAQADAAAAHAADAAEAAAAcAAQAOAAAAAoACAACAAIAAQAg6QH//f//AAAAAAAg6QD//f//AAH/4xcEAAMAAQAAAAAAAAAAAAAAAQAB//8ADwABAAD/wAAAA8AAAgAANzkBAAAAAAEAAP/AAAADwAACAAA3OQEAAAAAAQAA/8AAAAPAAAIAADc5AQAAAAACAAD/wAOUA8AItQs+AAABDgEjDgEVIgYHFAYHDgExOAExMCIxMAYxDgExMCIVIgYxDgEHMAYxIgYxOAExMAYxDgExIgYxDgEHIgYHFCIxMCIVMAYHDgEHDgEHMAYxMAYVIgYPARUcATEiMCMwBgcqASMwBiMGIiMUIjEwBiMiBiMOASMGIgcwIiMwBjEwIiMwIgciBiMiBgcqATEwBiMGIjEwBiMiBiMwIjEiBiMUIiMiBiMiBiMwBiMwIhUqATEqAQciBjEqAQcwIiMiBiMwIjEiBiMqASMGIiMwIjEwIgcwIgcqATEOASMiBgciBiMwBiMiBiMwBiMGIjEGIiMiBgcwIjEUMCMUMDEUBjEOARUwFAccATEwBhUOATEwFDEUBhUOATEwBhUUBjEOAQcUBgcGFBUwBhUUBhUwFDEUBjEcATEGFDEcASMwFBUwFCMcATEUBjEcARUUBhUUBhUcARUGMjMwNjMyNjMyNjEyNjMyNjcwMjM+ATM6ATEwNjMyNjc6ATMyNjMyNjMyNjM+ATMyNjMyNjMwMjM+ATM6ATc6ATU6ATU6ATMyNjE6ATEwMjUyNjMyNjM6ATcwMjMwNhUwNjMwMjcyNjcyNjE6ATcyNjM6ATEwNjMwNjM+ATMyNjMyNjMyNjMyNjMyNjc6ATcwMjcyNjMwMjcwMjM2MjE2MjM+ATE6ATEyNjMwMjM3FRwBIzAGBzAGIw4BIyoBByoBMQYiIzAiIzAGIyIGBzAiMTAiIxQGIzAGIwYiMSIGMSoBIxQiMTAiByoBMSIGIyoBIzAGIyIGIyIGIyoBBzAiByoBByIGIyIGIyIGIyIGMSIGIwYiMTAGIyIGBw4BIwYiByoBIzAGMSIGMSIGIwYiMQYiIzAGIzAiMTAiFSoBIw4BIyoBIzAGMSIGByIGIwYiByIGIyIGByoBBzAiBw4BIw4BFTAUMQYUMTAGFRQGMTAGBzAUBxQGMRQGMTAGMTAGBw4BFQ4BBwYUBzAGMRwBBxwBMRQGFQ4BFRQGFRQGFRQGFTAUFRQGFQYUFRQGFRQWNzYyMzA2MzYyMTYyNzI2MzoBNzI2MzoBNTAyMzA2Mz4BMzA2MTI2Mz4BMTAyNzoBMzA2MzAyNz4BMzAyNzoBMTI0MzAyMzAyMTA2MzYyNzYyMTI2MzYyMzI2MzoBNToBMTI2MToBMTI2MToBMTI2Mz4BMzI2MzI2MzYyMzI2MzoBMTgBNzAyMz4BMzI2MzoBMTYyMzA2MzAyMzA2MzYyMTI2MTAyNzI2MzI2MzAyMTAyNzoBNzI2MzoBNzoBNzA2MzI2MTI2NzI2MzoBNzAyMTYyMTAyMzYyNzI2MzAyMzA2MzoBMTI2MzoBMT4BMzoBNzI2MzoBNzQ2NTA2NTA0MTA0MzQ2NTQ2MTQ2NTQ2MTI0MTA0NTI4MTwBMT4BNTA0MzA0MTA2NTQ2NTA0MzQ2MTA2NzwBNTI0NTQ2NTQ2NTQ2MTQ2NTA2NTwBMTA2NTwBNTY0MTAGIwGsAQMBAQMBCwICAQECAQEBAQEBAQEFAQIBAQEBAQEBAQEBAQIBAQECAgMYAQECAQEBAQIBAgEBBgEBAQEDAgIDAQEDAgIEAQEFAgMDAQIBAgEBAgEBBAIBAwMBAgEBAgEBAQEBAQEDAgIEAQEFAgMDAQIBAgEBAgEBBAIBAwMBAgQBAgMCAQIFAQECAgQCAQECAQEDAQMBAgEBAQEBAgUBAQECAQEBAQEBAQEBAQEBAQEBAQECAQEDBAcBAQUCAwQBAgICCwMDAgEEAQEBAQgDAQEBAQIBAQEBAgEBAQEBAQEBAQEBAQEBAQECAQEBAQIDAQEDAQECAgQCAQQCAgECBAEBAQcBAQQCAQEBAQYCAQIBAQQCAgQBAQMBAQIBAgEBBAIBAQEBAwECAgEBAQECAQECAQQBAQMBAQEBAgEBAQECAQMEAwIDAQMBAgMBAQEGAgMCAgUBAQIBAQIBAgMCAQMBAQQCAQMBBAIBAwECAQMBAgIBAgEDBAEBAQEBAQEBAQYCBAMCBQEBAgEBAgEBAQEBAgEBBAMCAQEFAwMCAgMBAQECAQIBAQECAQUBAQEBAgEBBAEBAQEBAgEDAQEDAQEDAQEDAQEDAQICAQMBBAICAQMEBAYHAwIDAQEBAQICBQEDAgEEAQEBAQECAgECAQIEAQEBAQIBBQQBBAIBBAEBAwECBAQBAQEEAwIGAQMDAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBBQMDAQMBAgMBAwIBAwEDBgIDAQECAgEDAQQGAQICBAIBBgIBAQEBAQEEAwIEAgICAQEBAQEBAgEBAwEBAwEEAwEBAQIBAQMBAQMBAQEBAQEBAQIBBAIEAwIBAgIBAwEDBgEBAgECAwEDAgIDAQIBAgMCBAYBAwEFAwIFAQMDCAECAQMCAQMBAgIBAgEBAgEBAgEBAwECBAECAwEBAwECAgEBAgEBAQECAQIJAQECAQIBAQMBAQMCAgMBBQICAQIBAgECBAECBAECAQMDAQEBAgEFAwIEAQEEAQEBAQECAQMGAwIBAgECAQEBAQEBAgEDAQEBAQEBAQEBAQEBAgEFAQEBAgEBAQEBAQMBAgEBAQEBAwEBAQEBAQEDAQEBAQICAwEBAQEBAQEBAQECAQIBAQMCAgQFAwECBAEBAQIBAQEBAQIBAQECAQICAQEDAQEBAQECAQEBAQEBAQEDAwECAQMCAQMBDQEBAQEBAQEBCwECBQEDAQEDAQMCAgQBAgEBAgEBBQIBAgECAQECAQMCAgUBAgIBAgEDAgQEAQEBAQMCAgMDAgIDAwIBBAEBBAICBAECBgEBAQEBAQECAQEBAgEBAQEBAQIBAgEBAgECAQEBAQEBAgEBAQECAQIBAQMCCgIBAgEBAQkBAgICBgIBAQEDAgIFAQEBAQIBAgEBAQIBAwEBAwECAwEBAQIBAQEBAQECAgQBAQIBAgIBAQEBAwEBAQEBAQEBAQIBAQEBAQEBAQECAQEBAQECAQO/AQIBAQEHAQEBAQEBAQEBAQEBAwECAQEBAQEBAQECAQEBAgEDGAIBAgEBAQEDAQLXa2sBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQIBAQEBAwEBAQIBAQEBAQIEAQEBAQEBAQEDAQEDAQIDAgEBAgMFAgEEAgIDAQEBAQIBAQEBAQIBAgEBAgEDAQIBCAEBAQEDAQIEAQICAQEBAQEBAQEBAQIBAQIBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQFGMRQBAQEBAQEBAQEBAQEBAQEBAQIBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQECAgEBAQEBAQIDAQEBAQIBAQQEAgIEAQEEBQEDAQMBAgEBAQEDAgEEAQEDAgEDAQEBAQICAQQCAgMBAQMCAwEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQECAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQIBAQEBAQEBAQEBAgEBAQEBBwEBAQEEAQEBAQEBAQEFAQECAQIBAgEBBAEBAQEBAQEBAQEBAQQCAgEDAwQBAgEBAgEBAQECAQEBBAEBBQIEFDAaJQEBAQEBAQEBAQEBAQEBAQEBAQMBH09uAwEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQECAQECAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQIBAQIBAQEBAgEBAQEBCwMCAgEBAQEBAQECAQMCAgUCAwQBAgUFAQIBBAQBAQICAQQCBAUBAQIBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBARsbNwEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQECAgMBAQEBAQUCAgEBAgEBAQQCAwMBAgEBAgEBAwEDCwUBAwEBAQEBAgEBBgIBAwECAQgJAQEBAQEBAQEBAQEBAQECAgEBAQEBAQEBAQEBAQEBAQEBAQIBAQEBAQEBAgEBAQEBAgEBAQHGZGIBAQEBAQEEAQEBAQEBAQEBAQEFAQEBAQECAQECAQECBAEFBgYDBQIBAQIBAQIBAQIBAgKkpQEBAQIBAQEBAQEBAQEBAQEBAQIB95VjAfy/AQEBAQEBAQEBAQEBAQEBAQEBAQQBAQEBAQEBAQEBAQEBAQEBAQEBAQIBAQECAQEBAQEBAQEBAgEBAQEBAQEBAQEBAgEBAQICAQEJAQEBAQEBAQEBAQEBAQEBAQEBAgEDAgMDAgEDAgEKBAECAQMCAgMBAgEDDgMCAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQIBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBBgEBAQEBAQEBAQEBAQIBAgEBAQEBAQEFAgIBAgEBAgEBAgQEAgEBAQEBAQIBAgYCAQIBBgIDAQECAgEBAwECCAEAAAEAAP/AAjIDwAAIAAABBzc+ATEwBgcCMAICAQEBAQNIAgIBAQEBAAABAAAAAAAAsksaaV8PPPUACwQAAAAAAOP2zQ8AAAAA4/bNDwAA/8ADlAPAAAAACAACAAAAAAAAAAEAAAPA/8AAAAQAAAAAAAOUAAEAAAAAAAAAAAAAAAAAAAAGBAAAAAAAAAAAAAAAAgAAAAOUAAADlAAAAAAAAAAKABQAHgvyDAYAAAABAAAABgs/AAIAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAADgCuAAEAAAAAAAEABwAAAAEAAAAAAAIABwBgAAEAAAAAAAMABwA2AAEAAAAAAAQABwB1AAEAAAAAAAUACwAVAAEAAAAAAAYABwBLAAEAAAAAAAoAGgCKAAMAAQQJAAEADgAHAAMAAQQJAAIADgBnAAMAAQQJAAMADgA9AAMAAQQJAAQADgB8AAMAAQQJAAUAFgAgAAMAAQQJAAYADgBSAAMAAQQJAAoANACkaWNvbW9vbgBpAGMAbwBtAG8AbwBuVmVyc2lvbiAxLjAAVgBlAHIAcwBpAG8AbgAgADEALgAwaWNvbW9vbgBpAGMAbwBtAG8AbwBuUmVndWxhcgBSAGUAZwB1AGwAYQByaWNvbW9vbgBpAGMAbwBtAG8AbwBuRm9udCBnZW5lcmF0ZWQgYnkgSWNvTW9vbi4ARgBvAG4AdAAgAGcAZQBuAGUAcgBhAHQAZQBk ACAAYgB5 ACAASQBjAG8ATQBvAG8AbnAuAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==") format("truetype");
+      font-weight: normal; font-style: normal; unicode-range: U+E900;
+  }
+  .anx-currency-sym, .o_sar_symbol, .icon-sr, [class*="sr_symbol"] { font-family: 'sr_symbol' !important; display: inline-block; }
+  body{font-family:'sr_symbol',Inter,sans-serif;padding:32px;}table{width:100%;border-collapse:collapse;}@media print{button{display:none}}</style></head><body>`
             + `<h2 style="margin:0 0 4px">Balance Sheet</h2><p style="color:#8a93a4;margin:0 0 20px">${d.company}</p>`
             + `<table>${hdr}`
             + row('Assets','','',true) + row('Current Assets','','',true)
@@ -1846,7 +1880,15 @@ export class AnalytixFinanceDashboard extends Component {
         const win = window.open('', '_blank', 'width=960,height=720');
         win.document.write(html);
         win.document.close();
-        setTimeout(() => win.print(), 400);
+        if (win.document.fonts && win.document.fonts.load) {
+            win.document.fonts.load("12px sr_symbol", "\uE900").then(() => {
+                setTimeout(() => win.print(), 100);
+            }).catch(() => {
+                setTimeout(() => win.print(), 400);
+            });
+        } else {
+            setTimeout(() => win.print(), 400);
+        }
     }
 
 
@@ -1855,6 +1897,8 @@ export class AnalytixFinanceDashboard extends Component {
         if (!this.state.plData) return;
         const d   = this.state.plData;
         const sym = d.currency_sym || '';
+        const isSar = /^(SAR|SR|﷼|ر\.?س\.?|\uE900|)$/i.test(String(sym).trim()) || String(sym).includes('\uE900') || String(sym).includes('');
+        const symSpan = isSar ? `<span class="anx-currency-sym" style="font-family:'sr_symbol' !important;">&#xe900;</span>` : `<span>${sym}</span>`;
 
         const fmtN = v => {
             const neg = Number(v) < 0;
@@ -1862,8 +1906,8 @@ export class AnalytixFinanceDashboard extends Component {
                 minimumFractionDigits: 2, maximumFractionDigits: 2
             });
             return neg
-                ? `<span style="color:#e53935">-${sym} ${s}</span>`
-                : `${sym} ${s}`;
+                ? `<span style="color:#e53935">-${symSpan} ${s}</span>`
+                : `${symSpan} ${s}`;
         };
 
         const secRow = label => `
@@ -1897,7 +1941,14 @@ export class AnalytixFinanceDashboard extends Component {
         const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
 <title>Profit &amp; Loss — ${d.company}</title>
 <style>
-  body { font-family: Inter, Arial, sans-serif; padding: 32px; color: #1f2937; }
+  @font-face {
+      font-family: "sr_symbol";
+      src: url("/iwesabe_sar_currency_symbol/static/src/fonts/sr.ttf") format("truetype"),
+           url("data:font/truetype;base64,AAEAAAALAIAAAwAwT1MvMg8SBTgAAAC8AAAAYGNtYXAXVtKIAAABHAAAAFRnYXNwAAAAEAAAAXAAAAAIZ2x5ZjrqSMoAAAF4AAAYDGhlYWQqn96bAAAZhAAAADZoaGVhB1YDxwAAGbwAAAAkaG10eA0oAAAAABngAAAAGGxvY2EMLgwGAAAZ+AAAAA5tYXhwAAkLQQAAGggAAAAgbmFtZZlKCfsAABooAAABhnBvc3QAAwAAAAAbsAAAACAAAwMNAZAABQAAApkCzAAAAI8CmQLMAAAB6wAzAQkAAAAAAAAAAAAAAAAAAAABEAAAAAAAAAAAAAAAAAAAAABAAADpAQPA/8AAQAPAAEAAAAABAAAAAAAAAAAAAAAgAAAAAAADAAAAAwAAABwAAQADAAAAHAADAAEAAAAcAAQAOAAAAAoACAACAAIAAQAg6QH//f//AAAAAAAg6QD//f//AAH/4xcEAAMAAQAAAAAAAAAAAAAAAQAB//8ADwABAAD/wAAAA8AAAgAANzkBAAAAAAEAAP/AAAADwAACAAA3OQEAAAAAAQAA/8AAAAPAAAIAADc5AQAAAAACAAD/wAOUA8AItQs+AAABDgEjDgEVIgYHFAYHDgExOAExMCIxMAYxDgExMCIVIgYxDgEHMAYxIgYxOAExMAYxDgExIgYxDgEHIgYHFCIxMCIVMAYHDgEHDgEHMAYxMAYVIgYPARUcATEiMCMwBgcqASMwBiMGIiMUIjEwBiMiBiMOASMGIgcwIiMwBjEwIiMwIgciBiMiBgcqATEwBiMGIjEwBiMiBiMwIjEiBiMUIiMiBiMiBiMwBiMwIhUqATEqAQciBjEqAQcwIiMiBiMwIjEiBiMqASMGIiMwIjEwIgcwIgcqATEOASMiBgciBiMwBiMiBiMwBiMGIjEGIiMiBgcwIjEUMCMUMDEUBjEOARUwFAccATEwBhUOATEwFDEUBhUOATEwBhUUBjEOAQcUBgcGFBUwBhUUBhUwFDEUBjEcATEGFDEcASMwFBUwFCMcATEUBjEcARUUBhUUBhUcARUGMjMwNjMyNjMyNjEyNjMyNjcwMjM+ATM6ATEwNjMyNjc6ATMyNjMyNjMyNjM+ATMyNjMyNjMwMjM+ATM6ATc6ATU6ATU6ATMyNjE6ATEwMjUyNjMyNjM6ATcwMjMwNhUwNjMwMjcyNjcyNjE6ATcyNjM6ATEwNjMwNjM+ATMyNjMyNjMyNjMyNjMyNjc6ATcwMjcyNjMwMjcwMjM2MjE2MjM+ATE6ATEyNjMwMjM3FRwBIzAGBzAGIw4BIyoBByoBMQYiIzAiIzAGIyIGBzAiMTAiIxQGIzAGIwYiMSIGMSoBIxQiMTAiByoBMSIGIyoBIzAGIyIGIyIGIyoBBzAiByoBByIGIyIGIyIGIyIGMSIGIwYiMTAGIyIGBw4BIwYiByoBIzAGMSIGMSIGIwYiMQYiIzAGIzAiMTAiFSoBIw4BIyoBIzAGMSIGByIGIwYiByIGIyIGByoBBzAiBw4BIw4BFTAUMQYUMTAGFRQGMTAGBzAUBxQGMRQGMTAGMTAGBw4BFQ4BBwYUBzAGMRwBBxwBMRQGFQ4BFRQGFRQGFRQGFTAUFRQGFQYUFRQGFRQWNzYyMzA2MzYyMTYyNzI2MzoBNzI2MzoBNTAyMzA2Mz4BMzA2MTI2Mz4BMTAyNzoBMzA2MzAyNz4BMzAyNzoBMTI0MzAyMzAyMTA2MzYyNzYyMTI2MzYyMzI2MzoBNToBMTI2MToBMTI2MToBMTI2Mz4BMzI2MzI2MzYyMzI2MzoBMTgBNzAyMz4BMzI2MzoBMTYyMzA2MzAyMzA2MzYyMTI2MTAyNzI2MzI2MzAyMTAyNzoBNzI2MzoBNzoBNzA2MzI2MTI2NzI2MzoBNzAyMTYyMTAyMzYyNzI2MzAyMzA2MzoBMTI2MzoBMT4BMzoBNzI2MzoBNzQ2NTA2NTA0MTA0MzQ2NTQ2MTQ2NTQ2MTI0MTA0NTI4MTwBMT4BNTA0MzA0MTA2NTQ2NTA0MzQ2MTA2NzwBNTI0NTQ2NTQ2NTQ2MTQ2NTA2NTwBMTA2NTwBNTY0MTAGIwGsAQMBAQMBCwICAQECAQEBAQEBAQEFAQIBAQEBAQEBAQEBAQIBAQECAgMYAQECAQEBAQIBAgEBBgEBAQEDAgIDAQEDAgIEAQEFAgMDAQIBAgEBAgEBBAIBAwMBAgEBAgEBAQEBAQEDAgIEAQEFAgMDAQIBAgEBAgEBBAIBAwMBAgQBAgMCAQIFAQECAgQCAQECAQEDAQMBAgEBAQEBAgUBAQECAQEBAQEBAQEBAQEBAQEBAQECAQEDBAcBAQUCAwQBAgICCwMDAgEEAQEBAQgDAQEBAQIBAQEBAgEBAQEBAQEBAQEBAQEBAQECAQEBAQIDAQEDAQECAgQCAQQCAgECBAEBAQcBAQQCAQEBAQYCAQIBAQQCAgQBAQMBAQIBAgEBBAIBAQEBAwECAgEBAQECAQECAQQBAQMBAQEBAgEBAQECAQMEAwIDAQMBAgMBAQEGAgMCAgUBAQIBAQIBAgMCAQMBAQQCAQMBBAIBAwECAQMBAgIBAgEDBAEBAQEBAQEBAQYCBAMCBQEBAgEBAgEBAQEBAgEBBAMCAQEFAwMCAgMBAQECAQIBAQECAQUBAQEBAgEBBAEBAQEBAgEDAQEDAQEDAQEDAQEDAQICAQMBBAICAQMEBAYHAwIDAQEBAQICBQEDAgEEAQEBAQECAgECAQIEAQEBAQIBBQQBBAIBBAEBAwECBAQBAQEEAwIGAQMDAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBBQMDAQMBAgMBAwIBAwEDBgIDAQECAgEDAQQGAQICBAIBBgIBAQEBAQEEAwIEAgICAQEBAQEBAgEBAwEBAwEEAwEBAQIBAQMBAQMBAQEBAQEBAQIBBAIEAwIBAgIBAwEDBgEBAgECAwEDAgIDAQIBAgMCBAYBAwEFAwIFAQMDCAECAQMCAQMBAgIBAgEBAgEBAgEBAwECBAECAwEBAwECAgEBAgEBAQECAQIJAQECAQIBAQMBAQMCAgMBBQICAQIBAgECBAECBAECAQMDAQEBAgEFAwIEAQEEAQEBAQECAQMGAwIBAgECAQEBAQEBAgEDAQEBAQEBAQEBAQEBAgEFAQEBAgEBAQEBAQMBAgEBAQEBAwEBAQEBAQEDAQEBAQICAwEBAQEBAQEBAQECAQIBAQMCAgQFAwECBAEBAQIBAQEBAQIBAQECAQICAQEDAQEBAQECAQEBAQEBAQEDAwECAQMCAQMBDQEBAQEBAQEBCwECBQEDAQEDAQMCAgQBAgEBAgEBBQIBAgECAQECAQMCAgUBAgIBAgEDAgQEAQEBAQMCAgMDAgIDAwIBBAEBBAICBAECBgEBAQEBAQECAQEBAgEBAQEBAQIBAgEBAgECAQEBAQEBAgEBAQECAQIBAQMCCgIBAgEBAQkBAgICBgIBAQEDAgIFAQEBAQIBAgEBAQIBAwEBAwECAwEBAQIBAQEBAQECAgQBAQIBAgIBAQEBAwEBAQEBAQEBAQIBAQEBAQEBAQECAQEBAQECAQO/AQIBAQEHAQEBAQEBAQEBAQEBAwECAQEBAQEBAQECAQEBAgEDGAIBAgEBAQEDAQLXa2sBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQIBAQEBAwEBAQIBAQEBAQIEAQEBAQEBAQEDAQEDAQIDAgEBAgMFAgEEAgIDAQEBAQIBAQEBAQIBAgEBAgEDAQIBCAEBAQEDAQIEAQICAQEBAQEBAQEBAQIBAQIBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQFGMRQBAQEBAQEBAQEBAQEBAQEBAQIBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQECAgEBAQEBAQIDAQEBAQIBAQQEAgIEAQEEBQEDAQMBAgEBAQEDAgEEAQEDAgEDAQEBAQICAQQCAgMBAQMCAwEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQECAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQIBAQEBAQEBAQEBAgEBAQEBBwEBAQEEAQEBAQEBAQEFAQECAQIBAgEBBAEBAQEBAQEBAQEBAQQCAgEDAwQBAgEBAgEBAQECAQEBBAEBBQIEFDAaJQEBAQEBAQEBAQEBAQEBAQEBAQMBH09uAwEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQECAQECAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQIBAQIBAQEBAgEBAQEBCwMCAgEBAQEBAQECAQMCAgUCAwQBAgUFAQIBBAQBAQICAQQCBAUBAQIBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBARsbNwEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQECAgMBAQEBAQUCAgEBAgEBAQQCAwMBAgEBAgEBAwEDCwUBAwEBAQEBAgEBBgIBAwECAQgJAQEBAQEBAQEBAQEBAQECAgEBAQEBAQEBAQEBAQEBAQEBAQIBAQEBAQEBAgEBAQEBAgEBAQHGZGIBAQEBAQEEAQEBAQEBAQEBAQEFAQEBAQECAQECAQECBAEFBgYDBQIBAQIBAQIBAQIBAgKkpQEBAQIBAQEBAQEBAQEBAQEBAQIB95VjAfy/AQEBAQEBAQEBAQEBAQEBAQEBAQQBAQEBAQEBAQEBAQEBAQEBAQEBAQIBAQECAQEBAQEBAQEBAgEBAQEBAQEBAQEBAgEBAQICAQEJAQEBAQEBAQEBAQEBAQEBAQEBAgEDAgMDAgEDAgEKBAECAQMCAgMBAgEDDgMCAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQIBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBBgEBAQEBAQEBAQEBAQIBAgEBAQEBAQEFAgIBAgEBAgEBAgQEAgEBAQEBAQIBAgYCAQIBBgIDAQECAgEBAwECCAEAAAEAAP/AAjIDwAAIAAABBzc+ATEwBgcCMAICAQEBAQNIAgIBAQEBAAABAAAAAAAAsksaaV8PPPUACwQAAAAAAOP2zQ8AAAAA4/bNDwAA/8ADlAPAAAAACAACAAAAAAAAAAEAAAPA/8AAAAQAAAAAAAOUAAEAAAAAAAAAAAAAAAAAAAAGBAAAAAAAAAAAAAAAAgAAAAOUAAADlAAAAAAAAAAKABQAHgvyDAYAAAABAAAABgs/AAIAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAADgCuAAEAAAAAAAEABwAAAAEAAAAAAAIABwBgAAEAAAAAAAMABwA2AAEAAAAAAAQABwB1AAEAAAAAAAUACwAVAAEAAAAAAAYABwBLAAEAAAAAAAoAGgCKAAMAAQQJAAEADgAHAAMAAQQJAAIADgBnAAMAAQQJAAMADgA9AAMAAQQJAAQADgB8AAMAAQQJAAUAFgAgAAMAAQQJAAYADgBSAAMAAQQJAAoANACkaWNvbW9vbgBpAGMAbwBtAG8AbwBuVmVyc2lvbiAxLjAAVgBlAHIAcwBpAG8AbgAgADEALgAwaWNvbW9vbgBpAGMAbwBtAG8AbwBuUmVndWxhcgBSAGUAZwB1AGwAYQByaWNvbW9vbgBpAGMAbwBtAG8AbwBuRm9udCBnZW5lcmF0ZWQgYnkgSWNvTW9vbi4ARgBvAG4AdAAgAGcAZQBuAGUAcgBhAHQAZQBk ACAAYgB5 ACAASQBjAG8ATQBvAG8AbnAuAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==") format("truetype");
+      font-weight: normal; font-style: normal; unicode-range: U+E900;
+  }
+  .anx-currency-sym, .o_sar_symbol, .icon-sr, [class*="sr_symbol"] { font-family: 'sr_symbol' !important; display: inline-block; }
+  body { font-family: 'sr_symbol', Inter, Arial, sans-serif; padding: 32px; color: #1f2937; }
   h2   { margin: 0 0 4px; font-size: 22px; }
   p.sub{ color: #8a93a4; margin: 0 0 24px; font-size: 13px; }
   table{ width: 100%; border-collapse: collapse; font-size: 13.5px; }
@@ -1958,7 +2009,15 @@ export class AnalytixFinanceDashboard extends Component {
         const win = window.open('', '_blank', 'width=800,height=720');
         win.document.write(html);
         win.document.close();
-        setTimeout(() => win.print(), 400);
+        if (win.document.fonts && win.document.fonts.load) {
+            win.document.fonts.load("12px sr_symbol", "\uE900").then(() => {
+                setTimeout(() => win.print(), 100);
+            }).catch(() => {
+                setTimeout(() => win.print(), 400);
+            });
+        } else {
+            setTimeout(() => win.print(), 400);
+        }
     }
 
     // Format a P&L value → e.g. "$ 52,421.51" or "-$ 31,447.40"
@@ -2663,10 +2722,18 @@ export class AnalytixFinanceDashboard extends Component {
 
     async analyzeAndCreateDocument(ev, overrideAccountId = null, targetDocId = null, overrideLineAccounts = null, overrideTaxAccountId = null) {
         const docId = targetDocId || (ev && ev.currentTarget ? parseInt(ev.currentTarget.dataset.id, 10) : null);
-        if (!docId || this.state.analyzingDocId) return;
+        if (!docId) return;
 
+        // Per-doc lock: only block the same doc from being clicked twice
+        if (this.state.analyzingDocIds && this.state.analyzingDocIds[docId]) return;
+
+        if (!this.state.analyzingDocIds) this.state.analyzingDocIds = {};
+        this.state.analyzingDocIds[docId] = true;
+
+        // Keep legacy analyzingDocId for any template compatibility
         this.state.analyzingDocId = docId;
-        this.notification.add("Processing document with AI & product lookup...", { type: "info", sticky: false });
+
+        this.notification.add(`Processing document #${docId} with AI…`, { type: "info", sticky: false });
         
         try {
             const kwargs = {};
@@ -2707,10 +2774,10 @@ export class AnalytixFinanceDashboard extends Component {
             }
             
             this.closeAccountValidationModal();
-            this.notification.add("AI entry created successfully!", { type: "success", sticky: false });
+            this.notification.add(`AI entry created for document #${docId}!`, { type: "success", sticky: false });
             
-            // Reload the list to update button state
-            await this.fetchDocumentData();
+            // Reload the list to update button state (non-blocking — other docs continue)
+            this.fetchDocumentData();
             
             // Open the created move record
             if (action && action.type === 'ir.actions.act_window') {
@@ -2729,11 +2796,89 @@ export class AnalytixFinanceDashboard extends Component {
                 errorMsg = String(e) || "Odoo Server Error";
             }
             this.notification.add(
-                "Failed to process document with AI: " + errorMsg,
+                `AI failed for document #${docId}: ` + errorMsg,
                 { type: "danger", sticky: true }
             );
         } finally {
+            // Release only THIS doc's lock — other docs are unaffected
+            if (this.state.analyzingDocIds) {
+                this.state.analyzingDocIds[docId] = false;
+            }
             this.state.analyzingDocId = null;
+        }
+    }
+
+    onDocSelectOne(ev) {
+        const docId = parseInt(ev.target.dataset.id, 10);
+        if (!docId) return;
+        if (!this.state.selectedDocIds) this.state.selectedDocIds = {};
+        this.state.selectedDocIds[docId] = ev.target.checked;
+    }
+
+    onDocSelectAll(ev) {
+        const checked = ev.target.checked;
+        const newMap = {};
+        (this.filteredDocuments || []).forEach(doc => {
+            newMap[doc.id] = checked;
+        });
+        this.state.selectedDocIds = newMap;
+    }
+
+    async analyzeAndCreateBatch() {
+        // Collect all selected (checked) doc IDs
+        const selectedIds = Object.entries(this.state.selectedDocIds || {})
+            .filter(([, checked]) => checked)
+            .map(([id]) => parseInt(id, 10))
+            .filter(Boolean);
+
+        if (!selectedIds.length) {
+            this.notification.add("Please select at least one document to batch process.", { type: "warning" });
+            return;
+        }
+
+        if (this.state.batchAnalyzing) return;
+        this.state.batchAnalyzing = true;
+
+        this.notification.add(
+            `Processing ${selectedIds.length} document(s) with AI — please wait...`,
+            { type: "info", sticky: false }
+        );
+
+        try {
+            const action = await this.orm.call(
+                'analytix.document',
+                'action_batch_analyze_and_create',
+                [selectedIds],
+                {}
+            );
+
+            await this.fetchDocumentData();
+
+            // Uncheck all after processing
+            this.state.selectedDocIds = {};
+
+            const summary = action && action.context && action.context.batch_ai_summary;
+            this.notification.add(
+                summary || `AI batch processing complete! Entries created.`,
+                { type: "success", sticky: true }
+            );
+
+            if (action && action.type === 'ir.actions.act_window') {
+                this.action.doAction(action);
+            }
+        } catch (e) {
+            console.error("Batch AI Analysis error:", e);
+            let errorMsg = "";
+            if (e && e.data && e.data.message) errorMsg = e.data.message;
+            else if (e && e.data && e.data.arguments && e.data.arguments[0]) errorMsg = e.data.arguments[0];
+            else if (e && e.message) errorMsg = e.message;
+            else errorMsg = String(e) || "Odoo Server Error";
+            this.notification.add(
+                "Batch AI processing failed: " + errorMsg,
+                { type: "danger", sticky: true }
+            );
+        } finally {
+            this.state.batchAnalyzing = false;
         }
     }
 
@@ -2820,15 +2965,17 @@ export class AnalytixFinanceDashboard extends Component {
     }
 
     printTbReport() {
-
-        // Support both tab view (tbData) and modal (tbModalData)
-        const d = this.state.tbModalData || this.state.tbData;
-        if (!d) return;
+        if (!this.state.tbData) return;
+        const d = this.state.tbData;
         const sym = d.currency_sym || '';
+        const isSar = /^(SAR|SR|﷼|ر\.?س\.?|\uE900|)$/i.test(String(sym).trim()) || String(sym).includes('\uE900') || String(sym).includes('');
+        const symSpan = isSar ? `<span class="anx-currency-sym" style="font-family:'sr_symbol' !important;">&#xe900;</span>` : `<span>${sym}</span>`;
+
         const fmtN = v => {
-            const neg = Number(v) < 0;
-            const s = Math.abs(Number(v)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            return neg ? `<span style="color:#e53935">-${sym} ${s}</span>` : `${sym} ${s}`;
+            const num = Number(v) || 0;
+            const neg = num < 0;
+            const s = Math.abs(num).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            return neg ? `<span style="color:#e53935">-${symSpan} ${s}</span>` : `${symSpan} ${s}`;
         };
 
         const rows = (d.records || []).map(r => `
@@ -2845,7 +2992,14 @@ export class AnalytixFinanceDashboard extends Component {
 
         const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Trial Balance</title>
 <style>
-  body { font-family: Inter, sans-serif; padding: 32px; color: #1f2937; }
+  @font-face {
+      font-family: "sr_symbol";
+      src: url("/iwesabe_sar_currency_symbol/static/src/fonts/sr.ttf") format("truetype"),
+           url("data:font/truetype;base64,AAEAAAALAIAAAwAwT1MvMg8SBTgAAAC8AAAAYGNtYXAXVtKIAAABHAAAAFRnYXNwAAAAEAAAAXAAAAAIZ2x5ZjrqSMoAAAF4AAAYDGhlYWQqn96bAAAZhAAAADZoaGVhB1YDxwAAGbwAAAAkaG10eA0oAAAAABngAAAAGGxvY2EMLgwGAAAZ+AAAAA5tYXhwAAkLQQAAGggAAAAgbmFtZZlKCfsAABooAAABhnBvc3QAAwAAAAAbsAAAACAAAwMNAZAABQAAApkCzAAAAI8CmQLMAAAB6wAzAQkAAAAAAAAAAAAAAAAAAAABEAAAAAAAAAAAAAAAAAAAAABAAADpAQPA/8AAQAPAAEAAAAABAAAAAAAAAAAAAAAgAAAAAAADAAAAAwAAABwAAQADAAAAHAADAAEAAAAcAAQAOAAAAAoACAACAAIAAQAg6QH//f//AAAAAAAg6QD//f//AAH/4xcEAAMAAQAAAAAAAAAAAAAAAQAB//8ADwABAAD/wAAAA8AAAgAANzkBAAAAAAEAAP/AAAADwAACAAA3OQEAAAAAAQAA/8AAAAPAAAIAADc5AQAAAAACAAD/wAOUA8AItQs+AAABDgEjDgEVIgYHFAYHDgExOAExMCIxMAYxDgExMCIVIgYxDgEHMAYxIgYxOAExMAYxDgExIgYxDgEHIgYHFCIxMCIVMAYHDgEHDgEHMAYxMAYVIgYPARUcATEiMCMwBgcqASMwBiMGIiMUIjEwBiMiBiMOASMGIgcwIiMwBjEwIiMwIgciBiMiBgcqATEwBiMGIjEwBiMiBiMwIjEiBiMUIiMiBiMiBiMwBiMwIhUqATEqAQciBjEqAQcwIiMiBiMwIjEiBiMqASMGIiMwIjEwIgcwIgcqATEOASMiBgciBiMwBiMiBiMwBiMGIjEGIiMiBgcwIjEUMCMUMDEUBjEOARUwFAccATEwBhUOATEwFDEUBhUOATEwBhUUBjEOAQcUBgcGFBUwBhUUBhUwFDEUBjEcATEGFDEcASMwFBUwFCMcATEUBjEcARUUBhUUBhUcARUGMjMwNjMyNjMyNjEyNjMyNjcwMjM+ATM6ATEwNjMyNjc6ATMyNjMyNjMyNjM+ATMyNjMyNjMwMjM+ATM6ATc6ATU6ATU6ATMyNjE6ATEwMjUyNjMyNjM6ATcwMjMwNhUwNjMwMjcyNjcyNjE6ATcyNjM6ATEwNjMwNjM+ATMyNjMyNjMyNjMyNjMyNjc6ATcwMjcyNjMwMjcwMjM2MjE2MjM+ATE6ATEyNjMwMjM3FRwBIzAGBzAGIw4BIyoBByoBMQYiIzAiIzAGIyIGBzAiMTAiIxQGIzAGIwYiMSIGMSoBIxQiMTAiByoBMSIGIyoBIzAGIyIGIyIGIyoBBzAiByoBByIGIyIGIyIGIyIGMSIGIwYiMTAGIyIGBw4BIwYiByoBIzAGMSIGMSIGIwYiMQYiIzAGIzAiMTAiFSoBIw4BIyoBIzAGMSIGByIGIwYiByIGIyIGByoBBzAiBw4BIw4BFTAUMQYUMTAGFRQGMTAGBzAUBxQGMRQGMTAGMTAGBw4BFQ4BBwYUBzAGMRwBBxwBMRQGFQ4BFRQGFRQGFRQGFTAUFRQGFQYUFRQGFRQWNzYyMzA2MzYyMTYyNzI2MzoBNzI2MzoBNTAyMzA2Mz4BMzA2MTI2Mz4BMTAyNzoBMzA2MzAyNz4BMzAyNzoBMTI0MzAyMzAyMTA2MzYyNzYyMTI2MzYyMzI2MzoBNToBMTI2MToBMTI2MToBMTI2Mz4BMzI2MzI2MzYyMzI2MzoBMTgBNzAyMz4BMzI2MzoBMTYyMzA2MzAyMzA2MzYyMTI2MTAyNzI2MzI2MzAyMTAyNzoBNzI2MzoBNzoBNzA2MzI2MTI2NzI2MzoBNzAyMTYyMTAyMzYyNzI2MzAyMzA2MzoBMTI2MzoBMT4BMzoBNzI2MzoBNzQ2NTA2NTA0MTA0MzQ2NTQ2MTQ2NTQ2MTI0MTA0NTI4MTwBMT4BNTA0MzA0MTA2NTQ2NTA0MzQ2MTA2NzwBNTI0NTQ2NTQ2NTQ2MTQ2NTA2NTwBMTA2NTwBNTY0MTAGIwGsAQMBAQMBCwICAQECAQEBAQEBAQEFAQIBAQEBAQEBAQEBAQIBAQECAgMYAQECAQEBAQIBAgEBBgEBAQEDAgIDAQEDAgIEAQEFAgMDAQIBAgEBAgEBBAIBAwMBAgEBAgEBAQEBAQEDAgIEAQEFAgMDAQIBAgEBAgEBBAIBAwMBAgQBAgMCAQIFAQECAgQCAQECAQEDAQMBAgEBAQEBAgUBAQECAQEBAQEBAQEBAQEBAQEBAQECAQEDBAcBAQUCAwQBAgICCwMDAgEEAQEBAQgDAQEBAQIBAQEBAgEBAQEBAQEBAQEBAQEBAQECAQEBAQIDAQEDAQECAgQCAQQCAgECBAEBAQcBAQQCAQEBAQYCAQIBAQQCAgQBAQMBAQIBAgEBBAIBAQEBAwECAgEBAQECAQECAQQBAQMBAQEBAgEBAQECAQMEAwIDAQMBAgMBAQEGAgMCAgUBAQIBAQIBAgMCAQMBAQQCAQMBBAIBAwECAQMBAgIBAgEDBAEBAQEBAQEBAQYCBAMCBQEBAgEBAgEBAQEBAgEBBAMCAQEFAwMCAgMBAQECAQIBAQECAQUBAQEBAgEBBAEBAQEBAgEDAQEDAQEDAQEDAQEDAQICAQMBBAICAQMEBAYHAwIDAQEBAQICBQEDAgEEAQEBAQECAgECAQIEAQEBAQIBBQQBBAIBBAEBAwECBAQBAQEEAwIGAQMDAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBBQMDAQMBAgMBAwIBAwEDBgIDAQECAgEDAQQGAQICBAIBBgIBAQEBAQEEAwIEAgICAQEBAQEBAgEBAwEBAwEEAwEBAQIBAQMBAQMBAQEBAQEBAQIBBAIEAwIBAgIBAwEDBgEBAgECAwEDAgIDAQIBAgMCBAYBAwEFAwIFAQMDCAECAQMCAQMBAgIBAgEBAgEBAgEBAwECBAECAwEBAwECAgEBAgEBAQECAQIJAQECAQIBAQMBAQMCAgMBBQICAQIBAgECBAECBAECAQMDAQEBAgEFAwIEAQEEAQEBAQECAQMGAwIBAgECAQEBAQEBAgEDAQEBAQEBAQEBAQEBAgEFAQEBAgEBAQEBAQMBAgEBAQEBAwEBAQEBAQEDAQEBAQICAwEBAQEBAQEBAQECAQIBAQMCAgQFAwECBAEBAQIBAQEBAQIBAQECAQICAQEDAQEBAQECAQEBAQEBAQEDAwECAQMCAQMBDQEBAQEBAQEBCwECBQEDAQEDAQMCAgQBAgEBAgEBBQIBAgECAQECAQMCAgUBAgIBAgEDAgQEAQEBAQMCAgMDAgIDAwIBBAEBBAICBAECBgEBAQEBAQECAQEBAgEBAQEBAQIBAgEBAgECAQEBAQEBAgEBAQECAQIBAQMCCgIBAgEBAQkBAgICBgIBAQEDAgIFAQEBAQIBAgEBAQIBAwEBAwECAwEBAQIBAQEBAQECAgQBAQIBAgIBAQEBAwEBAQEBAQEBAQIBAQEBAQEBAQECAQEBAQECAQO/AQIBAQEHAQEBAQEBAQEBAQEBAwECAQEBAQEBAQECAQEBAgEDGAIBAgEBAQEDAQLXa2sBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQIBAQEBAwEBAQIBAQEBAQIEAQEBAQEBAQEDAQEDAQIDAgEBAgMFAgEEAgIDAQEBAQIBAQEBAQIBAgEBAgEDAQIBCAEBAQEDAQIEAQICAQEBAQEBAQEBAQIBAQIBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQFGMRQBAQEBAQEBAQEBAQEBAQEBAQIBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQECAgEBAQEBAQIDAQEBAQIBAQQEAgIEAQEEBQEDAQMBAgEBAQEDAgEEAQEDAgEDAQEBAQICAQQCAgMBAQMCAwEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQECAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQIBAQEBAQEBAQEBAgEBAQEBBwEBAQEEAQEBAQEBAQEFAQECAQIBAgEBBAEBAQEBAQEBAQEBAQQCAgEDAwQBAgEBAgEBAQECAQEBBAEBBQIEFDAaJQEBAQEBAQEBAQEBAQEBAQEBAQMBH09uAwEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQECAQECAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQIBAQIBAQEBAgEBAQEBCwMCAgEBAQEBAQECAQMCAgUCAwQBAgUFAQIBBAQBAQICAQQCBAUBAQIBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBARsbNwEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQECAgMBAQEBAQUCAgEBAgEBAQQCAwMBAgEBAgEBAwEDCwUBAwEBAQEBAgEBBgIBAwECAQgJAQEBAQEBAQEBAQEBAQECAgEBAQEBAQEBAQEBAQEBAQEBAQIBAQEBAQEBAgEBAQEBAgEBAQHGZGIBAQEBAQEEAQEBAQEBAQEBAQEFAQEBAQECAQECAQECBAEFBgYDBQIBAQIBAQIBAQIBAgKkpQEBAQIBAQEBAQEBAQEBAQEBAQIB95VjAfy/AQEBAQEBAQEBAQEBAQEBAQEBAQQBAQEBAQEBAQEBAQEBAQEBAQEBAQIBAQECAQEBAQEBAQEBAgEBAQEBAQEBAQEBAgEBAQICAQEJAQEBAQEBAQEBAQEBAQEBAQEBAgEDAgMDAgEDAgEKBAECAQMCAgMBAgEDDgMCAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQIBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBBgEBAQEBAQEBAQEBAQIBAgEBAQEBAQEFAgIBAgEBAgEBAgQEAgEBAQEBAQIBAgYCAQIBBgIDAQECAgEBAwECCAEAAAEAAP/AAjIDwAAIAAABBzc+ATEwBgcCMAICAQEBAQNIAgIBAQEBAAABAAAAAAAAsksaaV8PPPUACwQAAAAAAOP2zQ8AAAAA4/bNDwAA/8ADlAPAAAAACAACAAAAAAAAAAEAAAPA/8AAAAQAAAAAAAOUAAEAAAAAAAAAAAAAAAAAAAAGBAAAAAAAAAAAAAAAAgAAAAOUAAADlAAAAAAAAAAKABQAHgvyDAYAAAABAAAABgs/AAIAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAADgCuAAEAAAAAAAEABwAAAAEAAAAAAAIABwBgAAEAAAAAAAMABwA2AAEAAAAAAAQABwB1AAEAAAAAAAUACwAVAAEAAAAAAAYABwBLAAEAAAAAAAoAGgCKAAMAAQQJAAEADgAHAAMAAQQJAAIADgBnAAMAAQQJAAMADgA9AAMAAQQJAAQADgB8AAMAAQQJAAUAFgAgAAMAAQQJAAYADgBSAAMAAQQJAAoANACkaWNvbW9vbgBpAGMAbwBtAG8AbwBuVmVyc2lvbiAxLjAAVgBlAHIAcwBpAG8AbgAgADEALgAwaWNvbW9vbgBpAGMAbwBtAG8AbwBuUmVndWxhcgBSAGUAZwB1AGwAYQByaWNvbW9vbgBpAGMAbwBtAG8AbwBuRm9udCBnZW5lcmF0ZWQgYnkgSWNvTW9vbi4ARgBvAG4AdAAgAGcAZQBuAGUAcgBhAHQAZQBk ACAAYgB5 ACAASQBjAG8ATQBvAG8AbnAuAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==") format("truetype");
+      font-weight: normal; font-style: normal; unicode-range: U+E900;
+  }
+  .anx-currency-sym, .o_sar_symbol, .icon-sr, [class*="sr_symbol"] { font-family: 'sr_symbol' !important; display: inline-block; }
+  body { font-family: 'sr_symbol', Inter, sans-serif; padding: 32px; color: #1f2937; }
   h2 { margin: 0 0 4px; font-size: 22px; text-align: center; }
   p.sub { color: #8a93a4; margin: 0 0 24px; font-size: 13px; text-align: center; }
   table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 20px; }
@@ -2883,7 +3037,15 @@ export class AnalytixFinanceDashboard extends Component {
         const win = window.open('', '_blank', 'width=980,height=720');
         win.document.write(html);
         win.document.close();
-        setTimeout(() => win.print(), 400);
+        if (win.document.fonts && win.document.fonts.load) {
+            win.document.fonts.load("12px sr_symbol", "\uE900").then(() => {
+                setTimeout(() => win.print(), 100);
+            }).catch(() => {
+                setTimeout(() => win.print(), 400);
+            });
+        } else {
+            setTimeout(() => win.print(), 400);
+        }
     }
 
     startDragChat(ev) {

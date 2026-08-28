@@ -8,7 +8,7 @@
         Analytix 360 Finance Dashboard.
         Provides a comprehensive overview of the company's financial situation.
     """,
-    'depends': ['account', 'web', 'l10n_sa', 'mail', 'proforma_invoice', 'spreadsheet_dashboard'],
+    'depends': ['account', 'web', 'l10n_sa', 'mail', 'proforma_invoice', 'spreadsheet_dashboard', 'iwesabe_sar_currency_symbol'],
     'data': [
         'security/security_groups.xml',
         'security/security_rules.xml',
@@ -31,6 +31,7 @@
             'analytix_finance_dashboard/static/src/components/**/*',
         ],
         'web.report_assets_common': [
+            'analytix_finance_dashboard/static/src/css/sr_symbol_pdf.css',
             'analytix_finance_dashboard/static/src/css/report_style.css',
         ],
     },

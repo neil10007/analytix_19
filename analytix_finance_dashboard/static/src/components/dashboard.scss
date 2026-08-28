@@ -2,6 +2,18 @@
    Analytix 360 Finance Dashboard
    ===================================================== */
 
+@font-face {
+    font-family: 'sr_symbol';
+    src: url('/iwesabe_sar_currency_symbol/static/src/fonts/sr.ttf') format('truetype');
+    src: url('/iwesabe_sar_currency_symbol/static/src/fonts/sr.eot') format('embedded-opentype'),
+         url('/iwesabe_sar_currency_symbol/static/src/fonts/sr.ttf') format('truetype'),
+         url('/iwesabe_sar_currency_symbol/static/src/fonts/sr.woff') format('woff'),
+         url('/iwesabe_sar_currency_symbol/static/src/fonts/sr.svg') format('svg');
+    font-weight: normal;
+    font-style: normal;
+    unicode-range: U+E900;
+}
+
 .anx-wrap, .anx-wrap *, .anx-wrap *::before, .anx-wrap *::after {
     box-sizing: border-box;
 }
@@ -22,13 +34,23 @@
 }
 
 /* ── Universal Font Family Override (Excluding Icon Glyphs & Currency Symbols) ── */
-.anx-wrap *:not(i):not(.fa):not([class*="fa-"]):not(.oi):not([class*="oi-"]):not(.anx-currency-sym):not(.icon-sr):not(.o_sar_symbol):not([class*="sr_symbol"]) {
-    font-family: 'Inter', 'Spline Sans', 'Roboto', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+.anx-wrap *:not(i):not(.fa):not([class*="fa-"]):not(.oi):not([class*="oi-"]):not(.anx-currency-sym):not(.icon-sr):not(.o_sar_symbol):not([class*="sr_symbol"]):not(.sr_symbol):not(.o_currency_symbol):not([class*="currency_symbol"]) {
+    font-family: 'sr_symbol', 'Inter', 'Spline Sans', 'Roboto', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
 }
 
 
-/* Dedicated currency symbol glyph styling */
-.anx-currency-sym, .icon-sr, .o_sar_symbol, [class*="sr_symbol"] {
+/* Dedicated currency symbol glyph styling (high specificity to override global font rules in production bundles) */
+.anx-wrap .anx-currency-sym,
+.anx-wrap .icon-sr,
+.anx-wrap .o_sar_symbol,
+.anx-wrap [class*="sr_symbol"],
+.anx-wrap span[class*="sr_symbol"],
+.anx-wrap div[class*="sr_symbol"],
+.anx-wrap i[class*="sr_symbol"],
+.anx-currency-sym,
+.icon-sr,
+.o_sar_symbol,
+[class*="sr_symbol"] {
     font-family: 'sr_symbol' !important;
     display: inline-block;
 }
@@ -2799,6 +2821,37 @@ a.anx-tb-acc-link {
 .anx-doc-btn-del:hover { background: #e53935; color: #fff; transform: translateY(-1px); }
 .anx-doc-row { cursor: default !important; }
 .anx-doc-row td { vertical-align: middle; }
+
+/* ── Batch AI Create Button ── */
+.anx-doc-batch-ai-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 16px;
+    background: linear-gradient(135deg, #5b4fcf, #7c3aed);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.18s, transform 0.15s, box-shadow 0.18s;
+    box-shadow: 0 2px 8px rgba(91, 79, 207, 0.25);
+    white-space: nowrap;
+    margin-left: auto;
+    .fa { font-size: 13px; }
+}
+.anx-doc-batch-ai-btn:hover {
+    background: linear-gradient(135deg, #4338ca, #6d28d9);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(91, 79, 207, 0.35);
+}
+.anx-doc-batch-ai-btn.loading,
+.anx-doc-batch-ai-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+}
 
 /* ── Upload form card (shown when file is selected) ── */
 .anx-doc-upload-form {

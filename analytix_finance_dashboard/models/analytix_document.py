@@ -350,16 +350,16 @@ class AnalytixDocument(models.Model):
         return 0.0
 
     def _image_to_base64(self, image):
-        """Convert a PIL Image to a fast, compressed base64 JPEG string (max 1600px)."""
+        """Convert a PIL Image to a fast, compressed base64 JPEG string (max 1200px) to prevent payload timeouts."""
         from PIL import Image
         img = image.copy()
-        max_dim = 1600
+        max_dim = 1200
         if max(img.width, img.height) > max_dim:
             img.thumbnail((max_dim, max_dim), Image.Resampling.LANCZOS)
         if img.mode != 'RGB':
             img = img.convert('RGB')
         buffer = BytesIO()
-        img.save(buffer, format="JPEG", quality=85, optimize=True)
+        img.save(buffer, format="JPEG", quality=75, optimize=True)
         return base64.b64encode(buffer.getvalue()).decode("utf-8")
 
     def _repair_json_string(self, s):
@@ -539,6 +539,23 @@ class AnalytixDocument(models.Model):
 
         _logger.info("Calling OpenRouter with model: %s (User configured: %s, Company configured: %s)", model_name, user_model, company_model)
 
+        user_content = [{"type": "text", "text": "Extract all document data across all pages as a single combined JSON object."}]
+        if isinstance(image_b64, list):
+            for b64 in image_b64:
+                user_content.append({
+                    "type": "image_url",
+                    "image_url": {
+                        "url": f"data:image/jpeg;base64,{b64}"
+                    },
+                })
+        else:
+            user_content.append({
+                "type": "image_url",
+                "image_url": {
+                    "url": f"data:image/jpeg;base64,{image_b64}"
+                },
+            })
+
         try:
             response = client.chat.completions.create(
                 model=model_name,
@@ -546,15 +563,7 @@ class AnalytixDocument(models.Model):
                     {"role": "system", "content": system_prompt},
                     {
                         "role": "user",
-                        "content": [
-                            {"type": "text", "text": "Extract the document data as JSON."},
-                            {
-                                "type": "image_url",
-                                "image_url": {
-                                    "url": f"data:image/jpeg;base64,{image_b64}"
-                                },
-                            },
-                        ],
+                        "content": user_content,
                     },
                 ],
                 response_format={"type": "json_object"},
@@ -869,7 +878,7 @@ class AnalytixDocument(models.Model):
                 "HTTP-Referer": base_url,
                 "X-Title": "Analytix Finance Dashboard",
             },
-            timeout=90.0,
+            timeout=60.0,
         )
 
         file_bytes = self._get_decoded_file_bytes()
@@ -882,26 +891,27 @@ class AnalytixDocument(models.Model):
         is_pdf = file_bytes.startswith(b'%PDF') or (self.mimetype and 'pdf' in self.mimetype.lower())
 
         if is_pdf:
-            # Process PDF via PyMuPDF
+            # Process PDF via PyMuPDF in 1 single multi-image batch request to stay under Cloudflare timeout
             try:
                 doc = fitz.open(stream=file_bytes, filetype="pdf")
             except Exception as e_fitz:
                 raise UserError(f"Could not open/read PDF file format: {e_fitz}")
 
-            results = []
             try:
-                for page_index in range(len(doc)):
+                # Process up to 15 pages in 1 single API call
+                max_pages = min(len(doc), 15)
+                page_b64_list = []
+                for page_index in range(max_pages):
                     page = doc.load_page(page_index)
-                    pix = page.get_pixmap(dpi=150, alpha=False)
+                    pix = page.get_pixmap(dpi=110, alpha=False)
                     image = Image.open(BytesIO(pix.tobytes("png"))).convert("RGB")
-                    image_b64 = self._image_to_base64(image)
-                    result = self._call_openrouter(client, image_b64)
-                    results.append(result)
+                    page_b64_list.append(self._image_to_base64(image))
+
+                output = self._call_openrouter(client, page_b64_list)
             finally:
                 doc.close()
 
-            output = results[0] if len(results) == 1 else results
-            _logger.info("Processed document as PDF via PyMuPDF for doc ID %s", self.id)
+            _logger.info("Processed document as PDF via multi-image OpenRouter request for doc ID %s", self.id)
         else:
             # Process image formats (PNG, JPG, WEBP, GIF, BMP, TIFF) via Pillow & fitz fallback
             image = None
@@ -1814,3 +1824,60 @@ class AnalytixDocument(models.Model):
             'views': [[False, 'form']],
             'target': 'current',
         }
+
+    def action_batch_analyze_and_create(self):
+        """Process multiple document records at once with OpenRouter AI and create accounting entries for each.
+        Returns a list-view action opening all created account.move records.
+        """
+        if not self:
+            raise UserError("No documents selected for batch AI processing.")
+
+        created_move_ids = []
+        errors = []
+
+        for doc in self:
+            try:
+                result = doc.action_analyze_and_create_entry()
+                if result and result.get('res_id'):
+                    created_move_ids.append(result['res_id'])
+            except Exception as e:
+                _logger.warning("Batch AI: Failed to process doc ID %s (%s): %s", doc.id, doc.name, e)
+                errors.append(f"• [{doc.name or doc.id}]: {e}")
+
+        if errors and not created_move_ids:
+            raise UserError(
+                "Batch AI processing failed for all documents:\n" + "\n".join(errors)
+            )
+
+        # Build summary notification via chatter on last processed record (optional)
+        summary_lines = [f"✓ {len(created_move_ids)} entries created successfully."]
+        if errors:
+            summary_lines.append(f"✗ {len(errors)} failed:")
+            summary_lines.extend(errors)
+
+        _logger.info("Batch AI Create Summary:\n%s", "\n".join(summary_lines))
+
+        if len(created_move_ids) == 1:
+            return {
+                'type': 'ir.actions.act_window',
+                'name': 'Created Entry',
+                'res_model': 'account.move',
+                'res_id': created_move_ids[0],
+                'view_mode': 'form',
+                'views': [[False, 'form']],
+                'target': 'current',
+            }
+
+        return {
+            'type': 'ir.actions.act_window',
+            'name': f'AI Created Entries ({len(created_move_ids)})',
+            'res_model': 'account.move',
+            'domain': [('id', 'in', created_move_ids)],
+            'view_mode': 'list,form',
+            'views': [[False, 'list'], [False, 'form']],
+            'target': 'current',
+            'context': {
+                'batch_ai_summary': "\n".join(summary_lines),
+            },
+        }
+

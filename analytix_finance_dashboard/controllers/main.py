@@ -264,7 +264,7 @@ class AccountMove(models.Model):
 
         # --- Alerts ---
         alerts = []
-        sym = company_currency.symbol or company_currency.name
+        sym = self._get_currency_symbol(company_currency)
 
         def fmt_amount(amount):
             """Format amount for display in alerts."""
@@ -643,9 +643,9 @@ class AccountMove(models.Model):
                 'due_date':       move.invoice_date_due.strftime('%Y-%m-%d') if move.invoice_date_due else '',
                 'amount':         amount,
                 'amount_display': '{} {:,.2f}'.format(
-                    move.currency_id.symbol or move.currency_id.name, move.amount_total
+                    self._get_currency_symbol(move.currency_id), move.amount_total
                 ),
-                'currency_sym':   move.currency_id.symbol or move.currency_id.name,
+                'currency_sym':   self._get_currency_symbol(move.currency_id),
                 'company_id':     move.company_id.id,
                 'company_name':   move.company_id.name,
                 'company_color':  company_color,
@@ -668,7 +668,7 @@ class AccountMove(models.Model):
             'total_amount':   total_amount,
             'paid_amount':    paid_amount,
             'unpaid_amount':  unpaid_amount,
-            'currency_sym':   company_currency.symbol or company_currency.name,
+            'currency_sym':   self._get_currency_symbol(company_currency),
             'companies':      [{'id': c.id, 'name': c.name, 'color': company_color_map.get(c.id, COMPANY_COLORS[0])} for c in companies],
             'date_range':     {'start': start_date.strftime('%Y-%m-%d'), 'end': end_date.strftime('%Y-%m-%d')},
         }
@@ -747,18 +747,18 @@ class AccountMove(models.Model):
                     'tax_name':     line.tax_line_id.name or '—',
                     'tax_amount':   amt,
                     'tax_display':  '{} {:,.2f}'.format(
-                        move.currency_id.symbol or move.currency_id.name,
+                        self._get_currency_symbol(move.currency_id),
                         abs(line.balance)),
                     'total_amount': total_amt,
                     'total_display':'{} {:,.2f}'.format(
-                        move.currency_id.symbol or move.currency_id.name,
+                        self._get_currency_symbol(move.currency_id),
                         move.amount_total),
                     'invoice_date': move.invoice_date.strftime('%Y-%m-%d') if move.invoice_date else '',
                     'move_type':    move.move_type,
                     'company_id':   move.company_id.id,
                     'company_name': move.company_id.name,
                     'company_color':co,
-                    'currency_sym': move.currency_id.symbol or move.currency_id.name,
+                    'currency_sym': self._get_currency_symbol(move.currency_id),
                 })
             return rows, total
 
@@ -767,7 +767,7 @@ class AccountMove(models.Model):
         out_records, output_vat = build_records(out_lines)
         in_records,  input_vat  = build_records(in_lines)
 
-        sym = company_currency.symbol or company_currency.name
+        sym = self._get_currency_symbol(company_currency)
         return {
             'output_records': out_records,
             'input_records':  in_records,
@@ -784,7 +784,7 @@ class AccountMove(models.Model):
 
     @api.model
     def export_analytix_vat_xlsx(self, filter_name='this_month', date_from=None, date_to=None):
-        """Generate and return a base64 encoded native .xlsx binary file for VAT Summary."""
+        """Generate and return a base64 encoded native .xlsx binary file for Tax Summary."""
         import io
         import base64
         import xlsxwriter
@@ -802,7 +802,7 @@ class AccountMove(models.Model):
 
         output = io.BytesIO()
         workbook = xlsxwriter.Workbook(output, {'in_memory': True})
-        worksheet = workbook.add_worksheet('VAT Summary')
+        worksheet = workbook.add_worksheet('Tax Summary')
 
         # Enable grid lines explicitly
         worksheet.hide_gridlines(2)
@@ -923,7 +923,7 @@ class AccountMove(models.Model):
         # Write Header
         row = 0
         worksheet.set_row(row, 42)
-        worksheet.merge_range(row, 0, row, 6, '  VAT SUMMARY REPORT', title_fmt)
+        worksheet.merge_range(row, 0, row, 6, '  TAX SUMMARY REPORT', title_fmt)
 
         row += 1
         worksheet.set_row(row, 26)
@@ -1027,7 +1027,7 @@ class AccountMove(models.Model):
         workbook.close()
         output.seek(0)
         file_data = base64.b64encode(output.read()).decode('utf-8')
-        filename = f"VAT_Summary_{start_str}_to_{end_str}.xlsx"
+        filename = f"Tax_Summary_{start_str}_to_{end_str}.xlsx"
 
         return {
             'filename': filename,
@@ -1136,7 +1136,7 @@ class AccountMove(models.Model):
                 'state_text':     stcfg['text'],
                 'state_dot':      stcfg['dot'],
                 'amount':         amt,
-                'amount_display': '{} {:,.2f}'.format(company_currency.symbol or company_currency.name, amt),
+                'amount_display': '{} {:,.2f}'.format(self._get_currency_symbol(company_currency), amt),
                 'company_id':     move.company_id.id,
                 'company_name':   move.company_id.name,
                 'company_color':  co_color,
@@ -1146,7 +1146,7 @@ class AccountMove(models.Model):
             'records':      records,
             'total_count':  len(records),
             'total_amount': total_amount,
-            'currency_sym': company_currency.symbol or company_currency.name,
+            'currency_sym': self._get_currency_symbol(company_currency),
             'companies':    [{'id': c.id, 'name': c.name, 'color': company_color_map.get(c.id, COMPANY_COLORS[0])} for c in companies],
             'date_range':   {'start': start_date.strftime('%Y-%m-%d') if start_date else 'All Time', 'end': end_date.strftime('%Y-%m-%d') if end_date else 'All Time'},
         }
@@ -1196,7 +1196,7 @@ class AccountMove(models.Model):
 
         company_ids = self.env.companies.ids or [self.env.company.id]
         company_currency = self.env.company.currency_id
-        sym = company_currency.symbol or company_currency.name
+        sym = self._get_currency_symbol(company_currency)
 
         def build_pl_period(s_date, e_date):
             def fetch_section(account_types, negate=False):
@@ -1294,7 +1294,7 @@ class AccountMove(models.Model):
         self = self.sudo()
         today = date.today()
         company_ids = self.env.companies.ids or [self.env.company.id]
-        sym = self.env.company.currency_id.symbol or self.env.company.currency_id.name
+        sym = self._get_currency_symbol(self.env.company.currency_id)
 
         def parse_display(s):
             """Parse date for display — keeps selected date even if future."""
@@ -1430,7 +1430,7 @@ class AccountMove(models.Model):
 
         company_ids = self.env.companies.ids or [self.env.company.id]
         company_currency = self.env.company.currency_id
-        sym = company_currency.symbol or company_currency.name
+        sym = self._get_currency_symbol(company_currency)
 
         COMPANY_COLORS = [
             {'bg': '#e8f4fd', 'text': '#1565c0', 'dot': '#1e88e5'},
