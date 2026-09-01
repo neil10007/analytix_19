@@ -1083,6 +1083,27 @@ class AnalytixDocument(models.Model):
                 if update_vals:
                     partner.write(update_vals)
 
+        # Determine if partner/invoice is outside the company's country
+        company = self.company_id or self.env.company
+        is_foreign_country = False
+        company_country = (company.country_id.code or 'SA').upper()
+        partner_country = (target_pdict.get('country') or '').strip().upper() if target_pdict else ''
+        partner_city = (target_pdict.get('city') or '').strip().upper() if target_pdict else ''
+        partner_street = (target_pdict.get('street') or '').strip().upper() if target_pdict else ''
+        partner_street2 = (target_pdict.get('street2') or '').strip().upper() if target_pdict else ''
+
+        if partner_country:
+            if partner_country not in (company_country, 'SA', 'SAU', 'SAUDI', 'SAUDI ARABIA', 'KSA', 'المملكة العربية السعودية', 'السعودية'):
+                is_foreign_country = True
+        if not is_foreign_country:
+            for val in (partner_country, partner_city, partner_street, partner_street2):
+                if any(kw in val for kw in ('DUBAI', 'UAE', 'UNITED ARAB EMIRATES', 'EMIRATES', 'دبي', 'الإمارات')):
+                    is_foreign_country = True
+                    break
+        if not is_foreign_country and partner and partner.country_id:
+            if partner.country_id.code != company_country:
+                is_foreign_country = True
+
         # Resolve Invoice Date
         from datetime import date as _date
         today_str = _date.today().strftime('%Y-%m-%d')
@@ -1191,6 +1212,28 @@ class AnalytixDocument(models.Model):
                 config_account = ai_config.expense_bill_account_id
                 config_tax = ai_config.expense_bill_tax_id
                 config_tax_account = ai_config.expense_bill_tax_account_id
+
+        # Resolve Foreign Services configuration for Sales Invoices
+        foreign_service_line = None
+        if move_type in ('out_invoice', 'out_refund') and ai_config and ai_config.foreign_service_line_ids:
+            target_stage = 'international_sales' if is_foreign_country else 'domestic_sales'
+            foreign_service_line = ai_config.foreign_service_line_ids.filtered(lambda l: l.service_stage == target_stage)
+            if foreign_service_line:
+                if foreign_service_line[0].account_id:
+                    config_account = foreign_service_line[0].account_id
+                if foreign_service_line[0].tax_id:
+                    config_tax = foreign_service_line[0].tax_id
+
+        # Resolve Foreign Expenses configuration for Purchase Bills
+        foreign_expense_line = None
+        if move_type in ('in_invoice', 'in_refund') and ai_config and ai_config.foreign_expense_line_ids:
+            target_stage = 'international_import' if is_foreign_country else 'domestic_purchase'
+            foreign_expense_line = ai_config.foreign_expense_line_ids.filtered(lambda l: l.expense_stage == target_stage)
+            if foreign_expense_line:
+                if foreign_expense_line[0].account_id:
+                    config_account = foreign_expense_line[0].account_id
+                if foreign_expense_line[0].tax_id:
+                    config_tax = foreign_expense_line[0].tax_id
 
         account_types = ['income', 'income_other'] if move_type in ('out_invoice', 'out_refund') else ['expense', 'expense_depreciation', 'expense_direct_cost']
         default_account = (
@@ -1416,6 +1459,41 @@ class AnalytixDocument(models.Model):
                     for it in items
                 )
 
+            # ── Foreign Expenses mapping for Expense Bills consolidated line ──
+            is_international_import = False
+            if ai_config and ai_config.foreign_expense_line_ids:
+                target_stage = 'international_import' if is_foreign_country else 'domestic_purchase'
+                foreign_expense_line = ai_config.foreign_expense_line_ids.filtered(lambda l: l.expense_stage == target_stage)
+                if foreign_expense_line:
+                    if foreign_expense_line[0].account_id:
+                        line_account = foreign_expense_line[0].account_id
+                    
+                    if target_stage == 'international_import':
+                        is_international_import = True
+                        if not foreign_expense_line[0].tax_id:
+                            line_tax = self.env['account.tax']
+                        else:
+                            line_tax = foreign_expense_line[0].tax_id
+                    else:
+                        if foreign_expense_line[0].tax_id:
+                            line_tax = foreign_expense_line[0].tax_id
+                        else:
+                            line_tax = self.env['account.tax']
+
+            if is_international_import:
+                original_price = exp_price_unit
+                if global_tax_rate > 0:
+                    exp_price_unit = round(exp_price_unit * (1.0 + (global_tax_rate / 100.0)), 2)
+                    _logger.info("Absorbed global tax rate %.2f%% into price unit (original: %.2f, new: %.2f) for international import expense bill", global_tax_rate, original_price, exp_price_unit)
+                elif json_subtotal > 0 and json_tax > 0:
+                    ratio = json_tax / json_subtotal
+                    exp_price_unit = round(exp_price_unit * (1.0 + ratio), 2)
+                    _logger.info("Absorbed global tax ratio %.4f into price unit (original: %.2f, new: %.2f) for international import expense bill", ratio, original_price, exp_price_unit)
+                
+                validation_warnings.append(
+                    f"• International Import Expense Bill: Absorbed extracted tax into price unit (was {original_price:.2f}, now {exp_price_unit:.2f})."
+                )
+
             # Construct summary description
             exp_desc = data.get('summary') or data.get('description') or (partner and f"Expense Bill - {partner.name}") or "Expense Bill Summary"
             if items:
@@ -1609,6 +1687,82 @@ class AnalytixDocument(models.Model):
                 if not line_account or not line_account.exists():
                     line_account = default_account
 
+                # ── Foreign Services mapping for Sales Invoice line items ──
+                is_international_sales = False
+                if move_type in ('out_invoice', 'out_refund') and ai_config and ai_config.foreign_service_line_ids:
+                    target_stage = 'international_sales' if is_foreign_country else 'domestic_sales'
+                    if foreign_service_line:
+                        if foreign_service_line[0].account_id:
+                            line_account = foreign_service_line[0].account_id
+                        
+                        if target_stage == 'international_sales':
+                            is_international_sales = True
+                            if not foreign_service_line[0].tax_id:
+                                tax = self.env['account.tax']
+                            else:
+                                tax = foreign_service_line[0].tax_id
+                        else:
+                            if foreign_service_line[0].tax_id:
+                                tax = foreign_service_line[0].tax_id
+                            else:
+                                tax = self.env['account.tax']
+
+                if is_international_sales:
+                    # Absorb tax into price_unit: e.g. 100 + 15 = 115
+                    item_tax_rate = tax_rate or global_tax_rate
+                    original_price = price
+                    if item_tax_rate > 0:
+                        tax_amt = price * (item_tax_rate / 100.0)
+                        price = round(price + tax_amt, 2)
+                        _logger.info("Absorbed %.2f%% tax into price unit (original: %.2f, new: %.2f) for international sales", item_tax_rate, original_price, price)
+                    elif json_subtotal > 0 and json_tax > 0:
+                        ratio = json_tax / json_subtotal
+                        price = round(price * (1.0 + ratio), 2)
+                        _logger.info("Absorbed global tax ratio %.4f into price unit (original: %.2f, new: %.2f) for international sales", ratio, original_price, price)
+                    
+                    # Add to validation warnings so it's highlighted for the accountant
+                    validation_warnings.append(
+                        f"• Line {idx + 1} (International Sales): Absorbed extracted tax into price unit (was {original_price:.2f}, now {price:.2f})."
+                    )
+
+                # ── Foreign Expenses mapping for Purchase Bill line items ──
+                is_international_import = False
+                if move_type in ('in_invoice', 'in_refund') and ai_config and ai_config.foreign_expense_line_ids:
+                    target_stage = 'international_import' if is_foreign_country else 'domestic_purchase'
+                    if foreign_expense_line:
+                        if foreign_expense_line[0].account_id:
+                            line_account = foreign_expense_line[0].account_id
+                        
+                        if target_stage == 'international_import':
+                            is_international_import = True
+                            if not foreign_expense_line[0].tax_id:
+                                tax = self.env['account.tax']
+                            else:
+                                tax = foreign_expense_line[0].tax_id
+                        else:
+                            if foreign_expense_line[0].tax_id:
+                                tax = foreign_expense_line[0].tax_id
+                            else:
+                                tax = self.env['account.tax']
+
+                if is_international_import:
+                    # Absorb tax into price_unit: e.g. 100 + 15 = 115 total expense
+                    item_tax_rate = tax_rate or global_tax_rate
+                    original_price = price
+                    if item_tax_rate > 0:
+                        tax_amt = price * (item_tax_rate / 100.0)
+                        price = round(price + tax_amt, 2)
+                        _logger.info("Absorbed %.2f%% tax into price unit (original: %.2f, new: %.2f) for international import purchase", item_tax_rate, original_price, price)
+                    elif json_subtotal > 0 and json_tax > 0:
+                        ratio = json_tax / json_subtotal
+                        price = round(price * (1.0 + ratio), 2)
+                        _logger.info("Absorbed global tax ratio %.4f into price unit (original: %.2f, new: %.2f) for international import purchase", ratio, original_price, price)
+                    
+                    # Add to validation warnings so it's highlighted for the accountant
+                    validation_warnings.append(
+                        f"• Line {idx + 1} (International Import Purchase): Absorbed extracted tax into price unit (was {original_price:.2f}, now {price:.2f})."
+                    )
+
                 item_display_name = raw_name or desc
                 line_vals = {
                     'name': item_display_name,
@@ -1647,6 +1801,74 @@ class AnalytixDocument(models.Model):
 
             if not line_account or not line_account.exists():
                 line_account = default_account
+
+            # ── Foreign Services mapping for Sales Invoice fallback line ──
+            is_international_sales = False
+            if move_type in ('out_invoice', 'out_refund') and ai_config and ai_config.foreign_service_line_ids:
+                target_stage = 'international_sales' if is_foreign_country else 'domestic_sales'
+                if foreign_service_line:
+                    if foreign_service_line[0].account_id:
+                        line_account = foreign_service_line[0].account_id
+                    
+                    if target_stage == 'international_sales':
+                        is_international_sales = True
+                        if not foreign_service_line[0].tax_id:
+                            tax = self.env['account.tax']
+                        else:
+                            tax = foreign_service_line[0].tax_id
+                    else:
+                        if foreign_service_line[0].tax_id:
+                            tax = foreign_service_line[0].tax_id
+                        else:
+                            tax = self.env['account.tax']
+
+            if is_international_sales:
+                original_price = price_unit
+                if global_tax_rate > 0:
+                    price_unit = round(price_unit * (1.0 + (global_tax_rate / 100.0)), 2)
+                    _logger.info("Absorbed global tax rate %.2f%% into price unit (original: %.2f, new: %.2f) for international sales", global_tax_rate, original_price, price_unit)
+                elif json_subtotal > 0 and json_tax > 0:
+                    ratio = json_tax / json_subtotal
+                    price_unit = round(price_unit * (1.0 + ratio), 2)
+                    _logger.info("Absorbed global tax ratio %.4f into price unit (original: %.2f, new: %.2f) for international sales", ratio, original_price, price_unit)
+                
+                validation_warnings.append(
+                    f"• International Sales: Absorbed extracted tax into price unit (was {original_price:.2f}, now {price_unit:.2f})."
+                )
+
+            # ── Foreign Expenses mapping for Purchase Bill fallback line ──
+            is_international_import = False
+            if move_type in ('in_invoice', 'in_refund') and ai_config and ai_config.foreign_expense_line_ids:
+                target_stage = 'international_import' if is_foreign_country else 'domestic_purchase'
+                if foreign_expense_line:
+                    if foreign_expense_line[0].account_id:
+                        line_account = foreign_expense_line[0].account_id
+                    
+                    if target_stage == 'international_import':
+                        is_international_import = True
+                        if not foreign_expense_line[0].tax_id:
+                            tax = self.env['account.tax']
+                        else:
+                            tax = foreign_expense_line[0].tax_id
+                    else:
+                        if foreign_expense_line[0].tax_id:
+                            tax = foreign_expense_line[0].tax_id
+                        else:
+                            tax = self.env['account.tax']
+
+            if is_international_import:
+                original_price = price_unit
+                if global_tax_rate > 0:
+                    price_unit = round(price_unit * (1.0 + (global_tax_rate / 100.0)), 2)
+                    _logger.info("Absorbed global tax rate %.2f%% into price unit (original: %.2f, new: %.2f) for international import purchase", global_tax_rate, original_price, price_unit)
+                elif json_subtotal > 0 and json_tax > 0:
+                    ratio = json_tax / json_subtotal
+                    price_unit = round(price_unit * (1.0 + ratio), 2)
+                    _logger.info("Absorbed global tax ratio %.4f into price unit (original: %.2f, new: %.2f) for international import purchase", ratio, original_price, price_unit)
+                
+                validation_warnings.append(
+                    f"• International Import Purchase: Absorbed extracted tax into price unit (was {original_price:.2f}, now {price_unit:.2f})."
+                )
 
             line_vals = {
                 'name': self.name or 'Document',

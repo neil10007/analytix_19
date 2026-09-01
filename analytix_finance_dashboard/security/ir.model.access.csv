@@ -5,4 +5,6 @@ access_analytix_finance_alert_tag_user,analytix.finance.alert.tag.user,model_ana
 access_analytix_finance_alert_escalation_user,analytix.finance.alert.escalation.user,model_analytix_finance_alert_escalation,base.group_user,1,1,1,1
 access_ai_gl_config_user,ai.gl.config.user,model_ai_gl_config,base.group_user,1,1,1,1
 access_ai_gl_config_expense_line_user,ai.gl.config.expense.line.user,model_ai_gl_config_expense_line,base.group_user,1,1,1,1
+access_ai_gl_config_foreign_service_line_user,ai.gl.config.foreign.service.line.user,model_ai_gl_config_foreign_service_line,base.group_user,1,1,1,1
+access_ai_gl_config_foreign_expense_line_user,ai.gl.config.foreign.expense.line.user,model_ai_gl_config_foreign_expense_line,base.group_user,1,1,1,1
 

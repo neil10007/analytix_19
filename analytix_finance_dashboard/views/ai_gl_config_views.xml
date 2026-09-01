@@ -94,8 +94,26 @@
                         </group>
                     </group>
 
-                    <notebook invisible="type != 'expense_bill'">
-                        <page string="Expense Category Mapping Lines">
+                    <notebook invisible="type not in ('sales_invoice', 'expense_bill', 'purchase_bill')">
+                        <page string="Foreign Services" invisible="type != 'sales_invoice'">
+                            <field name="foreign_service_line_ids">
+                                <list editable="bottom">
+                                    <field name="service_stage"/>
+                                    <field name="account_id" options="{'no_create': True}" domain="[('account_type', 'in', ['income', 'income_other']), ('company_ids', 'in', parent.company_id)]"/>
+                                    <field name="tax_id" options="{'no_create': True}" domain="[('type_tax_use', '=', 'sale'), ('company_id', 'in', [parent.company_id, False])]"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Foreign Expenses" invisible="type not in ('purchase_bill', 'expense_bill')">
+                            <field name="foreign_expense_line_ids">
+                                <list editable="bottom">
+                                    <field name="expense_stage"/>
+                                    <field name="account_id" options="{'no_create': True}" domain="[('account_type', 'in', ['expense', 'expense_depreciation', 'expense_direct_cost']), ('company_ids', 'in', parent.company_id)]"/>
+                                    <field name="tax_id" options="{'no_create': True}" domain="[('type_tax_use', '=', 'purchase'), ('company_id', 'in', [parent.company_id, False])]"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Expense Category Mapping Lines" invisible="type != 'expense_bill'">
                             <field name="expense_line_ids">
                                 <list editable="bottom">
                                     <field name="expense_bills_type"/>

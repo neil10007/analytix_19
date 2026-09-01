@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Inject static Bootstrap, FontAwesome, & Saudi Riyal Currency Symbol Font into frontend layout -->
+    <template id="frontend_layout_bootstrap_fix" inherit_id="web.frontend_layout" priority="1">
+        <xpath expr="//head" position="inside">
+            <link rel="stylesheet" type="text/css" href="/web/static/lib/bootstrap/dist/css/bootstrap.css"/>
+            <link rel="stylesheet" type="text/css" href="/web/static/src/libs/fontawesome/css/font-awesome.css"/>
+            <style>
+                @font-face {
+                    font-family: 'sr_symbol';
+                    src: url('/iwesabe_sar_currency_symbol/static/src/fonts/sr.eot');
+                    src: url('/iwesabe_sar_currency_symbol/static/src/fonts/sr.eot?#iefix') format('embedded-opentype'),
+                         url('/iwesabe_sar_currency_symbol/static/src/fonts/sr.woff') format('woff'),
+                         url('/iwesabe_sar_currency_symbol/static/src/fonts/sr.ttf') format('truetype'),
+                         url('/iwesabe_sar_currency_symbol/static/src/fonts/sr.svg#sr_symbol') format('svg');
+                    font-weight: normal;
+                    font-style: normal;
+                    font-display: block;
+                }
+
+                .anx-sar-icon {
+                    font-family: 'sr_symbol' !important;
+                    display: inline-block;
+                    font-style: normal;
+                    font-weight: normal;
+                    line-height: 1;
+                    -webkit-font-smoothing: antialiased;
+                    -moz-osx-font-smoothing: grayscale;
+                }
+
+                /* Ensure 'sr_symbol' font family is fallback for currency elements */
+                .oe_currency_value, .o_field_monetary, .h2, h2, .h3, h3, td, th {
+                    font-family: 'sr_symbol', Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+                }
+                
+                /* Fix avatar image sizing in sidebar */
+                .o_portal_sidebar img, 
+                .o_portal_sidebar .o_avatar,
+                .o_portal_sidebar div.rounded-circle,
+                .o_portal_sidebar div[style*="background-color"] {
+                    max-width: 60px !important;
+                    max-height: 60px !important;
+                    border-radius: 10px !important;
+                }
+
+                /* Header banner styling */
+                .o_portal .navbar {
+                    background-color: #0f172a !important;
+                    border-radius: 8px !important;
+                    padding: 12px 20px !important;
+                }
+
+                /* Crisp tables */
+                .o_portal_wrap table.table {
+                    border: 1px solid #e2e8f0 !important;
+                    border-radius: 8px !important;
+                    overflow: hidden !important;
+                }
+                .o_portal_wrap table.table th {
+                    background-color: #f1f5f9 !important;
+                    color: #334155 !important;
+                    font-weight: 600 !important;
+                    border-bottom: 1px solid #cbd5e1 !important;
+                }
+            </style>
+        </xpath>
+    </template>
+</odoo>

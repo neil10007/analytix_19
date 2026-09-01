@@ -97,6 +97,20 @@ class AiGlConfig(models.Model):
         string='Expense Category Mapping Lines'
     )
 
+    # --- Sales Invoice Foreign Services Mapping Lines ---
+    foreign_service_line_ids = fields.One2many(
+        'ai.gl.config.foreign.service.line',
+        'config_id',
+        string='Foreign Services Mapping Lines'
+    )
+
+    # --- Purchase Bills Foreign Expenses Mapping Lines ---
+    foreign_expense_line_ids = fields.One2many(
+        'ai.gl.config.foreign.expense.line',
+        'config_id',
+        string='Foreign Expenses Mapping Lines'
+    )
+
     # --- Sales Invoice Configuration ---
     income_account_id = fields.Many2one(
         'account.account',
@@ -408,5 +422,89 @@ class AiGlConfigExpenseLine(models.Model):
         for line in self:
             if line.config_id:
                 line.config_id._check_duplicate_line_keywords()
+
+
+class AiGlConfigForeignServiceLine(models.Model):
+    """Line model for mapping specific Sales Service Stages (Domestic, International) to Accounts and Taxes."""
+    _name = 'ai.gl.config.foreign.service.line'
+    _description = 'AI GL Config Foreign Service Line'
+    _order = 'config_id, service_stage'
+
+    config_id = fields.Many2one(
+        'ai.gl.config',
+        string='Configuration',
+        ondelete='cascade',
+        required=True
+    )
+    company_id = fields.Many2one(
+        'res.company',
+        string='Company',
+        related='config_id.company_id',
+        store=True,
+        readonly=True
+    )
+    service_stage = fields.Selection(
+        [
+            ('domestic_sales', 'Domestic Sales'),
+            ('international_sales', 'International Sales'),
+        ],
+        string='Stage',
+        required=True
+    )
+    account_id = fields.Many2one(
+        'account.account',
+        string='Chart of Account',
+        domain="[('account_type', 'in', ['income', 'income_other']), ('company_ids', 'in', company_id)]",
+        check_company=True,
+        required=True
+    )
+    tax_id = fields.Many2one(
+        'account.tax',
+        string='Tax',
+        domain="[('type_tax_use', '=', 'sale'), ('company_id', 'in', [company_id, False])]",
+        check_company=True
+    )
+
+
+class AiGlConfigForeignExpenseLine(models.Model):
+    """Line model for mapping specific Purchase/Expense Stages (Domestic Purchase, International Import Purchase) to Accounts and Taxes."""
+    _name = 'ai.gl.config.foreign.expense.line'
+    _description = 'AI GL Config Foreign Expense Line'
+    _order = 'config_id, expense_stage'
+
+    config_id = fields.Many2one(
+        'ai.gl.config',
+        string='Configuration',
+        ondelete='cascade',
+        required=True
+    )
+    company_id = fields.Many2one(
+        'res.company',
+        string='Company',
+        related='config_id.company_id',
+        store=True,
+        readonly=True
+    )
+    expense_stage = fields.Selection(
+        [
+            ('domestic_purchase', 'Domestic Purchase'),
+            ('international_import', 'International Import Purchase'),
+        ],
+        string='Stage',
+        required=True
+    )
+    account_id = fields.Many2one(
+        'account.account',
+        string='Chart of Account',
+        domain="[('account_type', 'in', ['expense', 'expense_depreciation', 'expense_direct_cost']), ('company_ids', 'in', company_id)]",
+        check_company=True,
+        required=True
+    )
+    tax_id = fields.Many2one(
+        'account.tax',
+        string='Tax',
+        domain="[('type_tax_use', '=', 'purchase'), ('company_id', 'in', [company_id, False])]",
+        check_company=True
+    )
 
 

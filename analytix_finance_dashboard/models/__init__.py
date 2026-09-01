@@ -6,5 +6,8 @@ from . import finance_alert
 from . import account_move
 from . import res_partner
 from . import ai_gl_config
+from . import res_company
+from . import res_partner_bank
+
 
 

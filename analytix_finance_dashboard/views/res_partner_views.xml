@@ -5,9 +5,40 @@
         <field name="model">res.partner</field>
         <field name="inherit_id" ref="base.view_partner_form"/>
         <field name="arch" type="xml">
-            <xpath expr="//field[@name='name']" position="after">
-                <field name="mother_lang" placeholder="Name"/>
+
+            <!-- Arabic name after English name -->
+            <xpath expr="//field[@name='name'][last()]" position="after">
+                <field name="mother_lang" placeholder="Name in Arabic"/>
             </xpath>
+
+            <!-- Arabic address section — visible only for KSA company/partner -->
+            <xpath expr="//div[@name='partner_address_country']/.." position="after">
+                <span class="o_form_label o_td_label" invisible="not show_arabic_address">
+                    <span class="fw-bold" style="color: #6c757d; font-size: 0.9em;">Arabic Address</span>
+                </span>
+                <div class="o_address_format" dir="rtl" invisible="not show_arabic_address">
+                    <field name="show_arabic_address" invisible="1"/>
+                    <field name="street_ar" placeholder="Street..." class="o_address_street"/>
+                    <field name="district" placeholder="Street 2..." class="o_address_street"/>
+                    <field name="building_no" placeholder="City" class="o_address_city"/>
+                    <field name="state_ar" placeholder="State" class="o_address_state"/>
+                    <field name="city_ar" placeholder="Country" class="o_address_street"/>
+                </div>
+            </xpath>
+
+            <!-- Arabic address in nested child contact/address form -->
+            <xpath expr="//div[@name='div_address']" position="after">
+                <div class="o_address_format" dir="rtl"
+                    style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #dee2e6;"
+                    invisible="not show_arabic_address">
+                    <field name="street_ar" placeholder="Street..." class="o_address_street"/>
+                    <field name="district" placeholder="Street 2..." class="o_address_street"/>
+                    <field name="building_no" placeholder="City" class="o_address_city"/>
+                    <field name="state_ar" placeholder="State" class="o_address_state"/>
+                    <field name="city_ar" placeholder="Country" class="o_address_street"/>
+                </div>
+            </xpath>
+
         </field>
     </record>
 </odoo>

@@ -675,7 +675,7 @@ class AccountMove(models.Model):
 
     @api.model
     def get_analytix_vat_data(self, filter_name='this_month', date_from=None, date_to=None):
-        """Return VAT tax lines split into output (invoices) and input (bills)."""
+        """Return VAT tax lines split into output (invoices) and input (bills), plus ZATCA VAT Return structure."""
         self = self.sudo()
         today = date.today()
         if filter_name == 'this_month':
@@ -710,6 +710,27 @@ class AccountMove(models.Model):
         companies = self.env['res.company'].browse(company_ids)
         company_color_map = {c.id: COMPANY_COLORS[i % len(COMPANY_COLORS)] for i, c in enumerate(companies)}
 
+        # Initialize ZATCA VAT Return structure
+        sales_boxes = {
+            '1':   {'box': '1',   'description': 'Standard rated domestic sales (15%)', 'amount': 0.0, 'adjustment': 0.0, 'vat_amount': 0.0},
+            '1.1': {'box': '1.1', 'description': 'Standard rated domestic sales (5%)',  'amount': 0.0, 'adjustment': 0.0, 'vat_amount': 0.0},
+            '2':   {'box': '2',   'description': 'Private Healthcare/Private Education/First house sales to citizens', 'amount': 0.0, 'adjustment': 0.0, 'vat_amount': 0.0},
+            '3':   {'box': '3',   'description': 'Zero rated domestic sales',           'amount': 0.0, 'adjustment': 0.0, 'vat_amount': 0.0},
+            '4':   {'box': '4',   'description': 'Exports',                             'amount': 0.0, 'adjustment': 0.0, 'vat_amount': 0.0},
+            '5':   {'box': '5',   'description': 'Exempt sales',                         'amount': 0.0, 'adjustment': 0.0, 'vat_amount': 0.0},
+        }
+
+        purchase_boxes = {
+            '7':   {'box': '7',   'description': 'Standard rated domestic purchases (15%)', 'amount': 0.0, 'adjustment': 0.0, 'vat_amount': 0.0},
+            '7.1': {'box': '7.1', 'description': 'Standard rated domestic purchases (5%)',  'amount': 0.0, 'adjustment': 0.0, 'vat_amount': 0.0},
+            '8':   {'box': '8',   'description': 'Imports subject to VAT paid at customs (15%)', 'amount': 0.0, 'adjustment': 0.0, 'vat_amount': 0.0},
+            '8.1': {'box': '8.1', 'description': 'Imports subject to VAT paid at customs (5%)',  'amount': 0.0, 'adjustment': 0.0, 'vat_amount': 0.0},
+            '9':   {'box': '9',   'description': 'Imports subject to VAT accounted for through reverse charge mechanism (15%)', 'amount': 0.0, 'adjustment': 0.0, 'vat_amount': 0.0},
+            '9.1': {'box': '9.1', 'description': 'Imports subject to VAT accounted for through reverse charge mechanism (5%)',  'amount': 0.0, 'adjustment': 0.0, 'vat_amount': 0.0},
+            '10':  {'box': '10',  'description': 'Zero rated purchases', 'amount': 0.0, 'adjustment': 0.0, 'vat_amount': 0.0},
+            '11':  {'box': '11',  'description': 'Exempt purchases',     'amount': 0.0, 'adjustment': 0.0, 'vat_amount': 0.0},
+        }
+
         def fetch_lines(move_types):
             return self.env['account.move.line'].search([
                 ('move_id.state', '=', 'posted'),
@@ -720,13 +741,15 @@ class AccountMove(models.Model):
                 ('tax_line_id', '!=', False),
             ], order='move_id desc')
 
-        def build_records(lines):
+        def build_records(lines, type_use):
             rows = []
             total = 0.0
             for line in lines:
                 move = line.move_id
                 amt = abs(line.balance)
                 total_amt = move.amount_total
+                base_amt = abs(line.tax_base_amount)
+
                 if move.company_id.currency_id != company_currency:
                     try:
                         amt = move.company_id.currency_id._convert(
@@ -738,6 +761,12 @@ class AccountMove(models.Model):
                             total_amt, company_currency, move.company_id, move.invoice_date or today)
                     except Exception:
                         pass
+                    try:
+                        base_amt = move.company_id.currency_id._convert(
+                            base_amt, company_currency, move.company_id, move.invoice_date or today)
+                    except Exception:
+                        pass
+
                 total += amt
                 co = company_color_map.get(move.company_id.id, COMPANY_COLORS[0])
                 rows.append({
@@ -760,12 +789,139 @@ class AccountMove(models.Model):
                     'company_color':co,
                     'currency_sym': self._get_currency_symbol(move.currency_id),
                 })
+
+                # Classify into ZATCA Boxes
+                if type_use == 'sale':
+                    tax = line.tax_line_id
+                    name_lower = (tax.name or '').lower()
+                    rate = abs(tax.amount)
+                    is_refund = move.move_type == 'out_refund'
+
+                    box_key = None
+                    if rate == 15.0:
+                        box_key = '1'
+                    elif rate == 5.0:
+                        box_key = '1.1'
+                    elif any(k in name_lower for k in ['healthcare', 'medical', 'education', 'citizen', 'first house', 'first_house']):
+                        box_key = '2'
+                    elif rate == 0.0 or 'zero' in name_lower or '0%' in name_lower:
+                        if 'export' in name_lower or 'خارج' in name_lower:
+                            box_key = '4'
+                        elif 'exempt' in name_lower or 'معفى' in name_lower or 'معفاه' in name_lower:
+                            box_key = '5'
+                        else:
+                            box_key = '3'
+                    else:
+                        box_key = '1' if rate > 0 else '3'
+
+                    box = sales_boxes[box_key]
+                    if is_refund:
+                        box['adjustment'] += base_amt
+                        box['vat_amount'] -= amt
+                    else:
+                        box['amount'] += base_amt
+                        box['vat_amount'] += amt
+
+                elif type_use == 'purchase':
+                    tax = line.tax_line_id
+                    name_lower = (tax.name or '').lower()
+                    rate = abs(tax.amount)
+                    is_refund = move.move_type == 'in_refund'
+
+                    box_key = None
+                    if rate == 15.0:
+                        if any(k in name_lower for k in ['import', 'custom', 'الجمارك', 'استيراد']):
+                            box_key = '8'
+                        elif any(k in name_lower for k in ['rcm', 'reverse', 'عكسي', 'r c']):
+                            box_key = '9'
+                        else:
+                            box_key = '7'
+                    elif rate == 5.0:
+                        if any(k in name_lower for k in ['import', 'custom', 'الجمارك', 'استيراد']):
+                            box_key = '8.1'
+                        elif any(k in name_lower for k in ['rcm', 'reverse', 'عكسي', 'r c']):
+                            box_key = '9.1'
+                        else:
+                            box_key = '7.1'
+                    elif rate == 0.0 or 'zero' in name_lower or '0%' in name_lower:
+                        if 'exempt' in name_lower or 'معفى' in name_lower or 'معفاه' in name_lower:
+                            box_key = '11'
+                        else:
+                            box_key = '10'
+                    else:
+                        box_key = '7' if rate > 0 else '10'
+
+                    box = purchase_boxes[box_key]
+                    if is_refund:
+                        box['adjustment'] += base_amt
+                        box['vat_amount'] -= amt
+                    else:
+                        box['amount'] += base_amt
+                        box['vat_amount'] += amt
+
             return rows, total
 
         out_lines = fetch_lines(['out_invoice', 'out_refund'])
         in_lines  = fetch_lines(['in_invoice',  'in_refund'])
-        out_records, output_vat = build_records(out_lines)
-        in_records,  input_vat  = build_records(in_lines)
+        out_records, output_vat = build_records(out_lines, 'sale')
+        in_records,  input_vat  = build_records(in_lines, 'purchase')
+
+        # Compute Totals for Sales
+        total_sales_amt = sum(b['amount'] for b in sales_boxes.values())
+        total_sales_adj = sum(b['adjustment'] for b in sales_boxes.values())
+        total_sales_vat = sum(b['vat_amount'] for b in sales_boxes.values())
+        sales_total_box = {
+            'box': '6',
+            'description': 'Total Sales',
+            'amount': total_sales_amt,
+            'adjustment': total_sales_adj,
+            'vat_amount': total_sales_vat
+        }
+
+        # Compute Totals for Purchases
+        total_purch_amt = sum(b['amount'] for b in purchase_boxes.values())
+        total_purch_adj = sum(b['adjustment'] for b in purchase_boxes.values())
+        total_purch_vat = sum(b['vat_amount'] for b in purchase_boxes.values())
+        purch_total_box = {
+            'box': '12',
+            'description': 'Total purchases',
+            'amount': total_purch_amt,
+            'adjustment': total_purch_adj,
+            'vat_amount': total_purch_vat
+        }
+
+        # Net VAT
+        net_vat_box = {
+            'box': '13',
+            'description': 'Total VAT due for current period',
+            'amount': 0.0,
+            'adjustment': 0.0,
+            'vat_amount': total_sales_vat - total_purch_vat
+        }
+        corrections_box = {
+            'box': '14',
+            'description': 'Corrections from previous period (between SAR -15,000 and SAR 15,000)',
+            'amount': 0.0,
+            'adjustment': 0.0,
+            'vat_amount': 0.0
+        }
+
+        # Build list in order
+        sales_list = [
+            sales_boxes['1'], sales_boxes['1.1'], sales_boxes['2'],
+            sales_boxes['3'], sales_boxes['4'], sales_boxes['5'],
+            sales_total_box
+        ]
+        purchases_list = [
+            purchase_boxes['7'], purchase_boxes['7.1'], purchase_boxes['8'],
+            purchase_boxes['8.1'], purchase_boxes['9'], purchase_boxes['9.1'],
+            purchase_boxes['10'], purchase_boxes['11'],
+            purch_total_box
+        ]
+        net_list = [
+            net_vat_box,
+            corrections_box
+        ]
 
         sym = self._get_currency_symbol(company_currency)
         return {
@@ -773,25 +929,26 @@ class AccountMove(models.Model):
             'input_records':  in_records,
             'output_count':   len(out_records),
             'input_count':    len(in_records),
-            'total_count':    len(out_records) + len(in_records),
+                'total_count':    len(out_records) + len(in_records),
             'output_vat':     output_vat,
             'input_vat':      input_vat,
             'net_vat':        output_vat - input_vat,
             'currency_sym':   sym,
             'companies':      [{'id': c.id, 'name': c.name, 'color': company_color_map.get(c.id, COMPANY_COLORS[0])} for c in companies],
             'date_range':     {'start': start_date.strftime('%Y-%m-%d'), 'end': end_date.strftime('%Y-%m-%d')},
+            'vat_return_sales': sales_list,
+            'vat_return_purchases': purchases_list,
+            'vat_return_net': net_list,
         }
 
     @api.model
     def export_analytix_vat_xlsx(self, filter_name='this_month', date_from=None, date_to=None):
-        """Generate and return a base64 encoded native .xlsx binary file for Tax Summary."""
+        """Generate and return a base64 encoded native .xlsx binary file for ZATCA VAT Return."""
         import io
         import base64
         import xlsxwriter
 
         vat_data = self.get_analytix_vat_data(filter_name=filter_name, date_from=date_from, date_to=date_to)
-        output_records = vat_data.get('output_records', [])
-        input_records = vat_data.get('input_records', [])
         sym = vat_data.get('currency_sym', '')
         date_range = vat_data.get('date_range', {})
         start_str = date_range.get('start', '')
@@ -802,232 +959,409 @@ class AccountMove(models.Model):
 
         output = io.BytesIO()
         workbook = xlsxwriter.Workbook(output, {'in_memory': True})
-        worksheet = workbook.add_worksheet('Tax Summary')
+        worksheet = workbook.add_worksheet('VAT Return Summary')
 
         # Enable grid lines explicitly
         worksheet.hide_gridlines(2)
 
-        # Column widths (generous size for immediate readability)
-        worksheet.set_column(0, 0, 28)  # Document #
-        worksheet.set_column(1, 1, 35)  # Customer / Vendor
-        worksheet.set_column(2, 2, 24)  # Tax Rate / Name
-        worksheet.set_column(3, 3, 30)  # Company
-        worksheet.set_column(4, 4, 18)  # Date
-        worksheet.set_column(5, 5, 24)  # Total Amount
-        worksheet.set_column(6, 6, 24)  # VAT Amount
+        # Set Column Widths
+        worksheet.set_column(0, 0, 10)  # Box #
+        worksheet.set_column(1, 1, 65)  # Description
+        worksheet.set_column(2, 2, 22)  # Amount (Base)
+        worksheet.set_column(3, 3, 22)  # Adjustment
+        worksheet.set_column(4, 4, 22)  # VAT Amount
 
         # Formats
         title_fmt = workbook.add_format({
-            'bold': True, 'font_size': 18, 'font_name': 'Arial',
+            'bold': True, 'font_size': 16, 'font_name': 'Arial',
             'bg_color': '#0f172a', 'font_color': '#ffffff',
-            'align': 'left', 'valign': 'vcenter'
+            'align': 'center', 'valign': 'vcenter'
         })
         meta_fmt = workbook.add_format({
             'font_size': 11, 'font_name': 'Arial',
             'bg_color': '#f8fafc', 'font_color': '#475569',
-            'align': 'left', 'valign': 'vcenter'
+            'align': 'center', 'valign': 'vcenter'
         })
-        kpi_hdr_fmt = workbook.add_format({
-            'bold': True, 'font_size': 12, 'font_name': 'Arial',
-            'bg_color': '#cbd5e1', 'font_color': '#0f172a',
-            'border': 1, 'border_color': '#94a3b8', 'valign': 'vcenter'
-        })
-        kpi_lbl_fmt = workbook.add_format({
-            'bold': True, 'font_size': 12, 'font_name': 'Arial',
-            'bg_color': '#ffffff', 'font_color': '#1e293b',
-            'border': 1, 'border_color': '#cbd5e1', 'valign': 'vcenter'
-        })
-        kpi_val_out = workbook.add_format({
+        section_hdr_fmt = workbook.add_format({
             'bold': True, 'font_size': 13, 'font_name': 'Arial',
-            'bg_color': '#ffffff', 'font_color': '#1e88e5',
-            'num_format': '#,##0.00', 'border': 1, 'border_color': '#cbd5e1',
-            'align': 'right', 'valign': 'vcenter'
-        })
-        kpi_val_in = workbook.add_format({
-            'bold': True, 'font_size': 13, 'font_name': 'Arial',
-            'bg_color': '#ffffff', 'font_color': '#e53935',
-            'num_format': '#,##0.00', 'border': 1, 'border_color': '#cbd5e1',
-            'align': 'right', 'valign': 'vcenter'
-        })
-        kpi_val_net = workbook.add_format({
-            'bold': True, 'font_size': 14, 'font_name': 'Arial',
-            'bg_color': '#f0fdf4', 'font_color': '#15803d',
-            'num_format': '#,##0.00', 'border': 2, 'border_color': '#86efac',
-            'align': 'right', 'valign': 'vcenter'
-        })
-        kpi_lbl_net = workbook.add_format({
-            'bold': True, 'font_size': 12, 'font_name': 'Arial',
-            'bg_color': '#f0fdf4', 'font_color': '#166534',
-            'border': 2, 'border_color': '#86efac', 'valign': 'vcenter'
-        })
-        sec_out_fmt = workbook.add_format({
-            'bold': True, 'font_size': 14, 'font_name': 'Arial',
-            'bg_color': '#1e88e5', 'font_color': '#ffffff',
-            'align': 'left', 'valign': 'vcenter'
-        })
-        sec_in_fmt = workbook.add_format({
-            'bold': True, 'font_size': 14, 'font_name': 'Arial',
-            'bg_color': '#e53935', 'font_color': '#ffffff',
-            'align': 'left', 'valign': 'vcenter'
+            'bg_color': '#1e3a8a', 'font_color': '#ffffff',
+            'align': 'left', 'valign': 'vcenter',
+            'border': 1, 'border_color': '#1e3a8a'
         })
         tbl_hdr_fmt = workbook.add_format({
-            'bold': True, 'font_size': 12, 'font_name': 'Arial',
+            'bold': True, 'font_size': 11, 'font_name': 'Arial',
             'bg_color': '#e2e8f0', 'font_color': '#0f172a',
-            'border': 1, 'border_color': '#cbd5e1', 'valign': 'vcenter'
+            'border': 1, 'border_color': '#cbd5e1', 'align': 'center', 'valign': 'vcenter'
         })
-        tbl_hdr_r_fmt = workbook.add_format({
-            'bold': True, 'font_size': 12, 'font_name': 'Arial',
-            'bg_color': '#e2e8f0', 'font_color': '#0f172a',
-            'border': 1, 'border_color': '#cbd5e1',
-            'align': 'right', 'valign': 'vcenter'
+        cell_box_fmt = workbook.add_format({
+            'font_size': 11, 'font_name': 'Arial',
+            'border': 1, 'border_color': '#cbd5e1', 'align': 'center', 'valign': 'vcenter'
         })
-        cell_out_name = workbook.add_format({
-            'bold': True, 'font_size': 12, 'font_name': 'Arial',
-            'font_color': '#1e88e5', 'border': 1, 'border_color': '#cbd5e1', 'valign': 'vcenter'
+        cell_desc_fmt = workbook.add_format({
+            'font_size': 11, 'font_name': 'Arial',
+            'border': 1, 'border_color': '#cbd5e1', 'align': 'left', 'valign': 'vcenter'
         })
-        cell_in_name = workbook.add_format({
-            'bold': True, 'font_size': 12, 'font_name': 'Arial',
-            'font_color': '#e53935', 'border': 1, 'border_color': '#cbd5e1', 'valign': 'vcenter'
+        cell_num_fmt = workbook.add_format({
+            'font_size': 11, 'font_name': 'Arial',
+            'num_format': '#,##0.00', 'border': 1, 'border_color': '#cbd5e1', 'align': 'right', 'valign': 'vcenter'
         })
-        cell_text = workbook.add_format({
-            'font_size': 12, 'font_name': 'Arial',
-            'border': 1, 'border_color': '#cbd5e1', 'valign': 'vcenter'
-        })
-        cell_center = workbook.add_format({
-            'font_size': 12, 'font_name': 'Arial',
-            'align': 'center', 'border': 1, 'border_color': '#cbd5e1', 'valign': 'vcenter'
-        })
-        cell_num = workbook.add_format({
-            'bold': True, 'font_size': 12, 'font_name': 'Arial',
-            'num_format': '#,##0.00', 'align': 'right',
-            'border': 1, 'border_color': '#cbd5e1', 'valign': 'vcenter'
-        })
-        tot_lbl_fmt = workbook.add_format({
-            'bold': True, 'font_size': 12, 'font_name': 'Arial',
+        total_lbl_fmt = workbook.add_format({
+            'bold': True, 'font_size': 11, 'font_name': 'Arial',
             'bg_color': '#f1f5f9', 'font_color': '#0f172a',
-            'align': 'right', 'border': 1, 'border_color': '#cbd5e1', 'valign': 'vcenter'
+            'border': 1, 'border_color': '#cbd5e1', 'align': 'left', 'valign': 'vcenter'
         })
-        tot_out_fmt = workbook.add_format({
-            'bold': True, 'font_size': 13, 'font_name': 'Arial',
-            'bg_color': '#f1f5f9', 'font_color': '#1e88e5',
-            'num_format': '#,##0.00', 'align': 'right',
-            'border': 1, 'border_color': '#cbd5e1', 'valign': 'vcenter'
+        total_num_fmt = workbook.add_format({
+            'bold': True, 'font_size': 11, 'font_name': 'Arial',
+            'bg_color': '#f1f5f9', 'num_format': '#,##0.00', 'border': 1, 'border_color': '#cbd5e1', 'align': 'right', 'valign': 'vcenter'
         })
-        tot_in_fmt = workbook.add_format({
-            'bold': True, 'font_size': 13, 'font_name': 'Arial',
-            'bg_color': '#f1f5f9', 'font_color': '#e53935',
-            'num_format': '#,##0.00', 'align': 'right',
-            'border': 1, 'border_color': '#cbd5e1', 'valign': 'vcenter'
+        net_lbl_fmt = workbook.add_format({
+            'bold': True, 'font_size': 12, 'font_name': 'Arial',
+            'bg_color': '#f0fdf4', 'font_color': '#166534',
+            'border': 2, 'border_color': '#86efac', 'align': 'left', 'valign': 'vcenter'
+        })
+        net_num_fmt = workbook.add_format({
+            'bold': True, 'font_size': 12, 'font_name': 'Arial',
+            'bg_color': '#f0fdf4', 'num_format': '#,##0.00', 'border': 2, 'border_color': '#86efac', 'align': 'right', 'valign': 'vcenter'
         })
 
-        # Write Header
-        row = 0
-        worksheet.set_row(row, 42)
-        worksheet.merge_range(row, 0, row, 6, '  TAX SUMMARY REPORT', title_fmt)
+        # Row height settings
+        worksheet.set_row(0, 35)
+        worksheet.merge_range(0, 0, 0, 4, '  VAT RETURN SUMMARY (ZATCA)', title_fmt)
+        worksheet.set_row(1, 24)
+        meta_text = f"Company: {company_str}  |  Period: {start_str} to {end_str}  |  Currency: {sym}"
+        worksheet.merge_range(1, 0, 1, 4, meta_text, meta_fmt)
 
-        row += 1
-        worksheet.set_row(row, 26)
-        meta_text = f"  Company: {company_str}  |  Period: {start_str} to {end_str}  |  Currency: {sym}"
-        worksheet.merge_range(row, 0, row, 6, meta_text, meta_fmt)
+        row = 3
 
-        row += 2
-        # KPI Block
-        worksheet.set_row(row, 30)
-        worksheet.merge_range(row, 0, row, 1, 'KPI Metric', kpi_hdr_fmt)
-        worksheet.merge_range(row, 2, row, 6, f'Amount ({sym})', kpi_hdr_fmt)
+        def write_headers(r):
+            worksheet.set_row(r, 26)
+            worksheet.write(r, 0, 'Box #', tbl_hdr_fmt)
+            worksheet.write(r, 1, 'Description', tbl_hdr_fmt)
+            worksheet.write(r, 2, f'Amount (Base) ({sym})', tbl_hdr_fmt)
+            worksheet.write(r, 3, f'Adjustment ({sym})', tbl_hdr_fmt)
+            worksheet.write(r, 4, f'VAT Amount ({sym})', tbl_hdr_fmt)
 
-        row += 1
+        # 1. VAT on Sales
         worksheet.set_row(row, 28)
-        worksheet.merge_range(row, 0, row, 1, 'Output VAT (Sales Invoices)', kpi_lbl_fmt)
-        worksheet.merge_range(row, 2, row, 6, vat_data.get('output_vat', 0.0), kpi_val_out)
-
+        worksheet.merge_range(row, 0, row, 4, ' 1. VAT on Sales', section_hdr_fmt)
         row += 1
+        write_headers(row)
+        
+        sales_data = vat_data.get('vat_return_sales', [])
+        for box in sales_data:
+            row += 1
+            worksheet.set_row(row, 22)
+            fmt_lbl = total_lbl_fmt if box['box'] == '6' else cell_desc_fmt
+            fmt_num = total_num_fmt if box['box'] == '6' else cell_num_fmt
+            fmt_box = total_lbl_fmt if box['box'] == '6' else cell_box_fmt
+            
+            worksheet.write(row, 0, box['box'], fmt_box)
+            worksheet.write(row, 1, box['description'], fmt_lbl)
+            worksheet.write(row, 2, box['amount'], fmt_num)
+            worksheet.write(row, 3, box['adjustment'], fmt_num)
+            worksheet.write(row, 4, box['vat_amount'], fmt_num)
+
+        row += 2
+        # 2. VAT on Purchases
         worksheet.set_row(row, 28)
-        worksheet.merge_range(row, 0, row, 1, 'Input VAT (Vendor Bills)', kpi_lbl_fmt)
-        worksheet.merge_range(row, 2, row, 6, vat_data.get('input_vat', 0.0), kpi_val_in)
-
+        worksheet.merge_range(row, 0, row, 4, ' 2. VAT on Purchases', section_hdr_fmt)
         row += 1
-        worksheet.set_row(row, 32)
-        worksheet.merge_range(row, 0, row, 1, 'Net VAT Payable / (Claimable)', kpi_lbl_net)
-        worksheet.merge_range(row, 2, row, 6, vat_data.get('net_vat', 0.0), kpi_val_net)
-
-        row += 1
-        worksheet.set_row(row, 26)
-        worksheet.merge_range(row, 0, row, 1, 'Total Tax Transactions Count', kpi_lbl_fmt)
-        worksheet.merge_range(row, 2, row, 6, vat_data.get('total_count', 0), cell_center)
-
-        row += 2
-        # Output VAT Table
-        worksheet.set_row(row, 36)
-        worksheet.merge_range(row, 0, row, 6, '  OUTPUT VAT — CUSTOMER INVOICES', sec_out_fmt)
-
-        row += 1
-        worksheet.set_row(row, 30)
-        worksheet.write(row, 0, 'Document #', tbl_hdr_fmt)
-        worksheet.write(row, 1, 'Customer', tbl_hdr_fmt)
-        worksheet.write(row, 2, 'Tax Rate / Name', tbl_hdr_fmt)
-        worksheet.write(row, 3, 'Company', tbl_hdr_fmt)
-        worksheet.write(row, 4, 'Date', tbl_hdr_fmt)
-        worksheet.write(row, 5, f'Total Amount ({sym})', tbl_hdr_r_fmt)
-        worksheet.write(row, 6, f'VAT Amount ({sym})', tbl_hdr_r_fmt)
-
-        for rec in output_records:
+        write_headers(row)
+        
+        purchases_data = vat_data.get('vat_return_purchases', [])
+        for box in purchases_data:
             row += 1
-            worksheet.set_row(row, 28)
-            worksheet.write(row, 0, rec.get('move_name', ''), cell_out_name)
-            worksheet.write(row, 1, rec.get('partner', ''), cell_text)
-            worksheet.write(row, 2, rec.get('tax_name', ''), cell_text)
-            worksheet.write(row, 3, rec.get('company_name', ''), cell_text)
-            worksheet.write(row, 4, rec.get('invoice_date', ''), cell_center)
-            worksheet.write(row, 5, rec.get('total_amount', 0.0), cell_num)
-            worksheet.write(row, 6, rec.get('tax_amount', 0.0), cell_num)
-
-        row += 1
-        worksheet.set_row(row, 32)
-        worksheet.merge_range(row, 0, row, 5, 'Total Output VAT:', tot_lbl_fmt)
-        worksheet.write(row, 6, vat_data.get('output_vat', 0.0), tot_out_fmt)
+            worksheet.set_row(row, 22)
+            fmt_lbl = total_lbl_fmt if box['box'] == '12' else cell_desc_fmt
+            fmt_num = total_num_fmt if box['box'] == '12' else cell_num_fmt
+            fmt_box = total_lbl_fmt if box['box'] == '12' else cell_box_fmt
+            
+            worksheet.write(row, 0, box['box'], fmt_box)
+            worksheet.write(row, 1, box['description'], fmt_lbl)
+            worksheet.write(row, 2, box['amount'], fmt_num)
+            worksheet.write(row, 3, box['adjustment'], fmt_num)
+            worksheet.write(row, 4, box['vat_amount'], fmt_num)
 
         row += 2
-        # Input VAT Table
-        worksheet.set_row(row, 36)
-        worksheet.merge_range(row, 0, row, 6, '  INPUT VAT — VENDOR BILLS', sec_in_fmt)
-
+        # 3. Net VAT Due
+        worksheet.set_row(row, 28)
+        worksheet.merge_range(row, 0, row, 4, ' 3. Net VAT Due', section_hdr_fmt)
         row += 1
-        worksheet.set_row(row, 30)
-        worksheet.write(row, 0, 'Document #', tbl_hdr_fmt)
-        worksheet.write(row, 1, 'Vendor', tbl_hdr_fmt)
-        worksheet.write(row, 2, 'Tax Rate / Name', tbl_hdr_fmt)
-        worksheet.write(row, 3, 'Company', tbl_hdr_fmt)
-        worksheet.write(row, 4, 'Date', tbl_hdr_fmt)
-        worksheet.write(row, 5, f'Total Amount ({sym})', tbl_hdr_r_fmt)
-        worksheet.write(row, 6, f'VAT Amount ({sym})', tbl_hdr_r_fmt)
-
-        for rec in input_records:
+        write_headers(row)
+        
+        net_data = vat_data.get('vat_return_net', [])
+        for box in net_data:
             row += 1
-            worksheet.set_row(row, 28)
-            worksheet.write(row, 0, rec.get('move_name', ''), cell_in_name)
-            worksheet.write(row, 1, rec.get('partner', ''), cell_text)
-            worksheet.write(row, 2, rec.get('tax_name', ''), cell_text)
-            worksheet.write(row, 3, rec.get('company_name', ''), cell_text)
-            worksheet.write(row, 4, rec.get('invoice_date', ''), cell_center)
-            worksheet.write(row, 5, rec.get('total_amount', 0.0), cell_num)
-            worksheet.write(row, 6, rec.get('tax_amount', 0.0), cell_num)
-
-        row += 1
-        worksheet.set_row(row, 32)
-        worksheet.merge_range(row, 0, row, 5, 'Total Input VAT:', tot_lbl_fmt)
-        worksheet.write(row, 6, vat_data.get('input_vat', 0.0), tot_in_fmt)
-
-        row += 2
-        # Net Summary Row
-        worksheet.set_row(row, 40)
-        worksheet.merge_range(row, 0, row, 5, 'NET VAT PAYABLE / (CLAIMABLE):', kpi_lbl_net)
-        worksheet.write(row, 6, vat_data.get('net_vat', 0.0), kpi_val_net)
+            worksheet.set_row(row, 24)
+            fmt_lbl = net_lbl_fmt if box['box'] == '13' else cell_desc_fmt
+            fmt_num = net_num_fmt if box['box'] == '13' else cell_num_fmt
+            fmt_box = net_lbl_fmt if box['box'] == '13' else cell_box_fmt
+            
+            worksheet.write(row, 0, box['box'], fmt_box)
+            worksheet.write(row, 1, box['description'], fmt_lbl)
+            worksheet.write(row, 2, box['amount'], fmt_num)
+            worksheet.write(row, 3, box['adjustment'], fmt_num)
+            worksheet.write(row, 4, box['vat_amount'], fmt_num)
 
         workbook.close()
         output.seek(0)
         file_data = base64.b64encode(output.read()).decode('utf-8')
         filename = f"Tax_Summary_{start_str}_to_{end_str}.xlsx"
+
+        return {
+            'filename': filename,
+            'file_content': file_data,
+        }
+
+    @api.model
+    def export_analytix_vat_detailed_xlsx(self, filter_name='custom', date_from=None, date_to=None, company_filter='all', search_query='', sort_col=None, sort_dir='asc'):
+        """Generate and return a base64 encoded native .xlsx binary file for Detailed VAT Return."""
+        import io
+        import base64
+        import xlsxwriter
+
+        vat_data = self.get_analytix_vat_data(filter_name=filter_name, date_from=date_from, date_to=date_to)
+        sym = vat_data.get('currency_sym', '')
+        date_range = vat_data.get('date_range', {})
+        start_str = date_range.get('start', '')
+        end_str = date_range.get('end', '')
+
+        companies = [c['name'] for c in vat_data.get('companies', [])]
+        company_str = ', '.join(companies) if companies else (self.env.company.name or 'All Companies')
+
+        out_records = vat_data.get('output_records', [])
+        in_records = vat_data.get('input_records', [])
+
+        # Filter by company
+        if company_filter != 'all':
+            try:
+                cid = int(company_filter)
+                out_records = [r for r in out_records if r['company_id'] == cid]
+                in_records = [r for r in in_records if r['company_id'] == cid]
+            except ValueError:
+                pass
+
+        # Filter by search query
+        if search_query and search_query.strip():
+            q = search_query.strip().lower()
+            out_records = [r for r in out_records if q in (r.get('move_name') or '').lower() or q in (r.get('partner') or '').lower() or q in (r.get('tax_name') or '').lower()]
+            in_records = [r for r in in_records if q in (r.get('move_name') or '').lower() or q in (r.get('partner') or '').lower() or q in (r.get('tax_name') or '').lower()]
+
+        # Sort records
+        if sort_col:
+            reverse = sort_dir == 'desc'
+            def get_val(r):
+                val = r.get(sort_col)
+                if val is None:
+                    return ''
+                if isinstance(val, str):
+                    return val.lower()
+                return val
+            
+            out_records.sort(key=get_val, reverse=reverse)
+            in_records.sort(key=get_val, reverse=reverse)
+
+        # Recalculate totals
+        total_output_vat = sum(r.get('tax_amount', 0.0) for r in out_records)
+        total_input_vat = sum(r.get('tax_amount', 0.0) for r in in_records)
+        net_vat_payable = total_output_vat - total_input_vat
+        total_count = len(out_records) + len(in_records)
+
+        output = io.BytesIO()
+        workbook = xlsxwriter.Workbook(output, {'in_memory': True})
+        worksheet = workbook.add_worksheet('Detailed VAT Report')
+
+        # Enable grid lines explicitly
+        worksheet.hide_gridlines(2)
+
+        # Set Column Widths
+        worksheet.set_column(0, 0, 20)  # Document
+        worksheet.set_column(1, 1, 35)  # Customer / Vendor
+        worksheet.set_column(2, 2, 20)  # Tax
+        worksheet.set_column(3, 3, 20)  # Company
+        worksheet.set_column(4, 4, 15)  # Date
+        worksheet.set_column(5, 5, 20)  # Total Amount
+        worksheet.set_column(6, 6, 20)  # VAT Amount
+
+        # Formats
+        title_fmt = workbook.add_format({
+            'bold': True, 'font_size': 14, 'font_name': 'Arial',
+            'bg_color': '#0f172a', 'font_color': '#ffffff',
+            'align': 'center', 'valign': 'vcenter'
+        })
+        meta_fmt = workbook.add_format({
+            'font_size': 10, 'font_name': 'Arial',
+            'bg_color': '#f8fafc', 'font_color': '#475569',
+            'align': 'center', 'valign': 'vcenter'
+        })
+        
+        # KPI Card format
+        kpi_lbl_fmt = workbook.add_format({
+            'font_size': 9, 'font_name': 'Arial', 'bold': True,
+            'bg_color': '#f8fafc', 'font_color': '#64748b',
+            'align': 'center', 'valign': 'vcenter', 'border': 1, 'border_color': '#cbd5e1'
+        })
+        kpi_val_out_fmt = workbook.add_format({
+            'font_size': 11, 'font_name': 'Arial', 'bold': True,
+            'bg_color': '#f8fafc', 'font_color': '#1e88e5', 'num_format': f'"{sym} "#,##0.00',
+            'align': 'center', 'valign': 'vcenter', 'border': 1, 'border_color': '#cbd5e1'
+        })
+        kpi_val_in_fmt = workbook.add_format({
+            'font_size': 11, 'font_name': 'Arial', 'bold': True,
+            'bg_color': '#f8fafc', 'font_color': '#e53935', 'num_format': f'"{sym} "#,##0.00',
+            'align': 'center', 'valign': 'vcenter', 'border': 1, 'border_color': '#cbd5e1'
+        })
+        kpi_val_net_fmt = workbook.add_format({
+            'font_size': 11, 'font_name': 'Arial', 'bold': True,
+            'bg_color': '#f8fafc', 'font_color': '#2e7d32', 'num_format': f'"{sym} "#,##0.00',
+            'align': 'center', 'valign': 'vcenter', 'border': 1, 'border_color': '#cbd5e1'
+        })
+        kpi_val_tot_fmt = workbook.add_format({
+            'font_size': 11, 'font_name': 'Arial', 'bold': True,
+            'bg_color': '#f8fafc', 'font_color': '#0f172a', 'num_format': '#,##0',
+            'align': 'center', 'valign': 'vcenter', 'border': 1, 'border_color': '#cbd5e1'
+        })
+
+        section_hdr_sales_fmt = workbook.add_format({
+            'bold': True, 'font_size': 11, 'font_name': 'Arial',
+            'bg_color': '#1e3a8a', 'font_color': '#ffffff',
+            'align': 'left', 'valign': 'vcenter',
+            'border': 1, 'border_color': '#1e3a8a'
+        })
+        section_hdr_purch_fmt = workbook.add_format({
+            'bold': True, 'font_size': 11, 'font_name': 'Arial',
+            'bg_color': '#7f1d1d', 'font_color': '#ffffff',
+            'align': 'left', 'valign': 'vcenter',
+            'border': 1, 'border_color': '#7f1d1d'
+        })
+        tbl_hdr_fmt = workbook.add_format({
+            'bold': True, 'font_size': 10, 'font_name': 'Arial',
+            'bg_color': '#e2e8f0', 'font_color': '#0f172a',
+            'border': 1, 'border_color': '#cbd5e1', 'align': 'center', 'valign': 'vcenter'
+        })
+        cell_center_fmt = workbook.add_format({
+            'font_size': 10, 'font_name': 'Arial',
+            'border': 1, 'border_color': '#cbd5e1', 'align': 'center', 'valign': 'vcenter'
+        })
+        cell_desc_fmt = workbook.add_format({
+            'font_size': 10, 'font_name': 'Arial',
+            'border': 1, 'border_color': '#cbd5e1', 'align': 'left', 'valign': 'vcenter'
+        })
+        cell_num_fmt = workbook.add_format({
+            'font_size': 10, 'font_name': 'Arial',
+            'num_format': '#,##0.00', 'border': 1, 'border_color': '#cbd5e1', 'align': 'right', 'valign': 'vcenter'
+        })
+        total_lbl_fmt = workbook.add_format({
+            'bold': True, 'font_size': 10, 'font_name': 'Arial',
+            'bg_color': '#f1f5f9', 'font_color': '#0f172a',
+            'border': 1, 'border_color': '#cbd5e1', 'align': 'left', 'valign': 'vcenter'
+        })
+        total_num_fmt = workbook.add_format({
+            'bold': True, 'font_size': 10, 'font_name': 'Arial',
+            'bg_color': '#f1f5f9', 'num_format': '#,##0.00', 'border': 1, 'border_color': '#cbd5e1', 'align': 'right', 'valign': 'vcenter'
+        })
+
+        # Title
+        worksheet.set_row(0, 30)
+        worksheet.merge_range(0, 0, 0, 6, '  VAT DETAILED SUMMARY REPORT', title_fmt)
+        worksheet.set_row(1, 20)
+        meta_text = f"Company: {company_str}  |  Period: {start_str} to {end_str}  |  Currency: {sym}"
+        worksheet.merge_range(1, 0, 1, 6, meta_text, meta_fmt)
+
+        # KPI Summary Cards (row 3 & 4)
+        worksheet.set_row(3, 16)
+        worksheet.set_row(4, 20)
+        
+        # 1. Output VAT (Sales)
+        worksheet.write(3, 0, 'OUTPUT VAT (SALES)', kpi_lbl_fmt)
+        worksheet.write(4, 0, total_output_vat, kpi_val_out_fmt)
+        
+        # 2. Input VAT (Bills)
+        worksheet.write(3, 2, 'INPUT VAT (BILLS)', kpi_lbl_fmt)
+        worksheet.write(4, 2, total_input_vat, kpi_val_in_fmt)
+        
+        # 3. Net VAT Payable
+        worksheet.write(3, 4, 'NET VAT PAYABLE', kpi_lbl_fmt)
+        worksheet.write(4, 4, net_vat_payable, kpi_val_net_fmt)
+        
+        # 4. Total Tax Lines
+        worksheet.write(3, 6, 'TOTAL TAX LINES', kpi_lbl_fmt)
+        worksheet.write(4, 6, total_count, kpi_val_tot_fmt)
+
+        row = 6
+
+        # Helper to write headers
+        def write_headers(r, partner_hdr):
+            worksheet.set_row(r, 24)
+            worksheet.write(r, 0, 'Document', tbl_hdr_fmt)
+            worksheet.write(r, 1, partner_hdr, tbl_hdr_fmt)
+            worksheet.write(r, 2, 'Tax', tbl_hdr_fmt)
+            worksheet.write(r, 3, 'Company', tbl_hdr_fmt)
+            worksheet.write(r, 4, 'Date', tbl_hdr_fmt)
+            worksheet.write(r, 5, f'Total Amount ({sym})', tbl_hdr_fmt)
+            worksheet.write(r, 6, f'VAT Amount ({sym})', tbl_hdr_fmt)
+
+        # Helper to write table rows
+        def write_table_rows(start_row, records):
+            curr_row = start_row
+            sum_total = 0.0
+            sum_vat = 0.0
+            for rec in records:
+                worksheet.set_row(curr_row, 20)
+                worksheet.write(curr_row, 0, rec.get('move_name', '/'), cell_center_fmt)
+                worksheet.write(curr_row, 1, rec.get('partner', '—'), cell_desc_fmt)
+                worksheet.write(curr_row, 2, rec.get('tax_name', '—'), cell_center_fmt)
+                worksheet.write(curr_row, 3, rec.get('company_name', '—'), cell_desc_fmt)
+                worksheet.write(curr_row, 4, rec.get('invoice_date', ''), cell_center_fmt)
+                worksheet.write(curr_row, 5, rec.get('total_amount', 0.0), cell_num_fmt)
+                worksheet.write(curr_row, 6, rec.get('tax_amount', 0.0), cell_num_fmt)
+                sum_total += rec.get('total_amount', 0.0)
+                sum_vat += rec.get('tax_amount', 0.0)
+                curr_row += 1
+            
+            # Total row
+            worksheet.set_row(curr_row, 22)
+            worksheet.write(curr_row, 0, 'Total', total_lbl_fmt)
+            worksheet.write(curr_row, 1, '', total_lbl_fmt)
+            worksheet.write(curr_row, 2, '', total_lbl_fmt)
+            worksheet.write(curr_row, 3, '', total_lbl_fmt)
+            worksheet.write(curr_row, 4, '', total_lbl_fmt)
+            worksheet.write(curr_row, 5, sum_total, total_num_fmt)
+            worksheet.write(curr_row, 6, sum_vat, total_num_fmt)
+            return curr_row + 1
+
+        # 1. Output VAT - Customer Invoices
+        worksheet.set_row(row, 24)
+        worksheet.merge_range(row, 0, row, 6, ' OUTPUT VAT — CUSTOMER INVOICES', section_hdr_sales_fmt)
+        row += 1
+        write_headers(row, 'Customer')
+        row += 1
+        if not out_records:
+            worksheet.set_row(row, 20)
+            worksheet.merge_range(row, 0, row, 6, 'No output VAT lines found.', cell_center_fmt)
+            row += 1
+        else:
+            row = write_table_rows(row, out_records)
+
+        row += 2
+
+        # 2. Input VAT - Vendor Bills
+        worksheet.set_row(row, 24)
+        worksheet.merge_range(row, 0, row, 6, ' INPUT VAT — VENDOR BILLS', section_hdr_purch_fmt)
+        row += 1
+        write_headers(row, 'Vendor')
+        row += 1
+        if not in_records:
+            worksheet.set_row(row, 20)
+            worksheet.merge_range(row, 0, row, 6, 'No input VAT lines found.', cell_center_fmt)
+            row += 1
+        else:
+            row = write_table_rows(row, in_records)
+
+        workbook.close()
+        output.seek(0)
+        file_data = base64.b64encode(output.read()).decode('utf-8')
+        filename = f"Tax_Detailed_{start_str}_to_{end_str}.xlsx"
 
         return {
             'filename': filename,

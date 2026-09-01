@@ -19,16 +19,23 @@
         'views/set_home_action.xml',
         'views/account_move_views.xml',
         'views/res_partner_views.xml',
+        'views/res_company_views.xml',
+        'views/res_partner_bank_views.xml',
         # 'views/report_invoice.xml',
         # 'views/report_vat_invoice.xml',
         'views/zatca_settings.xml',
         'views/groq_settings_views.xml',
         'views/ai_gl_config_views.xml',
+        'views/portal_preview_fix.xml',
     ],
 
     'assets': {
         'web.assets_backend': [
             'analytix_finance_dashboard/static/src/components/**/*',
+        ],
+        'web.assets_frontend': [
+            'analytix_finance_dashboard/static/src/css/portal_preview_fallback.css',
+            'analytix_finance_dashboard/static/src/js/portal_sar_symbol.js',
         ],
         'web.report_assets_common': [
             'analytix_finance_dashboard/static/src/css/sr_symbol_pdf.css',

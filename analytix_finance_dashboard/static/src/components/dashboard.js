@@ -6,6 +6,7 @@ import { loadJS } from "@web/core/assets";
 import { Discuss } from "@mail/core/public_web/discuss";
 import { MessagingMenu } from "@mail/core/public_web/messaging_menu";
 import { DROPDOWN_NESTING } from "@web/core/dropdown/_behaviours/dropdown_nesting";
+import { user } from "@web/core/user";
 
 export class DashboardMessagingMenu extends Component {
     static template = xml`
@@ -1435,56 +1436,68 @@ export class AnalytixFinanceDashboard extends Component {
         this.state.showVatModal = false;
     }
 
-    // ── Print VAT Summary PDF ─────────────────────────────────────────
     printVatReport() {
         if (!this.state.vatData) return;
-        const d = this.state.vatData;
-        const sym = d.currency_sym || '';
-        const isSar = /^(SAR|SR|﷼|ر\.?س\.?|\uE900|)$/i.test(String(sym).trim()) || String(sym).includes('\uE900') || String(sym).includes('');
-        const symSpan = isSar ? `<span class="anx-currency-sym" style="font-family:'sr_symbol' !important;">&#xe900;</span>` : `<span>${sym}</span>`;
+        
+        if (this.state.showVatModal) {
+            const outputRows = this.filteredOutputVat;
+            const inputRows = this.filteredInputVat;
+            
+            const totalOutputVat = outputRows.reduce((sum, r) => sum + (r.tax_amount || 0), 0);
+            const totalInputVat = inputRows.reduce((sum, r) => sum + (r.tax_amount || 0), 0);
+            const netVatPayable = totalOutputVat - totalInputVat;
+            const totalLinesCount = outputRows.length + inputRows.length;
+            
+            const sym = this.state.vatData.currency_sym || '';
+            const isSar = /^(SAR|SR|﷼|ر\.?س\.?|\uE900|)$/i.test(String(sym).trim()) || String(sym).includes('\uE900') || String(sym).includes('');
+            const symSpan = isSar ? `<span class="anx-currency-sym" style="font-family:'sr_symbol', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;">&#xe900;</span>` : `<span>${sym}</span>`;
 
-        const fmtN = v => {
-            const num = Number(v) || 0;
-            const neg = num < 0;
-            const s = Math.abs(num).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            return neg ? `<span style="color:#e53935">-${symSpan} ${s}</span>` : `${symSpan} ${s}`;
-        };
+            const fmtN = v => {
+                const num = Number(v) || 0;
+                const neg = num < 0;
+                const s = Math.abs(num).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                return neg ? `<span style="color:#e53935">-${symSpan}${s}</span>` : `${symSpan}${s}`;
+            };
 
-        const outRows = (this.filteredOutputVat || []).map(r => `
-            <tr>
-                <td style="padding:8px 12px;border-bottom:1px solid #f0f1f5;font-weight:600;color:#1e88e5;">${r.move_name}</td>
-                <td style="padding:8px 12px;border-bottom:1px solid #f0f1f5;">${r.partner}</td>
-                <td style="padding:8px 12px;border-bottom:1px solid #f0f1f5;"><span style="background:#e3f2fd;color:#1565c0;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;">${r.tax_name}</span></td>
-                <td style="padding:8px 12px;border-bottom:1px solid #f0f1f5;">${r.company_name}</td>
-                <td style="padding:8px 12px;border-bottom:1px solid #f0f1f5;">${r.invoice_date}</td>
-                <td style="padding:8px 12px;border-bottom:1px solid #f0f1f5;text-align:right;font-weight:600;">${r.total_display}</td>
-                <td style="padding:8px 12px;border-bottom:1px solid #f0f1f5;text-align:right;font-weight:600;">${r.tax_display}</td>
-            </tr>
-        `).join('') || `<tr><td colspan="7" style="padding:12px;text-align:center;color:#8a93a4;">No Output VAT entries found.</td></tr>`;
+            let companyName = user.activeCompany?.name || 'All Companies';
+            if (this.state.vatData && this.state.vatData.companies && Array.isArray(this.state.vatData.companies)) {
+                companyName = this.state.vatData.companies.map(c => c.name).join(', ');
+            } else if (this.state.data && typeof this.state.data.companies === 'string') {
+                companyName = this.state.data.companies;
+            }
 
-        const inRows = (this.filteredInputVat || []).map(r => `
-            <tr>
-                <td style="padding:8px 12px;border-bottom:1px solid #f0f1f5;font-weight:600;color:#e53935;">${r.move_name}</td>
-                <td style="padding:8px 12px;border-bottom:1px solid #f0f1f5;">${r.partner}</td>
-                <td style="padding:8px 12px;border-bottom:1px solid #f0f1f5;"><span style="background:#fce4ec;color:#c2185b;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;">${r.tax_name}</span></td>
-                <td style="padding:8px 12px;border-bottom:1px solid #f0f1f5;">${r.company_name}</td>
-                <td style="padding:8px 12px;border-bottom:1px solid #f0f1f5;">${r.invoice_date}</td>
-                <td style="padding:8px 12px;border-bottom:1px solid #f0f1f5;text-align:right;font-weight:600;">${r.total_display}</td>
-                <td style="padding:8px 12px;border-bottom:1px solid #f0f1f5;text-align:right;font-weight:600;">${r.tax_display}</td>
-            </tr>
-        `).join('') || `<tr><td colspan="7" style="padding:12px;text-align:center;color:#8a93a4;">No Input VAT entries found.</td></tr>`;
+            const buildDetailedRows = (rows) => {
+                if (!rows || rows.length === 0) {
+                    return `<tr><td colspan="7" style="padding:16px;text-align:center;color:#64748b;">No data found.</td></tr>`;
+                }
+                return rows.map(r => `
+                    <tr>
+                        <td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;text-align:center;font-weight:600;color:#0f172a;">${r.move_name}</td>
+                        <td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;">${r.partner}</td>
+                        <td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;text-align:center;"><span style="background:#f1f5f9;color:#475569;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;">${r.tax_name}</span></td>
+                        <td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;">${r.company_name}</td>
+                        <td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;text-align:center;color:#475569;">${r.invoice_date}</td>
+                        <td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;text-align:right;">${fmtN(r.total_amount)}</td>
+                        <td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;text-align:right;font-weight:600;">${fmtN(r.tax_amount)}</td>
+                    </tr>
+                `).join('');
+            };
 
-        const companyName = (this.state.data && this.state.data.companies) || 'All Companies';
+            const outTotalAmt = outputRows.reduce((sum, r) => sum + (r.total_amount || 0), 0);
+            const inTotalAmt = inputRows.reduce((sum, r) => sum + (r.total_amount || 0), 0);
 
-        const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Tax Summary Report</title>
+            const outRowsHtml = buildDetailedRows(outputRows);
+            const inRowsHtml = buildDetailedRows(inputRows);
+
+            const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>VAT Detailed Summary Report</title>
 <style>
   @font-face {
       font-family: "sr_symbol";
       src: url("/iwesabe_sar_currency_symbol/static/src/fonts/sr.ttf") format("truetype"),
-           url("data:font/truetype;base64,AAEAAAALAIAAAwAwT1MvMg8SBTgAAAC8AAAAYGNtYXAXVtKIAAABHAAAAFRnYXNwAAAAEAAAAXAAAAAIZ2x5ZjrqSMoAAAF4AAAYDGhlYWQqn96bAAAZhAAAADZoaGVhB1YDxwAAGbwAAAAkaG10eA0oAAAAABngAAAAGGxvY2EMLgwGAAAZ+AAAAA5tYXhwAAkLQQAAGggAAAAgbmFtZZlKCfsAABooAAABhnBvc3QAAwAAAAAbsAAAACAAAwMNAZAABQAAApkCzAAAAI8CmQLMAAAB6wAzAQkAAAAAAAAAAAAAAAAAAAABEAAAAAAAAAAAAAAAAAAAAABAAADpAQPA/8AAQAPAAEAAAAABAAAAAAAAAAAAAAAgAAAAAAADAAAAAwAAABwAAQADAAAAHAADAAEAAAAcAAQAOAAAAAoACAACAAIAAQAg6QH//f//AAAAAAAg6QD//f//AAH/4xcEAAMAAQAAAAAAAAAAAAAAAQAB//8ADwABAAD/wAAAA8AAAgAANzkBAAAAAAEAAP/AAAADwAACAAA3OQEAAAAAAQAA/8AAAAPAAAIAADc5AQAAAAACAAD/wAOUA8AItQs+AAABDgEjDgEVIgYHFAYHDgExOAExMCIxMAYxDgExMCIVIgYxDgEHMAYxIgYxOAExMAYxDgExIgYxDgEHIgYHFCIxMCIVMAYHDgEHDgEHMAYxMAYVIgYPARUcATEiMCMwBgcqASMwBiMGIiMUIjEwBiMiBiMOASMGIgcwIiMwBjEwIiMwIgciBiMiBgcqATEwBiMGIjEwBiMiBiMwIjEiBiMUIiMiBiMiBiMwBiMwIhUqATEqAQciBjEqAQcwIiMiBiMwIjEiBiMqASMGIiMwIjEwIgcwIgcqATEOASMiBgciBiMwBiMiBiMwBiMGIjEGIiMiBgcwIjEUMCMUMDEUBjEOARUwFAccATEwBhUOATEwFDEUBhUOATEwBhUUBjEOAQcUBgcGFBUwBhUUBhUwFDEUBjEcATEGFDEcASMwFBUwFCMcATEUBjEcARUUBhUUBhUcARUGMjMwNjMyNjMyNjEyNjMyNjcwMjM+ATM6ATEwNjMyNjc6ATMyNjMyNjMyNjM+ATMyNjMyNjMwMjM+ATM6ATc6ATU6ATU6ATMyNjE6ATEwMjUyNjMyNjM6ATcwMjMwNhUwNjMwMjcyNjcyNjE6ATcyNjM6ATEwNjMwNjM+ATMyNjMyNjMyNjMyNjMyNjc6ATcwMjcyNjMwMjcwMjM2MjE2MjM+ATE6ATEyNjMwMjM3FRwBIzAGBzAGIw4BIyoBByoBMQYiIzAiIzAGIyIGBzAiMTAiIxQGIzAGIwYiMSIGMSoBIxQiMTAiByoBMSIGIyoBIzAGIyIGIyIGIyoBBzAiByoBByIGIyIGIyIGIyIGMSIGIwYiMTAGIyIGBw4BIwYiByoBIzAGMSIGMSIGIwYiMQYiIzAGIzAiMTAiFSoBIw4BIyoBIzAGMSIGByIGIwYiByIGIyIGByoBBzAiBw4BIw4BFTAUMQYUMTAGFRQGMTAGBzAUBxQGMRQGMTAGMTAGBw4BFQ4BBwYUBzAGMRwBBxwBMRQGFQ4BFRQGFRQGFRQGFTAUFRQGFQYUFRQGFRQWNzYyMzA2MzYyMTYyNzI2MzoBNzI2MzoBNTAyMzA2Mz4BMzA2MTI2Mz4BMTAyNzoBMzA2MzAyNz4BMzAyNzoBMTI0MzAyMzAyMTA2MzYyNzYyMTI2MzYyMzI2MzoBNToBMTI2MToBMTI2MToBMTI2Mz4BMzI2MzI2MzYyMzI2MzoBMTgBNzAyMz4BMzI2MzoBMTYyMzA2MzAyMzA2MzYyMTI2MTAyNzI2MzI2MzAyMTAyNzoBNzI2MzoBNzoBNzA2MzI2MTI2NzI2MzoBNzAyMTYyMTAyMzYyNzI2MzAyMzA2MzoBMTI2MzoBMT4BMzoBNzI2MzoBNzQ2NTA2NTA0MTA0MzQ2NTQ2MTQ2NTQ2MTI0MTA0NTI4MTwBMT4BNTA0MzA0MTA2NTQ2NTA0MzQ2MTA2NzwBNTI0NTQ2NTQ2NTQ2MTQ2NTA2NTwBMTA2NTwBNTY0MTAGIwGsAQMBAQMBCwICAQECAQEBAQEBAQEFAQIBAQEBAQEBAQEBAQIBAQECAgMYAQECAQEBAQIBAgEBBgEBAQEDAgIDAQEDAgIEAQEFAgMDAQIBAgEBAgEBBAIBAwMBAgEBAgEBAQEBAQEDAgIEAQEFAgMDAQIBAgEBAgEBBAIBAwMBAgQBAgMCAQIFAQECAgQCAQECAQEDAQMBAgEBAQEBAgUBAQECAQEBAQEBAQEBAQEBAQEBAQECAQEDBAcBAQUCAwQBAgICCwMDAgEEAQEBAQgDAQEBAQIBAQEBAgEBAQEBAQEBAQEBAQEBAQECAQEBAQIDAQEDAQECAgQCAQQCAgECBAEBAQcBAQQCAQEBAQYCAQIBAQQCAgQBAQMBAQIBAgEBBAIBAQEBAwECAgEBAQECAQECAQQBAQMBAQEBAgEBAQECAQMEAwIDAQMBAgMBAQEGAgMCAgUBAQIBAQIBAgMCAQMBAQQCAQMBBAIBAwECAQMBAgIBAgEDBAEBAQEBAQEBAQYCBAMCBQEBAgEBAgEBAQEBAgEBBAMCAQEFAwMCAgMBAQECAQIBAQECAQUBAQEBAgEBBAEBAQEBAgEDAQEDAQEDAQEDAQEDAQICAQMBBAICAQMEBAYHAwIDAQEBAQICBQEDAgEEAQEBAQECAgECAQIEAQEBAQIBBQQBBAIBBAEBAwECBAQBAQEEAwIGAQMDAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBBQMDAQMBAgMBAwIBAwEDBgIDAQECAgEDAQQGAQICBAIBBgIBAQEBAQEEAwIEAgICAQEBAQEBAgEBAwEBAwEEAwEBAQIBAQMBAQMBAQEBAQEBAQIBBAIEAwIBAgIBAwEDBgEBAgECAwEDAgIDAQIBAgMCBAYBAwEFAwIFAQMDCAECAQMCAQMBAgIBAgEBAgEBAgEBAwECBAECAwEBAwECAgEBAgEBAQECAQIJAQECAQIBAQMBAQMCAgMBBQICAQIBAgECBAECBAECAQMDAQEBAgEFAwIEAQEEAQEBAQECAQMGAwIBAgECAQEBAQEBAgEDAQEBAQEBAQEBAQEBAgEFAQEBAgEBAQEBAQMBAgEBAQEBAwEBAQEBAQEDAQEBAQICAwEBAQEBAQEBAQECAQIBAQMCAgQFAwECBAEBAQIBAQEBAQIBAQECAQICAQEDAQEBAQECAQEBAQEBAQEDAwECAQMCAQMBDQEBAQEBAQEBCwECBQEDAQEDAQMCAgQBAgEBAgEBBQIBAgECAQECAQMCAgUBAgIBAgEDAgQEAQEBAQMCAgMDAgIDAwIBBAEBBAICBAECBgEBAQEBAQECAQEBAgEBAQEBAQIBAgEBAgECAQEBAQEBAgEBAQECAQIBAQMCCgIBAgEBAQkBAgICBgIBAQEDAgIFAQEBAQIBAgEBAQIBAwEBAwECAwEBAQIBAQEBAQECAgQBAQIBAgIBAQEBAwEBAQEBAQEBAQIBAQEBAQEBAQECAQEBAQECAQO/AQIBAQEHAQEBAQEBAQEBAQEBAwECAQEBAQEBAQECAQEBAgEDGAIBAgEBAQEDAQLXa2sBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQIBAQEBAwEBAQIBAQEBAQIEAQEBAQEBAQEDAQEDAQIDAgEBAgMFAgEEAgIDAQEBAQIBAQEBAQIBAgEBAgEDAQIBCAEBAQEDAQIEAQICAQEBAQEBAQEBAQIBAQIBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQFGMRQBAQEBAQEBAQEBAQEBAQEBAQIBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQECAgEBAQEBAQIDAQEBAQIBAQQEAgIEAQEEBQEDAQMBAgEBAQEDAgEEAQEDAgEDAQEBAQICAQQCAgMBAQMCAwEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQECAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQIBAQEBAQEBAQEBAgEBAQEBBwEBAQEEAQEBAQEBAQEFAQECAQIBAgEBBAEBAQEBAQEBAQEBAQQCAgEDAwQBAgEBAgEBAQECAQEBBAEBBQIEFDAaJQEBAQEBAQEBAQEBAQEBAQEBAQMBH09uAwEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQECAQECAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQIBAQIBAQEBAgEBAQEBCwMCAgEBAQEBAQECAQMCAgUCAwQBAgUFAQIBBAQBAQICAQQCBAUBAQIBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBARsbNwEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQECAgMBAQEBAQUCAgEBAgEBAQQCAwMBAgEBAgEBAwEDCwUBAwEBAQEBAgEBBgIBAwECAQgJAQEBAQEBAQEBAQEBAQECAgEBAQEBAQEBAQEBAQEBAQEBAQIBAQEBAQEBAgEBAQEBAgEBAQHGZGIBAQEBAQEEAQEBAQEBAQEBAQEFAQEBAQECAQECAQECBAEFBgYDBQIBAQIBAQIBAQIBAgKkpQEBAQIBAQEBAQEBAQEBAQEBAQIB95VjAfy/AQEBAQEBAQEBAQEBAQEBAQEBAQQBAQEBAQEBAQEBAQEBAQEBAQEBAQIBAQECAQEBAQEBAQEBAgEBAQEBAQEBAQEBAgEBAQICAQEJAQEBAQEBAQEBAQEBAQEBAQEBAgEDAgMDAgEDAgEKBAECAQMCAgMBAgEDDgMCAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQIBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBBgEBAQEBAQEBAQEBAQIBAgEBAQEBAQEFAgIBAgEBAgEBAgQEAgEBAQEBAQIBAgYCAQIBBgIDAQECAgEBAwECCAEAAAEAAP/AAjIDwAAIAAABBzc+ATEwBgcCMAICAQEBAQNIAgIBAQEBAAABAAAAAAAAsksaaV8PPPUACwQAAAAAAOP2zQ8AAAAA4/bNDwAA/8ADlAPAAAAACAACAAAAAAAAAAEAAAPA/8AAAAQAAAAAAAOUAAEAAAAAAAAAAAAAAAAAAAAGBAAAAAAAAAAAAAAAAgAAAAOUAAADlAAAAAAAAAAKABQAHgvyDAYAAAABAAAABgs/AAIAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAADgCuAAEAAAAAAAEABwAAAAEAAAAAAAIABwBgAAEAAAAAAAMABwA2AAEAAAAAAAQABwB1AAEAAAAAAAUACwAVAAEAAAAAAAYABwBLAAEAAAAAAAoAGgCKAAMAAQQJAAEADgAHAAMAAQQJAAIADgBnAAMAAQQJAAMADgA9AAMAAQQJAAQADgB8AAMAAQQJAAUAFgAgAAMAAQQJAAYADgBSAAMAAQQJAAoANACkaWNvbW9vbgBpAGMAbwBtAG8AbwBuVmVyc2lvbiAxLjAAVgBlAHIAcwBpAG8AbgAgADEALgAwaWNvbW9vbgBpAGMAbwBtAG8AbwBuUmVndWxhcgBSAGUAZwB1AGwAYQByaWNvbW9vbgBpAGMAbwBtAG8AbwBuRm9udCBnZW5lcmF0ZWQgYnkgSWNvTW9vbi4ARgBvAG4AdAAgAGcAZQBuAGUAcgBhAHQAZQBk ACAAYgB5 ACAASQBjAG8ATQBvAG8AbnAuAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==") format("truetype");
+           url("data:font/truetype;base64,AAEAAAALAIAAAwAwT1MvMg8SBTgAAAC8AAAAYGNtYXAXVtKIAAABHAAAAFRnYXNwAAAAEAAAAXAAAAAIZ2x5ZjrqSMoAAAF4AAAYDGhlYWQqn96bAAAZhAAAADZoaGVhB1YDxwAAGbwAAAAkaG10eA0oAAAAABngAAAAGGxvY2EMLgwGAAAZ+AAAAA5tYXhwAAkLQQAAGggAAAAgbmFtZZlKCfsAABooAAABhnBvc3QAAwAAAAAbsAAAACAAAwMNAZAABQAAApkCzAAAAI8CmQLMAAAB6wAzAQkAAAAAAAAAAAAAAAAAAAABEAAAAAAAAAAAAAAAAAAAAABAAADpAQPA/8AAQAPAAEAAAAABAAAAAAAAAAAAAAAgAAAAAAADAAAAAwAAABwAAQADAAAAHAADAAEAAAAcAAQAOAAAAAoACAACAAIAAQAg6QH//f//AAAAAAAg6QD//f//AAH/4xcEAAMAAQAAAAAAAAAAAAAAAQAB//8ADwABAAD/wAAAA8AAAgAANzkBAAAAAAEAAP/AAAADwAACAAA3OQEAAAAAAQAA/8AAAAPAAAIAADc5AQAAAAACAAD/wAOUA8AItQs+AAABDgEjDgEVIgYHFAYHDgExOAExMCIxMAYxDgExMCIVIgYxDgEHMAYxIgYxOAExMAYxDgExIgYxDgEHIgYHFCIxMCIVMAYHDgEHDgEHMAYxMAYVIgYPARUcATEiMCMwBgcqASMwBiMGIiMUIjEwBiMiBiMOASMGIgcwIiMwBjEwIiMwIgciBiMiBgcqATEwBiMGIjEwBiMiBiMwIjEiBiMUIiMiBiMiBiMwBiMwIhUqATEqAQciBjEqAQcwIiMiBiMwIjEiBiMqASMGIiMwIjEwIgcwIgcqATEOASMiBgciBiMwBiMiBiMwBiMGIjEGIiMiBgcwIjEUMCMUMDEUBjEOARUwFAccATEwBhUOATEwFDEUBhUOATEwBhUUBjEOAQcUBgcGFBUwBhUUBhUwFDEUBjEcATEGFDEcASMwFBUwFCMcATEUBjEcARUUBhUUBhUcARUGMjMwNjMyNjMyNjEyNjMyNjcwMjM+ATM6ATEwNjMyNjc6ATMyNjMyNjMyNjM+ATMyNjMyNjMwMjM+ATM6ATc6ATU6ATU6ATMyNjE6ATEwMjUyNjMyNjM6ATcwMjMwNhUwNjMwMjcyNjcyNjE6ATcyNjM6ATEwNjMwNjM+ATMyNjMyNjMyNjMyNjMyNjc6ATcwMjcyNjMwMjcwMjM2MjE2MjM+ATE6ATEyNjMwMjM3FRwBIzAGBzAGIw4BIyoBByoBMQYiIzAiIzAGIyIGBzAiMTAiIxQGIzAGIwYiMSIGMSoBIxQiMTAiByoBMSIGIyoBIzAGIyIGIyIGIyoBBzAiByoBByIGIyIGIyIGIyIGMSIGIwYiMTAGIyIGBw4BIwYiByoBIzAGMSIGMSIGIwYiMQYiIzAGIzAiMTAiFSoBIw4BIyoBIzAGMSIGByIGIwYiByIGIyIGByoBBzAiBw4BIw4BFTAUMQYUMTAGFRQGMTAGBzAUBxQGMRQGMTAGMTAGBw4BFQ4BBwYUBzAGMRwBBxwBMRQGFQ4BFRQGFRQGFRQGFTAUFRQGFQYUFRQGFRQWNzYyMzA2MzYyMTYyNzI2MzoBNzI2MzoBNTAyMzA2Mz4BMzA2MTI2Mz4BMTAyNzoBMzA2MzAyNz4BMzAyNzoBMTI0MzAyMzAyMTA2MzYyNzYyMTI2MzYyMzI2MzoBNToBMTI2MToBMTI2MToBMTI2Mz4BMzI2MzI2MzYyMzI2MzoBMTgBNzAyMz4BMzI2MzoBMTYyMzA2MzAyMzA2MzYyMTI2MTAyNzI2MzI2MzAyMzA2MzoBNzI2MzoBNzoBNzA2MzI2MTI2NzI2MzoBNzAyMTYyMTAyMzYyNzI2MzAyMzA2MzoBMTI2MzoBMT4BMzoBNzI2MzoBNzQ2NTA2NTA0MTA0MzQ2NTQ2MTQ2NTQ2MTI0MTA0NTI4MTwBMT4BNTA0MzA0MTA2NTQ2NTA0MzQ2MTA2NzwBNTI0NTQ2NTQ2NTQ2MTQ2NTA2NTwBMTA2NTwBNTY0MTAGIwGsAQMBAQMBCwICAQECAQEBAQEBAQEFAQIBAQEBAQEBAQEBAQIBAQECAgMYAQECAQEBAQIBAgEBBgEBAQEDAgIDAQEDAgIEAQEFAgMDAQIBAgEBAgEBBAIBAwMBAgEBAgEBAQEBAQEDAgIEAQEFAgMDAQIBAgEBAgEBBAIBAwMBAgQBAgMCAQIFAQECAgQCAQECAQEDAQMBAgEBAQEBAgUBAQECAQEBAQEBAQEBAQEBAQEBAQECAQEDBAcBAQUCAwQBAgICCwMDAgEEAQEBAQgDAQEBAQIBAQEBAgEBAQEBAQEBAQEBAQEBAQECAQEBAQIDAQEDAQECAgQCAQQCAgECBAEBAQcBAQQCAQEBAQYCAQIBAQQCAgQBAQMBAQIBAgEBBAIBAQEBAwECAgEBAQECAQECAQQBAQMBAQEBAgEBAQECAQMEAwIDAQMBAgMBAQEGAgMCAgUBAQIBAQIBAgMCAQMBAQQCAQMBBAIBAwECAQMBAgIBAgEDBAEBAQEBAQEBAQYCBAMCBQEBAgEBAgEBAQEBAgEBBAMCAQEFAwMCAgMBAQECAQIBAQECAQUBAQEBAgEBBAEBAQEBAgEDAQEDAQEDAQEDAQEDAQICAQMBBAICAQMEBAYHAwIDAQEBAQICBQEDAgEEAQEBAQECAgECAQIEAQEBAQIBBQQBBAIBBAEBAwECBAQBAQEEAwIGAQMDAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBBQMDAQMBAgMBAwIBAwEDBgIDAQECAgEDAQQGAQICBAIBBgIBAQEBAQEEAwIEAgICAQEBAQEBAgEBAwEBAwEEAwEBAQIBAQMBAQMBAQEBAQEBAQIBBAIEAwIBAgIBAwEDBgEBAgECAwEDAgIDAQIBAgMCBAYBAwEFAwIFAQMDCAECAQMCAQMBAgIBAgEBAgEBAgEBAwECBAECAwEBAwECAgEBAgEBAQECAQIJAQECAQIBAQMBAQMCAgMBBQICAQIBAgECBAECBAECAQMDAQEBAgEFAwIEAQEEAQEBAQECAQMGAwIBAgECAQEBAQEBAgEDAQEBAQEBAQEBAQEBAgEFAQEBAgEBAQEBAQMBAgEBAQEBAwEBAQEBAQEDAQEBAQICAwEBAQEBAQEBAQECAQIBAQMCAgQFAwECBAEBAQIBAQEBAQIBAQECAQICAQEDAQEBAQECAQEBAQEBAQEDAwECAQMCAQMBDQEBAQEBAQEBCwECBQEDAQEDAQMCAgQBAgEBAgEBBQIBAgECAQECAQMCAgUBAgIBAgEDAgQEAQEBAQMCAgMDAgIDAwIBBAEBBAICBAECBgEBAQEBAQECAQEBAgEBAQEBAQIBAgEBAgECAQEBAQEBAgEBAQECAQIBAQMCCgIBAgEBAQkBAgICBgIBAQEDAgIFAQEBAQIBAgEBAQIBAwEBAwECAwEBAQIBAQEBAQECAgQBAQIBAgIBAQEBAwEBAQEBAQEBAQIBAQEBAQEBAQECAQEBAQECAQO/AQIBAQEHAQEBAQEBAQEBAQEBAwECAQEBAQEBAQECAQEBAgEDGAIBAgEBAQEDAQLXa2sBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQIBAQEBAwEBAQIBAQEBAQIEAQEBAQEBAQEDAQEDAQIDAgEBAgMFAgEEAgIDAQEBAQIBAQEBAQIBAgEBAgEDAQIBCAEBAQEDAQIEAQICAQEBAQEBAQEBAQIBAQIBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQFGMRQBAQEBAQEBAQEBAQEBAQEBAQIBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQECAgEBAQEBAQIDAQEBAQIBAQQEAgIEAQEEBQEDAQMBAgEBAQEDAgEEAQEDAgEDAQEBAQICAQQCAgMBAQMCAwEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQECAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQIBAQEBAQEBAQEBAgEBAQEBBwEBAQEEAQEBAQEBAQEFAQECAQIBAgEBBAEBAQEBAQEBAQEBAQQCAgEDAwQBAgEBAgEBAQECAQEBBAEBBQIEFDAaJQEBAQEBAQEBAQEBAQEBAQEBAQMBH09uAwEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQECAQECAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQIBAQIBAQEBAgEBAQEBCwMCAgEBAQEBAQECAQMCAgUCAwQBAgUFAQIBBAQBAQICAQQCBAUBAQIBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBARsbNwEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQECAgMBAQEBAQUCAgEBAgEBAQQCAwMBAgEBAgEBAwEDCwUBAwEBAQEBAgEBBgIBAwECAQgJAQEBAQEBAQEBAQEBAQECAgEBAQEBAQEBAQEBAQEBAQEBAQIBAQEBAQEBAgEBAQEBAgEBAQHGZGIBAQEBAQEEAQEBAQEBAQEBAQEFAQEBAQECAQECAQECBAEFBgYDBQIBAQIBAQIBAQIBAgKkpQEBAQIBAQEBAQEBAQEBAQEBAQIB95VjAfy/AQEBAQEBAQEBAQEBAQEBAQEBAQQBAQEBAQEBAQEBAQEBAQEBAQEBAQIBAQECAQEBAQEBAQEBAgEBAQEBAQEBAQEBAgEBAQICAQEJAQEBAQEBAQEBAQEBAQEBAQEBAgEDAgMDAgEDAgEKBAECAQMCAgMBAgEDDgMCAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQIBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBBgEBAQEBAQEBAQEBAQIBAgEBAQEBAQEFAgIBAgEBAgEBAgQEAgEBAQEBAQIBAgYCAQIBBgIDAQECAgEBAwECCAEAAAEAAP/AAjIDwAAIAAABBzc+ATEwBgcCMAICAQEBAQNIAgIBAQEBAAABAAAAAAAAsksaaV8PPPUACwQAAAAAAOP2zQ8AAAAA4/bNDwAA/8ADlAPAAAAACAACAAAAAAAAAAEAAAPA/8AAAAQAAAAAAAOUAAEAAAAAAAAAAAAAAAAAAAAGBAAAAAAAAAAAAAAAAgAAAAOUAAADlAAAAAAAAAAKABQAHgvyDAYAAAABAAAABgs/AAIAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAADgCuAAEAAAAAAAEABwAAAAEAAAAAAAIABwBgAAEAAAAAAAMABwA2AAEAAAAAAAQABwB1AAEAAAAAAAUACwAVAAEAAAAAAAYABwBLAAEAAAAAAAoAGgCKAAMAAQQJAAEADgAHAAMAAQQJAAIADgBnAAMAAQQJAAMADgA9AAMAAQQJAAQADgB8AAMAAQQJAAUAFgAgAAMAAQQJAAYADgBSAAMAAQQJAAoANACkaWNvbW9vbgBpAGMAbwBtAG8AbwBuVmVyc2lvbiAxLjAAVgBlAHIAcwBpAG8AbgAgADEALgAwaWNvbW9vbgBpAGMAbwBtAG8AbwBuUmVndWxhcgBSAGUAZwB1AGwAYQByaWNvbW9vbgBpAGMAbwBtAG8AbwBuRm9udCBnZW5lcmF0ZWQgYnkgSWNvTW9vbi4ARgBvAG4AdAAgAGcAZQBuAGUAcgBhAHQAZQBk ACAAYgB5 ACAASQBjAG8ATQBvAG8AbnAuAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==") format("truetype");
       font-weight: normal; font-style: normal; unicode-range: U+E900;
   }
-  .anx-currency-sym, .o_sar_symbol, .icon-sr, [class*="sr_symbol"] { font-family: 'sr_symbol' !important; display: inline-block; }
+  .anx-currency-sym, .o_sar_symbol, .icon-sr, [class*="sr_symbol"] { font-family: 'sr_symbol', "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important; display: inline-block; }
   body { font-family: 'sr_symbol', Inter, Arial, sans-serif; padding: 32px; color: #1f2937; line-height: 1.5; }
   .hdr-box { text-align: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 16px; margin-bottom: 24px; }
   h2 { margin: 0 0 4px; font-size: 24px; color: #0f172a; letter-spacing: -0.5px; }
@@ -1496,19 +1509,186 @@ export class AnalytixFinanceDashboard extends Component {
   .kpi-val.output { color: #1e88e5; }
   .kpi-val.input { color: #e53935; }
   .kpi-val.net { color: #2e7d32; }
-  .sec-hdr { font-size: 14px; font-weight: 700; padding: 10px 14px; background: #0f1729; color: #fff; border-radius: 6px 6px 0 0; margin-top: 24px; display: flex; justify-content: space-between; align-items: center; }
-  .sec-hdr.input { background: #7f1d1d; }
-  table { width: 100%; border-collapse: collapse; font-size: 12.5px; margin-bottom: 24px; border: 1px solid #e2e8f0; }
-  th { text-align: left; padding: 10px 12px; background: #f1f5f9; border-bottom: 2px solid #cbd5e1; color: #475569; font-weight: 700; text-transform: uppercase; font-size: 10.5px; }
+  .sec-hdr { font-size: 14px; font-weight: 700; padding: 10px 14px; background: #1e3a8a; color: #fff; border-radius: 6px 6px 0 0; margin-top: 24px; display: flex; justify-content: space-between; align-items: center; }
+  .sec-hdr.purchases { background: #7f1d1d; }
+  table { width: 100%; border-collapse: collapse; font-size: 11.5px; margin-bottom: 24px; border: 1px solid #e2e8f0; }
+  th { text-align: left; padding: 10px 12px; background: #f1f5f9; border-bottom: 2px solid #cbd5e1; color: #475569; font-weight: 700; text-transform: uppercase; font-size: 10px; }
+  th.num-col { text-align: right; }
+  th.center-col { text-align: center; }
+  td { padding: 8px 12px; border-bottom: 1px solid #e2e8f0; }
   tr.tot-row { background: #f8fafc; font-weight: 700; }
-  tr.tot-row td { padding: 10px 12px; border-top: 2px solid #cbd5e1; font-size: 13px; }
-  .net-box { background: #f0fdf4; border: 2px solid #86efac; border-radius: 8px; padding: 16px; display: flex; justify-content: space-between; align-items: center; margin-top: 24px; }
-  .net-lbl { font-weight: 800; font-size: 15px; color: #166534; }
-  .net-val { font-weight: 800; font-size: 20px; color: #15803d; }
+  tr.tot-row td { padding: 10px 12px; border-top: 2px solid #cbd5e1; font-size: 12px; }
   @media print { button { display:none } body { padding: 15px; } }
 </style></head><body>
 <div class="hdr-box">
-  <h2>Tax Summary Report &mdash; ${companyName}</h2>
+  <h2>VAT Detailed Report &mdash; ${companyName}</h2>
+  <p class="sub">Date Range: ${this.state.vatFilterFrom || 'Beginning'} to ${this.state.vatFilterTo || 'Present'}</p>
+</div>
+
+<div class="kpi-row">
+  <div class="kpi-card">
+    <div class="kpi-lbl">Total Output VAT</div>
+    <div class="kpi-val output">${fmtN(totalOutputVat)}</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-lbl">Total Input VAT</div>
+    <div class="kpi-val input">${fmtN(totalInputVat)}</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-lbl">Net VAT Payable</div>
+    <div class="kpi-val net">${fmtN(netVatPayable)}</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-lbl">Total Tax Lines</div>
+    <div class="kpi-val">${totalLinesCount}</div>
+  </div>
+</div>
+
+<div class="sec-hdr">
+  <span>1. Output VAT &mdash; Customer Invoices</span>
+</div>
+<table>
+  <thead>
+    <tr>
+      <th class="center-col" style="width:15%">Document</th>
+      <th style="width:25%">Customer</th>
+      <th class="center-col" style="width:12%">Tax</th>
+      <th style="width:15%">Company</th>
+      <th class="center-col" style="width:11%">Date</th>
+      <th class="num-col" style="width:11%">Total Amount</th>
+      <th class="num-col" style="width:11%">VAT Amount</th>
+    </tr>
+  </thead>
+  <tbody>
+    ${outRowsHtml}
+    <tr class="tot-row">
+      <td colspan="5" style="border-top: 2px solid #cbd5e1;">Total</td>
+      <td style="text-align:right;border-top: 2px solid #cbd5e1;">${fmtN(outTotalAmt)}</td>
+      <td style="text-align:right;border-top: 2px solid #cbd5e1;">${fmtN(totalOutputVat)}</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="sec-hdr purchases">
+  <span>2. Input VAT &mdash; Vendor Bills</span>
+</div>
+<table>
+  <thead>
+    <tr>
+      <th class="center-col" style="width:15%">Document</th>
+      <th style="width:25%">Vendor</th>
+      <th class="center-col" style="width:12%">Tax</th>
+      <th style="width:15%">Company</th>
+      <th class="center-col" style="width:11%">Date</th>
+      <th class="num-col" style="width:11%">Total Amount</th>
+      <th class="num-col" style="width:11%">VAT Amount</th>
+    </tr>
+  </thead>
+  <tbody>
+    ${inRowsHtml}
+    <tr class="tot-row">
+      <td colspan="5" style="border-top: 2px solid #cbd5e1;">Total</td>
+      <td style="text-align:right;border-top: 2px solid #cbd5e1;">${fmtN(inTotalAmt)}</td>
+      <td style="text-align:right;border-top: 2px solid #cbd5e1;">${fmtN(totalInputVat)}</td>
+    </tr>
+  </tbody>
+</table>
+
+</body></html>`;
+
+            const win = window.open('', '_blank', 'width=1100,height=800');
+            win.document.write(html);
+            win.document.close();
+            if (win.document.fonts && win.document.fonts.load) {
+                win.document.fonts.load("12px sr_symbol", "\uE900").then(() => {
+                    setTimeout(() => win.print(), 100);
+                }).catch(() => {
+                    setTimeout(() => win.print(), 400);
+                });
+            } else {
+                setTimeout(() => win.print(), 400);
+            }
+            return;
+        }
+
+        const d = this.state.vatData;
+        const sym = d.currency_sym || '';
+        const isSar = /^(SAR|SR|﷼|ر\.?س\.?|\uE900|)$/i.test(String(sym).trim()) || String(sym).includes('\uE900') || String(sym).includes('');
+        const symSpan = isSar ? `<span class="anx-currency-sym" style="font-family:'sr_symbol', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;">&#xe900;</span>` : `<span>${sym}</span>`;
+
+        const fmtN = v => {
+            const num = Number(v) || 0;
+            const neg = num < 0;
+            const s = Math.abs(num).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            return neg ? `<span style="color:#e53935">-${symSpan}${s}</span>` : `${symSpan}${s}`;
+        };
+
+        let companyName = user.activeCompany?.name || 'All Companies';
+        if (d && d.companies && Array.isArray(d.companies)) {
+            companyName = d.companies.map(c => c.name).join(', ');
+        } else if (this.state.data && typeof this.state.data.companies === 'string') {
+            companyName = this.state.data.companies;
+        }
+
+        const buildRows = (boxes, totalBox) => {
+            return (boxes || []).map(b => {
+                const isTotal = b.box === totalBox || b.box === '13' || b.box === '14';
+                const rowStyle = isTotal ? 'font-weight: 700; background-color: #f1f5f9;' : '';
+                const numStyle = isTotal ? 'font-weight: 700; text-align: right;' : 'text-align: right;';
+                const boxStyle = isTotal ? 'font-weight: 700; text-align: center;' : 'text-align: center; color: #4b5563;';
+                
+                const amtVal = (b.box === '13' || b.box === '14') ? '—' : fmtN(b.amount);
+                const adjVal = (b.box === '13' || b.box === '14') ? '—' : fmtN(b.adjustment);
+                
+                return `
+                    <tr style="${rowStyle}">
+                        <td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;${boxStyle}">${b.box}</td>
+                        <td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;font-weight:${isTotal?'700':'normal'};">${b.description}</td>
+                        <td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;${numStyle}">${amtVal}</td>
+                        <td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;${numStyle}">${adjVal}</td>
+                        <td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;${numStyle}">${fmtN(b.vat_amount)}</td>
+                    </tr>
+                `;
+            }).join('');
+        };
+
+        const salesRows = buildRows(d.vat_return_sales, '6');
+        const purchaseRows = buildRows(d.vat_return_purchases, '12');
+        const netRows = buildRows(d.vat_return_net, '');
+
+        const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>VAT Return Summary</title>
+<style>
+  @font-face {
+      font-family: "sr_symbol";
+      src: url("/iwesabe_sar_currency_symbol/static/src/fonts/sr.ttf") format("truetype"),
+           url("data:font/truetype;base64,AAEAAAALAIAAAwAwT1MvMg8SBTgAAAC8AAAAYGNtYXAXVtKIAAABHAAAAFRnYXNwAAAAEAAAAXAAAAAIZ2x5ZjrqSMoAAAF4AAAYDGhlYWQqn96bAAAZhAAAADZoaGVhB1YDxwAAGbwAAAAkaG10eA0oAAAAABngAAAAGGxvY2EMLgwGAAAZ+AAAAA5tYXhwAAkLQQAAGggAAAAgbmFtZZlKCfsAABooAAABhnBvc3QAAwAAAAAbsAAAACAAAwMNAZAABQAAApkCzAAAAI8CmQLMAAAB6wAzAQkAAAAAAAAAAAAAAAAAAAABEAAAAAAAAAAAAAAAAAAAAABAAADpAQPA/8AAQAPAAEAAAAABAAAAAAAAAAAAAAAgAAAAAAADAAAAAwAAABwAAQADAAAAHAADAAEAAAAcAAQAOAAAAAoACAACAAIAAQAg6QH//f//AAAAAAAg6QD//f//AAH/4xcEAAMAAQAAAAAAAAAAAAAAAQAB//8ADwABAAD/wAAAA8AAAgAANzkBAAAAAAEAAP/AAAADwAACAAA3OQEAAAAAAQAA/8AAAAPAAAIAADc5AQAAAAACAAD/wAOUA8AItQs+AAABDgEjDgEVIgYHFAYHDgExOAExMCIxMAYxDgExMCIVIgYxDgEHMAYxIgYxOAExMAYxDgExIgYxDgEHIgYHFCIxMCIVMAYHDgEHDgEHMAYxMAYVIgYPARUcATEiMCMwBgcqASMwBiMGIiMUIjEwBiMiBiMOASMGIgcwIiMwBjEwIiMwIgciBiMiBgcqATEwBiMGIjEwBiMiBiMwIjEiBiMUIiMiBiMiBiMwBiMwIhUqATEqAQciBjEqAQcwIiMiBiMwIjEiBiMqASMGIiMwIjEwIgcwIgcqATEOASMiBgciBiMwBiMiBiMwBiMGIjEGIiMiBgcwIjEUMCMUMDEUBjEOARUwFAccATEwBhUOATEwFDEUBhUOATEwBhUUBjEOAQcUBgcGFBUwBhUUBhUwFDEUBjEcATEGFDEcASMwFBUwFCMcATEUBjEcARUUBhUUBhUcARUGMjMwNjMyNjMyNjEyNjMyNjcwMjM+ATM6ATEwNjMyNjc6ATMyNjMyNjMyNjM+ATMyNjMyNjMwMjM+ATM6ATc6ATU6ATU6ATMyNjE6ATEwMjUyNjMyNjM6ATcwMjMwNhUwNjMwMjcyNjcyNjE6ATcyNjM6ATEwNjMwNjM+ATMyNjMyNjMyNjMyNjMyNjc6ATcwMjcyNjMwMjcwMjM2MjE2MjM+ATE6ATEyNjMwMjM3FRwBIzAGBzAGIw4BIyoBByoBMQYiIzAiIzAGIyIGBzAiMTAiIxQGIzAGIwYiMSIGMSoBIxQiMTAiByoBMSIGIyoBIzAGIyIGIyIGIyoBBzAiByoBByIGIyIGIyIGIyIGMSIGIwYiMTAGIyIGBw4BIwYiByoBIzAGMSIGMSIGIwYiMQYiIzAGIzAiMTAiFSoBIw4BIyoBIzAGMSIGByIGIwYiByIGIyIGByoBBzAiBw4BIw4BFTAUMQYUMTAGFRQGMTAGBzAUBxQGMRQGMTAGMTAGBw4BFQ4BBwYUBzAGMRwBBxwBMRQGFQ4BFRQGFRQGFRQGFTAUFRQGFQYUFRQGFRQWNzYyMzA2MzYyMTYyNzI2MzoBNzI2MzoBNTAyMzA2Mz4BMzA2MTI2Mz4BMTAyNzoBMzA2MzAyNz4BMzAyNzoBMTI0MzAyMzAyMTA2MzYyNzYyMTI2MzYyMzI2MzoBNToBMTI2MToBMTI2MToBMTI2Mz4BMzI2MzI2MzYyMzI2MzoBMTgBNzAyMz4BMzI2MzoBMTYyMzA2MzAyMzA2MzYyMTI2MTAyNzI2MzI2MzAyMzA2MzoBNzI2MzoBNzoBNzA2MzI2MTI2NzI2MzoBNzAyMTYyMTAyMzYyNzI2MzAyMzA2MzoBMTI2MzoBMT4BMzoBNzI2MzoBNzQ2NTA2NTA0MTA0MzQ2NTQ2MTQ2NTQ2MTI0MTA0NTI4MTwBMT4BNTA0MzA0MTA2NTQ2NTA0MzQ2MTA2NzwBNTI0NTQ2NTQ2NTQ2MTQ2NTA2NTwBMTA2NTwBNTY0MTAGIwGsAQMBAQMBCwICAQECAQEBAQEBAQEFAQIBAQEBAQEBAQEBAQIBAQECAgMYAQECAQEBAQIBAgEBBgEBAQEDAgIDAQEDAgIEAQEFAgMDAQIBAgEBAgEBBAIBAwMBAgEBAgEBAQEBAQEDAgIEAQEFAgMDAQIBAgEBAgEBBAIBAwMBAgQBAgMCAQIFAQECAgQCAQECAQEDAQMBAgEBAQEBAgUBAQECAQEBAQEBAQEBAQEBAQEBAQECAQEDBAcBAQUCAwQBAgICCwMDAgEEAQEBAQgDAQEBAQIBAQEBAgEBAQEBAQEBAQEBAQEBAQECAQEBAQIDAQEDAQECAgQCAQQCAgECBAEBAQcBAQQCAQEBAQYCAQIBAQQCAgQBAQMBAQIBAgEBBAIBAQEBAwECAgEBAQECAQECAQQBAQMBAQEBAgEBAQECAQMEAwIDAQMBAgMBAQEGAgMCAgUBAQIBAQIBAgMCAQMBAQQCAQMBBAIBAwECAQMBAgIBAgEDBAEBAQEBAQEBAQYCBAMCBQEBAgEBAgEBAQEBAgEBBAMCAQEFAwMCAgMBAQECAQIBAQECAQUBAQEBAgEBBAEBAQEBAgEDAQEDAQEDAQEDAQEDAQICAQMBBAICAQMEBAYHAwIDAQEBAQICBQEDAgEEAQEBAQECAgECAQIEAQEBAQIBBQQBBAIBBAEBAwECBAQBAQEEAwIGAQMDAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBBQMDAQMBAgMBAwIBAwEDBgIDAQECAgEDAQQGAQICBAIBBgIBAQEBAQEEAwIEAgICAQEBAQEBAgEBAwEBAwEEAwEBAQIBAQMBAQMBAQEBAQEBAQIBBAIEAwIBAgIBAwEDBgEBAgECAwEDAgIDAQIBAgMCBAYBAwEFAwIFAQMDCAECAQMCAQMBAgIBAgEBAgEBAgEBAwECBAECAwEBAwECAgEBAgEBAQECAQIJAQECAQIBAQMBAQMCAgMBBQICAQIBAgECBAECBAECAQMDAQEBAgEFAwIEAQEEAQEBAQECAQMGAwIBAgECAQEBAQEBAgEDAQEBAQEBAQEBAQEBAgEFAQEBAgEBAQEBAQMBAgEBAQEBAwEBAQEBAQEDAQEBAQICAwEBAQEBAQEBAQECAQIBAQMCAgQFAwECBAEBAQIBAQEBAQIBAQECAQICAQEDAQEBAQECAQEBAQEBAQEDAwECAQMCAQMBDQEBAQEBAQEBCwECBQEDAQEDAQMCAgQBAgEBAgEBBQIBAgECAQECAQMCAgUBAgIBAgEDAgQEAQEBAQMCAgMDAgIDAwIBBAEBBAICBAECBgEBAQEBAQECAQEBAgEBAQEBAQIBAgEBAgECAQEBAQEBAgEBAQECAQIBAQMCCgIBAgEBAQkBAgICBgIBAQEDAgIFAQEBAQIBAgEBAQIBAwEBAwECAwEBAQIBAQEBAQECAgQBAQIBAgIBAQEBAwEBAQEBAQEBAQIBAQEBAQEBAQECAQEBAQECAQO/AQIBAQEHAQEBAQEBAQEBAQEBAwECAQEBAQEBAQECAQEBAgEDGAIBAgEBAQEDAQLXa2sBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQIBAQEBAwEBAQIBAQEBAQIEAQEBAQEBAQEDAQEDAQIDAgEBAgMFAgEEAgIDAQEBAQIBAQEBAQIBAgEBAgEDAQIBCAEBAQEDAQIEAQICAQEBAQEBAQEBAQIBAQIBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQFGMRQBAQEBAQEBAQEBAQEBAQEBAQIBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQECAgEBAQEBAQIDAQEBAQIBAQQEAgIEAQEEBQEDAQMBAgEBAQEDAgEEAQEDAgEDAQEBAQICAQQCAgMBAQMCAwEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQECAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQIBAQEBAQEBAQEBAgEBAQEBBwEBAQEEAQEBAQEBAQEFAQECAQIBAgEBBAEBAQEBAQEBAQEBAQQCAgEDAwQBAgEBAgEBAQECAQEBBAEBBQIEFDAaJQEBAQEBAQEBAQEBAQEBAQEBAQMBH09uAwEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQECAQECAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQIBAQIBAQEBAgEBAQEBCwMCAgEBAQEBAQECAQMCAgUCAwQBAgUFAQIBBAQBAQICAQQCBAUBAQIBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBARsbNwEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQECAgMBAQEBAQUCAgEBAgEBAQQCAwMBAgEBAgEBAwEDCwUBAwEBAQEBAgEBBgIBAwECAQgJAQEBAQEBAQEBAQEBAQECAgEBAQEBAQEBAQEBAQEBAQEBAQIBAQEBAQEBAgEBAQEBAgEBAQHGZGIBAQEBAQEEAQEBAQEBAQEBAQEFAQEBAQECAQECAQECBAEFBgYDBQIBAQIBAQIBAQIBAgKkpQEBAQIBAQEBAQEBAQEBAQEBAQIB95VjAfy/AQEBAQEBAQEBAQEBAQEBAQEBAQQBAQEBAQEBAQEBAQEBAQEBAQEBAQIBAQECAQEBAQEBAQEBAgEBAQEBAQEBAQEBAgEBAQICAQEJAQEBAQEBAQEBAQEBAQEBAQEBAgEDAgMDAgEDAgEKBAECAQMCAgMBAgEDDgMCAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQIBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBBgEBAQEBAQEBAQEBAQIBAgEBAQEBAQEFAgIBAgEBAgEBAgQEAgEBAQEBAQIBAgYCAQIBBgIDAQECAgEBAwECCAEAAAEAAP/AAjIDwAAIAAABBzc+ATEwBgcCMAICAQEBAQNIAgIBAQEBAAABAAAAAAAAsksaaV8PPPUACwQAAAAAAOP2zQ8AAAAA4/bNDwAA/8ADlAPAAAAACAACAAAAAAAAAAEAAAPA/8AAAAQAAAAAAAOUAAEAAAAAAAAAAAAAAAAAAAAGBAAAAAAAAAAAAAAAAgAAAAOUAAADlAAAAAAAAAAKABQAHgvyDAYAAAABAAAABgs/AAIAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAADgCuAAEAAAAAAAEABwAAAAEAAAAAAAIABwBgAAEAAAAAAAMABwA2AAEAAAAAAAQABwB1AAEAAAAAAAUACwAVAAEAAAAAAAYABwBLAAEAAAAAAAoAGgCKAAMAAQQJAAEADgAHAAMAAQQJAAIADgBnAAMAAQQJAAMADgA9AAMAAQQJAAQADgB8AAMAAQQJAAUAFgAgAAMAAQQJAAYADgBSAAMAAQQJAAoANACkaWNvbW9vbgBpAGMAbwBtAG8AbwBuVmVyc2lvbiAxLjAAVgBlAHIAcwBpAG8AbgAgADEALgAwaWNvbW9vbgBpAGMAbwBtAG8AbwBuUmVndWxhcgBSAGUAZwB1AGwAYQByaWNvbW9vbgBpAGMAbwBtAG8AbwBuRm9udCBnZW5lcmF0ZWQgYnkgSWNvTW9vbi4ARgBvAG4AdAAgAGcAZQBuAGUAcgBhAHQAZQBk ACAAYgB5 ACAASQBjAG8ATQBvAG8AbnAuAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==") format("truetype");
+      font-weight: normal; font-style: normal; unicode-range: U+E900;
+  }
+  .anx-currency-sym, .o_sar_symbol, .icon-sr, [class*="sr_symbol"] { font-family: 'sr_symbol', "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important; display: inline-block; }
+  body { font-family: 'sr_symbol', Inter, Arial, sans-serif; padding: 32px; color: #1f2937; line-height: 1.5; }
+  .hdr-box { text-align: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 16px; margin-bottom: 24px; }
+  h2 { margin: 0 0 4px; font-size: 24px; color: #0f172a; letter-spacing: -0.5px; }
+  p.sub { color: #64748b; margin: 0; font-size: 13px; font-weight: 500; }
+  .kpi-row { display: flex; gap: 16px; margin-bottom: 28px; justify-content: space-between; }
+  .kpi-card { flex: 1; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px; text-align: center; }
+  .kpi-lbl { font-size: 11px; text-transform: uppercase; font-weight: 700; color: #64748b; margin-bottom: 4px; }
+  .kpi-val { font-size: 18px; font-weight: 800; color: #0f172a; }
+  .kpi-val.output { color: #1e88e5; }
+  .kpi-val.input { color: #e53935; }
+  .kpi-val.net { color: #2e7d32; }
+  .sec-hdr { font-size: 14px; font-weight: 700; padding: 10px 14px; background: #1e3a8a; color: #fff; border-radius: 6px 6px 0 0; margin-top: 24px; display: flex; justify-content: space-between; align-items: center; }
+  .sec-hdr.purchases { background: #7f1d1d; }
+  .sec-hdr.net-due { background: #166534; }
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; margin-bottom: 24px; border: 1px solid #e2e8f0; }
+  th { text-align: left; padding: 10px 12px; background: #f1f5f9; border-bottom: 2px solid #cbd5e1; color: #475569; font-weight: 700; text-transform: uppercase; font-size: 10.5px; }
+  th.num-col { text-align: right; }
+  th.box-col { text-align: center; }
+  tr.tot-row { background: #f8fafc; font-weight: 700; }
+  tr.tot-row td { padding: 10px 12px; border-top: 2px solid #cbd5e1; font-size: 13px; }
+  @media print { button { display:none } body { padding: 15px; } }
+</style></head><body>
+<div class="hdr-box">
+  <h2>VAT Return Summary Report &mdash; ${companyName}</h2>
   <p class="sub">Date Range: ${this.state.vatFilterFrom || 'Beginning'} to ${this.state.vatFilterTo || 'Present'}</p>
 </div>
 
@@ -1522,69 +1702,64 @@ export class AnalytixFinanceDashboard extends Component {
     <div class="kpi-val input">${fmtN(d.input_vat)}</div>
   </div>
   <div class="kpi-card">
-    <div class="kpi-lbl">Net VAT</div>
+    <div class="kpi-lbl">Net VAT Payable</div>
     <div class="kpi-val net">${fmtN(d.net_vat)}</div>
-  </div>
-  <div class="kpi-card">
-    <div class="kpi-lbl">Transactions</div>
-    <div class="kpi-val">${d.total_count}</div>
   </div>
 </div>
 
 <div class="sec-hdr">
-  <span>OUTPUT VAT &mdash; CUSTOMER INVOICES</span>
-  <span>Total: ${fmtN(d.output_vat)}</span>
+  <span>1. VAT on Sales</span>
 </div>
 <table>
   <thead>
     <tr>
-      <th style="width:18%">Document</th>
-      <th style="width:22%">Customer</th>
-      <th style="width:14%">Tax</th>
-      <th style="width:18%">Company</th>
-      <th style="width:10%">Date</th>
-      <th style="width:9%;text-align:right;">Total Amount</th>
-      <th style="width:9%;text-align:right;">VAT Amount</th>
+      <th class="box-col" style="width:10%">Box #</th>
+      <th style="width:45%">Description</th>
+      <th class="num-col" style="width:15%">Amount (Base)</th>
+      <th class="num-col" style="width:15%">Adjustment</th>
+      <th class="num-col" style="width:15%">VAT Amount</th>
     </tr>
   </thead>
   <tbody>
-    ${outRows}
-    <tr class="tot-row">
-      <td colspan="6" style="text-align:right;color:#0f172a;">Total Output VAT:</td>
-      <td style="text-align:right;color:#1e88e5;">${fmtN(d.output_vat)}</td>
-    </tr>
+    ${salesRows}
   </tbody>
 </table>
 
-<div class="sec-hdr input">
-  <span>INPUT VAT &mdash; VENDOR BILLS</span>
-  <span>Total: ${fmtN(d.input_vat)}</span>
+<div class="sec-hdr purchases">
+  <span>2. VAT on Purchases</span>
 </div>
 <table>
   <thead>
     <tr>
-      <th style="width:18%">Document</th>
-      <th style="width:22%">Vendor</th>
-      <th style="width:14%">Tax</th>
-      <th style="width:18%">Company</th>
-      <th style="width:10%">Date</th>
-      <th style="width:9%;text-align:right;">Total Amount</th>
-      <th style="width:9%;text-align:right;">VAT Amount</th>
+      <th class="box-col" style="width:10%">Box #</th>
+      <th style="width:45%">Description</th>
+      <th class="num-col" style="width:15%">Amount (Base)</th>
+      <th class="num-col" style="width:15%">Adjustment</th>
+      <th class="num-col" style="width:15%">VAT Amount</th>
     </tr>
   </thead>
   <tbody>
-    ${inRows}
-    <tr class="tot-row">
-      <td colspan="6" style="text-align:right;color:#0f172a;">Total Input VAT:</td>
-      <td style="text-align:right;color:#e53935;">${fmtN(d.input_vat)}</td>
-    </tr>
+    ${purchaseRows}
   </tbody>
 </table>
 
-<div class="net-box">
-  <span class="net-lbl">NET VAT PAYABLE / (CLAIMABLE)</span>
-  <span class="net-val">${fmtN(d.net_vat)}</span>
+<div class="sec-hdr net-due">
+  <span>3. Net VAT Due</span>
 </div>
+<table>
+  <thead>
+    <tr>
+      <th class="box-col" style="width:10%">Box #</th>
+      <th style="width:45%">Description</th>
+      <th class="num-col" style="width:15%">Amount (Base)</th>
+      <th class="num-col" style="width:15%">Adjustment</th>
+      <th class="num-col" style="width:15%">VAT Amount</th>
+    </tr>
+  </thead>
+  <tbody>
+    ${netRows}
+  </tbody>
+</table>
 
 </body></html>`;
 
@@ -1605,15 +1780,33 @@ export class AnalytixFinanceDashboard extends Component {
     async exportVatExcel() {
         if (!this.state.vatData) return;
         try {
-            const filterName = this.state.selectedVatFilter || 'custom';
-            const fromDate = this.state.vatFilterFrom || '';
-            const toDate = this.state.vatFilterTo || '';
+            let res;
+            if (this.state.showVatModal) {
+                res = await this.orm.call(
+                    'account.move',
+                    'export_analytix_vat_detailed_xlsx',
+                    [],
+                    {
+                        filter_name: 'custom',
+                        date_from: this.state.vatFilterFrom || '',
+                        date_to: this.state.vatFilterTo || '',
+                        company_filter: this.state.vatCompanyFilter || 'all',
+                        search_query: this.state.vatSearch || '',
+                        sort_col: this.state.vatSortCol || '',
+                        sort_dir: this.state.vatSortDir || 'asc'
+                    }
+                );
+            } else {
+                const filterName = this.state.selectedVatFilter || 'custom';
+                const fromDate = this.state.vatFilterFrom || '';
+                const toDate = this.state.vatFilterTo || '';
 
-            const res = await this.orm.call(
-                'account.move',
-                'export_analytix_vat_xlsx',
-                [filterName, fromDate, toDate]
-            );
+                res = await this.orm.call(
+                    'account.move',
+                    'export_analytix_vat_xlsx',
+                    [filterName, fromDate, toDate]
+                );
+            }
 
             if (res && res.file_content) {
                 const byteCharacters = atob(res.file_content);
@@ -1812,7 +2005,7 @@ export class AnalytixFinanceDashboard extends Component {
         const sym = d.currency_sym || '';
         const hasCmp = this.state.bsCompareMode && d.compare;
         const isSar = /^(SAR|SR|﷼|ر\.?س\.?|\uE900|)$/i.test(String(sym).trim()) || String(sym).includes('\uE900') || String(sym).includes('');
-        const symSpan = isSar ? `<span class="anx-currency-sym" style="font-family:'sr_symbol' !important;">&#xe900;</span>` : `<span>${sym}</span>`;
+        const symSpan = isSar ? `<span class="anx-currency-sym" style="font-family:'sr_symbol', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;">&#xe900;</span>` : `<span>${sym}</span>`;
         const fmtN = v => {
             const neg = Number(v) < 0;
             const s = Math.abs(Number(v)).toLocaleString(undefined, { minimumFractionDigits:2, maximumFractionDigits:2 });
@@ -1848,7 +2041,7 @@ export class AnalytixFinanceDashboard extends Component {
            url("data:font/truetype;base64,AAEAAAALAIAAAwAwT1MvMg8SBTgAAAC8AAAAYGNtYXAXVtKIAAABHAAAAFRnYXNwAAAAEAAAAXAAAAAIZ2x5ZjrqSMoAAAF4AAAYDGhlYWQqn96bAAAZhAAAADZoaGVhB1YDxwAAGbwAAAAkaG10eA0oAAAAABngAAAAGGxvY2EMLgwGAAAZ+AAAAA5tYXhwAAkLQQAAGggAAAAgbmFtZZlKCfsAABooAAABhnBvc3QAAwAAAAAbsAAAACAAAwMNAZAABQAAApkCzAAAAI8CmQLMAAAB6wAzAQkAAAAAAAAAAAAAAAAAAAABEAAAAAAAAAAAAAAAAAAAAABAAADpAQPA/8AAQAPAAEAAAAABAAAAAAAAAAAAAAAgAAAAAAADAAAAAwAAABwAAQADAAAAHAADAAEAAAAcAAQAOAAAAAoACAACAAIAAQAg6QH//f//AAAAAAAg6QD//f//AAH/4xcEAAMAAQAAAAAAAAAAAAAAAQAB//8ADwABAAD/wAAAA8AAAgAANzkBAAAAAAEAAP/AAAADwAACAAA3OQEAAAAAAQAA/8AAAAPAAAIAADc5AQAAAAACAAD/wAOUA8AItQs+AAABDgEjDgEVIgYHFAYHDgExOAExMCIxMAYxDgExMCIVIgYxDgEHMAYxIgYxOAExMAYxDgExIgYxDgEHIgYHFCIxMCIVMAYHDgEHDgEHMAYxMAYVIgYPARUcATEiMCMwBgcqASMwBiMGIiMUIjEwBiMiBiMOASMGIgcwIiMwBjEwIiMwIgciBiMiBgcqATEwBiMGIjEwBiMiBiMwIjEiBiMUIiMiBiMiBiMwBiMwIhUqATEqAQciBjEqAQcwIiMiBiMwIjEiBiMqASMGIiMwIjEwIgcwIgcqATEOASMiBgciBiMwBiMiBiMwBiMGIjEGIiMiBgcwIjEUMCMUMDEUBjEOARUwFAccATEwBhUOATEwFDEUBhUOATEwBhUUBjEOAQcUBgcGFBUwBhUUBhUwFDEUBjEcATEGFDEcASMwFBUwFCMcATEUBjEcARUUBhUUBhUcARUGMjMwNjMyNjMyNjEyNjMyNjcwMjM+ATM6ATEwNjMyNjc6ATMyNjMyNjMyNjM+ATMyNjMyNjMwMjM+ATM6ATc6ATU6ATU6ATMyNjE6ATEwMjUyNjMyNjM6ATcwMjMwNhUwNjMwMjcyNjcyNjE6ATcyNjM6ATEwNjMwNjM+ATMyNjMyNjMyNjMyNjMyNjc6ATcwMjcyNjMwMjcwMjM2MjE2MjM+ATE6ATEyNjMwMjM3FRwBIzAGBzAGIw4BIyoBByoBMQYiIzAiIzAGIyIGBzAiMTAiIxQGIzAGIwYiMSIGMSoBIxQiMTAiByoBMSIGIyoBIzAGIyIGIyIGIyoBBzAiByoBByIGIyIGIyIGIyIGMSIGIwYiMTAGIyIGBw4BIwYiByoBIzAGMSIGMSIGIwYiMQYiIzAGIzAiMTAiFSoBIw4BIyoBIzAGMSIGByIGIwYiByIGIyIGByoBBzAiBw4BIw4BFTAUMQYUMTAGFRQGMTAGBzAUBxQGMRQGMTAGMTAGBw4BFQ4BBwYUBzAGMRwBBxwBMRQGFQ4BFRQGFRQGFRQGFTAUFRQGFQYUFRQGFRQWNzYyMzA2MzYyMTYyNzI2MzoBNzI2MzoBNTAyMzA2Mz4BMzA2MTI2Mz4BMTAyNzoBMzA2MzAyNz4BMzAyNzoBMTI0MzAyMzAyMTA2MzYyNzYyMTI2MzYyMzI2MzoBNToBMTI2MToBMTI2MToBMTI2Mz4BMzI2MzI2MzYyMzI2MzoBMTgBNzAyMz4BMzI2MzoBMTYyMzA2MzAyMzA2MzYyMTI2MTAyNzI2MzI2MzAyMTAyNzoBNzI2MzoBNzoBNzA2MzI2MTI2NzI2MzoBNzAyMTYyMTAyMzYyNzI2MzAyMzA2MzoBMTI2MzoBMT4BMzoBNzI2MzoBNzQ2NTA2NTA0MTA0MzQ2NTQ2MTQ2NTQ2MTI0MTA0NTI4MTwBMT4BNTA0MzA0MTA2NTQ2NTA0MzQ2MTA2NzwBNTI0NTQ2NTQ2NTQ2MTQ2NTA2NTwBMTA2NTwBNTY0MTAGIwGsAQMBAQMBCwICAQECAQEBAQEBAQEFAQIBAQEBAQEBAQEBAQIBAQECAgMYAQECAQEBAQIBAgEBBgEBAQEDAgIDAQEDAgIEAQEFAgMDAQIBAgEBAgEBBAIBAwMBAgEBAgEBAQEBAQEDAgIEAQEFAgMDAQIBAgEBAgEBBAIBAwMBAgQBAgMCAQIFAQECAgQCAQECAQEDAQMBAgEBAQEBAgUBAQECAQEBAQEBAQEBAQEBAQEBAQECAQEDBAcBAQUCAwQBAgICCwMDAgEEAQEBAQgDAQEBAQIBAQEBAgEBAQEBAQEBAQEBAQEBAQECAQEBAQIDAQEDAQECAgQCAQQCAgECBAEBAQcBAQQCAQEBAQYCAQIBAQQCAgQBAQMBAQIBAgEBBAIBAQEBAwECAgEBAQECAQECAQQBAQMBAQEBAgEBAQECAQMEAwIDAQMBAgMBAQEGAgMCAgUBAQIBAQIBAgMCAQMBAQQCAQMBBAIBAwECAQMBAgIBAgEDBAEBAQEBAQEBAQYCBAMCBQEBAgEBAgEBAQEBAgEBBAMCAQEFAwMCAgMBAQECAQIBAQECAQUBAQEBAgEBBAEBAQEBAgEDAQEDAQEDAQEDAQEDAQICAQMBBAICAQMEBAYHAwIDAQEBAQICBQEDAgEEAQEBAQECAgECAQIEAQEBAQIBBQQBBAIBBAEBAwECBAQBAQEEAwIGAQMDAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBBQMDAQMBAgMBAwIBAwEDBgIDAQECAgEDAQQGAQICBAIBBgIBAQEBAQEEAwIEAgICAQEBAQEBAgEBAwEBAwEEAwEBAQIBAQMBAQMBAQEBAQEBAQIBBAIEAwIBAgIBAwEDBgEBAgECAwEDAgIDAQIBAgMCBAYBAwEFAwIFAQMDCAECAQMCAQMBAgIBAgEBAgEBAgEBAwECBAECAwEBAwECAgEBAgEBAQECAQIJAQECAQIBAQMBAQMCAgMBBQICAQIBAgECBAECBAECAQMDAQEBAgEFAwIEAQEEAQEBAQECAQMGAwIBAgECAQEBAQEBAgEDAQEBAQEBAQEBAQEBAgEFAQEBAgEBAQEBAQMBAgEBAQEBAwEBAQEBAQEDAQEBAQICAwEBAQEBAQEBAQECAQIBAQMCAgQFAwECBAEBAQIBAQEBAQIBAQECAQICAQEDAQEBAQECAQEBAQEBAQEDAwECAQMCAQMBDQEBAQEBAQEBCwECBQEDAQEDAQMCAgQBAgEBAgEBBQIBAgECAQECAQMCAgUBAgIBAgEDAgQEAQEBAQMCAgMDAgIDAwIBBAEBBAICBAECBgEBAQEBAQECAQEBAgEBAQEBAQIBAgEBAgECAQEBAQEBAgEBAQECAQIBAQMCCgIBAgEBAQkBAgICBgIBAQEDAgIFAQEBAQIBAgEBAQIBAwEBAwECAwEBAQIBAQEBAQECAgQBAQIBAgIBAQEBAwEBAQEBAQEBAQIBAQEBAQEBAQECAQEBAQECAQO/AQIBAQEHAQEBAQEBAQEBAQEBAwECAQEBAQEBAQECAQEBAgEDGAIBAgEBAQEDAQLXa2sBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQIBAQEBAwEBAQIBAQEBAQIEAQEBAQEBAQEDAQEDAQIDAgEBAgMFAgEEAgIDAQEBAQIBAQEBAQIBAgEBAgEDAQIBCAEBAQEDAQIEAQICAQEBAQEBAQEBAQIBAQIBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQFGMRQBAQEBAQEBAQEBAQEBAQEBAQIBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQECAgEBAQEBAQIDAQEBAQIBAQQEAgIEAQEEBQEDAQMBAgEBAQEDAgEEAQEDAgEDAQEBAQICAQQCAgMBAQMCAwEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQECAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQIBAQEBAQEBAQEBAgEBAQEBBwEBAQEEAQEBAQEBAQEFAQECAQIBAgEBBAEBAQEBAQEBAQEBAQQCAgEDAwQBAgEBAgEBAQECAQEBBAEBBQIEFDAaJQEBAQEBAQEBAQEBAQEBAQEBAQMBH09uAwEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQECAQECAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQIBAQIBAQEBAgEBAQEBCwMCAgEBAQEBAQECAQMCAgUCAwQBAgUFAQIBBAQBAQICAQQCBAUBAQIBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBARsbNwEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQECAgMBAQEBAQUCAgEBAgEBAQQCAwMBAgEBAgEBAwEDCwUBAwEBAQEBAgEBBgIBAwECAQgJAQEBAQEBAQEBAQEBAQECAgEBAQEBAQEBAQEBAQEBAQEBAQIBAQEBAQEBAgEBAQEBAgEBAQHGZGIBAQEBAQEEAQEBAQEBAQEBAQEFAQEBAQECAQECAQECBAEFBgYDBQIBAQIBAQIBAQIBAgKkpQEBAQIBAQEBAQEBAQEBAQEBAQIB95VjAfy/AQEBAQEBAQEBAQEBAQEBAQEBAQQBAQEBAQEBAQEBAQEBAQEBAQEBAQIBAQECAQEBAQEBAQEBAgEBAQEBAQEBAQEBAgEBAQICAQEJAQEBAQEBAQEBAQEBAQEBAQEBAgEDAgMDAgEDAgEKBAECAQMCAgMBAgEDDgMCAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQIBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBBgEBAQEBAQEBAQEBAQIBAgEBAQEBAQEFAgIBAgEBAgEBAgQEAgEBAQEBAQIBAgYCAQIBBgIDAQECAgEBAwECCAEAAAEAAP/AAjIDwAAIAAABBzc+ATEwBgcCMAICAQEBAQNIAgIBAQEBAAABAAAAAAAAsksaaV8PPPUACwQAAAAAAOP2zQ8AAAAA4/bNDwAA/8ADlAPAAAAACAACAAAAAAAAAAEAAAPA/8AAAAQAAAAAAAOUAAEAAAAAAAAAAAAAAAAAAAAGBAAAAAAAAAAAAAAAAgAAAAOUAAADlAAAAAAAAAAKABQAHgvyDAYAAAABAAAABgs/AAIAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAADgCuAAEAAAAAAAEABwAAAAEAAAAAAAIABwBgAAEAAAAAAAMABwA2AAEAAAAAAAQABwB1AAEAAAAAAAUACwAVAAEAAAAAAAYABwBLAAEAAAAAAAoAGgCKAAMAAQQJAAEADgAHAAMAAQQJAAIADgBnAAMAAQQJAAMADgA9AAMAAQQJAAQADgB8AAMAAQQJAAUAFgAgAAMAAQQJAAYADgBSAAMAAQQJAAoANACkaWNvbW9vbgBpAGMAbwBtAG8AbwBuVmVyc2lvbiAxLjAAVgBlAHIAcwBpAG8AbgAgADEALgAwaWNvbW9vbgBpAGMAbwBtAG8AbwBuUmVndWxhcgBSAGUAZwB1AGwAYQByaWNvbW9vbgBpAGMAbwBtAG8AbwBuRm9udCBnZW5lcmF0ZWQgYnkgSWNvTW9vbi4ARgBvAG4AdAAgAGcAZQBuAGUAcgBhAHQAZQBk ACAAYgB5 ACAASQBjAG8ATQBvAG8AbnAuAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==") format("truetype");
       font-weight: normal; font-style: normal; unicode-range: U+E900;
   }
-  .anx-currency-sym, .o_sar_symbol, .icon-sr, [class*="sr_symbol"] { font-family: 'sr_symbol' !important; display: inline-block; }
+  .anx-currency-sym, .o_sar_symbol, .icon-sr, [class*="sr_symbol"] { font-family: 'sr_symbol', "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important; display: inline-block; }
   body{font-family:'sr_symbol',Inter,sans-serif;padding:32px;}table{width:100%;border-collapse:collapse;}@media print{button{display:none}}</style></head><body>`
             + `<h2 style="margin:0 0 4px">Balance Sheet</h2><p style="color:#8a93a4;margin:0 0 20px">${d.company}</p>`
             + `<table>${hdr}`
@@ -1898,7 +2091,7 @@ export class AnalytixFinanceDashboard extends Component {
         const d   = this.state.plData;
         const sym = d.currency_sym || '';
         const isSar = /^(SAR|SR|﷼|ر\.?س\.?|\uE900|)$/i.test(String(sym).trim()) || String(sym).includes('\uE900') || String(sym).includes('');
-        const symSpan = isSar ? `<span class="anx-currency-sym" style="font-family:'sr_symbol' !important;">&#xe900;</span>` : `<span>${sym}</span>`;
+        const symSpan = isSar ? `<span class="anx-currency-sym" style="font-family:'sr_symbol', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;">&#xe900;</span>` : `<span>${sym}</span>`;
 
         const fmtN = v => {
             const neg = Number(v) < 0;
@@ -1947,7 +2140,7 @@ export class AnalytixFinanceDashboard extends Component {
            url("data:font/truetype;base64,AAEAAAALAIAAAwAwT1MvMg8SBTgAAAC8AAAAYGNtYXAXVtKIAAABHAAAAFRnYXNwAAAAEAAAAXAAAAAIZ2x5ZjrqSMoAAAF4AAAYDGhlYWQqn96bAAAZhAAAADZoaGVhB1YDxwAAGbwAAAAkaG10eA0oAAAAABngAAAAGGxvY2EMLgwGAAAZ+AAAAA5tYXhwAAkLQQAAGggAAAAgbmFtZZlKCfsAABooAAABhnBvc3QAAwAAAAAbsAAAACAAAwMNAZAABQAAApkCzAAAAI8CmQLMAAAB6wAzAQkAAAAAAAAAAAAAAAAAAAABEAAAAAAAAAAAAAAAAAAAAABAAADpAQPA/8AAQAPAAEAAAAABAAAAAAAAAAAAAAAgAAAAAAADAAAAAwAAABwAAQADAAAAHAADAAEAAAAcAAQAOAAAAAoACAACAAIAAQAg6QH//f//AAAAAAAg6QD//f//AAH/4xcEAAMAAQAAAAAAAAAAAAAAAQAB//8ADwABAAD/wAAAA8AAAgAANzkBAAAAAAEAAP/AAAADwAACAAA3OQEAAAAAAQAA/8AAAAPAAAIAADc5AQAAAAACAAD/wAOUA8AItQs+AAABDgEjDgEVIgYHFAYHDgExOAExMCIxMAYxDgExMCIVIgYxDgEHMAYxIgYxOAExMAYxDgExIgYxDgEHIgYHFCIxMCIVMAYHDgEHDgEHMAYxMAYVIgYPARUcATEiMCMwBgcqASMwBiMGIiMUIjEwBiMiBiMOASMGIgcwIiMwBjEwIiMwIgciBiMiBgcqATEwBiMGIjEwBiMiBiMwIjEiBiMUIiMiBiMiBiMwBiMwIhUqATEqAQciBjEqAQcwIiMiBiMwIjEiBiMqASMGIiMwIjEwIgcwIgcqATEOASMiBgciBiMwBiMiBiMwBiMGIjEGIiMiBgcwIjEUMCMUMDEUBjEOARUwFAccATEwBhUOATEwFDEUBhUOATEwBhUUBjEOAQcUBgcGFBUwBhUUBhUwFDEUBjEcATEGFDEcASMwFBUwFCMcATEUBjEcARUUBhUUBhUcARUGMjMwNjMyNjMyNjEyNjMyNjcwMjM+ATM6ATEwNjMyNjc6ATMyNjMyNjMyNjM+ATMyNjMyNjMwMjM+ATM6ATc6ATU6ATU6ATMyNjE6ATEwMjUyNjMyNjM6ATcwMjMwNhUwNjMwMjcyNjcyNjE6ATcyNjM6ATEwNjMwNjM+ATMyNjMyNjMyNjMyNjMyNjc6ATcwMjcyNjMwMjcwMjM2MjE2MjM+ATE6ATEyNjMwMjM3FRwBIzAGBzAGIw4BIyoBByoBMQYiIzAiIzAGIyIGBzAiMTAiIxQGIzAGIwYiMSIGMSoBIxQiMTAiByoBMSIGIyoBIzAGIyIGIyIGIyoBBzAiByoBByIGIyIGIyIGIyIGMSIGIwYiMTAGIyIGBw4BIwYiByoBIzAGMSIGMSIGIwYiMQYiIzAGIzAiMTAiFSoBIw4BIyoBIzAGMSIGByIGIwYiByIGIyIGByoBBzAiBw4BIw4BFTAUMQYUMTAGFRQGMTAGBzAUBxQGMRQGMTAGMTAGBw4BFQ4BBwYUBzAGMRwBBxwBMRQGFQ4BFRQGFRQGFRQGFTAUFRQGFQYUFRQGFRQWNzYyMzA2MzYyMTYyNzI2MzoBNzI2MzoBNTAyMzA2Mz4BMzA2MTI2Mz4BMTAyNzoBMzA2MzAyNz4BMzAyNzoBMTI0MzAyMzAyMTA2MzYyNzYyMTI2MzYyMzI2MzoBNToBMTI2MToBMTI2MToBMTI2Mz4BMzI2MzI2MzYyMzI2MzoBMTgBNzAyMz4BMzI2MzoBMTYyMzA2MzAyMzA2MzYyMTI2MTAyNzI2MzI2MzAyMTAyNzoBNzI2MzoBNzoBNzA2MzI2MTI2NzI2MzoBNzAyMTYyMTAyMzYyNzI2MzAyMzA2MzoBMTI2MzoBMT4BMzoBNzI2MzoBNzQ2NTA2NTA0MTA0MzQ2NTQ2MTQ2NTQ2MTI0MTA0NTI4MTwBMT4BNTA0MzA0MTA2NTQ2NTA0MzQ2MTA2NzwBNTI0NTQ2NTQ2NTQ2MTQ2NTA2NTwBMTA2NTwBNTY0MTAGIwGsAQMBAQMBCwICAQECAQEBAQEBAQEFAQIBAQEBAQEBAQEBAQIBAQECAgMYAQECAQEBAQIBAgEBBgEBAQEDAgIDAQEDAgIEAQEFAgMDAQIBAgEBAgEBBAIBAwMBAgEBAgEBAQEBAQEDAgIEAQEFAgMDAQIBAgEBAgEBBAIBAwMBAgQBAgMCAQIFAQECAgQCAQECAQEDAQMBAgEBAQEBAgUBAQECAQEBAQEBAQEBAQEBAQEBAQECAQEDBAcBAQUCAwQBAgICCwMDAgEEAQEBAQgDAQEBAQIBAQEBAgEBAQEBAQEBAQEBAQEBAQECAQEBAQIDAQEDAQECAgQCAQQCAgECBAEBAQcBAQQCAQEBAQYCAQIBAQQCAgQBAQMBAQIBAgEBBAIBAQEBAwECAgEBAQECAQECAQQBAQMBAQEBAgEBAQECAQMEAwIDAQMBAgMBAQEGAgMCAgUBAQIBAQIBAgMCAQMBAQQCAQMBBAIBAwECAQMBAgIBAgEDBAEBAQEBAQEBAQYCBAMCBQEBAgEBAgEBAQEBAgEBBAMCAQEFAwMCAgMBAQECAQIBAQECAQUBAQEBAgEBBAEBAQEBAgEDAQEDAQEDAQEDAQEDAQICAQMBBAICAQMEBAYHAwIDAQEBAQICBQEDAgEEAQEBAQECAgECAQIEAQEBAQIBBQQBBAIBBAEBAwECBAQBAQEEAwIGAQMDAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBBQMDAQMBAgMBAwIBAwEDBgIDAQECAgEDAQQGAQICBAIBBgIBAQEBAQEEAwIEAgICAQEBAQEBAgEBAwEBAwEEAwEBAQIBAQMBAQMBAQEBAQEBAQIBBAIEAwIBAgIBAwEDBgEBAgECAwEDAgIDAQIBAgMCBAYBAwEFAwIFAQMDCAECAQMCAQMBAgIBAgEBAgEBAgEBAwECBAECAwEBAwECAgEBAgEBAQECAQIJAQECAQIBAQMBAQMCAgMBBQICAQIBAgECBAECBAECAQMDAQEBAgEFAwIEAQEEAQEBAQECAQMGAwIBAgECAQEBAQEBAgEDAQEBAQEBAQEBAQEBAgEFAQEBAgEBAQEBAQMBAgEBAQEBAwEBAQEBAQEDAQEBAQICAwEBAQEBAQEBAQECAQIBAQMCAgQFAwECBAEBAQIBAQEBAQIBAQECAQICAQEDAQEBAQECAQEBAQEBAQEDAwECAQMCAQMBDQEBAQEBAQEBCwECBQEDAQEDAQMCAgQBAgEBAgEBBQIBAgECAQECAQMCAgUBAgIBAgEDAgQEAQEBAQMCAgMDAgIDAwIBBAEBBAICBAECBgEBAQEBAQECAQEBAgEBAQEBAQIBAgEBAgECAQEBAQEBAgEBAQECAQIBAQMCCgIBAgEBAQkBAgICBgIBAQEDAgIFAQEBAQIBAgEBAQIBAwEBAwECAwEBAQIBAQEBAQECAgQBAQIBAgIBAQEBAwEBAQEBAQEBAQIBAQEBAQEBAQECAQEBAQECAQO/AQIBAQEHAQEBAQEBAQEBAQEBAwECAQEBAQEBAQECAQEBAgEDGAIBAgEBAQEDAQLXa2sBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQIBAQEBAwEBAQIBAQEBAQIEAQEBAQEBAQEDAQEDAQIDAgEBAgMFAgEEAgIDAQEBAQIBAQEBAQIBAgEBAgEDAQIBCAEBAQEDAQIEAQICAQEBAQEBAQEBAQIBAQIBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQFGMRQBAQEBAQEBAQEBAQEBAQEBAQIBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQECAgEBAQEBAQIDAQEBAQIBAQQEAgIEAQEEBQEDAQMBAgEBAQEDAgEEAQEDAgEDAQEBAQICAQQCAgMBAQMCAwEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQECAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQIBAQEBAQEBAQEBAgEBAQEBBwEBAQEEAQEBAQEBAQEFAQECAQIBAgEBBAEBAQEBAQEBAQEBAQQCAgEDAwQBAgEBAgEBAQECAQEBBAEBBQIEFDAaJQEBAQEBAQEBAQEBAQEBAQEBAQMBH09uAwEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQECAQECAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQIBAQIBAQEBAgEBAQEBCwMCAgEBAQEBAQECAQMCAgUCAwQBAgUFAQIBBAQBAQICAQQCBAUBAQIBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBARsbNwEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQECAgMBAQEBAQUCAgEBAgEBAQQCAwMBAgEBAgEBAwEDCwUBAwEBAQEBAgEBBgIBAwECAQgJAQEBAQEBAQEBAQEBAQECAgEBAQEBAQEBAQEBAQEBAQEBAQIBAQEBAQEBAgEBAQEBAgEBAQHGZGIBAQEBAQEEAQEBAQEBAQEBAQEFAQEBAQECAQECAQECBAEFBgYDBQIBAQIBAQIBAQIBAgKkpQEBAQIBAQEBAQEBAQEBAQEBAQIB95VjAfy/AQEBAQEBAQEBAQEBAQEBAQEBAQQBAQEBAQEBAQEBAQEBAQEBAQEBAQIBAQECAQEBAQEBAQEBAgEBAQEBAQEBAQEBAgEBAQICAQEJAQEBAQEBAQEBAQEBAQEBAQEBAgEDAgMDAgEDAgEKBAECAQMCAgMBAgEDDgMCAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQIBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBBgEBAQEBAQEBAQEBAQIBAgEBAQEBAQEFAgIBAgEBAgEBAgQEAgEBAQEBAQIBAgYCAQIBBgIDAQECAgEBAwECCAEAAAEAAP/AAjIDwAAIAAABBzc+ATEwBgcCMAICAQEBAQNIAgIBAQEBAAABAAAAAAAAsksaaV8PPPUACwQAAAAAAOP2zQ8AAAAA4/bNDwAA/8ADlAPAAAAACAACAAAAAAAAAAEAAAPA/8AAAAQAAAAAAAOUAAEAAAAAAAAAAAAAAAAAAAAGBAAAAAAAAAAAAAAAAgAAAAOUAAADlAAAAAAAAAAKABQAHgvyDAYAAAABAAAABgs/AAIAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAADgCuAAEAAAAAAAEABwAAAAEAAAAAAAIABwBgAAEAAAAAAAMABwA2AAEAAAAAAAQABwB1AAEAAAAAAAUACwAVAAEAAAAAAAYABwBLAAEAAAAAAAoAGgCKAAMAAQQJAAEADgAHAAMAAQQJAAIADgBnAAMAAQQJAAMADgA9AAMAAQQJAAQADgB8AAMAAQQJAAUAFgAgAAMAAQQJAAYADgBSAAMAAQQJAAoANACkaWNvbW9vbgBpAGMAbwBtAG8AbwBuVmVyc2lvbiAxLjAAVgBlAHIAcwBpAG8AbgAgADEALgAwaWNvbW9vbgBpAGMAbwBtAG8AbwBuUmVndWxhcgBSAGUAZwB1AGwAYQByaWNvbW9vbgBpAGMAbwBtAG8AbwBuRm9udCBnZW5lcmF0ZWQgYnkgSWNvTW9vbi4ARgBvAG4AdAAgAGcAZQBuAGUAcgBhAHQAZQBk ACAAYgB5 ACAASQBjAG8ATQBvAG8AbnAuAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==") format("truetype");
       font-weight: normal; font-style: normal; unicode-range: U+E900;
   }
-  .anx-currency-sym, .o_sar_symbol, .icon-sr, [class*="sr_symbol"] { font-family: 'sr_symbol' !important; display: inline-block; }
+  .anx-currency-sym, .o_sar_symbol, .icon-sr, [class*="sr_symbol"] { font-family: 'sr_symbol', "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important; display: inline-block; }
   body { font-family: 'sr_symbol', Inter, Arial, sans-serif; padding: 32px; color: #1f2937; }
   h2   { margin: 0 0 4px; font-size: 22px; }
   p.sub{ color: #8a93a4; margin: 0 0 24px; font-size: 13px; }
@@ -2969,7 +3162,7 @@ export class AnalytixFinanceDashboard extends Component {
         const d = this.state.tbData;
         const sym = d.currency_sym || '';
         const isSar = /^(SAR|SR|﷼|ر\.?س\.?|\uE900|)$/i.test(String(sym).trim()) || String(sym).includes('\uE900') || String(sym).includes('');
-        const symSpan = isSar ? `<span class="anx-currency-sym" style="font-family:'sr_symbol' !important;">&#xe900;</span>` : `<span>${sym}</span>`;
+        const symSpan = isSar ? `<span class="anx-currency-sym" style="font-family:'sr_symbol', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;">&#xe900;</span>` : `<span>${sym}</span>`;
 
         const fmtN = v => {
             const num = Number(v) || 0;
@@ -2998,7 +3191,7 @@ export class AnalytixFinanceDashboard extends Component {
            url("data:font/truetype;base64,AAEAAAALAIAAAwAwT1MvMg8SBTgAAAC8AAAAYGNtYXAXVtKIAAABHAAAAFRnYXNwAAAAEAAAAXAAAAAIZ2x5ZjrqSMoAAAF4AAAYDGhlYWQqn96bAAAZhAAAADZoaGVhB1YDxwAAGbwAAAAkaG10eA0oAAAAABngAAAAGGxvY2EMLgwGAAAZ+AAAAA5tYXhwAAkLQQAAGggAAAAgbmFtZZlKCfsAABooAAABhnBvc3QAAwAAAAAbsAAAACAAAwMNAZAABQAAApkCzAAAAI8CmQLMAAAB6wAzAQkAAAAAAAAAAAAAAAAAAAABEAAAAAAAAAAAAAAAAAAAAABAAADpAQPA/8AAQAPAAEAAAAABAAAAAAAAAAAAAAAgAAAAAAADAAAAAwAAABwAAQADAAAAHAADAAEAAAAcAAQAOAAAAAoACAACAAIAAQAg6QH//f//AAAAAAAg6QD//f//AAH/4xcEAAMAAQAAAAAAAAAAAAAAAQAB//8ADwABAAD/wAAAA8AAAgAANzkBAAAAAAEAAP/AAAADwAACAAA3OQEAAAAAAQAA/8AAAAPAAAIAADc5AQAAAAACAAD/wAOUA8AItQs+AAABDgEjDgEVIgYHFAYHDgExOAExMCIxMAYxDgExMCIVIgYxDgEHMAYxIgYxOAExMAYxDgExIgYxDgEHIgYHFCIxMCIVMAYHDgEHDgEHMAYxMAYVIgYPARUcATEiMCMwBgcqASMwBiMGIiMUIjEwBiMiBiMOASMGIgcwIiMwBjEwIiMwIgciBiMiBgcqATEwBiMGIjEwBiMiBiMwIjEiBiMUIiMiBiMiBiMwBiMwIhUqATEqAQciBjEqAQcwIiMiBiMwIjEiBiMqASMGIiMwIjEwIgcwIgcqATEOASMiBgciBiMwBiMiBiMwBiMGIjEGIiMiBgcwIjEUMCMUMDEUBjEOARUwFAccATEwBhUOATEwFDEUBhUOATEwBhUUBjEOAQcUBgcGFBUwBhUUBhUwFDEUBjEcATEGFDEcASMwFBUwFCMcATEUBjEcARUUBhUUBhUcARUGMjMwNjMyNjMyNjEyNjMyNjcwMjM+ATM6ATEwNjMyNjc6ATMyNjMyNjMyNjM+ATMyNjMyNjMwMjM+ATM6ATc6ATU6ATU6ATMyNjE6ATEwMjUyNjMyNjM6ATcwMjMwNhUwNjMwMjcyNjcyNjE6ATcyNjM6ATEwNjMwNjM+ATMyNjMyNjMyNjMyNjMyNjc6ATcwMjcyNjMwMjcwMjM2MjE2MjM+ATE6ATEyNjMwMjM3FRwBIzAGBzAGIw4BIyoBByoBMQYiIzAiIzAGIyIGBzAiMTAiIxQGIzAGIwYiMSIGMSoBIxQiMTAiByoBMSIGIyoBIzAGIyIGIyIGIyoBBzAiByoBByIGIyIGIyIGIyIGMSIGIwYiMTAGIyIGBw4BIwYiByoBIzAGMSIGMSIGIwYiMQYiIzAGIzAiMTAiFSoBIw4BIyoBIzAGMSIGByIGIwYiByIGIyIGByoBBzAiBw4BIw4BFTAUMQYUMTAGFRQGMTAGBzAUBxQGMRQGMTAGMTAGBw4BFQ4BBwYUBzAGMRwBBxwBMRQGFQ4BFRQGFRQGFRQGFTAUFRQGFQYUFRQGFRQWNzYyMzA2MzYyMTYyNzI2MzoBNzI2MzoBNTAyMzA2Mz4BMzA2MTI2Mz4BMTAyNzoBMzA2MzAyNz4BMzAyNzoBMTI0MzAyMzAyMTA2MzYyNzYyMTI2MzYyMzI2MzoBNToBMTI2MToBMTI2MToBMTI2Mz4BMzI2MzI2MzYyMzI2MzoBMTgBNzAyMz4BMzI2MzoBMTYyMzA2MzAyMzA2MzYyMTI2MTAyNzI2MzI2MzAyMTAyNzoBNzI2MzoBNzoBNzA2MzI2MTI2NzI2MzoBNzAyMTYyMTAyMzYyNzI2MzAyMzA2MzoBMTI2MzoBMT4BMzoBNzI2MzoBNzQ2NTA2NTA0MTA0MzQ2NTQ2MTQ2NTQ2MTI0MTA0NTI4MTwBMT4BNTA0MzA0MTA2NTQ2NTA0MzQ2MTA2NzwBNTI0NTQ2NTQ2NTQ2MTQ2NTA2NTwBMTA2NTwBNTY0MTAGIwGsAQMBAQMBCwICAQECAQEBAQEBAQEFAQIBAQEBAQEBAQEBAQIBAQECAgMYAQECAQEBAQIBAgEBBgEBAQEDAgIDAQEDAgIEAQEFAgMDAQIBAgEBAgEBBAIBAwMBAgEBAgEBAQEBAQEDAgIEAQEFAgMDAQIBAgEBAgEBBAIBAwMBAgQBAgMCAQIFAQECAgQCAQECAQEDAQMBAgEBAQEBAgUBAQECAQEBAQEBAQEBAQEBAQEBAQECAQEDBAcBAQUCAwQBAgICCwMDAgEEAQEBAQgDAQEBAQIBAQEBAgEBAQEBAQEBAQEBAQEBAQECAQEBAQIDAQEDAQECAgQCAQQCAgECBAEBAQcBAQQCAQEBAQYCAQIBAQQCAgQBAQMBAQIBAgEBBAIBAQEBAwECAgEBAQECAQECAQQBAQMBAQEBAgEBAQECAQMEAwIDAQMBAgMBAQEGAgMCAgUBAQIBAQIBAgMCAQMBAQQCAQMBBAIBAwECAQMBAgIBAgEDBAEBAQEBAQEBAQYCBAMCBQEBAgEBAgEBAQEBAgEBBAMCAQEFAwMCAgMBAQECAQIBAQECAQUBAQEBAgEBBAEBAQEBAgEDAQEDAQEDAQEDAQEDAQICAQMBBAICAQMEBAYHAwIDAQEBAQICBQEDAgEEAQEBAQECAgECAQIEAQEBAQIBBQQBBAIBBAEBAwECBAQBAQEEAwIGAQMDAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBBQMDAQMBAgMBAwIBAwEDBgIDAQECAgEDAQQGAQICBAIBBgIBAQEBAQEEAwIEAgICAQEBAQEBAgEBAwEBAwEEAwEBAQIBAQMBAQMBAQEBAQEBAQIBBAIEAwIBAgIBAwEDBgEBAgECAwEDAgIDAQIBAgMCBAYBAwEFAwIFAQMDCAECAQMCAQMBAgIBAgEBAgEBAgEBAwECBAECAwEBAwECAgEBAgEBAQECAQIJAQECAQIBAQMBAQMCAgMBBQICAQIBAgECBAECBAECAQMDAQEBAgEFAwIEAQEEAQEBAQECAQMGAwIBAgECAQEBAQEBAgEDAQEBAQEBAQEBAQEBAgEFAQEBAgEBAQEBAQMBAgEBAQEBAwEBAQEBAQEDAQEBAQICAwEBAQEBAQEBAQECAQIBAQMCAgQFAwECBAEBAQIBAQEBAQIBAQECAQICAQEDAQEBAQECAQEBAQEBAQEDAwECAQMCAQMBDQEBAQEBAQEBCwECBQEDAQEDAQMCAgQBAgEBAgEBBQIBAgECAQECAQMCAgUBAgIBAgEDAgQEAQEBAQMCAgMDAgIDAwIBBAEBBAICBAECBgEBAQEBAQECAQEBAgEBAQEBAQIBAgEBAgECAQEBAQEBAgEBAQECAQIBAQMCCgIBAgEBAQkBAgICBgIBAQEDAgIFAQEBAQIBAgEBAQIBAwEBAwECAwEBAQIBAQEBAQECAgQBAQIBAgIBAQEBAwEBAQEBAQEBAQIBAQEBAQEBAQECAQEBAQECAQO/AQIBAQEHAQEBAQEBAQEBAQEBAwECAQEBAQEBAQECAQEBAgEDGAIBAgEBAQEDAQLXa2sBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQIBAQEBAwEBAQIBAQEBAQIEAQEBAQEBAQEDAQEDAQIDAgEBAgMFAgEEAgIDAQEBAQIBAQEBAQIBAgEBAgEDAQIBCAEBAQEDAQIEAQICAQEBAQEBAQEBAQIBAQIBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQFGMRQBAQEBAQEBAQEBAQEBAQEBAQIBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQECAgEBAQEBAQIDAQEBAQIBAQQEAgIEAQEEBQEDAQMBAgEBAQEDAgEEAQEDAgEDAQEBAQICAQQCAgMBAQMCAwEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQECAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQIBAQEBAQEBAQEBAgEBAQEBBwEBAQEEAQEBAQEBAQEFAQECAQIBAgEBBAEBAQEBAQEBAQEBAQQCAgEDAwQBAgEBAgEBAQECAQEBBAEBBQIEFDAaJQEBAQEBAQEBAQEBAQEBAQEBAQMBH09uAwEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQECAQECAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQIBAQIBAQEBAgEBAQEBCwMCAgEBAQEBAQECAQMCAgUCAwQBAgUFAQIBBAQBAQICAQQCBAUBAQIBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBARsbNwEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQECAgMBAQEBAQUCAgEBAgEBAQQCAwMBAgEBAgEBAwEDCwUBAwEBAQEBAgEBBgIBAwECAQgJAQEBAQEBAQEBAQEBAQECAgEBAQEBAQEBAQEBAQEBAQEBAQIBAQEBAQEBAgEBAQEBAgEBAQHGZGIBAQEBAQEEAQEBAQEBAQEBAQEFAQEBAQECAQECAQECBAEFBgYDBQIBAQIBAQIBAQIBAgKkpQEBAQIBAQEBAQEBAQEBAQEBAQIB95VjAfy/AQEBAQEBAQEBAQEBAQEBAQEBAQQBAQEBAQEBAQEBAQEBAQEBAQEBAQIBAQECAQEBAQEBAQEBAgEBAQEBAQEBAQEBAgEBAQICAQEJAQEBAQEBAQEBAQEBAQEBAQEBAgEDAgMDAgEDAgEKBAECAQMCAgMBAgEDDgMCAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQIBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBBgEBAQEBAQEBAQEBAQIBAgEBAQEBAQEFAgIBAgEBAgEBAgQEAgEBAQEBAQIBAgYCAQIBBgIDAQECAgEBAwECCAEAAAEAAP/AAjIDwAAIAAABBzc+ATEwBgcCMAICAQEBAQNIAgIBAQEBAAABAAAAAAAAsksaaV8PPPUACwQAAAAAAOP2zQ8AAAAA4/bNDwAA/8ADlAPAAAAACAACAAAAAAAAAAEAAAPA/8AAAAQAAAAAAAOUAAEAAAAAAAAAAAAAAAAAAAAGBAAAAAAAAAAAAAAAAgAAAAOUAAADlAAAAAAAAAAKABQAHgvyDAYAAAABAAAABgs/AAIAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAADgCuAAEAAAAAAAEABwAAAAEAAAAAAAIABwBgAAEAAAAAAAMABwA2AAEAAAAAAAQABwB1AAEAAAAAAAUACwAVAAEAAAAAAAYABwBLAAEAAAAAAAoAGgCKAAMAAQQJAAEADgAHAAMAAQQJAAIADgBnAAMAAQQJAAMADgA9AAMAAQQJAAQADgB8AAMAAQQJAAUAFgAgAAMAAQQJAAYADgBSAAMAAQQJAAoANACkaWNvbW9vbgBpAGMAbwBtAG8AbwBuVmVyc2lvbiAxLjAAVgBlAHIAcwBpAG8AbgAgADEALgAwaWNvbW9vbgBpAGMAbwBtAG8AbwBuUmVndWxhcgBSAGUAZwB1AGwAYQByaWNvbW9vbgBpAGMAbwBtAG8AbwBuRm9udCBnZW5lcmF0ZWQgYnkgSWNvTW9vbi4ARgBvAG4AdAAgAGcAZQBuAGUAcgBhAHQAZQBk ACAAYgB5 ACAASQBjAG8ATQBvAG8AbnAuAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==") format("truetype");
       font-weight: normal; font-style: normal; unicode-range: U+E900;
   }
-  .anx-currency-sym, .o_sar_symbol, .icon-sr, [class*="sr_symbol"] { font-family: 'sr_symbol' !important; display: inline-block; }
+  .anx-currency-sym, .o_sar_symbol, .icon-sr, [class*="sr_symbol"] { font-family: 'sr_symbol', "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important; display: inline-block; }
   body { font-family: 'sr_symbol', Inter, sans-serif; padding: 32px; color: #1f2937; }
   h2 { margin: 0 0 4px; font-size: 22px; text-align: center; }
   p.sub { color: #8a93a4; margin: 0 0 24px; font-size: 13px; text-align: center; }

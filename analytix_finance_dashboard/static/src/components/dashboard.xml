@@ -646,94 +646,89 @@
                                 <span t-if="state.vatCompanyFilter !== 'all'" class="anx-inv-co-legend-item anx-inv-co-clear" data-company="all" t-on-click="onVatCompanyFilter">✕ All</span>
                             </div>
                         </div>
-                        <!-- Toolbar: search only (type is now separated by panel) -->
-                        <div class="anx-inv-toolbar" style="margin-bottom:14px;">
-                            <div class="anx-inv-search-wrap" style="max-width:380px;">
-                                <i class="fa fa-search anx-inv-search-icon"/>
-                                <input class="anx-inv-search" type="text" placeholder="Search document, partner, tax name…" t-on-input="onVatSearch"/>
-                            </div>
-                        </div>
-                        <!-- OUTPUT VAT PANEL -->
-                        <div class="anx-section-label" style="margin-top:4px;">
-                            <i class="fa fa-arrow-up" style="color:#1e88e5;"/> OUTPUT VAT — CUSTOMER INVOICES
+                        <!-- ZATCA VAT Return tables -->
+                        <div class="anx-section-label" style="margin-top:20px; font-weight: 700; color: #1e3a8a;">
+                            <i class="fa fa-arrow-up"/> 1. VAT on Sales
                         </div>
                         <div class="anx-inv-table-wrap anx-panel" style="margin-bottom:20px;">
                             <table class="anx-inv-table">
                                 <thead>
                                     <tr>
-                                        <th class="anx-inv-th anx-inv-th-sort" data-col="move_name"    t-on-click="onVatSort">Document <i t-attf-class="fa {{ state.vatSortCol==='move_name'?(state.vatSortDir==='asc'?'fa-sort-asc':'fa-sort-desc'):'fa-sort' }} anx-inv-sort-icon"/></th>
-                                        <th class="anx-inv-th anx-inv-th-sort" data-col="partner"      t-on-click="onVatSort">Customer <i t-attf-class="fa {{ state.vatSortCol==='partner'?(state.vatSortDir==='asc'?'fa-sort-asc':'fa-sort-desc'):'fa-sort' }} anx-inv-sort-icon"/></th>
-                                        <th class="anx-inv-th anx-inv-th-sort" data-col="tax_name"     t-on-click="onVatSort">Tax <i t-attf-class="fa {{ state.vatSortCol==='tax_name'?(state.vatSortDir==='asc'?'fa-sort-asc':'fa-sort-desc'):'fa-sort' }} anx-inv-sort-icon"/></th>
-                                        <th class="anx-inv-th">Company</th>
-                                        <th class="anx-inv-th anx-inv-th-sort" data-col="invoice_date" t-on-click="onVatSort">Date <i t-attf-class="fa {{ state.vatSortCol==='invoice_date'?(state.vatSortDir==='asc'?'fa-sort-asc':'fa-sort-desc'):'fa-sort' }} anx-inv-sort-icon"/></th>
-                                        <th class="anx-inv-th anx-inv-th-right anx-inv-th-sort" data-col="total_amount" t-on-click="onVatSort">Total Amount <i t-attf-class="fa {{ state.vatSortCol==='total_amount'?(state.vatSortDir==='asc'?'fa-sort-asc':'fa-sort-desc'):'fa-sort' }} anx-inv-sort-icon"/></th>
-                                        <th class="anx-inv-th anx-inv-th-right anx-inv-th-sort" data-col="tax_amount" t-on-click="onVatSort">VAT Amount <i t-attf-class="fa {{ state.vatSortCol==='tax_amount'?(state.vatSortDir==='asc'?'fa-sort-asc':'fa-sort-desc'):'fa-sort' }} anx-inv-sort-icon"/></th>
-                                        <th class="anx-inv-th anx-inv-th-center"></th>
+                                        <th class="anx-inv-th anx-inv-th-center" style="width: 10%; text-align: center;">Box #</th>
+                                        <th class="anx-inv-th" style="width: 50%;">Description</th>
+                                        <th class="anx-inv-th anx-inv-th-right" style="width: 15%; text-align: right;">Amount (Base)</th>
+                                        <th class="anx-inv-th anx-inv-th-right" style="width: 15%; text-align: right;">Adjustment</th>
+                                        <th class="anx-inv-th anx-inv-th-right" style="width: 15%; text-align: right;">VAT Amount</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <t t-if="filteredOutputVat.length === 0">
-                                        <tr><td colspan="8" class="anx-inv-empty">No output VAT lines found.</td></tr>
-                                    </t>
-                                    <t t-foreach="filteredOutputVat" t-as="vl" t-key="vl_index">
-                                        <tr class="anx-inv-row anx-vat-row-output" t-att-data-id="vl.id" t-on-click="openVatDoc">
-                                            <td class="anx-inv-td anx-inv-td-name"><span class="anx-inv-num"><i class="fa fa-file-text-o" style="color:#1e88e5;"/>&#160;<t t-esc="vl.move_name"/></span></td>
-                                            <td class="anx-inv-td"><div class="anx-inv-partner"><span class="anx-inv-partner-avatar" style="background:#e3f2fd;color:#1e88e5;"><t t-esc="vl.partner.charAt(0).toUpperCase()"/></span><span class="anx-inv-partner-name" t-att-title="vl.partner"><t t-esc="vl.partner"/></span></div></td>
-                                            <td class="anx-inv-td"><span class="anx-vat-tax-badge"><t t-esc="vl.tax_name"/></span></td>
-                                            <td class="anx-inv-td"><span class="anx-inv-company-badge" t-attf-style="background:{{ vl.company_color.bg }};color:{{ vl.company_color.text }};"><span class="anx-inv-co-dot-sm" t-attf-style="background:{{ vl.company_color.dot }};"></span><t t-esc="vl.company_name"/></span></td>
-                                            <td class="anx-inv-td anx-inv-td-date"><t t-esc="vl.invoice_date"/></td>
-                                            <td class="anx-inv-td anx-inv-td-amount"><t t-esc="vl.total_display"/></td>
-                                            <td class="anx-inv-td anx-inv-td-amount"><t t-esc="vl.tax_display"/></td>
-                                            <td class="anx-inv-td anx-inv-td-center"><button class="anx-inv-open-btn" t-att-data-id="vl.id" t-on-click.stop="openVatDoc"><i class="fa fa-external-link"/></button></td>
+                                    <t t-foreach="state.vatData.vat_return_sales" t-as="b" t-key="b.box">
+                                        <tr t-attf-style="{{ (b.box === '6') ? 'font-weight: 700; background-color: rgba(30, 58, 138, 0.05);' : '' }}">
+                                            <td class="anx-inv-td anx-inv-td-center" style="text-align: center;"><t t-esc="b.box"/></td>
+                                            <td class="anx-inv-td" t-attf-style="{{ (b.box === '6') ? 'font-weight: 700;' : '' }}"><t t-esc="b.description"/></td>
+                                            <td class="anx-inv-td anx-inv-td-amount" style="text-align: right;"><span class="anx-currency-sym"><t t-esc="state.vatData.currency_sym"/></span>&#160;<t t-esc="formatShort(b.amount)"/></td>
+                                            <td class="anx-inv-td anx-inv-td-amount" style="text-align: right;"><span class="anx-currency-sym"><t t-esc="state.vatData.currency_sym"/></span>&#160;<t t-esc="formatShort(b.adjustment)"/></td>
+                                            <td class="anx-inv-td anx-inv-td-amount" t-attf-style="text-align: right; {{ (b.box === '6') ? 'color: #1e88e5; font-weight: 700;' : '' }}"><span class="anx-currency-sym"><t t-esc="state.vatData.currency_sym"/></span>&#160;<t t-esc="formatShort(b.vat_amount)"/></td>
                                         </tr>
                                     </t>
                                 </tbody>
                             </table>
-                            <div class="anx-inv-table-footer" t-if="state.vatData">
-                                <span>Showing <strong><t t-esc="filteredOutputVat.length"/></strong> of <strong><t t-esc="state.vatData.output_count"/></strong> output VAT lines</span>
-                                <span class="anx-inv-footer-range">Period: <t t-esc="state.vatData.date_range.start"/> → <t t-esc="state.vatData.date_range.end"/></span>
-                            </div>
                         </div>
-                        <!-- INPUT VAT PANEL -->
-                        <div class="anx-section-label">
-                            <i class="fa fa-arrow-down" style="color:#e53935;"/> INPUT VAT — VENDOR BILLS
+
+                        <div class="anx-section-label" style="margin-top:20px; font-weight: 700; color: #7f1d1d;">
+                            <i class="fa fa-arrow-down"/> 2. VAT on Purchases
                         </div>
                         <div class="anx-inv-table-wrap anx-panel" style="margin-bottom:20px;">
                             <table class="anx-inv-table">
                                 <thead>
                                     <tr>
-                                        <th class="anx-inv-th anx-inv-th-sort" data-col="move_name"    t-on-click="onVatSort">Document <i t-attf-class="fa {{ state.vatSortCol==='move_name'?(state.vatSortDir==='asc'?'fa-sort-asc':'fa-sort-desc'):'fa-sort' }} anx-inv-sort-icon"/></th>
-                                        <th class="anx-inv-th anx-inv-th-sort" data-col="partner"      t-on-click="onVatSort">Vendor <i t-attf-class="fa {{ state.vatSortCol==='partner'?(state.vatSortDir==='asc'?'fa-sort-asc':'fa-sort-desc'):'fa-sort' }} anx-inv-sort-icon"/></th>
-                                        <th class="anx-inv-th anx-inv-th-sort" data-col="tax_name"     t-on-click="onVatSort">Tax <i t-attf-class="fa {{ state.vatSortCol==='tax_name'?(state.vatSortDir==='asc'?'fa-sort-asc':'fa-sort-desc'):'fa-sort' }} anx-inv-sort-icon"/></th>
-                                        <th class="anx-inv-th">Company</th>
-                                        <th class="anx-inv-th anx-inv-th-sort" data-col="invoice_date" t-on-click="onVatSort">Date <i t-attf-class="fa {{ state.vatSortCol==='invoice_date'?(state.vatSortDir==='asc'?'fa-sort-asc':'fa-sort-desc'):'fa-sort' }} anx-inv-sort-icon"/></th>
-                                        <th class="anx-inv-th anx-inv-th-right anx-inv-th-sort" data-col="total_amount" t-on-click="onVatSort">Total Amount <i t-attf-class="fa {{ state.vatSortCol==='total_amount'?(state.vatSortDir==='asc'?'fa-sort-asc':'fa-sort-desc'):'fa-sort' }} anx-inv-sort-icon"/></th>
-                                        <th class="anx-inv-th anx-inv-th-right anx-inv-th-sort" data-col="tax_amount" t-on-click="onVatSort">VAT Amount <i t-attf-class="fa {{ state.vatSortCol==='tax_amount'?(state.vatSortDir==='asc'?'fa-sort-asc':'fa-sort-desc'):'fa-sort' }} anx-inv-sort-icon"/></th>
-                                        <th class="anx-inv-th anx-inv-th-center"></th>
+                                        <th class="anx-inv-th anx-inv-th-center" style="width: 10%; text-align: center;">Box #</th>
+                                        <th class="anx-inv-th" style="width: 50%;">Description</th>
+                                        <th class="anx-inv-th anx-inv-th-right" style="width: 15%; text-align: right;">Amount (Base)</th>
+                                        <th class="anx-inv-th anx-inv-th-right" style="width: 15%; text-align: right;">Adjustment</th>
+                                        <th class="anx-inv-th anx-inv-th-right" style="width: 15%; text-align: right;">VAT Amount</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <t t-if="filteredInputVat.length === 0">
-                                        <tr><td colspan="8" class="anx-inv-empty">No input VAT lines found for this period.</td></tr>
-                                    </t>
-                                    <t t-foreach="filteredInputVat" t-as="vl" t-key="vl_index">
-                                        <tr class="anx-inv-row anx-vat-row-input" t-att-data-id="vl.id" t-on-click="openVatDoc">
-                                            <td class="anx-inv-td anx-inv-td-name"><span class="anx-inv-num"><i class="fa fa-file-text" style="color:#e53935;"/>&#160;<t t-esc="vl.move_name"/></span></td>
-                                            <td class="anx-inv-td"><div class="anx-inv-partner"><span class="anx-inv-partner-avatar" style="background:#fce4ec;color:#e53935;"><t t-esc="vl.partner.charAt(0).toUpperCase()"/></span><span class="anx-inv-partner-name" t-att-title="vl.partner"><t t-esc="vl.partner"/></span></div></td>
-                                            <td class="anx-inv-td"><span class="anx-vat-tax-badge anx-vat-tax-input"><t t-esc="vl.tax_name"/></span></td>
-                                            <td class="anx-inv-td"><span class="anx-inv-company-badge" t-attf-style="background:{{ vl.company_color.bg }};color:{{ vl.company_color.text }};"><span class="anx-inv-co-dot-sm" t-attf-style="background:{{ vl.company_color.dot }};"></span><t t-esc="vl.company_name"/></span></td>
-                                            <td class="anx-inv-td anx-inv-td-date"><t t-esc="vl.invoice_date"/></td>
-                                            <td class="anx-inv-td anx-inv-td-amount"><t t-esc="vl.total_display"/></td>
-                                            <td class="anx-inv-td anx-inv-td-amount"><t t-esc="vl.tax_display"/></td>
-                                            <td class="anx-inv-td anx-inv-td-center"><button class="anx-inv-open-btn" t-att-data-id="vl.id" t-on-click.stop="openVatDoc"><i class="fa fa-external-link"/></button></td>
+                                    <t t-foreach="state.vatData.vat_return_purchases" t-as="b" t-key="b.box">
+                                        <tr t-attf-style="{{ (b.box === '12') ? 'font-weight: 700; background-color: rgba(127, 29, 29, 0.05);' : '' }}">
+                                            <td class="anx-inv-td anx-inv-td-center" style="text-align: center;"><t t-esc="b.box"/></td>
+                                            <td class="anx-inv-td" t-attf-style="{{ (b.box === '12') ? 'font-weight: 700;' : '' }}"><t t-esc="b.description"/></td>
+                                            <td class="anx-inv-td anx-inv-td-amount" style="text-align: right;"><span class="anx-currency-sym"><t t-esc="state.vatData.currency_sym"/></span>&#160;<t t-esc="formatShort(b.amount)"/></td>
+                                            <td class="anx-inv-td anx-inv-td-amount" style="text-align: right;"><span class="anx-currency-sym"><t t-esc="state.vatData.currency_sym"/></span>&#160;<t t-esc="formatShort(b.adjustment)"/></td>
+                                            <td class="anx-inv-td anx-inv-td-amount" t-attf-style="text-align: right; {{ (b.box === '12') ? 'color: #e53935; font-weight: 700;' : '' }}"><span class="anx-currency-sym"><t t-esc="state.vatData.currency_sym"/></span>&#160;<t t-esc="formatShort(b.vat_amount)"/></td>
                                         </tr>
                                     </t>
                                 </tbody>
                             </table>
-                            <div class="anx-inv-table-footer" t-if="state.vatData">
-                                <span>Showing <strong><t t-esc="filteredInputVat.length"/></strong> of <strong><t t-esc="state.vatData.input_count"/></strong> input VAT lines</span>
-                                <span class="anx-inv-footer-range">Period: <t t-esc="state.vatData.date_range.start"/> → <t t-esc="state.vatData.date_range.end"/></span>
-                            </div>
+                        </div>
+
+                        <div class="anx-section-label" style="margin-top:20px; font-weight: 700; color: #166534;">
+                            <i class="fa fa-calculator"/> 3. Net VAT Due
+                        </div>
+                        <div class="anx-inv-table-wrap anx-panel" style="margin-bottom:20px;">
+                            <table class="anx-inv-table">
+                                <thead>
+                                    <tr>
+                                        <th class="anx-inv-th anx-inv-th-center" style="width: 10%; text-align: center;">Box #</th>
+                                        <th class="anx-inv-th" style="width: 50%;">Description</th>
+                                        <th class="anx-inv-th anx-inv-th-right" style="width: 15%; text-align: right;">Amount (Base)</th>
+                                        <th class="anx-inv-th anx-inv-th-right" style="width: 15%; text-align: right;">Adjustment</th>
+                                        <th class="anx-inv-th anx-inv-th-right" style="width: 15%; text-align: right;">VAT Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="state.vatData.vat_return_net" t-as="b" t-key="b.box">
+                                        <tr style="font-weight: 700; background-color: rgba(22, 101, 52, 0.05);">
+                                            <td class="anx-inv-td anx-inv-td-center" style="text-align: center;"><t t-esc="b.box"/></td>
+                                            <td class="anx-inv-td"><t t-esc="b.description"/></td>
+                                            <td class="anx-inv-td anx-inv-td-amount" style="text-align: right;">&#8212;</td>
+                                            <td class="anx-inv-td anx-inv-td-amount" style="text-align: right;">&#8212;</td>
+                                            <td class="anx-inv-td anx-inv-td-amount" style="text-align: right; color: #2e7d32; font-weight: 700;"><span class="anx-currency-sym"><t t-esc="state.vatData.currency_sym"/></span>&#160;<t t-esc="formatShort(b.vat_amount)"/></td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
                         </div>
                     </t>
                 </t>
