@@ -207,7 +207,7 @@
                     color: #475569 !important;
                 }
                 .o_total_table tr.o_total {
-                    background-color: #f1f5f9 !important;
+                    background-color: transparent !important;
                 }
                 .o_total_table tr.o_total td {
                     border-top: 2px solid #94a3b8 !important;

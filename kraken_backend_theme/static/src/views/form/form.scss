@@ -104,10 +104,14 @@
 .o_form_view .o_input,
 .o_form_view input,
 .o_form_view select,
-.o_form_view textarea {
+.o_form_view textarea,
+.o_form_view .o_field_monetary input,
+.o_form_view .o_field_monetary .o_input,
+.o_form_view .oe_currency_value {
     font-size: 13px;
     border-radius: 3px;
     border-bottom: none !important;
+    color: #111827;
 }
 
 .o_form_view .o_input:hover,

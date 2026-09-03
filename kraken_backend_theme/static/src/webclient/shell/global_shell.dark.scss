@@ -38,22 +38,21 @@ body.kr_sp_theme_dark,
     display: none !important;
 }
 
-.kr_sp_brand_section,
-.kr_sp_tabs_section,
-.kr_sp_topbar_icons,
-.kr_sp_rail_group,
-.kr_sp_pending_dashboard_content,
-.kr_sp_pending_grid article,
-.kr_sp_pending_dashboard_cards article,
-.kr_sp_pending_dashboard_chart,
-.kr_sp_pending_dashboard_tables article {
-    border-color: rgba(255,255,255,0.05);
-    background: #0d1b2a;
-    box-shadow: none;
-}
-
-.kr_sp_right_section {
-    background: transparent;
+body.kr_sp_theme_dark :is(
+    .kr_sp_brand_section,
+    .kr_sp_tabs_section,
+    .kr_sp_topbar_icons,
+    .kr_sp_right_section,
+    .kr_sp_rail_group,
+    .kr_sp_pending_dashboard_content,
+    .kr_sp_pending_grid article,
+    .kr_sp_pending_dashboard_cards article,
+    .kr_sp_pending_dashboard_chart,
+    .kr_sp_pending_dashboard_tables article
+) {
+    border-color: rgba(255,255,255,0.05) !important;
+    background: #0d1b2a !important;
+    box-shadow: none !important;
 }
 
 .kr_sp_profile {
@@ -193,21 +192,25 @@ body.kr_sp_theme_dark .kr_sp_back_btn,
 
 
 .kr_sp_tabs {
-    scrollbar-color: #00f2fe rgba(255, 255, 255, 0.05);
+    scrollbar-width: thin;
+    scrollbar-color: #00d4c8 transparent;
+}
+
+.kr_sp_tabs::-webkit-scrollbar {
+    height: 3px;
+    display: block !important;
 }
 
 .kr_sp_tabs::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 999px;
+    margin: 0 4px;
 }
 
 .kr_sp_tabs::-webkit-scrollbar-thumb {
-    background: linear-gradient(90deg, #00f2fe, #4facfe);
-    box-shadow: 0 0 8px rgba(0, 242, 254, 0.5);
-}
-
-.kr_sp_tabs::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(90deg, #38ef7d, #11998e);
-    box-shadow: 0 0 12px rgba(56, 239, 125, 0.7);
+    background: #00d4c8;
+    border-radius: 999px;
+    box-shadow: 0 0 6px rgba(0, 212, 200, 0.5);
 }
 
 .kr_sp_tabs span,

@@ -1,5 +1,11 @@
-.o_web_client,
-body.kr_sp_theme_dark {
+/* ================================================================
+   KRAKEN DARK MODE — ROOT CSS VARIABLE OVERRIDES
+   Overrides ALL Bootstrap + Odoo tokens globally.
+   ================================================================ */
+body.kr_sp_theme_dark,
+body.kr_sp_theme_dark .o_web_client,
+.o_web_client.kr_sp_theme_dark {
+    /* Kraken variables */
     --my-theme-bg: #111827;
     --my-theme-text: #e5e7eb;
     --tt-form-surface: #18212f;
@@ -14,84 +20,899 @@ body.kr_sp_theme_dark {
     --kr-dark-text: #e5e7eb;
     --kr-dark-muted: #9ca3af;
     --kr-dark-accent: #00d4c8;
-    
-    /* Odoo 18/19 native variables */
+
+    /* Bootstrap 5 overrides */
+    --bs-body-bg: #111827 !important;
+    --bs-body-color: #e5e7eb !important;
+    --bs-secondary-color: #9ca3af !important;
+    --bs-tertiary-color: #6b7280 !important;
+    --bs-tertiary-bg: #202b3a !important;
+    --bs-secondary-bg: #18212f !important;
+    --bs-heading-color: #f3f4f6 !important;
+    --bs-link-color: #00d4c8 !important;
+    --bs-link-hover-color: #33ddd3 !important;
+    --bs-border-color: #2b3647 !important;
+    --bs-emphasis-color: #ffffff !important;
+    --bs-card-bg: #18212f !important;
+    --bs-card-border-color: #2b3647 !important;
+    --bs-table-color: #e5e7eb !important;
+    --bs-table-bg: transparent !important;
+    --bs-table-border-color: #2b3647 !important;
+    --bs-table-striped-bg: #202b3a !important;
+    --bs-table-hover-bg: #202b3a !important;
+    --bs-input-bg: #111827 !important;
+    --bs-input-border-color: #2b3647 !important;
+    --bs-input-color: #e5e7eb !important;
+    --bs-input-placeholder-color: #6b7280 !important;
+
+    /* Odoo native variables */
     --o-view-background-color: #111827 !important;
     --o-list-background-color: #111827 !important;
     --o-form-background-color: #18212f !important;
     --o-kanban-background-color: #111827 !important;
     --o-activity-background-color: #111827 !important;
-    --bs-body-bg: #111827 !important;
-    --bs-body-color: #e5e7eb !important;
+    --o-default-color: #e5e7eb !important;
+    --o-input-bg: #111827 !important;
+    --o-input-text-color: #e5e7eb !important;
+    --o-input-border-color: #2b3647 !important;
 
-    background: var(--kr-dark-bg);
-    color: var(--kr-dark-text);
+    background-color: #111827 !important;
+    background: #111827 !important;
+    color: #e5e7eb !important;
     color-scheme: dark;
 }
 
-.o_web_client :is(.text-dark, .text-black, .text-body, .text-reset, .text-secondary, .text-body-secondary) {
+/* ================================================================
+   NUCLEAR GLOBAL TEXT FIX — Universal wildcard
+   Forces EVERY element's text to light color in dark mode.
+   This is the ONLY approach that works GLOBALLY without
+   enumerating every individual Odoo/Bootstrap class.
+   ================================================================ */
+/* ================================================================
+   NUCLEAR GLOBAL TEXT FIX — Universal wildcard
+   Forces EVERY element's text to light color in dark mode.
+   Targets body.kr_sp_theme_dark *, [data-bs-theme="dark"] *, .o_theme_dark *.
+   ================================================================ */
+body.kr_sp_theme_dark *,
+body.kr_sp_theme_dark *::before,
+body.kr_sp_theme_dark *::after,
+[data-bs-theme="dark"] *,
+[data-bs-theme="dark"] *::before,
+[data-bs-theme="dark"] *::after,
+.o_theme_dark *,
+.o_theme_dark *::before,
+.o_theme_dark *::after {
+    color: #e5e7eb !important;
+    -webkit-text-fill-color: #e5e7eb !important;
+    border-color: #2b3647 !important;
+    color-scheme: dark;
+}
+
+/* ── Form Labels: Crisp high-contrast light text ------------------ */
+body.kr_sp_theme_dark :is(.o_form_label, label, .o_field_widget .o_form_label, .o_inner_group .o_form_label, .o_group .o_form_label) {
+    color: #f1f5f9 !important;
+    -webkit-text-fill-color: #f1f5f9 !important;
+    font-weight: 600 !important;
+}
+
+/* ── Form Inputs & Field Values: Pure white text on dark background */
+body.kr_sp_theme_dark :is(input, select, textarea, .o_input, .form-control, .form-select, .o_field_widget, .o_field_char, .o_field_many2one, .o_field_number, .o_field_monetary, .oe_currency_value, .o_cell, .o_data_cell) {
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+}
+
+body.kr_sp_theme_dark input:not([type="checkbox"]):not([type="radio"]),
+body.kr_sp_theme_dark textarea,
+body.kr_sp_theme_dark select,
+body.kr_sp_theme_dark .o_input {
+    background-color: #111827 !important;
+    background: #111827 !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+    opacity: 1 !important;
+}
+
+/* ── Left Sidebar Navigation Rail Labels ------------------------- */
+body.kr_sp_theme_dark :is(.kr_sp_rail_label, .kr_sp_rail_btn, .kr_sp_rail_btn span, .kr_sp_rail_icon_wrap .fa) {
+    color: #cbd5e1 !important;
+    -webkit-text-fill-color: #cbd5e1 !important;
+}
+
+body.kr_sp_theme_dark .kr_sp_rail_btn.is-active :is(.kr_sp_rail_label, .kr_sp_rail_icon_wrap .fa, .fa) {
+    color: #000000 !important;
+    -webkit-text-fill-color: #000000 !important;
+}
+
+/* ── Stat Buttons text and values -------------------------------- */
+body.kr_sp_theme_dark .oe_stat_button :is(.o_stat_value, .o_stat_text, span, div) {
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+}
+
+/* ── Kanban Record & Card Text/Labels: Crisp high-contrast white ── */
+body.kr_sp_theme_dark :is(.o_kanban_record, .o_kanban_card, .o_kanban_primary_right, .o_kanban_primary_left) :is(span, div, p, label, a:not(.btn), small, b, strong, h1, h2, h3, h4, h5, h6, .o_primary) {
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+}
+
+/* ── Chatter author, body, timestamp ---------------------------- */
+body.kr_sp_theme_dark :is(.o-mail-Chatter, .o-mail-Message, .o-mail-Message-author, .o-mail-Message-body, .o-mail-DateSection, .o-mail-Thread) :is(span, div, p, strong, small, a, time) {
+    color: #e5e7eb !important;
+    -webkit-text-fill-color: #e5e7eb !important;
+}
+
+/* ── Tooltips & Popovers --------------------------------------- */
+body.kr_sp_theme_dark :is(.tooltip, .popover, [role="tooltip"], .tooltip-inner, .bs-tooltip-auto, .bs-tooltip-top, .bs-tooltip-bottom) {
+    background-color: #18212f !important;
+    background: #18212f !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    border: 1px solid #2b3647 !important;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4) !important;
+}
+
+body.kr_sp_theme_dark .tooltip .tooltip-arrow::before {
+    border-top-color: #18212f !important;
+    border-bottom-color: #18212f !important;
+}
+body.kr_sp_theme_dark .fa,
+body.kr_sp_theme_dark i.fa,
+body.kr_sp_theme_dark .oi {
+    -webkit-text-fill-color: unset !important;
+}
+
+/* ── Primary buttons: white text globally in dark mode ── */
+body.kr_sp_theme_dark .btn-primary,
+body.kr_sp_theme_dark .btn.btn-primary {
+    background-color: #00d4c8 !important;
+    background: #00d4c8 !important;
+    border-color: transparent !important;
+    color: #080d18 !important;
+    -webkit-text-fill-color: #080d18 !important;
+}
+body.kr_sp_theme_dark .btn-primary *,
+body.kr_sp_theme_dark .btn.btn-primary * {
+    color: #080d18 !important;
+    -webkit-text-fill-color: #080d18 !important;
+}
+body.kr_sp_theme_dark .btn-primary:hover:not(:disabled),
+body.kr_sp_theme_dark .btn.btn-primary:hover:not(:disabled) {
+    background-color: #00bdb2 !important;
+    background: #00bdb2 !important;
+    color: #000000 !important;
+    -webkit-text-fill-color: #000000 !important;
+}
+/* ── btn-default / Cancel / secondary outline buttons ── */
+body.kr_sp_theme_dark .btn-default,
+body.kr_sp_theme_dark .btn.btn-default,
+body.kr_sp_theme_dark .btn.btn-secondary:not(.active),
+body.kr_sp_theme_dark button[special="cancel"],
+body.kr_sp_theme_dark .o_btn_cancel {
+    background-color: #263345 !important;
+    background: #263345 !important;
+    border-color: #374151 !important;
+    color: #e5e7eb !important;
+    -webkit-text-fill-color: #e5e7eb !important;
+}
+body.kr_sp_theme_dark .btn-default:hover:not(:disabled),
+body.kr_sp_theme_dark .btn.btn-default:hover:not(:disabled),
+body.kr_sp_theme_dark .btn.btn-secondary:not(.active):hover:not(:disabled),
+body.kr_sp_theme_dark button[special="cancel"]:hover:not(:disabled) {
+    background-color: #2f3f54 !important;
+    border-color: #4b5563 !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+}
+
+/* ── Exception: Status/badge colored text stays vibrant */
+body.kr_sp_theme_dark .text-success { color: #22d77b !important; -webkit-text-fill-color: #22d77b !important; }
+body.kr_sp_theme_dark .text-danger  { color: #f87171 !important; -webkit-text-fill-color: #f87171 !important; }
+body.kr_sp_theme_dark .text-warning { color: #facc15 !important; -webkit-text-fill-color: #facc15 !important; }
+body.kr_sp_theme_dark .text-info    { color: #38bdf8 !important; -webkit-text-fill-color: #38bdf8 !important; }
+body.kr_sp_theme_dark .text-primary { color: #00d4c8 !important; -webkit-text-fill-color: #00d4c8 !important; }
+body.kr_sp_theme_dark .text-muted,
+body.kr_sp_theme_dark .text-body-secondary,
+body.kr_sp_theme_dark .text-secondary { color: #9ca3af !important; -webkit-text-fill-color: #9ca3af !important; }
+
+/* ── Exception: Links use accent color */
+body.kr_sp_theme_dark a:not(.btn):not(.nav-link),
+body.kr_sp_theme_dark .o_form_uri,
+body.kr_sp_theme_dark .o_form_uri * {
+    color: #00d4c8 !important;
+    -webkit-text-fill-color: #00d4c8 !important;
+}
+
+/* ── Exception: Placeholder text stays muted */
+body.kr_sp_theme_dark input::placeholder,
+body.kr_sp_theme_dark textarea::placeholder,
+body.kr_sp_theme_dark .form-control::placeholder {
+    color: #6b7280 !important;
+    -webkit-text-fill-color: #6b7280 !important;
+    opacity: 1 !important;
+}
+
+/* ── Exception: Breadcrumb nav is muted, active record title is white */
+body.kr_sp_theme_dark .o_control_panel .breadcrumb-item a,
+body.kr_sp_theme_dark .o_control_panel .o_back_button a {
+    color: #9ca3af !important;
+    -webkit-text-fill-color: #9ca3af !important;
+}
+body.kr_sp_theme_dark .o_control_panel .breadcrumb-item.active,
+body.kr_sp_theme_dark .o_control_panel .o_last_breadcrumb_item,
+body.kr_sp_theme_dark .o_control_panel .o_last_breadcrumb_item * {
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+}
+
+/* ================================================================
+   GLOBAL ROOT & CONTAINER BACKGROUND OVERRIDES — Ensures full dark canvas
+   ================================================================ */
+html,
+body,
+body.kr_sp_theme_dark,
+[data-bs-theme="dark"],
+.o_theme_dark,
+.o_web_client {
+    --bs-body-bg: #111827 !important;
+    --bs-body-color: #e5e7eb !important;
+    --bs-tertiary-bg: #18212f !important;
+    --bs-secondary-bg: #18212f !important;
+    --o-view-background-color: #111827 !important;
+    --o-web-color-scheme: dark !important;
+    --o-bg-color: #111827 !important;
+    background-color: #111827 !important;
+    background: #111827 !important;
+    color: #e5e7eb !important;
+}
+
+body.kr_sp_theme_dark :is(
+    .o_web_client,
+    .o_action_manager,
+    .o_action,
+    .o_content,
+    .o_control_panel,
+    .o_header,
+    .o_view_controller,
+    .o_kanban_view,
+    .o_kanban_renderer,
+    .o_form_view,
+    .o_form_sheet,
+    .o_form_sheet_bg,
+    .o_form_renderer,
+    .o_list_view,
+    .o_list_renderer,
+    .o_pivot_view,
+    .o_graph_view,
+    .o_activity_view,
+    .o_base_settings_view,
+    .o_settings_container
+) {
+    background-color: #111827 !important;
+    background: #111827 !important;
+    color: #e5e7eb !important;
+}
+
+/* ================================================================
+   GLOBAL INPUT / FORM CONTROL — all inputs readable everywhere
+   ================================================================ */
+body.kr_sp_theme_dark .o_web_client input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+body.kr_sp_theme_dark .o_web_client textarea,
+body.kr_sp_theme_dark .o_web_client select,
+body.kr_sp_theme_dark .o_web_client .form-control,
+body.kr_sp_theme_dark .o_web_client .form-select,
+body.kr_sp_theme_dark .o_web_client .o_input,
+body.kr_sp_theme_dark .o_web_client .input-group-text {
+    background-color: #111827 !important;
+    background: #111827 !important;
+    color: #e5e7eb !important;
+    -webkit-text-fill-color: #e5e7eb !important;
+    border-color: #2b3647 !important;
+    caret-color: #00d4c8 !important;
+    opacity: 1 !important;
+}
+
+body.kr_sp_theme_dark .o_web_client input:read-only,
+body.kr_sp_theme_dark .o_web_client input[disabled],
+body.kr_sp_theme_dark .o_web_client textarea:read-only {
+    background-color: #18212f !important;
+    color: #e5e7eb !important;
+    -webkit-text-fill-color: #e5e7eb !important;
+    opacity: 1 !important;
+}
+
+/* Browser autofill override (WebKit) */
+body.kr_sp_theme_dark .o_web_client input:-webkit-autofill,
+body.kr_sp_theme_dark .o_web_client input:-webkit-autofill:hover,
+body.kr_sp_theme_dark .o_web_client input:-webkit-autofill:focus {
+    -webkit-box-shadow: 0 0 0 1000px #111827 inset !important;
+    -webkit-text-fill-color: #e5e7eb !important;
+    transition: background-color 5000s ease-in-out 0s;
+}
+
+/* ================================================================
+   ANALYTIX CUSTOM MODULE FIX — anx-inv-* badges, company names, status chips
+   Fixes: company name, invoice badges, status labels invisible in dark mode
+   ================================================================ */
+/* Container and badge backgrounds */
+body.kr_sp_theme_dark :is(
+    [class*="anx-inv"],
+    [class*="anx_inv"],
+    [class*="anx-company"],
+    [class*="anx_company"],
+    .anx-inv-company-badg,
+    .anx-inv-tn-ds-ss,
+    .anx-inv-td-name,
+    .anx-inv-td-date,
+    .anx-inv-toolbar,
+    .anx-inv-table,
+    .anx-inv-wrap,
+    .anx-inv-body,
+    .anx-inv-panel,
+    .anx-topbar,
+    .anx-body
+) {
+    background-color: #1e2d42 !important;
+    background: #1e2d42 !important;
+    color: #e5e7eb !important;
+    border-color: #2b3647 !important;
+}
+
+/* All text inside anx-inv-* elements — override inline color styles */
+body.kr_sp_theme_dark [class*="anx-inv"] :is(span, div, p, td, th, label, a, strong, small, b),
+body.kr_sp_theme_dark [class*="anx_inv"] :is(span, div, p, td, th, label, a, strong, small, b),
+body.kr_sp_theme_dark span[class*="anx-inv"],
+body.kr_sp_theme_dark span[class*="anx_inv"] {
+    color: #e5e7eb !important;
+    -webkit-text-fill-color: #e5e7eb !important;
+    background-color: #1e2d42 !important;
+    background: #1e2d42 !important;
+}
+
+/* Company name badge specifically — high specificity to beat inline styles */
+body.kr_sp_theme_dark .anx-inv-company-badg,
+body.kr_sp_theme_dark span.anx-inv-company-badg,
+body.kr_sp_theme_dark td .anx-inv-company-badg,
+body.kr_sp_theme_dark [class*="company-badg"],
+body.kr_sp_theme_dark [class*="company_badg"] {
+    background-color: #263345 !important;
+    background: #263345 !important;
+    color: #00d4c8 !important;
+    -webkit-text-fill-color: #00d4c8 !important;
+    border-radius: 6px !important;
+    border: 1px solid rgba(0, 212, 200, 0.3) !important;
+}
+
+/* Status / phase chips */
+body.kr_sp_theme_dark [class*="anx-"] .badge,
+body.kr_sp_theme_dark [class*="anx_"] .badge,
+body.kr_sp_theme_dark td[class*="anx-"] {
+    background-color: #263345 !important;
+    color: #e5e7eb !important;
+    -webkit-text-fill-color: #e5e7eb !important;
+    border-color: #374151 !important;
+}
+
+/* ================================================================
+   ANALYTIX DOCUMENT TABLE — Preview column, doc-table headers & cells
+   Fixes: blank white preview thumbnails, invisible column headers
+   ================================================================ */
+
+/* All anx-doc table headers */
+body.kr_sp_theme_dark :is(
+    [class*="anx-doc-th"],
+    [class*="anx-doc-td"],
+    [class*="anx-inv-th"],
+    [class*="anx-inv-td"],
+    th[class*="anx-"],
+    td[class*="anx-"]
+) {
+    background-color: #18212f !important;
+    background: #18212f !important;
+    color: #e5e7eb !important;
+    -webkit-text-fill-color: #e5e7eb !important;
+    border-color: #2b3647 !important;
+}
+
+/* Preview cell container — dark slate with border so thumbnail is framed */
+body.kr_sp_theme_dark :is(
+    [class*="anx-doc-th-preview"],
+    [class*="anx-doc-td-preview"],
+    [class*="anx-doc-preview"],
+    [class*="anx-inv-th-preview"],
+    [class*="anx-inv-td-preview"],
+    th.anx-doc-th-preview,
+    td.anx-doc-td-preview
+) {
+    background-color: #111827 !important;
+    background: #111827 !important;
+    color: #e5e7eb !important;
+    border-color: #2b3647 !important;
+}
+
+/* Preview image/thumbnail inside preview cells — keep image visible */
+body.kr_sp_theme_dark [class*="anx-doc-td-preview"] img,
+body.kr_sp_theme_dark [class*="anx-doc-th-preview"] img,
+body.kr_sp_theme_dark [class*="anx-doc-preview"] img,
+body.kr_sp_theme_dark [class*="anx-inv-td-preview"] img,
+body.kr_sp_theme_dark td[class*="preview"] img,
+body.kr_sp_theme_dark th[class*="preview"] img {
+    background-color: #ffffff !important;  /* keep image bg white so doc renders */
+    border-radius: 4px !important;
+    box-shadow: 0 0 0 1px #374151 !important;
+    opacity: 0.92 !important;
+    display: block !important;
+    visibility: visible !important;
+}
+
+/* Preview iframe / embed / canvas */
+body.kr_sp_theme_dark [class*="preview"] iframe,
+body.kr_sp_theme_dark [class*="preview"] canvas,
+body.kr_sp_theme_dark [class*="preview"] embed,
+body.kr_sp_theme_dark [class*="anx-doc"][class*="preview"] iframe {
+    background-color: #ffffff !important;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+/* Column header text for Preview, Description, Doc Type etc. */
+body.kr_sp_theme_dark thead th[class*="anx-"],
+body.kr_sp_theme_dark thead th[class*="anx-doc"],
+body.kr_sp_theme_dark thead th[class*="anx-inv"] {
+    color: #94a3b8 !important;
+    -webkit-text-fill-color: #94a3b8 !important;
+    background-color: #111827 !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.06em !important;
+}
+
+/* anx-doc full table wrapper */
+body.kr_sp_theme_dark :is(
+    [class*="anx-doc-table"],
+    [class*="anx-inv-table"],
+    .anx-doc-table,
+    .anx-inv-table
+) {
+    background-color: #111827 !important;
+    background: #111827 !important;
+    border-color: #2b3647 !important;
+}
+
+/* ================================================================
+   GLOBAL TABLE FIX — list views, tree views, pivot
+   ================================================================ */
+
+/* ================================================================
+   GLOBAL TABLE & FINANCIAL REPORT FIX — Accounting reports, list views
+   Removes ALL white backgrounds from section headers, level rows, and actions.
+   ================================================================ */
+body.kr_sp_theme_dark table,
+body.kr_sp_theme_dark thead,
+body.kr_sp_theme_dark tbody,
+body.kr_sp_theme_dark tfoot,
+body.kr_sp_theme_dark tr,
+body.kr_sp_theme_dark th,
+body.kr_sp_theme_dark td,
+body.kr_sp_theme_dark .o_web_client table,
+body.kr_sp_theme_dark .o_web_client tr,
+body.kr_sp_theme_dark .o_web_client th,
+body.kr_sp_theme_dark .o_web_client td {
+    background-color: #18212f !important;
+    background: #18212f !important;
+    color: #e5e7eb !important;
+    border-color: #2b3647 !important;
+    --bs-table-bg: #18212f !important;
+    --bs-table-color: #e5e7eb !important;
+}
+
+body.kr_sp_theme_dark thead th,
+body.kr_sp_theme_dark .o_web_client thead th {
+    background-color: #111827 !important;
+    background: #111827 !important;
+    color: #9ca3af !important;
+    -webkit-text-fill-color: #9ca3af !important;
+}
+
+/* ── Financial & Accounting Dynamic Reports Container & Outer Frame Purge ── */
+body.kr_sp_theme_dark :is(
+    .o_account_reports_page,
+    .o_reports_body,
+    .o_account_reports_body,
+    .o_account_reports_summary,
+    .o_account_reports_no_print,
+    .o_account_reports_filters,
+    .o_account_reports_filter_input,
+    .o_account_reports_header,
+    .o_account_reports_table_container,
+    div[class*="account_reports"],
+    div[class*="o_account_reports"]
+) {
+    background-color: #111827 !important;
+    background: #111827 !important;
+    border-color: #2b3647 !important;
+    color: #ffffff !important;
+}
+
+/* ── TARGETED FIX: pycusFilterBox / pycus-main-filters / py-fin-lines-container ── */
+body.kr_sp_theme_dark :is(
+    .pycusFilterBox,
+    .pycus-main-filters,
+    .py-fin-lines-container,
+    .pycus_filter_box,
+    .pycus_main_filters,
+    .py_fin_lines_container,
+    [class*="pycus"],
+    [class*="py-fin"],
+    [class*="py_fin"]
+) {
+    background-color: #111827 !important;
+    background: #111827 !important;
+    border-color: #2b3647 !important;
+    color: #e5e7eb !important;
+}
+
+/* All text labels inside these filter boxes */
+body.kr_sp_theme_dark :is(
+    .pycusFilterBox,
+    .pycus-main-filters,
+    .py-fin-lines-container,
+    [class*="pycus"],
+    [class*="py-fin"],
+    [class*="py_fin"]
+) :is(label, span, div, p, td, th, small, strong, b, li, a) {
+    color: #e5e7eb !important;
+    -webkit-text-fill-color: #e5e7eb !important;
+}
+
+/* All input fields / selects / dropdowns inside these filter boxes */
+body.kr_sp_theme_dark :is(
+    .pycusFilterBox,
+    .pycus-main-filters,
+    .py-fin-lines-container,
+    [class*="pycus"],
+    [class*="py-fin"],
+    [class*="py_fin"]
+) :is(input, select, textarea, .o_input, .form-control, .form-select, .o_field_widget) {
+    background-color: #18212f !important;
+    background: #18212f !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    border: 1px solid #374151 !important;
+    border-radius: 6px !important;
+}
+
+/* Buttons inside these filter boxes */
+body.kr_sp_theme_dark :is(
+    .pycusFilterBox,
+    .pycus-main-filters,
+    .py-fin-lines-container,
+    [class*="pycus"],
+    [class*="py-fin"],
+    [class*="py_fin"]
+) :is(.btn, button) {
+    background-color: #263345 !important;
+    background: #263345 !important;
+    color: #00d4c8 !important;
+    -webkit-text-fill-color: #00d4c8 !important;
+    border: 1px solid rgba(0, 212, 200, 0.35) !important;
+    border-radius: 8px !important;
+}
+
+body.kr_sp_theme_dark :is(
+    .pycusFilterBox,
+    .pycus-main-filters,
+    .py-fin-lines-container,
+    [class*="pycus"],
+    [class*="py-fin"],
+    [class*="py_fin"]
+) :is(.btn:hover, button:hover) {
+    background-color: #00d4c8 !important;
+    color: #000000 !important;
+    -webkit-text-fill-color: #000000 !important;
+}
+
+/* ── Bootstrap Navbar bg-white Global Dark Mode Fix ─────────────────── */
+body.kr_sp_theme_dark :is(
+    .navbar.bg-white,
+    .navbar-expand-lg.bg-white,
+    nav.bg-white,
+    .navbar[class*="bg-white"],
+    .navbar[style*="background: white"],
+    .navbar[style*="background: #fff"],
+    .navbar[style*="background-color: white"],
+    .navbar[style*="background-color: #fff"]
+) {
+    background-color: #111827 !important;
+    background: #111827 !important;
+    border-color: #2b3647 !important;
+    color: #e5e7eb !important;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.4) !important;
+}
+
+/* Navbar text — brand, links, nav-items */
+body.kr_sp_theme_dark :is(
+    .navbar.bg-white,
+    .navbar-expand-lg.bg-white,
+    nav.bg-white
+) :is(
+    .navbar-brand,
+    .nav-link,
+    .navbar-text,
+    a,
+    span,
+    label,
+    div,
+    li,
+    p,
+    strong,
+    small
+) {
+    color: #e5e7eb !important;
+    -webkit-text-fill-color: #e5e7eb !important;
+}
+
+body.kr_sp_theme_dark :is(
+    .navbar.bg-white,
+    .navbar-expand-lg.bg-white,
+    nav.bg-white
+) .nav-link:hover,
+body.kr_sp_theme_dark :is(
+    .navbar.bg-white,
+    .navbar-expand-lg.bg-white,
+    nav.bg-white
+) .navbar-brand:hover {
+    color: #00d4c8 !important;
+    -webkit-text-fill-color: #00d4c8 !important;
+}
+
+/* Navbar toggler (hamburger) */
+body.kr_sp_theme_dark :is(
+    .navbar.bg-white,
+    .navbar-expand-lg.bg-white,
+    nav.bg-white
+) .navbar-toggler {
+    border-color: #374151 !important;
+    color: #e5e7eb !important;
+}
+
+body.kr_sp_theme_dark :is(
+    .navbar.bg-white,
+    .navbar-expand-lg.bg-white,
+    nav.bg-white
+) .navbar-toggler-icon {
+    filter: invert(1) !important;
+}
+
+/* Active nav-link */
+body.kr_sp_theme_dark :is(
+    .navbar.bg-white,
+    .navbar-expand-lg.bg-white,
+    nav.bg-white
+) .nav-link.active,
+body.kr_sp_theme_dark :is(
+    .navbar.bg-white,
+    .navbar-expand-lg.bg-white,
+    nav.bg-white
+) .nav-item.active .nav-link {
+    color: #00d4c8 !important;
+    -webkit-text-fill-color: #00d4c8 !important;
+}
+
+/* ── Financial & Accounting Reports Filter Box & Labels ────────────────── */
+
+body.kr_sp_theme_dark :is(
+    .o_account_reports_filter_input,
+    .o_account_reports_summary,
+    .o_account_reports_filters,
+    .o_account_reports_header
+) :is(label, span, div, p, th, td, small, strong, b) {
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    font-weight: 600 !important;
+}
+
+body.kr_sp_theme_dark :is(
+    .o_account_reports_filter_input,
+    .o_account_reports_summary,
+    .o_account_reports_filters,
+    .o_account_reports_header
+) :is(input, select, textarea, .o_input, .form-control, .form-select) {
+    background-color: #18212f !important;
+    background: #18212f !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    border: 1px solid #374151 !important;
+}
+
+/* ── Financial & Accounting Dynamic Reports Level Headers ───────── */
+body.kr_sp_theme_dark :is(
+    tr[class*="o_account_reports_level"],
+    tr[class*="o_account_reports_domain_line"],
+    tr[data-level],
+    tr.level_header,
+    tr.section_header,
+    tr.header_row,
+    tr.o_account_reports_initial_balance,
+    tr.o_account_reports_footnote,
+    .o_account_reports_table tr,
+    .o_reports_body table tr,
+    .o_account_reports_page tr,
+    tr.table-active,
+    tr.table-info,
+    tr.active,
+    tr.selected
+) {
+    background-color: #202b3a !important;
+    background: #202b3a !important;
+    color: #ffffff !important;
+}
+
+body.kr_sp_theme_dark :is(
+    tr[class*="o_account_reports_level"] td,
+    tr[class*="o_account_reports_level"] th,
+    tr[class*="o_account_reports_domain_line"] td,
+    tr[class*="o_account_reports_domain_line"] th,
+    tr[data-level] td,
+    tr[data-level] th,
+    .o_account_reports_table tr td,
+    .o_reports_body table tr td,
+    .o_account_reports_page tr td
+) {
+    background-color: #202b3a !important;
+    background: #202b3a !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+}
+
+/* ── Accounting Report Web Actions & Badges (e.g. "General Ledger") */
+body.kr_sp_theme_dark :is(
+    .o_account_reports_web_action,
+    a.o_account_reports_web_action,
+    .o_account_reports_table .badge,
+    .o_account_reports_table a,
+    .o_reports_body .badge,
+    .o_reports_body a,
+    tr .badge,
+    td .badge
+) {
+    background-color: #263345 !important;
+    background: #263345 !important;
+    color: #00d4c8 !important;
+    -webkit-text-fill-color: #00d4c8 !important;
+    border: 1px solid rgba(0, 212, 200, 0.4) !important;
+    border-radius: 6px !important;
+    padding: 3px 8px !important;
+    text-decoration: none !important;
+}
+
+body.kr_sp_theme_dark :is(
+    .o_account_reports_web_action:hover,
+    a.o_account_reports_web_action:hover,
+    .o_account_reports_table a:hover,
+    .o_reports_body a:hover
+) {
+    background-color: #00d4c8 !important;
+    background: #00d4c8 !important;
+    color: #000000 !important;
+    -webkit-text-fill-color: #000000 !important;
+}
+
+body.kr_sp_theme_dark tbody tr:hover td,
+body.kr_sp_theme_dark tbody tr:hover th {
+    background-color: #263345 !important;
+    background: #263345 !important;
+}
+
+/* ================================================================
+   GLOBAL DROPDOWN / MODAL FIX — menus, dialogs, popovers
+   ================================================================ */
+body.kr_sp_theme_dark .dropdown-menu,
+body.kr_sp_theme_dark .o-dropdown--menu,
+body.kr_sp_theme_dark .o_popover,
+body.kr_sp_theme_dark .modal-content,
+body.kr_sp_theme_dark .modal-header,
+body.kr_sp_theme_dark .modal-body,
+body.kr_sp_theme_dark .modal-footer {
+    background-color: #18212f !important;
+    background: #18212f !important;
+    border-color: #2b3647 !important;
+    color: #e5e7eb !important;
+}
+
+body.kr_sp_theme_dark .dropdown-menu *,
+body.kr_sp_theme_dark .o-dropdown--menu *,
+body.kr_sp_theme_dark .modal-content *,
+body.kr_sp_theme_dark .modal-body * {
+    color: #e5e7eb !important;
+    -webkit-text-fill-color: #e5e7eb !important;
+}
+
+body.kr_sp_theme_dark .modal .btn-close,
+body.kr_sp_theme_dark .o_dialog .btn-close {
+    filter: invert(1) grayscale(1) !important;
+    opacity: 0.78 !important;
+}
+
+body.kr_sp_theme_dark .modal-body input:not([type="checkbox"]):not([type="radio"]),
+body.kr_sp_theme_dark .modal-body textarea,
+body.kr_sp_theme_dark .modal-body select,
+body.kr_sp_theme_dark .modal-body .form-control {
+    background-color: #111827 !important;
+    color: #e5e7eb !important;
+    -webkit-text-fill-color: #e5e7eb !important;
+    border-color: #2b3647 !important;
+}
+
+body.kr_sp_theme_dark .o_web_client :is(.text-dark, .text-black, .text-body, .text-reset, .text-secondary, .text-body-secondary) {
     color: var(--kr-dark-text) !important;
 }
 
-.o_web_client :is(.text-muted, .text-body-tertiary, .text-secondary-emphasis) {
+body.kr_sp_theme_dark .o_web_client :is(.text-muted, .text-body-tertiary, .text-secondary-emphasis) {
     color: var(--kr-dark-muted) !important;
 }
 
-.o_web_client :is(.bg-white, .bg-light, .bg-body, .bg-view, .bg-100, .text-bg-light, .text-bg-100) {
+body.kr_sp_theme_dark .o_web_client :is(.bg-white, .bg-light, .bg-body, .bg-view, .bg-100, .text-bg-light, .text-bg-100) {
     background-color: var(--kr-dark-surface) !important;
     color: var(--kr-dark-text) !important;
 }
 
-.o_web_client :is(.border, .border-top, .border-bottom, .border-start, .border-end) {
+body.kr_sp_theme_dark .o_web_client :is(.border, .border-top, .border-bottom, .border-start, .border-end) {
     border-color: var(--kr-dark-border) !important;
 }
 
-.o_web_client > .o_action_manager,
-.o_web_client .o_action,
-.o_web_client .o_content {
+body.kr_sp_theme_dark .o_web_client > .o_action_manager,
+body.kr_sp_theme_dark .o_web_client .o_action,
+body.kr_sp_theme_dark .o_web_client .o_content {
     background: var(--kr-dark-bg);
     color: var(--kr-dark-text);
 }
 
-.o_web_client .o_navbar .o_main_navbar,
-.o_web_client .o_control_panel {
-    border-color: var(--kr-dark-border);
-    background: rgba(24, 33, 47, 0.96);
-    box-shadow: none;
-    color: var(--kr-dark-text);
+body.kr_sp_theme_dark .o_web_client .o_navbar .o_main_navbar,
+body.kr_sp_theme_dark .o_web_client .o_control_panel,
+body.kr_sp_theme_dark .o_control_panel,
+body.kr_sp_theme_dark .o_form_statusbar,
+body.kr_sp_theme_dark .o_statusbar_status {
+    border-color: var(--kr-dark-border) !important;
+    background-color: #111827 !important;
+    background: #111827 !important;
+    box-shadow: none !important;
+    color: var(--kr-dark-text) !important;
 }
 
-.o_web_client .o_main_navbar .o_menu_sections .dropdown-toggle,
-.o_web_client .o_main_navbar .o_menu_sections .o_nav_entry,
-.o_web_client .o_main_navbar .o_menu_systray .dropdown-toggle,
-.o_web_client .o_main_navbar .o_menu_systray .o-dropdown {
+body.kr_sp_theme_dark .o_web_client .o_main_navbar .o_menu_sections .dropdown-toggle,
+body.kr_sp_theme_dark .o_web_client .o_main_navbar .o_menu_sections .o_nav_entry,
+body.kr_sp_theme_dark .o_web_client .o_main_navbar .o_menu_systray .dropdown-toggle,
+body.kr_sp_theme_dark .o_web_client .o_main_navbar .o_menu_systray .o-dropdown {
     color: var(--kr-dark-muted);
 }
 
-.o_web_client .o_main_navbar .o_menu_sections .dropdown-toggle:hover,
-.o_web_client .o_main_navbar .o_menu_sections .o_nav_entry:hover,
-.o_web_client .o_main_navbar .o_menu_systray .dropdown-toggle:hover {
+body.kr_sp_theme_dark .o_web_client .o_main_navbar .o_menu_sections .dropdown-toggle:hover,
+body.kr_sp_theme_dark .o_web_client .o_main_navbar .o_menu_sections .o_nav_entry:hover,
+body.kr_sp_theme_dark .o_web_client .o_main_navbar .o_menu_systray .dropdown-toggle:hover {
     background: #202b3a;
     color: var(--kr-dark-text);
 }
 
-.o_web_client .o_control_panel .breadcrumb,
-.o_web_client .o_control_panel .o_breadcrumb,
-.o_web_client > .o_action_manager > .o_action.o_form_view .o_control_panel .breadcrumb-item,
-.o_web_client > .o_action_manager > .o_action.o_form_view .o_control_panel .breadcrumb-item a,
-.o_web_client > .o_action_manager > .o_action.o_form_view .o_control_panel .o_back_button a,
-.o_web_client .o_control_panel .breadcrumb-item,
-.o_web_client .o_control_panel .breadcrumb-item a,
-.o_web_client .o_control_panel .o_back_button a,
-.o_web_client .o_control_panel .o_last_breadcrumb_item {
+body.kr_sp_theme_dark .o_web_client .o_control_panel .breadcrumb,
+body.kr_sp_theme_dark .o_web_client .o_control_panel .o_breadcrumb,
+body.kr_sp_theme_dark .o_web_client > .o_action_manager > .o_action.o_form_view .o_control_panel .breadcrumb-item,
+body.kr_sp_theme_dark .o_web_client > .o_action_manager > .o_action.o_form_view .o_control_panel .breadcrumb-item a,
+body.kr_sp_theme_dark .o_web_client > .o_action_manager > .o_action.o_form_view .o_control_panel .o_back_button a,
+body.kr_sp_theme_dark .o_web_client .o_control_panel .breadcrumb-item,
+body.kr_sp_theme_dark .o_web_client .o_control_panel .breadcrumb-item a,
+body.kr_sp_theme_dark .o_web_client .o_control_panel .o_back_button a,
+body.kr_sp_theme_dark .o_web_client .o_control_panel .o_last_breadcrumb_item {
     color: #cbd5e1 !important;
     font-weight: 600 !important;
 }
 
-.o_web_client > .o_action_manager > .o_action.o_form_view .o_control_panel .breadcrumb-item.active,
-.o_web_client > .o_action_manager > .o_action.o_form_view .o_control_panel .o_last_breadcrumb_item,
-.o_web_client .o_control_panel .breadcrumb-item.active,
-.o_web_client .o_control_panel .o_last_breadcrumb_item {
+body.kr_sp_theme_dark .o_web_client > .o_action_manager > .o_action.o_form_view .o_control_panel .breadcrumb-item.active,
+body.kr_sp_theme_dark .o_web_client > .o_action_manager > .o_action.o_form_view .o_control_panel .o_last_breadcrumb_item,
+body.kr_sp_theme_dark .o_web_client .o_control_panel .breadcrumb-item.active,
+body.kr_sp_theme_dark .o_web_client .o_control_panel .o_last_breadcrumb_item {
     color: #ffffff !important;
     font-weight: 700 !important;
 }
@@ -320,8 +1141,9 @@ body.kr_sp_theme_dark {
 
 .o_web_client :is(.btn-primary, .btn-primary:disabled, .btn-primary.disabled) {
     border-color: transparent;
-    background-color: var(--kr-dark-accent);
-    color: #111827;
+    background-color: #00d4c8;
+    color: #080d18;
+    -webkit-text-fill-color: #080d18;
 }
 
 .o_web_client :is(.alert-secondary, .bg-primary-subtle, .text-bg-secondary) {
@@ -393,6 +1215,304 @@ body.kr_sp_theme_dark {
 .o_web_client .o_pivot_view .o_pivot td {
     border-color: var(--kr-dark-border);
     color: var(--kr-dark-text);
+}
+
+/* ============================================================
+   GLOBAL DARK MODE READABILITY FIX
+   Forces ALL text in form views, labels, tabs, widgets, and
+   every content area to be visible on dark backgrounds.
+   ============================================================ */
+
+/* --- Form sheet, notebook, record title --- */
+body.kr_sp_theme_dark .o_form_view,
+body.kr_sp_theme_dark .o_form_view .o_form_sheet,
+body.kr_sp_theme_dark .o_form_view .o_form_sheet_bg,
+body.kr_sp_theme_dark .o_form_renderer,
+body.kr_sp_theme_dark .o_form_view .o_group,
+body.kr_sp_theme_dark .o_form_view .o_cell,
+body.kr_sp_theme_dark .o_form_view .o_wrap_field,
+body.kr_sp_theme_dark .o_form_view .o_wrap_label {
+    background-color: var(--kr-dark-surface, #18212f) !important;
+    color: var(--kr-dark-text, #e5e7eb) !important;
+}
+
+/* --- ALL generic text elements inside the web client --- */
+body.kr_sp_theme_dark .o_web_client label,
+body.kr_sp_theme_dark .o_web_client .o_form_label,
+body.kr_sp_theme_dark .o_web_client .o_field_label,
+body.kr_sp_theme_dark .o_web_client .o_wrap_label label,
+body.kr_sp_theme_dark .o_web_client .o_group label,
+body.kr_sp_theme_dark .o_web_client .o_cell label,
+body.kr_sp_theme_dark .o_web_client .o_setting_box label,
+body.kr_sp_theme_dark .o_web_client .o_setting_left_pane label,
+body.kr_sp_theme_dark .o_web_client .o_setting_right_pane label,
+body.kr_sp_theme_dark .o_web_client .o_setting_right_pane span,
+body.kr_sp_theme_dark .o_web_client .o_setting_right_pane p {
+    color: var(--kr-dark-text, #e5e7eb) !important;
+    -webkit-text-fill-color: var(--kr-dark-text, #e5e7eb) !important;
+}
+
+/* --- Field widget text (read-only spans, display values) --- */
+body.kr_sp_theme_dark .o_web_client .o_field_widget,
+body.kr_sp_theme_dark .o_web_client .o_field_widget span:not(.badge):not(.o_tag),
+body.kr_sp_theme_dark .o_web_client .o_field_widget div,
+body.kr_sp_theme_dark .o_web_client .o_field_widget p,
+body.kr_sp_theme_dark .o_web_client .o_field_char span,
+body.kr_sp_theme_dark .o_web_client .o_field_text span,
+body.kr_sp_theme_dark .o_web_client .o_field_many2one span,
+body.kr_sp_theme_dark .o_web_client .o_field_selection span,
+body.kr_sp_theme_dark .o_web_client .o_field_float span,
+body.kr_sp_theme_dark .o_web_client .o_field_integer span,
+body.kr_sp_theme_dark .o_web_client .o_field_monetary span,
+body.kr_sp_theme_dark .o_web_client .o_field_date span,
+body.kr_sp_theme_dark .o_web_client .o_field_datetime span,
+body.kr_sp_theme_dark .o_web_client .o_field_boolean_toggle span,
+body.kr_sp_theme_dark .o_web_client .o_field_radio span,
+body.kr_sp_theme_dark .o_web_client .o_field_priority span,
+body.kr_sp_theme_dark .o_web_client .o_field_widget .o_input {
+    color: var(--kr-dark-text, #e5e7eb) !important;
+    -webkit-text-fill-color: var(--kr-dark-text, #e5e7eb) !important;
+}
+
+/* --- Notebook tabs (General Information, Sales, Purchase, etc.) --- */
+body.kr_sp_theme_dark .o_web_client .o_notebook,
+body.kr_sp_theme_dark .o_web_client .o_notebook .nav-tabs,
+body.kr_sp_theme_dark .o_web_client .o_notebook .nav-item,
+body.kr_sp_theme_dark .o_web_client .o_notebook .nav-link,
+body.kr_sp_theme_dark .o_web_client .o_notebook .tab-content,
+body.kr_sp_theme_dark .o_web_client .o_notebook .tab-pane {
+    background-color: var(--kr-dark-surface, #18212f) !important;
+    color: var(--kr-dark-text, #e5e7eb) !important;
+    border-color: var(--kr-dark-border, #2b3647) !important;
+}
+
+body.kr_sp_theme_dark .o_web_client .o_notebook .nav-link {
+    color: var(--kr-dark-muted, #9ca3af) !important;
+}
+
+body.kr_sp_theme_dark .o_web_client .o_notebook .nav-link.active,
+body.kr_sp_theme_dark .o_web_client .o_notebook .nav-link:hover {
+    color: var(--kr-dark-text, #e5e7eb) !important;
+    border-color: var(--kr-dark-border, #2b3647) !important;
+    background-color: var(--kr-dark-surface-soft, #202b3a) !important;
+}
+
+/* --- Section headings (INTERNAL NOTES, etc.) --- */
+body.kr_sp_theme_dark .o_web_client h1,
+body.kr_sp_theme_dark .o_web_client h2,
+body.kr_sp_theme_dark .o_web_client h3,
+body.kr_sp_theme_dark .o_web_client h4,
+body.kr_sp_theme_dark .o_web_client h5,
+body.kr_sp_theme_dark .o_web_client h6,
+body.kr_sp_theme_dark .o_web_client .o_horizontal_separator,
+body.kr_sp_theme_dark .o_web_client .o_form_view .o_horizontal_separator {
+    color: var(--kr-dark-text, #e5e7eb) !important;
+    border-color: var(--kr-dark-border, #2b3647) !important;
+}
+
+/* --- Stat buttons (DOCUMENTS, PURCHASED, SOLD, etc.) --- */
+body.kr_sp_theme_dark .o_web_client .oe_button_box,
+body.kr_sp_theme_dark .o_web_client .oe_button_box .oe_stat_button,
+body.kr_sp_theme_dark .o_web_client .o_stat_info,
+body.kr_sp_theme_dark .o_web_client .o_stat_value,
+body.kr_sp_theme_dark .o_web_client .o_stat_text,
+body.kr_sp_theme_dark .o_web_client .o_field_stat_info span,
+body.kr_sp_theme_dark .o_web_client .oe_stat_button span,
+body.kr_sp_theme_dark .o_web_client .oe_stat_button .o_button_icon,
+body.kr_sp_theme_dark .o_web_client .oe_stat_button i {
+    color: var(--kr-dark-text, #e5e7eb) !important;
+    -webkit-text-fill-color: var(--kr-dark-text, #e5e7eb) !important;
+}
+
+body.kr_sp_theme_dark .o_web_client .oe_button_box .oe_stat_button {
+    border-color: var(--kr-dark-border, #2b3647) !important;
+    background-color: var(--kr-dark-surface, #18212f) !important;
+}
+
+body.kr_sp_theme_dark .o_web_client .oe_button_box .oe_stat_button:hover {
+    background-color: var(--kr-dark-surface-soft, #202b3a) !important;
+}
+
+/* --- Chatter / messaging panel --- */
+body.kr_sp_theme_dark .o_web_client .o-mail-Thread,
+body.kr_sp_theme_dark .o_web_client .o-mail-Chatter,
+body.kr_sp_theme_dark .o_web_client .o-mail-Chatter-content,
+body.kr_sp_theme_dark .o_web_client .o-mail-Thread-messages,
+body.kr_sp_theme_dark .o_web_client .o-mail-Message,
+body.kr_sp_theme_dark .o_web_client .o-mail-Message-content,
+body.kr_sp_theme_dark .o_web_client .o-mail-Message-header,
+body.kr_sp_theme_dark .o_web_client .o-mail-Message-footer,
+body.kr_sp_theme_dark .o_web_client .o-mail-Message-body,
+body.kr_sp_theme_dark .o_web_client .o-mail-Message-body p,
+body.kr_sp_theme_dark .o_web_client .o-mail-Message-body span,
+body.kr_sp_theme_dark .o_web_client .o-mail-Message-body div,
+body.kr_sp_theme_dark .o_web_client .o-mail-Message-body a,
+body.kr_sp_theme_dark .o_web_client .o-mail-ChatterTopbar,
+body.kr_sp_theme_dark .o_web_client .o-mail-Chatter-scrolltop,
+body.kr_sp_theme_dark .o_web_client .o-mail-DateSection,
+body.kr_sp_theme_dark .o_web_client .o-mail-DateSection span {
+    background-color: var(--kr-dark-surface, #18212f) !important;
+    color: var(--kr-dark-text, #e5e7eb) !important;
+}
+
+body.kr_sp_theme_dark .o_web_client .o-mail-Message-content {
+    border-color: var(--kr-dark-border, #2b3647) !important;
+}
+
+body.kr_sp_theme_dark .o_web_client .o-mail-ChatterTopbar {
+    border-color: var(--kr-dark-border, #2b3647) !important;
+}
+
+/* Chatter action buttons (Send message, Log note, Activity) */
+body.kr_sp_theme_dark .o_web_client .o-mail-Chatter .btn,
+body.kr_sp_theme_dark .o_web_client .o-mail-ChatterTopbar .btn {
+    color: var(--kr-dark-text, #e5e7eb) !important;
+    border-color: var(--kr-dark-border, #2b3647) !important;
+    background: var(--kr-dark-surface-soft, #202b3a) !important;
+}
+
+body.kr_sp_theme_dark .o_web_client .o-mail-Chatter .btn:hover,
+body.kr_sp_theme_dark .o_web_client .o-mail-ChatterTopbar .btn:hover {
+    border-color: var(--kr-dark-accent, #00d4c8) !important;
+    color: var(--kr-dark-accent, #00d4c8) !important;
+}
+
+/* --- Author name, timestamps in chatter --- */
+body.kr_sp_theme_dark .o_web_client .o-mail-Message-author,
+body.kr_sp_theme_dark .o_web_client .o-mail-Message-date,
+body.kr_sp_theme_dark .o_web_client .o-mail-Message-author .o_redirect,
+body.kr_sp_theme_dark .o_web_client .o-mail-Message-author a,
+body.kr_sp_theme_dark .o_web_client .o-mail-Message span.text-muted,
+body.kr_sp_theme_dark .o_web_client .o-mail-Message small {
+    color: var(--kr-dark-muted, #9ca3af) !important;
+    -webkit-text-fill-color: var(--kr-dark-muted, #9ca3af) !important;
+}
+
+/* --- List view headers, table cells, rows --- */
+body.kr_sp_theme_dark .o_web_client .o_list_table,
+body.kr_sp_theme_dark .o_web_client .o_list_table thead,
+body.kr_sp_theme_dark .o_web_client .o_list_table tbody,
+body.kr_sp_theme_dark .o_web_client .o_list_table tr,
+body.kr_sp_theme_dark .o_web_client .o_list_table th,
+body.kr_sp_theme_dark .o_web_client .o_list_table td,
+body.kr_sp_theme_dark .o_web_client .o_list_table .o_data_cell,
+body.kr_sp_theme_dark .o_web_client .o_list_table .o_field_cell {
+    background-color: var(--kr-dark-surface, #18212f) !important;
+    color: var(--kr-dark-text, #e5e7eb) !important;
+    border-color: var(--kr-dark-border, #2b3647) !important;
+}
+
+body.kr_sp_theme_dark .o_web_client .o_list_table tbody tr:hover td {
+    background-color: var(--kr-dark-surface-soft, #202b3a) !important;
+}
+
+/* --- Kanban cards --- */
+body.kr_sp_theme_dark .o_web_client .o_kanban_record,
+body.kr_sp_theme_dark .o_web_client .o_kanban_record .o_kanban_record_title,
+body.kr_sp_theme_dark .o_web_client .o_kanban_record .o_kanban_record_body,
+body.kr_sp_theme_dark .o_web_client .o_kanban_record span,
+body.kr_sp_theme_dark .o_web_client .o_kanban_record div,
+body.kr_sp_theme_dark .o_web_client .o_kanban_record p,
+body.kr_sp_theme_dark .o_web_client .o_kanban_record strong {
+    color: var(--kr-dark-text, #e5e7eb) !important;
+    background-color: var(--kr-dark-surface, #18212f) !important;
+}
+
+/* --- Settings page --- */
+body.kr_sp_theme_dark .o_web_client .o_settings_container,
+body.kr_sp_theme_dark .o_web_client .o_setting_box,
+body.kr_sp_theme_dark .o_web_client .o_setting_left_pane,
+body.kr_sp_theme_dark .o_web_client .o_setting_right_pane,
+body.kr_sp_theme_dark .o_web_client .o_settings_header,
+body.kr_sp_theme_dark .o_web_client .o_searchable_setting,
+body.kr_sp_theme_dark .o_web_client .settings_tab,
+body.kr_sp_theme_dark .o_web_client .settings_tab span,
+body.kr_sp_theme_dark .o_web_client .o_sidebar .o_settings_tab {
+    background-color: var(--kr-dark-surface, #18212f) !important;
+    color: var(--kr-dark-text, #e5e7eb) !important;
+    border-color: var(--kr-dark-border, #2b3647) !important;
+}
+
+/* --- Generic catch-all for any missed text inside o_form_view --- */
+body.kr_sp_theme_dark .o_web_client .o_form_view span:not(.badge):not(.o_tag):not(.sr-only),
+body.kr_sp_theme_dark .o_web_client .o_form_view div:not(.modal):not(.modal-dialog):not(.modal-content),
+body.kr_sp_theme_dark .o_web_client .o_form_view p,
+body.kr_sp_theme_dark .o_web_client .o_form_view small,
+body.kr_sp_theme_dark .o_web_client .o_form_view strong,
+body.kr_sp_theme_dark .o_web_client .o_form_view em,
+body.kr_sp_theme_dark .o_web_client .o_form_view td,
+body.kr_sp_theme_dark .o_web_client .o_form_view th {
+    color: var(--kr-dark-text, #e5e7eb) !important;
+}
+
+/* --- Textarea placeholder for internal notes --- */
+body.kr_sp_theme_dark .o_web_client .o_form_view .o_field_text textarea::placeholder,
+body.kr_sp_theme_dark .o_web_client .o_form_view input::placeholder,
+body.kr_sp_theme_dark .o_web_client .o_form_view textarea::placeholder {
+    color: var(--kr-dark-muted, #9ca3af) !important;
+    -webkit-text-fill-color: var(--kr-dark-muted, #9ca3af) !important;
+    opacity: 1 !important;
+}
+
+/* --- Editable textarea / note area bg --- */
+body.kr_sp_theme_dark .o_web_client .o_field_html .odoo-editor-editable,
+body.kr_sp_theme_dark .o_web_client .o_field_html .o_editable,
+body.kr_sp_theme_dark .o_web_client .o_field_html,
+body.kr_sp_theme_dark .o_web_client .o_field_text textarea,
+body.kr_sp_theme_dark .o_web_client .note-editable {
+    background-color: var(--kr-dark-surface, #18212f) !important;
+    color: var(--kr-dark-text, #e5e7eb) !important;
+    -webkit-text-fill-color: var(--kr-dark-text, #e5e7eb) !important;
+}
+
+/* --- Tag / many2many_tags color fix --- */
+body.kr_sp_theme_dark .o_web_client .o_tag,
+body.kr_sp_theme_dark .o_web_client .badge:not(.text-bg-success):not(.text-bg-danger):not(.text-bg-warning):not(.text-bg-info):not(.text-bg-primary) {
+    background-color: var(--kr-dark-surface-soft, #202b3a) !important;
+    color: var(--kr-dark-text, #e5e7eb) !important;
+    border-color: var(--kr-dark-border, #2b3647) !important;
+}
+
+/* --- Many2one dropdown links --- */
+body.kr_sp_theme_dark .o_web_client .o_field_many2one .o_form_uri,
+body.kr_sp_theme_dark .o_web_client .o_field_many2many .o_form_uri,
+body.kr_sp_theme_dark .o_web_client a.o_form_uri {
+    color: var(--kr-dark-accent, #00d4c8) !important;
+}
+
+/* --- Avatar / image upload areas --- */
+body.kr_sp_theme_dark .o_web_client .o_field_image,
+body.kr_sp_theme_dark .o_web_client .o_avatar,
+body.kr_sp_theme_dark .o_web_client .o_upload_image_crop_wrapper {
+    border-color: var(--kr-dark-border, #2b3647) !important;
+    background-color: var(--kr-dark-surface-soft, #202b3a) !important;
+}
+
+/* --- Statusbar (workflow buttons) --- */
+body.kr_sp_theme_dark .o_web_client .o_statusbar_status,
+body.kr_sp_theme_dark .o_web_client .o_statusbar_status .btn,
+body.kr_sp_theme_dark .o_web_client .o_status_text,
+body.kr_sp_theme_dark .o_web_client .o_form_statusbar .o_statusbar_status span {
+    color: var(--kr-dark-muted, #9ca3af) !important;
+}
+
+body.kr_sp_theme_dark .o_web_client .o_statusbar_status .btn.btn-primary,
+body.kr_sp_theme_dark .o_web_client .o_statusbar_status .btn.o_arrow_button.o_status_current {
+    color: var(--kr-dark-text, #e5e7eb) !important;
+    background-color: var(--kr-dark-surface-soft, #202b3a) !important;
+    border-color: var(--kr-dark-border, #2b3647) !important;
+}
+
+/* --- Search panel sidebar --- */
+body.kr_sp_theme_dark .o_web_client .o_search_panel,
+body.kr_sp_theme_dark .o_web_client .o_search_panel_section,
+body.kr_sp_theme_dark .o_web_client .o_search_panel_label,
+body.kr_sp_theme_dark .o_web_client .o_search_panel_label_title,
+body.kr_sp_theme_dark .o_web_client .o_search_panel_category_value,
+body.kr_sp_theme_dark .o_web_client .o_search_panel_filter_value {
+    background-color: var(--kr-dark-surface, #18212f) !important;
+    color: var(--kr-dark-text, #e5e7eb) !important;
+    border-color: var(--kr-dark-border, #2b3647) !important;
 }
 
 body.kr_sp_theme_dark .modal:not(.s_popup),
@@ -1034,51 +2154,255 @@ body.kr_sp_theme_dark .text-bg-primary {
     -webkit-text-fill-color: #ffffff !important;
 }
 
-body.kr_sp_theme_dark .text-bg-success,
+/* Text utility color overrides (clean text, no background box) */
 body.kr_sp_theme_dark .text-success { 
+    color: #22d77b !important; 
+    -webkit-text-fill-color: #22d77b !important; 
+    background: transparent !important;
+    background-color: transparent !important;
+    border: none !important;
+}
+body.kr_sp_theme_dark .text-info { 
+    color: #38bdf8 !important; 
+    -webkit-text-fill-color: #38bdf8 !important; 
+    background: transparent !important;
+    background-color: transparent !important;
+    border: none !important;
+}
+body.kr_sp_theme_dark .text-warning { 
+    color: #facc15 !important; 
+    -webkit-text-fill-color: #facc15 !important; 
+    background: transparent !important;
+    background-color: transparent !important;
+    border: none !important;
+}
+body.kr_sp_theme_dark .text-danger { 
+    color: #f87171 !important; 
+    -webkit-text-fill-color: #f87171 !important; 
+    background: transparent !important;
+    background-color: transparent !important;
+    border: none !important;
+}
+body.kr_sp_theme_dark .text-primary { 
+    color: #00d4c8 !important; 
+    -webkit-text-fill-color: #00d4c8 !important; 
+    background: transparent !important;
+    background-color: transparent !important;
+    border: none !important;
+}
+
+/* Badge filled background boxes (only applied when explicit badge or text-bg container) */
+body.kr_sp_theme_dark :is(.badge.text-bg-success, .badge-success) { 
     background-color: rgba(34, 215, 123, 0.25) !important; 
     color: #22d77b !important; 
     -webkit-text-fill-color: #22d77b !important; 
     border: 1px solid rgba(34, 215, 123, 0.4) !important; 
 }
-body.kr_sp_theme_dark .text-bg-info,
-body.kr_sp_theme_dark .text-info { 
+body.kr_sp_theme_dark :is(.badge.text-bg-info, .badge-info) { 
     background-color: rgba(56, 189, 248, 0.25) !important; 
     color: #38bdf8 !important; 
     -webkit-text-fill-color: #38bdf8 !important; 
     border: 1px solid rgba(56, 189, 248, 0.4) !important; 
 }
-body.kr_sp_theme_dark .text-bg-warning,
-body.kr_sp_theme_dark .text-warning { 
+body.kr_sp_theme_dark :is(.badge.text-bg-warning, .badge-warning) { 
     background-color: rgba(250, 204, 21, 0.25) !important; 
     color: #facc15 !important; 
     -webkit-text-fill-color: #facc15 !important; 
     border: 1px solid rgba(250, 204, 21, 0.4) !important; 
 }
-body.kr_sp_theme_dark .text-bg-danger,
-body.kr_sp_theme_dark .text-danger { 
+body.kr_sp_theme_dark :is(.badge.text-bg-danger, .badge-danger) { 
     background-color: rgba(248, 113, 113, 0.25) !important; 
     color: #f87171 !important; 
     -webkit-text-fill-color: #f87171 !important; 
     border: 1px solid rgba(248, 113, 113, 0.4) !important; 
 }
-body.kr_sp_theme_dark .text-bg-primary,
-body.kr_sp_theme_dark .text-primary { 
+body.kr_sp_theme_dark :is(.badge.text-bg-primary, .badge-primary) { 
     background-color: rgba(0, 212, 200, 0.25) !important; 
     color: #00d4c8 !important; 
     -webkit-text-fill-color: #00d4c8 !important; 
     border: 1px solid rgba(0, 212, 200, 0.4) !important; 
 }
 
-/* ── FORCE LIST VIEW BACKGROUND (Handles cases where o_list_view class is missing in dashboards) ── */
-body.kr_sp_theme_dark .o_content,
-body.kr_sp_theme_dark .o_view_controller,
-body.kr_sp_theme_dark .o_list_renderer,
-body.kr_sp_theme_dark .o_list_view,
-body.kr_sp_theme_dark .o_action_manager {
-    background-color: #111827 !important;
+/* Explicit rule for Remaining Days / Due Date field widget */
+body.kr_sp_theme_dark :is(.o_field_remaining_days, .o_field_widget.o_field_remaining_days, [name="invoice_date_due"]) :is(div, span, p) {
+    background: transparent !important;
+    background-color: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
 }
 
-body.kr_sp_theme_dark .o_list_renderer .o_list_table {
+/* ── UNIVERSAL WHITE BACKGROUND PURGE FOR DARK MODE ───────── */
+body.kr_sp_theme_dark :is(
+    .o_content,
+    .o_control_panel,
+    .o_action_manager,
+    .o_view_controller,
+    .o_kanban_view,
+    .o_kanban_renderer,
+    .o_form_view,
+    .o_form_sheet_bg,
+    .o_list_view,
+    .o_list_renderer,
+    .o_pivot_view,
+    .o_graph_view,
+    .o_activity_view,
+    .o_account_reports_page,
+    .o_reports_body,
+    .o_account_reports_body,
+    .o_account_reports_summary,
+    .o_account_reports_filters,
+    .o_account_reports_filter_input,
+    .o_account_reports_header,
+    .o_account_reports_no_print,
+    .o_account_reports_table_container,
+    .o_account_reports_table,
+    div[class*="account_reports"],
+    table, tr, td, th, tbody, thead, tfoot
+) {
     background-color: #111827 !important;
+    background: #111827 !important;
+    border-color: #2b3647 !important;
+}
+
+/* ── ANALYTIX CHAT WIDGET DARK MODE OVERRIDES ───────────────── */
+body.kr_sp_theme_dark :is(.anx-chat-popup-window, [class*="anx-chat-popup"]) {
+    background-color: #18212f !important;
+    background: #18212f !important;
+    border: 1px solid #2b3647 !important;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5) !important;
+    color: #e5e7eb !important;
+}
+
+body.kr_sp_theme_dark :is(.anx-chat-popup-body, .anx-chat-list-scroll, [class*="anx-chat-body"], [class*="anx-chat-list"]) {
+    background-color: #18212f !important;
+    background: #18212f !important;
+}
+
+body.kr_sp_theme_dark :is(.anx-chat-search-bar, [class*="anx-chat-search"]) {
+    background-color: #111827 !important;
+    background: #111827 !important;
+    border-bottom: 1px solid #2b3647 !important;
+
+    input, textarea, select {
+        background-color: #202b3a !important;
+        background: #202b3a !important;
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+        border: 1px solid #2b3647 !important;
+        border-radius: 8px !important;
+
+        &::placeholder {
+            color: #9ca3af !important;
+            -webkit-text-fill-color: #9ca3af !important;
+        }
+    }
+}
+
+body.kr_sp_theme_dark :is(.anx-chat-section-hdr, [class*="anx-chat-section"]) {
+    background-color: #111827 !important;
+    background: #111827 !important;
+    color: #9ca3af !important;
+    -webkit-text-fill-color: #9ca3af !important;
+    font-weight: 600 !important;
+    border-bottom: 1px solid #2b3647 !important;
+}
+
+body.kr_sp_theme_dark :is(.anx-chat-item, [class*="anx-chat-item"]) {
+    background-color: #18212f !important;
+    background: #18212f !important;
+    border-bottom: 1px solid #243042 !important;
+    color: #e5e7eb !important;
+
+    &:hover, &.is-active, &.active {
+        background-color: #202b3a !important;
+        background: #202b3a !important;
+    }
+
+    * {
+        border-color: #2b3647 !important;
+    }
+}
+
+body.kr_sp_theme_dark :is(.anx-chat-item-top, .anx-chat-item-info, .anx-chat-item-name, [class*="anx-chat-item-title"]) {
+    color: #f3f4f6 !important;
+    -webkit-text-fill-color: #f3f4f6 !important;
+    font-weight: 600 !important;
+}
+
+body.kr_sp_theme_dark :is(.anx-chat-item-preview, .anx-chat-item-sub, [class*="anx-chat-item-meta"]) {
+    color: #9ca3af !important;
+    -webkit-text-fill-color: #9ca3af !important;
+}
+
+body.kr_sp_theme_dark :is(.anx-chat-popup-header, [class*="anx-chat-header"]) {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+
+    * {
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+    }
+}
+
+/* Chat Conversation Messages Body & Container */
+body.kr_sp_theme_dark :is(.anx-chat-messages-container, .anx-chat-msg-container, [class*="anx-chat-messages"], [class*="anx-chat-container"]) {
+    background-color: #111827 !important;
+    background: #111827 !important;
+    color: #e5e7eb !important;
+}
+
+/* Chat Message Bubbles (Received & Default) */
+body.kr_sp_theme_dark :is(.anx-chat-message, .anx-chat-msg, .anx-chat-bubble, [class*="anx-chat-msg"], [class*="anx-chat-message"], [class*="anx-msg-bubble"]) {
+    background-color: #202b3a !important;
+    background: #202b3a !important;
+    color: #f3f4f6 !important;
+    -webkit-text-fill-color: #f3f4f6 !important;
+    border: 1px solid #2b3647 !important;
+    border-radius: 12px !important;
+
+    p, span, div, small, em, strong {
+        color: #f3f4f6 !important;
+        -webkit-text-fill-color: #f3f4f6 !important;
+    }
+}
+
+/* Sent Messages (Outgoing) */
+body.kr_sp_theme_dark :is(.anx-chat-msg-sent, .anx-chat-message-sent, .is-user, .outgoing, [class*="sent"], [class*="outgoing"]) {
+    background-color: #059669 !important;
+    background: #059669 !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    border: none !important;
+
+    p, span, div, small, em, strong {
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+    }
+}
+
+/* Message Time & Metadata */
+body.kr_sp_theme_dark :is(.anx-chat-msg-time, .anx-chat-time, .anx-chat-meta, [class*="chat-time"], [class*="msg-time"]) {
+    color: #9ca3af !important;
+    -webkit-text-fill-color: #9ca3af !important;
+    font-size: 11px !important;
+}
+
+/* Chat Input Bar & Field */
+body.kr_sp_theme_dark :is(.anx-chat-input-bar, .anx-chat-footer, [class*="anx-chat-input-bar"]) {
+    background-color: #18212f !important;
+    background: #18212f !important;
+    border-top: 1px solid #2b3647 !important;
+
+    input, textarea {
+        background-color: #111827 !important;
+        background: #111827 !important;
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+        border: 1px solid #2b3647 !important;
+        border-radius: 20px !important;
+
+        &::placeholder {
+            color: #9ca3af !important;
+            -webkit-text-fill-color: #9ca3af !important;
+        }
+    }
 }

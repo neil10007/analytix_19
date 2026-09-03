@@ -36,8 +36,6 @@
     'website': 'https://www.cybrosys.com',
     'depends': ['account', 'account_payment'],
     'data':['views/res_config_settings_views.xml',
-            'views/res_company_views.xml',
-            'views/product_views.xml',
             'report/account_move_reports.xml',
             'views/account_move_views.xml',
             'report/vat_invoice_report_templates.xml',

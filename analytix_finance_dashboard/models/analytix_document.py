@@ -445,8 +445,14 @@ class AnalytixDocument(models.Model):
         tax = _extract_num('tax')
         total = _extract_num('total') or (subtotal + tax)
 
+        is_simplified = False
+        m_simp = re.search(r'"is_simplified_invoice"\s*:\s*(true|false)', s, re.IGNORECASE)
+        if m_simp:
+            is_simplified = m_simp.group(1).lower() == 'true'
+
         return {
             "document_type": doc_type,
+            "is_simplified_invoice": is_simplified,
             "vendor": {"name": vendor_name},
             "customer": {"name": customer_name},
             "vendor_name": vendor_name,
@@ -471,6 +477,7 @@ class AnalytixDocument(models.Model):
             "commentary) using this shape:\n"
             "{\n"
             '  "document_type": "invoice|bill|credit_note|debit_note|receipt|other",\n'
+            '  "is_simplified_invoice": true|false,\n'
             '  "vendor": {\n'
             '    "name": "string or null",\n'
             '    "street": "building number / street address or null",\n'
@@ -496,20 +503,25 @@ class AnalytixDocument(models.Model):
             '  "tax": number,\n'
             '  "total": number,\n'
             '  "items": [\n'
-            '    {"description": "string", "quantity": number, "unit_price": number, "discount": number, "tax_rate": number}\n'
+            '    {"description": "string", "quantity": number, "unit_price": number, "discount": number, "tax_rate": number, "vat_amount": number}\n'
             "  ]\n"
             "}\n"
             "Rules:\n"
+            "- CRITICAL FOR SIMPLIFIED INVOICE / RECEIPT IDENTIFICATION:\n"
+            "  1. Set 'is_simplified_invoice' to true if the document is a simplified tax invoice, cash receipt, retail receipt, small customer purchase, restaurant bill, petrol station receipt, or retail invoice where seller details are present, but customer details (such as customer name, customer VAT number, customer CRN number) are NOT specified / omitted / absent, or if the document title contains 'Simplified Tax Invoice' / 'فاتورة ضريبية مبسطة' / 'Receipt'.\n"
+            "  2. Set 'is_simplified_invoice' to false if the document is a standard B2B tax invoice where full customer details and customer VAT numbers are explicitly mentioned.\n"
             "- Extract full partner details for both vendor and customer including street, city, zip, country, and vat (tax ID).\n"
             "- CRITICAL FOR CURRENCY EXTRACTION:\n"
             "  1. Look carefully everywhere on the document (headers, table column headers like 'Taxable Amount (AED)', totals like 'AED 4,730.00' or 'SAR 500', currency labels, bank details, tax summary section, etc.).\n"
             "  2. Extract the exact currency mentioned on the document and convert it to its 3-letter ISO 4217 code (e.g., 'AED' for AED/Dirham/Dhs, 'SAR' for SAR/SR/Saudi Riyal, 'USD' for $, 'EUR' for €, 'GBP' for £, 'QAR', 'KWD', 'BHD', 'OMR', 'EGP', etc.).\n"
             "  3. If ANY currency is present or indicated anywhere on the document, return that 3-letter ISO code in 'currency'. ONLY if absolutely NO currency is mentioned or implied on the document, set 'currency' to null.\n"
+            "- CRITICAL FOR SUBTOTAL, TAX & TOTAL ACCURACY:\n"
+            "  1. 'subtotal' MUST be the exact untaxed subtotal before VAT. If not explicitly labeled as subtotal, calculate it as the sum of line item untaxed prices.\n"
+            "  2. 'tax' MUST be the total VAT/tax amount listed on the document (e.g., 'Total Vat', 'VAT Amount', 'Tax').\n"
+            "  3. 'total' MUST be the final gross total amount including VAT ('subtotal' + 'tax').\n"
+            "  4. For each item in 'items', extract 'vat_amount' (the specific VAT amount for that line) and 'tax_rate' (the percentage e.g. 15 for 15%).\n"
             "- tax_rate must be the tax percentage applied (e.g. 15 for 15%, 5 for 5%). If no tax, use 0.\n"
             "- discount must be the discount percentage (0 to 100) applied on the line item. If discount is listed as an amount, convert it to the discount percentage (0 to 100). If no discount, use 0.\n"
-            "- tax must be the total tax/VAT amount.\n"
-            "- subtotal must be the total amount before tax.\n"
-            "- total must be the final amount including tax.\n"
             "- numbers should be numeric without currency symbols.\n"
             "- CRITICAL FOR LINE ITEM UNIT PRICES & AMOUNTS:\n"
             "  1. The sum of (quantity * unit_price * (1 - discount/100)) across all items MUST be consistent with the document subtotal.\n"
@@ -1000,6 +1012,20 @@ class AnalytixDocument(models.Model):
             or ''
         ).strip()
 
+        # Identify if document is a Simplified Invoice
+        is_simplified_invoice = bool(data.get('is_simplified_invoice'))
+        if not is_simplified_invoice:
+            cust_check = data.get('customer')
+            c_name = (cust_check.get('name') if isinstance(cust_check, dict) else data.get('customer_name')) or ''
+            c_vat = (cust_check.get('vat') if isinstance(cust_check, dict) else data.get('customer_vat')) or ''
+            doc_title_check = (data.get('document_title') or self.name or '').lower()
+            if not c_name.strip() and not c_vat.strip():
+                is_simplified_invoice = True
+            elif any(kw in doc_title_check for kw in ['simplified', 'مبسطة', 'receipt', 'فاتورة ضريبية مبسطة']):
+                is_simplified_invoice = True
+
+        _logger.info("Document ID %s Simplified Invoice Detection Result: %s", self.id, is_simplified_invoice)
+
         # Resolve / Create / Update Partner (Vendor or Customer with full address & VAT)
         partner = None
         my_company_names = {c.name.strip().lower() for c in self.env.companies if c.name}
@@ -1151,6 +1177,8 @@ class AnalytixDocument(models.Model):
                 _logger.info("Currency not mentioned in PDF or not found in system. Calling current company's currency '%s' (ID: %s)", currency_code, currency_id)
 
         company = self.env.company
+        if currency_code and company.currency_id and currency_code.upper() != company.currency_id.name.upper():
+            is_foreign_country = True
 
         if move_type == 'entry':
             journal = self.env['account.journal'].search(
@@ -1253,9 +1281,15 @@ class AnalytixDocument(models.Model):
         invoice_line_vals = []
 
         global_tax_rate = 0.0
-        json_subtotal = self._clean_float(data.get('subtotal'))
-        json_tax = self._clean_float(data.get('tax'))
-        json_total = self._clean_float(data.get('total'))
+        json_subtotal = self._clean_float(
+            data.get('subtotal') or data.get('sub_total') or data.get('amount_untaxed') or data.get('untaxed_amount')
+        )
+        json_tax = self._clean_float(
+            data.get('tax') or data.get('tax_amount') or data.get('vat') or data.get('vat_amount') or data.get('total_tax') or data.get('total_vat')
+        )
+        json_total = self._clean_float(
+            data.get('total') or data.get('total_amount') or data.get('amount_total') or data.get('grand_total')
+        )
 
         if json_subtotal > 0 and json_tax > 0:
             global_tax_rate = round((json_tax / json_subtotal) * 100, 4)
@@ -1438,60 +1472,90 @@ class AnalytixDocument(models.Model):
             print(f"[AI BILL DEBUG] FINAL ASSIGNED EXPENSE TAX -> {line_tax.name if line_tax else 'None'}")
             print("=================================================================\n")
 
-            if json_tax > 0 or global_tax_rate > 0:
-                line_tax = self._resolve_tax(
-                    move_type,
-                    tax_rate=global_tax_rate,
-                    tax_amount=json_tax,
-                    subtotal=json_subtotal,
-                    total=json_total
-                )
-            else:
-                line_tax = None
+            items_sum = sum(
+                (self._clean_float(it.get('quantity')) or 1.0) * self._clean_float(it.get('unit_price'))
+                for it in items
+            ) if items else 0.0
 
-            # ── 4. Calculate Subtotal Price Unit for Consolidated Single Line ──
-            exp_price_unit = json_subtotal if json_subtotal > 0 else (
-                (json_total - json_tax) if (json_total > json_tax and json_tax > 0) else json_total
-            )
-            if exp_price_unit <= 0 and items:
-                exp_price_unit = sum(
-                    (self._clean_float(it.get('quantity')) or 1.0) * self._clean_float(it.get('unit_price'))
-                    for it in items
+            if is_simplified_invoice:
+                _logger.info("Expense Bill: Simplified Invoice detected. Setting line price to total gross amount (%.2f) and clearing line tax.", json_total)
+                exp_price_unit = json_total if json_total > 0 else (
+                    (items_sum + json_tax) if (items_sum > 0 and json_tax > 0) else (
+                        (json_subtotal + json_tax) if (json_subtotal > 0 and json_tax > 0) else (items_sum or json_subtotal)
+                    )
                 )
+                line_tax = False
+                json_tax = 0.0
+                validation_warnings.append(
+                    f"• Document Classification: Simplified Invoice / Retail Receipt detected. "
+                    f"Total gross amount ({exp_price_unit:.2f}) set directly as expense amount without separate line tax."
+                )
+            elif is_foreign_country:
+                _logger.info("Expense Bill: Foreign Expense (outside country) detected. Setting line price to total gross amount (%.2f) and absorbing tax.", json_total)
+                exp_price_unit = json_total if json_total > 0 else (
+                    (items_sum + json_tax) if (items_sum > 0 and json_tax > 0) else (
+                        (json_subtotal + json_tax) if (json_subtotal > 0 and json_tax > 0) else (items_sum or json_subtotal)
+                    )
+                )
+                line_tax = False
+                json_tax = 0.0
 
-            # ── Foreign Expenses mapping for Expense Bills consolidated line ──
-            is_international_import = False
-            if ai_config and ai_config.foreign_expense_line_ids:
-                target_stage = 'international_import' if is_foreign_country else 'domestic_purchase'
-                foreign_expense_line = ai_config.foreign_expense_line_ids.filtered(lambda l: l.expense_stage == target_stage)
-                if foreign_expense_line:
-                    if foreign_expense_line[0].account_id:
+                # Check if Foreign Expense GL account mapping exists in ai.gl.config
+                if ai_config and ai_config.foreign_expense_line_ids:
+                    foreign_expense_line = ai_config.foreign_expense_line_ids.filtered(lambda l: l.expense_stage == 'international_import')
+                    if foreign_expense_line and foreign_expense_line[0].account_id:
                         line_account = foreign_expense_line[0].account_id
-                    
-                    if target_stage == 'international_import':
-                        is_international_import = True
-                        if not foreign_expense_line[0].tax_id:
-                            line_tax = self.env['account.tax']
-                        else:
-                            line_tax = foreign_expense_line[0].tax_id
-                    else:
                         if foreign_expense_line[0].tax_id:
                             line_tax = foreign_expense_line[0].tax_id
-                        else:
-                            line_tax = self.env['account.tax']
 
-            if is_international_import:
-                original_price = exp_price_unit
-                if global_tax_rate > 0:
-                    exp_price_unit = round(exp_price_unit * (1.0 + (global_tax_rate / 100.0)), 2)
-                    _logger.info("Absorbed global tax rate %.2f%% into price unit (original: %.2f, new: %.2f) for international import expense bill", global_tax_rate, original_price, exp_price_unit)
-                elif json_subtotal > 0 and json_tax > 0:
-                    ratio = json_tax / json_subtotal
-                    exp_price_unit = round(exp_price_unit * (1.0 + ratio), 2)
-                    _logger.info("Absorbed global tax ratio %.4f into price unit (original: %.2f, new: %.2f) for international import expense bill", ratio, original_price, exp_price_unit)
-                
                 validation_warnings.append(
-                    f"• International Import Expense Bill: Absorbed extracted tax into price unit (was {original_price:.2f}, now {exp_price_unit:.2f})."
+                    f"• Document Classification: Expense From Foreign. Identified as an expense from outside the country (Foreign Expense Bill). "
+                    f"Total amount including foreign tax ({exp_price_unit:.2f}) set as total expense without local tax."
+                )
+            else:
+                # ── Standard Domestic Invoice Tax Resolution ──
+                if json_tax <= 0 and items:
+                    item_taxes_sum = sum(self._clean_float(it.get('tax_amount') or it.get('vat') or it.get('tax')) for it in items)
+                    if item_taxes_sum > 0:
+                        json_tax = item_taxes_sum
+                    elif json_total > 0 and items_sum > 0 and json_total > items_sum:
+                        json_tax = json_total - items_sum
+
+                if json_tax > 0 and (not global_tax_rate or global_tax_rate <= 0):
+                    base_amt = items_sum if items_sum > 0 else (json_subtotal if json_subtotal > 0 else (json_total - json_tax))
+                    if base_amt > 0:
+                        global_tax_rate = round((json_tax / base_amt) * 100, 4)
+
+                if (json_tax > 0 or global_tax_rate > 0):
+                    resolved_tax = self._resolve_tax(
+                        move_type,
+                        tax_rate=global_tax_rate,
+                        tax_amount=json_tax,
+                        subtotal=items_sum or json_subtotal,
+                        total=json_total
+                    )
+                    if resolved_tax:
+                        line_tax = resolved_tax
+
+                # ── 4. Calculate Subtotal Price Unit for Consolidated Single Line ──
+                if items_sum > 0:
+                    if json_subtotal > 0 and abs(items_sum - json_subtotal) <= 0.5:
+                        exp_price_unit = json_subtotal
+                    elif json_total > 0 and json_tax > 0 and abs(items_sum - (json_total - json_tax)) <= 0.5:
+                        exp_price_unit = items_sum
+                    elif json_subtotal > 0 and abs(items_sum - json_subtotal) > 0.5:
+                        _logger.info("Expense Bill: Header subtotal (%.2f) differs from items sum (%.2f). Using items sum.", json_subtotal, items_sum)
+                        exp_price_unit = items_sum
+                    else:
+                        exp_price_unit = items_sum
+                else:
+                    exp_price_unit = json_subtotal if json_subtotal > 0 else (
+                        (json_total - json_tax) if (json_total > json_tax and json_tax > 0) else json_total
+                    )
+
+                validation_warnings.append(
+                    f"• Document Classification: Standard (Normal) Tax Invoice detected. "
+                    f"Extracted untaxed subtotal ({exp_price_unit:.2f}) and resolved standard VAT."
                 )
 
             # Construct summary description
@@ -1535,6 +1599,33 @@ class AnalytixDocument(models.Model):
 
         else:
             # ── Multi-Line Item Processing for Sales Invoices and Purchase Bills ──
+            if move_type in ('out_invoice', 'out_refund'):
+                if is_foreign_country:
+                    validation_warnings.append(
+                        "• Document Classification: Foreign / Export Sales Invoice. Identified as international sales outside the country."
+                    )
+                elif is_simplified_invoice:
+                    validation_warnings.append(
+                        "• Document Classification: Simplified Sales Invoice (B2C / Retail). Customer details omitted or simplified invoice detected."
+                    )
+                else:
+                    validation_warnings.append(
+                        "• Document Classification: Standard B2B Sales Invoice. Full customer and VAT details extracted."
+                    )
+            elif move_type in ('in_invoice', 'in_refund'):
+                if is_foreign_country:
+                    validation_warnings.append(
+                        "• Document Classification: Foreign Import Vendor Bill. Identified as international purchase outside the country."
+                    )
+                elif is_simplified_invoice:
+                    validation_warnings.append(
+                        "• Document Classification: Simplified Vendor Receipt / Retail Bill. Identified as a simplified retail purchase/receipt."
+                    )
+                else:
+                    validation_warnings.append(
+                        "• Document Classification: Standard B2B Vendor Bill. Full vendor details and VAT extracted."
+                    )
+
             for idx, item in enumerate(items):
                 desc = (item.get('description') or 'Item').strip()
                 qty = self._clean_float(item.get('quantity')) or 1.0
@@ -1853,8 +1944,7 @@ class AnalytixDocument(models.Model):
                     else:
                         if foreign_expense_line[0].tax_id:
                             tax = foreign_expense_line[0].tax_id
-                        else:
-                            tax = self.env['account.tax']
+                        # Do not clear tax if tax_id is not configured on domestic_purchase line
 
             if is_international_import:
                 original_price = price_unit
@@ -1884,9 +1974,10 @@ class AnalytixDocument(models.Model):
         # Check document total mismatch vs lines sum
         if json_total > 0 and items:
             lines_total = sum((self._clean_float(it.get('quantity')) or 1.0) * self._clean_float(it.get('unit_price')) for it in items)
-            if json_subtotal > 0 and abs(lines_total - json_subtotal) > 0.5 and abs(lines_total - json_total) > 0.5:
+            eff_subtotal = exp_price_unit if (cfg_type == 'expense_bill' and 'exp_price_unit' in locals()) else json_subtotal
+            if eff_subtotal > 0 and abs(lines_total - eff_subtotal) > 0.5 and abs((lines_total + json_tax) - json_total) > 0.5:
                 validation_warnings.append(
-                    f"• Amount Discrepancy: Extracted document subtotal ({json_subtotal:.2f}) / total ({json_total:.2f}) differs from lines sum ({lines_total:.2f})."
+                    f"• Amount Discrepancy: Extracted document subtotal ({eff_subtotal:.2f}) / total ({json_total:.2f}) differs from lines sum ({lines_total:.2f})."
                 )
 
         invoice_ref = seq_ref or self._get_next_sequence_number(move_type, journal)

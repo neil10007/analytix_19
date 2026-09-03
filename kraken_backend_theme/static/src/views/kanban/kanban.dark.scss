@@ -1,4 +1,4 @@
-.o_web_client {
+body.kr_sp_theme_dark .o_web_client {
     .o_kanban_view,
     .o_kanban_renderer {
         --Kanban-background: #111827;
@@ -59,66 +59,83 @@
         background: #2b3647;
     }
 
+    /* ── Kanban Record / Card ───────────────────────────────── */
     .o_kanban_renderer .o_kanban_record:not(.o_kanban_ghost),
     .o_kanban_view .o_kanban_record:not(.o_kanban_ghost),
-    .o_kanban_record:not(.o_kanban_ghost) {
-        border: 1px solid var(--kr-dark-border);
+    .o_kanban_record:not(.o_kanban_ghost),
+    .o_kanban_card {
+        border: 1px solid #2b3647 !important;
         background: #18212f !important;
-        color: var(--kr-dark-text);
+        color: #ffffff !important;
         box-shadow: none;
     }
 
     .o_kanban_renderer .o_kanban_record:not(.o_kanban_ghost):hover,
-    .o_kanban_view .o_kanban_record:not(.o_kanban_ghost):hover {
-        border-color: #475569;
+    .o_kanban_view .o_kanban_record:not(.o_kanban_ghost):hover,
+    .o_kanban_card:hover {
+        border-color: #475569 !important;
         background: #202b3a !important;
         box-shadow: none;
     }
 
-    .o_kanban_record :is(h1, h2, h3, h4, h5, h6, strong, b),
-    .o_kanban_record .o_kanban_record_title,
-    .o_kanban_record .o_kanban_record_headings,
-    .o_kanban_record .o_kanban_record_top,
-    .o_kanban_record .o_kanban_record_body {
-        color: var(--kr-dark-text);
+    .o_kanban_record :is(h1, h2, h3, h4, h5, h6, strong, b, .o_kanban_record_title, .o_primary),
+    .o_kanban_card :is(h1, h2, h3, h4, h5, h6, strong, b, .o_kanban_record_title, .o_primary) {
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
     }
 
-    .o_kanban_record .text-muted,
-    .o_kanban_record small,
-    .o_kanban_record .o_text_overflow {
-        color: var(--kr-dark-muted) !important;
+    .o_kanban_record :is(span, div, p, label, a:not(.btn)),
+    .o_kanban_card :is(span, div, p, label, a:not(.btn)),
+    .o_kanban_primary_right,
+    .o_kanban_primary_left {
+        color: #f1f5f9 !important;
+        -webkit-text-fill-color: #f1f5f9 !important;
     }
 
-    .o_kanban_record :is(span, div, p, a:not(.btn), label, small) {
-        color: inherit;
+    .o_kanban_record :is(.text-muted, small, .o_text_overflow),
+    .o_kanban_card :is(.text-muted, small, .o_text_overflow) {
+        color: #cbd5e1 !important;
+        -webkit-text-fill-color: #cbd5e1 !important;
     }
 
+    /* ── Action Buttons inside Kanban Cards ("1 To Receive", "1 To Deliver", "Open") ── */
     .o_kanban_renderer .btn,
-    .o_kanban_renderer .o_kanban_record .btn,
-    .o_kanban_renderer .o_kanban_header .btn,
-    .o_kanban_renderer button:not(.o_drag_handle):not(.fa) {
-        border-color: var(--kr-dark-border);
-        background-color: #202b3a;
-        color: var(--kr-dark-text);
+    .o_kanban_record .btn,
+    .o_kanban_card .btn,
+    .o_kanban_primary_left .btn,
+    .o_kanban_primary_left button,
+    .o_kanban_primary_right .btn {
+        border: 1px solid rgba(0, 212, 200, 0.4) !important;
+        background-color: #263345 !important;
+        background: #263345 !important;
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
         box-shadow: none;
     }
 
     .o_kanban_renderer .btn:hover,
-    .o_kanban_renderer .o_kanban_record .btn:hover,
-    .o_kanban_renderer .o_kanban_header .btn:hover,
-    .o_kanban_renderer button:not(.o_drag_handle):not(.fa):hover {
-        border-color: rgba(0, 212, 200, 0.48);
-        background-color: #263244;
-        color: #ffffff;
+    .o_kanban_record .btn:hover,
+    .o_kanban_card .btn:hover,
+    .o_kanban_primary_left .btn:hover {
+        border-color: #00d4c8 !important;
+        background-color: #00d4c8 !important;
+        background: #00d4c8 !important;
+        color: #000000 !important;
+        -webkit-text-fill-color: #000000 !important;
     }
 
     .o_kanban_renderer .btn-primary,
+    .o_kanban_record .btn-primary,
+    .o_kanban_card .btn-primary,
     .o_kanban_renderer .btn.active,
     .o_kanban_renderer .btn.show,
     .o_kanban_renderer .btn:active {
-        border-color: transparent !important;
-        background-color: var(--kr-dark-accent) !important;
-        color: #111827 !important;
+        border: 1px solid rgba(0, 212, 200, 0.5) !important;
+        background-color: #1e293b !important;
+        background: #1e293b !important;
+        color: #00d4c8 !important;
+        -webkit-text-fill-color: #00d4c8 !important;
+        font-weight: 600 !important;
     }
 
     .o_kanban_renderer .o_kanban_quick_create,
@@ -126,14 +143,14 @@
     .o_kanban_renderer .o_kanban_load_more {
         border-color: var(--kr-dark-border);
         background: #18212f;
-        color: var(--kr-dark-text);
+        color: #ffffff;
     }
 
     .o_kanban_renderer .o_kanban_quick_create .form-control,
     .o_kanban_renderer .o_kanban_quick_create .o_input {
         border-color: var(--kr-dark-border);
         background: #111827;
-        color: var(--kr-dark-text);
+        color: #ffffff;
     }
 
     .o_kanban_record .o_kanban_image,
@@ -144,7 +161,8 @@
 
     .o_kanban_record .badge:not(.text-bg-danger):not(.text-bg-warning):not(.text-bg-success):not(.text-bg-info):not(.text-bg-primary) {
         background: #263244;
-        color: var(--kr-dark-text);
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
     }
 
     .o_opportunity_kanban,

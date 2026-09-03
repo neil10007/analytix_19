@@ -1,3 +1,4 @@
+body:not(.kr_sp_theme_dark) {
 .badge {
     border-radius: 50rem !important;
     padding: 0.35em 0.75em !important;
@@ -21,8 +22,6 @@
     min-height: 0;
     overflow: auto;
     scrollbar-width: thin;
-    // margin-inline: 10px;
-    // margin-top: 10px;
 }
 
 .o_list_view .o_list_renderer .o_list_table {
@@ -70,15 +69,13 @@
 }
 
 .o_list_view .o_list_renderer .o_list_table tbody td {
-    font-family: 'sr_symbol', "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     color: #374151;
     font-size: 13px;
     padding-top: 10px;
     padding-bottom: 10px;
     background-color: #ffffff;
 }
-
-
 
 .o_list_view .o_list_renderer .o_list_table tbody tr.o_data_row > td:first-child {
     border-left: 1px solid #edf2f7;
@@ -132,4 +129,5 @@
 
 .o_list_view .o_list_renderer .o_list_table tbody tr.o_data_row {
     border-bottom: none;
+}
 }

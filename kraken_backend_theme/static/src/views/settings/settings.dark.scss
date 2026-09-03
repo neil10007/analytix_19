@@ -1,147 +1,93 @@
-.o_web_client {
-    .o_action.o_base_settings_view,
-    .o_base_settings_view,
-    .o_base_settings_view .o_form_renderer,
-    .o_base_settings_view .o_form_renderer.o_form_nosheet,
-    .o_base_settings_view .o_setting_container {
+body.kr_sp_theme_dark {
+    :is(.o_action.o_base_settings_view, .o_base_settings_view, .o_settings_form_view, .o_setting_container, .settings_form-view, .o_form_view_container) {
         --settings__tab-bg: #111827;
         --settings__tab-bg--active: rgba(0, 212, 200, 0.16);
         --settings__tab-color: #e5e7eb;
         --settings__title-bg: #18212f;
+        background-color: #111827 !important;
         background: #111827 !important;
-        color: var(--kr-dark-text) !important;
-    }
+        color: #e5e7eb !important;
 
-    .o_base_settings_view .o_setting_container .settings_tab,
-    .o_base_settings_view .o_setting_container .settings,
-    .o_base_settings_view .o_setting_container .app_settings_block,
-    .o_base_settings_view .o_setting_container .o_settings_container {
-        border-color: var(--kr-dark-border) !important;
-        background: #111827 !important;
-        color: var(--kr-dark-text) !important;
-    }
+        /* Sticky Left Navigation Sidebar */
+        :is(.position-sticky, .settings_tab, [class*="settings_tab"]) {
+            background-color: #111827 !important;
+            background: #111827 !important;
+            border-right: 1px solid #2b3647 !important;
 
-    .o_base_settings_view .o_setting_container .settings_tab .tab {
-        color: var(--kr-dark-text) !important;
-    }
+            :is(.tab, .app_name, .setting_category, a, button, div, span, img) {
+                color: #9ca3af !important;
+                -webkit-text-fill-color: #9ca3af !important;
 
-    .o_base_settings_view .o_setting_container .settings_tab .tab:hover,
-    .o_base_settings_view .o_setting_container .settings_tab .tab.selected,
-    .o_base_settings_view .o_setting_container .settings_tab .selected {
-        background: rgba(0, 212, 200, 0.16) !important;
-        color: #ffffff !important;
-        box-shadow: inset 2px 0 0 var(--kr-dark-accent);
-    }
+                &:hover {
+                    color: #ffffff !important;
+                    -webkit-text-fill-color: #ffffff !important;
+                    background-color: rgba(255, 255, 255, 0.05) !important;
+                    border-radius: 6px !important;
+                }
 
-    .o_base_settings_view .o_setting_container .settings > .app_settings_block h2,
-    .o_base_settings_view .o_setting_container .settings .settingSearchHeader,
-    .o_base_settings_view .o_setting_container .settings .app_settings_header {
-        border-color: var(--kr-dark-border) !important;
-        background: #18212f !important;
-        color: var(--kr-dark-text) !important;
-    }
+                &.selected, &.active, &.is-active {
+                    color: #00d4c8 !important;
+                    -webkit-text-fill-color: #00d4c8 !important;
+                    background-color: rgba(0, 212, 200, 0.12) !important;
+                    border-radius: 6px !important;
+                    font-weight: 600 !important;
+                }
+            }
 
-    .o_base_settings_view .o_setting_container .settings > .app_settings_block h3,
-    .o_base_settings_view .o_setting_box,
-    .o_base_settings_view .o_setting_left_pane,
-    .o_base_settings_view .o_setting_right_pane {
-        border-color: var(--kr-dark-border) !important;
-        background: transparent !important;
-        color: var(--kr-dark-text) !important;
-    }
+            .selected, .active, .is-active {
+                color: #00d4c8 !important;
+                -webkit-text-fill-color: #00d4c8 !important;
+                font-weight: 600 !important;
+            }
+        }
 
-    .o_base_settings_view .o_setting_right_pane {
-        border-left-color: var(--kr-dark-border) !important;
-    }
+        /* Settings Main Block & Sections */
+        :is(.settings, .app_settings_block, .o_settings_container) {
+            background-color: #111827 !important;
+            background: #111827 !important;
+            color: #e5e7eb !important;
 
-    .o_base_settings_view .o_form_label,
-    .o_base_settings_view .o_setting_right_pane label,
-    .o_base_settings_view .o_setting_right_pane .o_form_label,
-    .o_base_settings_view .o_setting_right_pane span,
-    .o_base_settings_view .o_setting_right_pane p,
-    .o_base_settings_view .o_setting_right_pane div,
-    .o_base_settings_view .o_setting_right_pane strong,
-    .o_base_settings_view .o_setting_right_pane b,
-    .o_base_settings_view .o_setting_right_pane h1,
-    .o_base_settings_view .o_setting_right_pane h2,
-    .o_base_settings_view .o_setting_right_pane h3,
-    .o_base_settings_view .o_setting_right_pane h4,
-    .o_base_settings_view .o_setting_right_pane h5,
-    .o_base_settings_view .o_setting_right_pane h6 {
-        color: var(--kr-dark-text) !important;
-    }
+            h2, h3, .app_settings_header, .settingSearchHeader {
+                background-color: #18212f !important;
+                background: #18212f !important;
+                color: #f3f4f6 !important;
+                -webkit-text-fill-color: #f3f4f6 !important;
+                border-bottom: 1px solid #2b3647 !important;
+                padding: 10px 16px !important;
+                border-radius: 8px !important;
+                margin-top: 16px !important;
+                margin-bottom: 16px !important;
+            }
+        }
 
-    .o_base_settings_view .text-muted,
-    .o_base_settings_view .o_setting_right_pane .text-muted,
-    .o_base_settings_view .o_setting_right_pane small,
-    .o_base_settings_view .o_setting_right_pane .o_form_label.text-muted {
-        color: var(--kr-dark-muted) !important;
-    }
+        /* Setting Box Cards */
+        .o_setting_box {
+            background: transparent !important;
+            border-color: #2b3647 !important;
+            color: #e5e7eb !important;
 
-    .o_base_settings_view a,
-    .o_base_settings_view .btn-link,
-    .o_base_settings_view .oe-link {
-        color: #00d4c8 !important;
-    }
+            .o_setting_right_pane {
+                .o_form_label, label, strong, b {
+                    color: #f3f4f6 !important;
+                    -webkit-text-fill-color: #f3f4f6 !important;
+                }
 
-    .o_base_settings_view a:hover,
-    .o_base_settings_view .btn-link:hover,
-    .o_base_settings_view .oe-link:hover {
-        color: var(--kr-dark-accent) !important;
-    }
+                .text-muted, small {
+                    color: #9ca3af !important;
+                    -webkit-text-fill-color: #9ca3af !important;
+                }
+            }
+        }
 
-    .o_base_settings_view .o_input,
-    .o_base_settings_view input:not([type="checkbox"]):not([type="radio"]),
-    .o_base_settings_view select,
-    .o_base_settings_view textarea,
-    .o_base_settings_view .form-control,
-    .o_base_settings_view .o_field_widget:not(.o_field_boolean):not(.o_field_radio) {
-        border-color: var(--kr-dark-border) !important;
-        background: #111827 !important;
-        color: var(--kr-dark-text) !important;
-    }
+        .o_input, input, select, textarea {
+            border-color: #2b3647 !important;
+            background: #111827 !important;
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
+        }
 
-    .o_base_settings_view .o_form_statusbar .btn,
-    .o_base_settings_view .o_control_panel .btn {
-        border-color: var(--kr-dark-border);
-        background: #18212f;
-        color: var(--kr-dark-text);
-    }
-
-    .o_base_settings_view .o_form_button_save,
-    .o_base_settings_view .o_form_statusbar .o_form_button_save,
-    .o_base_settings_view .o_control_panel .o_form_button_save {
-        border-color: transparent !important;
-        background: var(--kr-dark-accent) !important;
-        color: #111827 !important;
-        box-shadow: none !important;
-    }
-
-    .o_base_settings_view .o_form_button_save:disabled,
-    .o_base_settings_view .o_form_button_save.disabled {
-        border-color: var(--kr-dark-border) !important;
-        background: #18212f !important;
-        color: #64748b !important;
-        opacity: 1;
-    }
-
-    .o_base_settings_view .o_form_button_cancel,
-    .o_base_settings_view .o_form_statusbar .o_form_button_cancel,
-    .o_base_settings_view .o_control_panel .o_form_button_cancel {
-        border-color: var(--kr-dark-border) !important;
-        background: #202b3a !important;
-        color: var(--kr-dark-text) !important;
-    }
-
-    .o_base_settings_view .badge,
-    .o_base_settings_view .o_tag {
-        border-color: var(--kr-dark-border);
-        background: #202b3a;
-        color: var(--kr-dark-text);
-    }
-
-    .o_base_settings_view .highlighter {
-        background: rgba(0, 212, 200, 0.28) !important;
-        color: #ffffff !important;
+        .btn-link, a {
+            color: #00d4c8 !important;
+        }
     }
 }

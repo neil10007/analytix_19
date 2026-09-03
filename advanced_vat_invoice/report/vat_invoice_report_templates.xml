@@ -24,37 +24,18 @@
                     <td style="width: 65%; vertical-align: top; border-color: white;">
                         <h3 style="margin: 0 0 5px 0; font-weight: bold; color: #1E293B; font-size: 15pt;">
                             <span t-field="company.name"/>
-                            <span t-if="company.company_arabic_name"> / <span t-field="company.company_arabic_name"/></span>
-                            <span t-elif="company.partner_id and company.partner_id.mother_lang"> / <span t-field="company.partner_id.mother_lang"/></span>
                         </h3>
                         <div style="font-size: 9pt; color: #475569; line-height: 1.4; font-weight: normal;">
-                            <span t-if="company.street or company.street1_arabic or (company.partner_id and company.partner_id.street_ar)">
-                                <span t-field="company.street"/>
-                                <span t-if="company.street1_arabic"> - <span t-field="company.street1_arabic"/></span>
-                                <span t-elif="company.partner_id and company.partner_id.street_ar"> - <span t-field="company.partner_id.street_ar"/></span>
-                                <br/>
-                            </span>
-                            <span t-if="company.street2 or company.street2_arabic">
-                                <span t-field="company.street2"/>
-                                <span t-if="company.street2_arabic"> - <span t-field="company.street2_arabic"/></span>
-                                <br/>
-                            </span>
+                            <span t-if="company.street"><span t-field="company.street"/><br/></span>
+                            <span t-if="company.street2"><span t-field="company.street2"/><br/></span>
                             <span>
                                 <span t-if="company.city" t-field="company.city"/>
-                                <span t-if="company.city_arabic"> <span t-field="company.city_arabic"/></span>
-                                <span t-elif="company.partner_id and company.partner_id.district"> <span t-field="company.partner_id.district"/></span>
-                                <t t-if="(company.city or company.city_arabic or (company.partner_id and company.partner_id.district)) and (company.state_id or company.state_arabic or (company.partner_id and company.partner_id.state_ar))">, </t>
+                                <t t-if="company.city and company.state_id">, </t>
                                 <span t-if="company.state_id" t-field="company.state_id.name"/>
-                                <span t-if="company.state_arabic"> <span t-field="company.state_arabic"/></span>
-                                <span t-elif="company.partner_id and company.partner_id.state_ar"> <span t-field="company.partner_id.state_ar"/></span>
                                 <t t-if="(company.city or company.state_id) and company.zip"> - </t>
                                 <span t-if="company.zip" t-field="company.zip"/>
                             </span>
-                            <span t-if="company.country_id or company.country_arabic or (company.partner_id and company.partner_id.city_ar)"><br/>
-                                <span t-if="company.country_id" t-field="company.country_id.name"/>
-                                <span t-if="company.country_arabic"> <span t-field="company.country_arabic"/></span>
-                                <span t-elif="company.partner_id and company.partner_id.city_ar"> <span t-field="company.partner_id.city_ar"/></span>
-                            </span>
+                            <span t-if="company.country_id"><br/><span t-field="company.country_id.name"/></span>
                         </div>
                     </td>
                     <td style="width: 35%; text-align: right; vertical-align: top; padding-top: 2px; border-color: white;">
@@ -99,7 +80,7 @@
                         <!-- Document Title -->
                         <div style="text-align: center; margin-bottom: 25px; margin-top: 10px;">
                             <h2 style="font-weight: 800; margin: 0 0 4px 0; color: #1E293B; font-size: 22pt; letter-spacing: -0.5px;">فاتورة ضريبية مبسطة</h2>
-                            <h4 style="font-weight: bold; color: #64748B; margin: 0; font-size: 13pt; letter-spacing: 1px; text-transform: uppercase;">TAX INVOICE</h4>
+                            <h4 style="font-weight: bold; color: #64748B; margin: 0; font-size: 13pt; letter-spacing: 1px; text-transform: uppercase;">VAT INVOICE</h4>
                         </div>
 
                         <!-- Metadata Card -->
@@ -129,7 +110,7 @@
                                         <div style="font-size: 8.5pt; color: #1E293B; font-weight: bold;">VERIFICATION</div>
                                         <div style="font-size: 7.5pt; color: #64748B; font-weight: normal; margin-top: 1px;">التحقق</div>
                                         <div style="margin-top: 4px; text-align: center;">
-                                            <img t-if="doc.qr" t-attf-src="data:image/png;base64, {{doc.qr}}" style="max-height: 90px; max-width: 90px; object-fit: contain; display: inline-block;" alt="QR Code"/>
+                                            <img t-if="doc.qr" t-attf-src="data:image/png;base64, {{doc.qr}}" style="max-height: 48px; max-width: 48px; object-fit: contain; display: inline-block;" alt="QR Code"/>
                                         </div>
                                     </td>
                                 </tr>
@@ -147,67 +128,24 @@
                                     <table class="table table-sm table-borderless" style="font-size: 9.5pt; margin-bottom: 0; color: #1E293B; line-height: 1.4; border-color: white;">
                                         <tbody>
                                             <tr>
-                                                <td style="width: 45%; padding: 2px 0; font-weight: bold; color: #475569; border-color: white;">Name /اسم:</td>
-                                                <td style="width: 55%; padding: 2px 0; font-weight: normal; border-color: white;">
-                                                    <span t-field="doc.company_id.name"/>
-                                                    <span t-if="doc.company_id.company_arabic_name"> <span t-field="doc.company_id.company_arabic_name"/></span>
-                                                    <span t-elif="doc.company_id.partner_id and doc.company_id.partner_id.mother_lang"> <span t-field="doc.company_id.partner_id.mother_lang"/></span>
-                                                </td>
+                                                <td style="width: 35%; padding: 2px 0; font-weight: bold; color: #475569; border-color: white;">Name /اسم:</td>
+                                                <td style="width: 65%; padding: 2px 0; font-weight: normal; border-color: white;"><span t-field="doc.company_id.name"/></td>
                                             </tr>
-                                            <tr t-if="doc.company_id.street or doc.company_id.street1_arabic or (doc.company_id.partner_id and doc.company_id.partner_id.street_ar)">
+                                            <tr t-if="doc.company_id.street">
                                                 <td style="padding: 2px 0; font-weight: bold; color: #475569; border-color: white;">Street /الشارع:</td>
-                                                <td style="padding: 2px 0; font-weight: normal; border-color: white;">
-                                                    <span t-field="doc.company_id.street"/>
-                                                    <span t-if="doc.company_id.street1_arabic"> <span t-field="doc.company_id.street1_arabic"/></span>
-                                                    <span t-elif="doc.company_id.partner_id and doc.company_id.partner_id.street_ar"> <span t-field="doc.company_id.partner_id.street_ar"/></span>
-                                                </td>
+                                                <td style="padding: 2px 0; font-weight: normal; border-color: white;"><span t-field="doc.company_id.street"/></td>
                                             </tr>
-                                            <tr t-if="doc.company_id.street2 or doc.company_id.street2_arabic">
-                                                <td style="padding: 2px 0; font-weight: bold; color: #475569; border-color: white;">Street 2 /الشارع 2:</td>
-                                                <td style="padding: 2px 0; font-weight: normal; border-color: white;">
-                                                    <span t-field="doc.company_id.street2"/>
-                                                    <span t-if="doc.company_id.street2_arabic"> <span t-field="doc.company_id.street2_arabic"/></span>
-                                                </td>
+                                            <tr t-if="doc.company_id.city">
+                                                <td style="padding: 2px 0; font-weight: bold; color: #475569; border-color: white;">District /منطقة:</td>
+                                                <td style="padding: 2px 0; font-weight: normal; border-color: white;"><span t-field="doc.company_id.city"/></td>
                                             </tr>
-                                            <tr t-if="doc.company_id.city or doc.company_id.city_arabic or (doc.company_id.partner_id and doc.company_id.partner_id.district)">
-                                                <td style="padding: 2px 0; font-weight: bold; color: #475569; border-color: white;">City/District /المدينة/حي:</td>
-                                                <td style="padding: 2px 0; font-weight: normal; border-color: white;">
-                                                    <span t-if="doc.company_id.city" t-field="doc.company_id.city"/>
-                                                    <span t-if="doc.company_id.city_arabic"> <span t-field="doc.company_id.city_arabic"/></span>
-                                                    <span t-elif="doc.company_id.partner_id and doc.company_id.partner_id.district"> <span t-field="doc.company_id.partner_id.district"/></span>
-                                                </td>
+                                            <tr t-if="doc.company_id.state_id">
+                                                <td style="padding: 2px 0; font-weight: bold; color: #475569; border-color: white;">State /حالة:</td>
+                                                <td style="padding: 2px 0; font-weight: normal; border-color: white;"><span t-field="doc.company_id.state_id.name"/></td>
                                             </tr>
-                                            <tr t-if="doc.company_id.partner_id and doc.company_id.partner_id.building_no">
-                                                <td style="padding: 2px 0; font-weight: bold; color: #475569; border-color: white;">Building No /رقم المبنى:</td>
-                                                <td style="padding: 2px 0; font-weight: normal; border-color: white;"><span t-field="doc.company_id.partner_id.building_no"/></td>
-                                            </tr>
-                                            <tr t-if="doc.company_id.partner_id and doc.company_id.partner_id.additional_no">
-                                                <td style="padding: 2px 0; font-weight: bold; color: #475569; border-color: white;">Additional No /الرقم الإضافي:</td>
-                                                <td style="padding: 2px 0; font-weight: normal; border-color: white;"><span t-field="doc.company_id.partner_id.additional_no"/></td>
-                                            </tr>
-                                            <tr t-if="doc.company_id.state_id or doc.company_id.state_arabic or (doc.company_id.partner_id and doc.company_id.partner_id.state_ar)">
-                                                <td style="padding: 2px 0; font-weight: bold; color: #475569; border-color: white;">State /المنطقة:</td>
-                                                <td style="padding: 2px 0; font-weight: normal; border-color: white;">
-                                                    <span t-if="doc.company_id.state_id" t-field="doc.company_id.state_id.name"/>
-                                                    <span t-if="doc.company_id.state_arabic"> <span t-field="doc.company_id.state_arabic"/></span>
-                                                    <span t-elif="doc.company_id.partner_id and doc.company_id.partner_id.state_ar"> <span t-field="doc.company_id.partner_id.state_ar"/></span>
-                                                </td>
-                                            </tr>
-                                            <tr t-if="doc.company_id.country_id or doc.company_id.country_arabic or (doc.company_id.partner_id and doc.company_id.partner_id.city_ar)">
-                                                <td style="padding: 2px 0; font-weight: bold; color: #475569; border-color: white;">Country /الدولة:</td>
-                                                <td style="padding: 2px 0; font-weight: normal; border-color: white;">
-                                                    <span t-if="doc.company_id.country_id" t-field="doc.company_id.country_id.name"/>
-                                                    <span t-if="doc.company_id.country_arabic"> <span t-field="doc.company_id.country_arabic"/></span>
-                                                    <span t-elif="doc.company_id.partner_id and doc.company_id.partner_id.city_ar"> <span t-field="doc.company_id.partner_id.city_ar"/></span>
-                                                </td>
-                                            </tr>
-                                            <tr t-if="doc.company_id.company_registry">
-                                                <td style="padding: 2px 0; font-weight: bold; color: #475569; border-color: white;">CR No /رقم السجل التجاري:</td>
-                                                <td style="padding: 2px 0; font-weight: normal; border-color: white;"><span t-field="doc.company_id.company_registry"/></td>
-                                            </tr>
-                                            <tr t-if="doc.company_id.vat">
-                                                <td style="padding: 2px 0; font-weight: bold; color: #475569; border-color: white;">Tax No /الرقم الضريبي:</td>
-                                                <td style="padding: 2px 0; font-weight: normal; border-color: white;"><span t-field="doc.company_id.vat"/></td>
+                                            <tr t-if="doc.company_id.country_id">
+                                                <td style="padding: 2px 0; font-weight: bold; color: #475569; border-color: white;">Country /بلد:</td>
+                                                <td style="padding: 2px 0; font-weight: normal; border-color: white;"><span t-field="doc.company_id.country_id.name"/></td>
                                             </tr>
                                             <tr t-if="doc.company_id.zip">
                                                 <td style="padding: 2px 0; font-weight: bold; color: #475569; border-color: white;">Postal Code /رمز:</td>
@@ -216,6 +154,10 @@
                                             <tr t-if="doc.company_id.phone">
                                                 <td style="padding: 2px 0; font-weight: bold; color: #475569; border-color: white;">Phone /هاتف:</td>
                                                 <td style="padding: 2px 0; font-weight: normal; border-color: white;"><span t-field="doc.company_id.phone"/></td>
+                                            </tr>
+                                            <tr t-if="doc.company_id.vat">
+                                                <td style="padding: 2px 0; font-weight: bold; color: #475569; border-color: white;">Bank /البنك:</td>
+                                                <td style="padding: 2px 0; font-weight: normal; border-color: white;">canara - BANK134567890</td>
                                             </tr>
                                         </tbody>
                                     </table>
@@ -235,46 +177,23 @@
                                         <tbody>
                                             <tr>
                                                 <td style="width: 35%; padding: 2px 0; font-weight: bold; color: #475569; border-color: white;">Name /اسم:</td>
-                                                <td style="width: 65%; padding: 2px 0; font-weight: normal; border-color: white;">
-                                                    <span t-field="doc.partner_id.name"/>
-                                                    <span t-if="doc.partner_id.mother_lang"> <span t-field="doc.partner_id.mother_lang"/></span>
-                                                </td>
+                                                <td style="width: 65%; padding: 2px 0; font-weight: normal; border-color: white;"><span t-field="doc.partner_id.name"/></td>
                                             </tr>
-                                            <tr t-if="doc.partner_id.street or doc.partner_id.street_ar">
+                                            <tr t-if="doc.partner_id.street">
                                                 <td style="padding: 2px 0; font-weight: bold; color: #475569; border-color: white;">Street /الشارع:</td>
-                                                <td style="padding: 2px 0; font-weight: normal; border-color: white;">
-                                                    <span t-field="doc.partner_id.street"/>
-                                                    <span t-if="doc.partner_id.street_ar"> <span t-field="doc.partner_id.street_ar"/></span>
-                                                </td>
+                                                <td style="padding: 2px 0; font-weight: normal; border-color: white;"><span t-field="doc.partner_id.street"/></td>
                                             </tr>
-                                            <tr t-if="doc.partner_id.district or doc.partner_id.city">
+                                            <tr t-if="doc.partner_id.city">
                                                 <td style="padding: 2px 0; font-weight: bold; color: #475569; border-color: white;">District /منطقة:</td>
-                                                <td style="padding: 2px 0; font-weight: normal; border-color: white;">
-                                                    <span t-if="doc.partner_id.district" t-field="doc.partner_id.district"/>
-                                                    <span t-else="" t-field="doc.partner_id.city"/>
-                                                </td>
+                                                <td style="padding: 2px 0; font-weight: normal; border-color: white;"><span t-field="doc.partner_id.city"/></td>
                                             </tr>
-                                            <tr t-if="doc.partner_id.building_no">
-                                                <td style="padding: 2px 0; font-weight: bold; color: #475569; border-color: white;">Building No /رقم المبنى:</td>
-                                                <td style="padding: 2px 0; font-weight: normal; border-color: white;"><span t-field="doc.partner_id.building_no"/></td>
-                                            </tr>
-                                            <tr t-if="doc.partner_id.additional_no">
-                                                <td style="padding: 2px 0; font-weight: bold; color: #475569; border-color: white;">Additional No /الرقم الإضافي:</td>
-                                                <td style="padding: 2px 0; font-weight: normal; border-color: white;"><span t-field="doc.partner_id.additional_no"/></td>
-                                            </tr>
-                                            <tr t-if="doc.partner_id.state_id or doc.partner_id.state_ar">
+                                            <tr t-if="doc.partner_id.state_id">
                                                 <td style="padding: 2px 0; font-weight: bold; color: #475569; border-color: white;">State /حالة:</td>
-                                                <td style="padding: 2px 0; font-weight: normal; border-color: white;">
-                                                    <span t-if="doc.partner_id.state_id" t-field="doc.partner_id.state_id.name"/>
-                                                    <span t-if="doc.partner_id.state_ar"> <span t-field="doc.partner_id.state_ar"/></span>
-                                                </td>
+                                                <td style="padding: 2px 0; font-weight: normal; border-color: white;"><span t-field="doc.partner_id.state_id.name"/></td>
                                             </tr>
-                                            <tr t-if="doc.partner_id.country_id or doc.partner_id.city_ar">
+                                            <tr t-if="doc.partner_id.country_id">
                                                 <td style="padding: 2px 0; font-weight: bold; color: #475569; border-color: white;">Country /بلد:</td>
-                                                <td style="padding: 2px 0; font-weight: normal; border-color: white;">
-                                                    <span t-if="doc.partner_id.country_id" t-field="doc.partner_id.country_id.name"/>
-                                                    <span t-if="doc.partner_id.city_ar"> <span t-field="doc.partner_id.city_ar"/></span>
-                                                </td>
+                                                <td style="padding: 2px 0; font-weight: normal; border-color: white;"><span t-field="doc.partner_id.country_id.name"/></td>
                                             </tr>
                                             <tr t-if="doc.partner_id.zip">
                                                 <td style="padding: 2px 0; font-weight: bold; color: #475569; border-color: white;">Postal Code /رمز:</td>
@@ -349,13 +268,9 @@
                                         
                                         <td style="padding: 8px 6px; vertical-align: middle;">
                                             <span t-field="line.name"/>
-                                            <t t-if="line.product_id and (line.product_id.product_arabic_name or line.product_id.product_tmpl_id.product_arabic_name)">
-                                                <br/>
-                                                <span style="font-size: 8.5pt; color: #475569;" t-field="line.product_id.product_tmpl_id.product_arabic_name"/>
-                                            </t>
                                         </td>
-                                         <td style="padding: 8px 6px; text-align: right; vertical-align: middle;">
-                                            <span t-esc="line.price_unit" t-options='{"widget": "monetary", "display_currency": doc.currency_id}'/>
+                                        <td style="padding: 8px 6px; text-align: right; vertical-align: middle;">
+                                            <span t-field="line.price_unit"/>
                                         </td>
                                         <td style="padding: 8px 6px; text-align: center; vertical-align: middle;">
                                             <span t-esc="'%.2f %s '%(line.quantity,line.product_uom_id.name)"/>
@@ -377,7 +292,7 @@
                                             <span t-esc="line_tax_amount" t-options='{"widget": "monetary", "display_currency": doc.currency_id}'/>
                                         </td>
                                         <td style="padding: 8px 6px; text-align: right; vertical-align: middle; font-weight: normal;">
-                                            <span t-esc="line.price_subtotal" t-options='{"widget": "monetary", "display_currency": doc.currency_id}'/>
+                                            <span t-field="line.price_subtotal"/>
                                         </td>
                                     </tr>
                                 </tbody>
@@ -392,44 +307,18 @@
                                         <div style="border-bottom: 2px solid #1E293B; padding-bottom: 4px; margin-bottom: 8px;">
                                             <strong style="color: #1E293B; font-size: 10pt;">BANK ACCOUNT DETAILS / <span style="font-weight: normal; font-size: 9.5pt;">تفاصيل الحساب البنكي</span></strong>
                                         </div>
-                                        <t t-if="doc.company_partner_bank_ids">
-                                            <t t-foreach="doc.company_partner_bank_ids" t-as="bank_account">
-                                                <table class="table table-sm table-borderless" style="font-size: 9pt; margin-bottom: 4px; color: #1E293B; width: 100%; border-color: white;">
-                                                    <tbody>
-                                                        <tr t-if="bank_account.acc_holder_name or (bank_account.partner_id and bank_account.partner_id.name) or doc.company_id.name">
-                                                            <td style="width: 45%; padding: 2px 0; font-weight: bold; color: #475569; border-color: white;">Account Name / اسم الحساب:</td>
-                                                            <td style="width: 55%; padding: 2px 0; font-weight: bold; color: #1E293B; border-color: white;">
-                                                                <span t-esc="bank_account.acc_holder_name or (bank_account.partner_id and bank_account.partner_id.name) or doc.company_id.name"/>
-                                                            </td>
-                                                        </tr>
-                                                        <tr t-if="bank_account.acc_number">
-                                                            <td style="width: 45%; padding: 2px 0; font-weight: bold; color: #475569; border-color: white;">Account number / رقم الحساب:</td>
-                                                            <td style="width: 55%; padding: 2px 0; font-weight: bold; color: #1E293B; border-color: white;">
-                                                                <span t-field="bank_account.acc_number"/>
-                                                            </td>
-                                                        </tr>
-                                                        <tr t-if="bank_account.iban or bank_account.acc_number">
-                                                            <td style="width: 45%; padding: 2px 0; font-weight: bold; color: #475569; border-color: white;">IBAN / الآيبان:</td>
-                                                            <td style="width: 55%; padding: 2px 0; font-weight: bold; color: #1E293B; border-color: white;">
-                                                                <span t-esc="bank_account.iban or bank_account.acc_number"/>
-                                                            </td>
-                                                        </tr>
-                                                        <tr t-if="bank_account.bank_id and bank_account.bank_id.name">
-                                                            <td style="width: 45%; padding: 2px 0; font-weight: bold; color: #475569; border-color: white;">Bank Name / اسم البنك:</td>
-                                                            <td style="width: 55%; padding: 2px 0; font-weight: bold; color: #1E293B; border-color: white;">
-                                                                <span t-field="bank_account.bank_id.name"/>
-                                                            </td>
-                                                        </tr>
-                                                        <tr t-if="bank_account.swift_code or (bank_account.bank_id and bank_account.bank_id.bic)">
-                                                            <td style="width: 45%; padding: 2px 0; font-weight: bold; color: #475569; border-color: white;">SWIFT / سويفت:</td>
-                                                            <td style="width: 55%; padding: 2px 0; font-weight: bold; color: #1E293B; border-color: white;">
-                                                                <span t-esc="bank_account.swift_code or (bank_account.bank_id and bank_account.bank_id.bic)"/>
-                                                            </td>
-                                                        </tr>
-                                                    </tbody>
-                                                </table>
-                                            </t>
-                                        </t>
+                                        <table class="table table-sm table-borderless" style="font-size: 9.5pt; margin-bottom: 0; color: #1E293B; width: 100%; border-color: white;">
+                                            <tbody>
+                                                <tr>
+                                                    <td style="width: 42%; padding: 2px 0; font-weight: bold; color: #475569; border-color: white;">Bank Name /اسم البنك:</td>
+                                                    <td style="width: 58%; padding: 2px 0; font-weight: bold; color: #1E293B; border-color: white;">canara</td>
+                                                </tr>
+                                                <tr>
+                                                    <td style="width: 42%; padding: 2px 0; font-weight: bold; color: #475569; border-color: white;">Account No /رقم الحساب:</td>
+                                                    <td style="width: 58%; padding: 2px 0; font-weight: bold; color: #1E293B; border-color: white;">BANK134567890</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
                                     </div>
                                 </td>
 
@@ -442,7 +331,7 @@
                                                     <span style="font-size: 8pt; color: #64748B; font-weight: normal;">إجمالي المبلغ الخاضع للضريبة (غير شامل الضريبة)</span>
                                                 </td>
                                                 <td style="text-align: right; padding: 6px 0; font-weight: normal; color: #1E293B; vertical-align: middle;" class="text-right text-end">
-                                                    <span t-esc="doc.amount_untaxed" t-options='{"widget": "monetary", "display_currency": doc.currency_id}'/>
+                                                    <span t-field="doc.amount_untaxed"/>
                                                 </td>
                                             </tr>
                                             <tr style="border-bottom: 1px solid #E2E8F0;">
@@ -460,7 +349,7 @@
                                                     <span style="font-size: 8pt; color: #475569; font-weight: normal;">إجمالي المبلغ المستحق</span>
                                                 </td>
                                                 <td style="text-align: right; padding: 8px 0; font-weight: bold; color: #1E293B; font-size: 11pt; vertical-align: middle;" class="text-right text-end">
-                                                    <span t-esc="doc.amount_residual" t-options='{"widget": "monetary", "display_currency": doc.currency_id}'/>
+                                                    <span t-field="doc.amount_residual"/>
                                                 </td>
                                             </tr>
                                         </tbody>

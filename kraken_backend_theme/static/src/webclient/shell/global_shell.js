@@ -750,14 +750,13 @@ function handleGlobalBack() {
         }
     }
 
-    // Fallback to browser history back if available
-    if (window.history.length > 1) {
-        window.history.back();
-        return;
+    // Fallback: reload current active menu section
+    const activeSection =
+        document.querySelector(".kr_sp_tabs .is-active") ||
+        document.querySelector(".kr_sp_rail_btn.is-active");
+    if (activeSection && typeof activeSection.click === "function") {
+        activeSection.click();
     }
-
-    // Default fallback to dashboard
-    window.location.assign("/odoo/dashboard");
 }
 
 
@@ -994,8 +993,18 @@ function openSubmenuPopover(button, menuService, activeMenuId) {
         }
     };
     const onWindowChange = (ev) => {
-        if (ev && ev.target && (popover.contains(ev.target) || ev.target === popover)) {
-            return;
+        if (ev && ev.target) {
+            const target = ev.target;
+            const isInsidePopover = popover.contains(target) || target === popover;
+            const isInsideButton = button.contains(target) || target === button;
+            const isInsideTabs = (typeof target.closest === "function") && (target.closest(".kr_sp_tabs") || target.closest(".kr_sp_tabs_cluster") || target.closest(".kr_sp_tabs_section"));
+            if (isInsidePopover || isInsideButton || isInsideTabs) {
+                if (ev.type === "scroll") {
+                    positionPopover();
+                    return;
+                }
+                return;
+            }
         }
         closeSubmenuPopover();
     };
@@ -2406,6 +2415,7 @@ function navigateToMenu(menuId, actionId) {
     if (!menuId) {
         return;
     }
+    trackNavigationHistory();
     closeWorkspaceModal();
     tabsRenderRetryCount = 0;
     try {
@@ -3114,23 +3124,30 @@ function setupTabsScroller(cluster) {
         cluster.classList.toggle("is-overflowing-right", canScrollRight);
     };
 
-    const scrollToActive = () => {
+    let lastActiveTab = null;
+    const scrollToActive = (force = false) => {
         const tabs = getTabs();
         if (!tabs) {
             return;
         }
         const activeTab = tabs.querySelector(".is-active");
-        if (activeTab) {
-            const tabLeft = activeTab.offsetLeft;
-            const tabWidth = activeTab.offsetWidth;
-            const viewWidth = viewport.clientWidth;
-            const scrollLeft = tabs.scrollLeft;
+        if (!activeTab) {
+            return;
+        }
+        if (!force && activeTab === lastActiveTab) {
+            return;
+        }
+        lastActiveTab = activeTab;
 
-            if (tabLeft < scrollLeft) {
-                tabs.scrollTo({ left: Math.max(0, tabLeft - 16), behavior: "smooth" });
-            } else if (tabLeft + tabWidth > scrollLeft + viewWidth) {
-                tabs.scrollTo({ left: tabLeft + tabWidth - viewWidth + 16, behavior: "smooth" });
-            }
+        const tabLeft = activeTab.offsetLeft;
+        const tabWidth = activeTab.offsetWidth;
+        const viewWidth = viewport.clientWidth;
+        const scrollLeft = tabs.scrollLeft;
+
+        if (tabLeft < scrollLeft) {
+            tabs.scrollTo({ left: Math.max(0, tabLeft - 16), behavior: "smooth" });
+        } else if (tabLeft + tabWidth > scrollLeft + viewWidth) {
+            tabs.scrollTo({ left: tabLeft + tabWidth - viewWidth + 16, behavior: "smooth" });
         }
     };
 
@@ -3174,7 +3191,7 @@ function setupTabsScroller(cluster) {
             return;
         }
         const deltaX = ev.clientX - pointerStartX;
-        if (Math.abs(deltaX) > 4) {
+        if (Math.abs(deltaX) > 16) {
             hasDragged = true;
             tabs.scrollLeft = pointerScrollStart - (deltaX * 1.3);
         }
@@ -3202,18 +3219,20 @@ function setupTabsScroller(cluster) {
 
     const resizeObserver = new ResizeObserver(() => {
         updateState();
-        scrollToActive();
     });
     resizeObserver.observe(viewport);
 
-    const mutationObserver = new MutationObserver(() => {
+    const mutationObserver = new MutationObserver((mutations) => {
         updateState();
-        scrollToActive();
+        const hasChildChanges = mutations.some((m) => m.type === "childList");
+        if (hasChildChanges) {
+            scrollToActive(true);
+        }
     });
-    mutationObserver.observe(viewport, { childList: true, subtree: true, attributes: true });
+    mutationObserver.observe(viewport, { childList: true, subtree: true });
 
     updateState();
-    scrollToActive();
+    scrollToActive(true);
 }
 
 function mountScrollers() {
