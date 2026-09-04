@@ -392,44 +392,40 @@
                                         <div style="border-bottom: 2px solid #1E293B; padding-bottom: 4px; margin-bottom: 8px;">
                                             <strong style="color: #1E293B; font-size: 10pt;">BANK ACCOUNT DETAILS / <span style="font-weight: normal; font-size: 9.5pt;">تفاصيل الحساب البنكي</span></strong>
                                         </div>
-                                        <t t-if="doc.company_partner_bank_ids">
-                                            <t t-foreach="doc.company_partner_bank_ids" t-as="bank_account">
-                                                <table class="table table-sm table-borderless" style="font-size: 9pt; margin-bottom: 4px; color: #1E293B; width: 100%; border-color: white;">
-                                                    <tbody>
-                                                        <tr t-if="bank_account.acc_holder_name or (bank_account.partner_id and bank_account.partner_id.name) or doc.company_id.name">
-                                                            <td style="width: 45%; padding: 2px 0; font-weight: bold; color: #475569; border-color: white;">Account Name / اسم الحساب:</td>
-                                                            <td style="width: 55%; padding: 2px 0; font-weight: bold; color: #1E293B; border-color: white;">
-                                                                <span t-esc="bank_account.acc_holder_name or (bank_account.partner_id and bank_account.partner_id.name) or doc.company_id.name"/>
-                                                            </td>
-                                                        </tr>
-                                                        <tr t-if="bank_account.acc_number">
-                                                            <td style="width: 45%; padding: 2px 0; font-weight: bold; color: #475569; border-color: white;">Account number / رقم الحساب:</td>
-                                                            <td style="width: 55%; padding: 2px 0; font-weight: bold; color: #1E293B; border-color: white;">
-                                                                <span t-field="bank_account.acc_number"/>
-                                                            </td>
-                                                        </tr>
-                                                        <tr t-if="bank_account.iban or bank_account.acc_number">
-                                                            <td style="width: 45%; padding: 2px 0; font-weight: bold; color: #475569; border-color: white;">IBAN / الآيبان:</td>
-                                                            <td style="width: 55%; padding: 2px 0; font-weight: bold; color: #1E293B; border-color: white;">
-                                                                <span t-esc="bank_account.iban or bank_account.acc_number"/>
-                                                            </td>
-                                                        </tr>
-                                                        <tr t-if="bank_account.bank_id and bank_account.bank_id.name">
-                                                            <td style="width: 45%; padding: 2px 0; font-weight: bold; color: #475569; border-color: white;">Bank Name / اسم البنك:</td>
-                                                            <td style="width: 55%; padding: 2px 0; font-weight: bold; color: #1E293B; border-color: white;">
-                                                                <span t-field="bank_account.bank_id.name"/>
-                                                            </td>
-                                                        </tr>
-                                                        <tr t-if="bank_account.swift_code or (bank_account.bank_id and bank_account.bank_id.bic)">
-                                                            <td style="width: 45%; padding: 2px 0; font-weight: bold; color: #475569; border-color: white;">SWIFT / سويفت:</td>
-                                                            <td style="width: 55%; padding: 2px 0; font-weight: bold; color: #1E293B; border-color: white;">
-                                                                <span t-esc="bank_account.swift_code or (bank_account.bank_id and bank_account.bank_id.bic)"/>
-                                                            </td>
-                                                        </tr>
-                                                    </tbody>
-                                                </table>
-                                            </t>
-                                        </t>
+                                        <table class="table table-sm table-borderless" style="font-size: 9pt; margin-bottom: 4px; color: #1E293B; width: 100%; border-color: white;">
+                                            <tbody>
+                                                <tr t-if="doc.company_id.bank_account_name">
+                                                    <td style="width: 45%; padding: 2px 0; font-weight: bold; color: #475569; border-color: white;">Account Name / اسم الحساب:</td>
+                                                    <td style="width: 55%; padding: 2px 0; font-weight: bold; color: #1E293B; border-color: white;">
+                                                        <span t-field="doc.company_id.bank_account_name"/>
+                                                    </td>
+                                                </tr>
+                                                <tr t-if="doc.company_id.bank_account_number">
+                                                    <td style="width: 45%; padding: 2px 0; font-weight: bold; color: #475569; border-color: white;">Account number / رقم الحساب:</td>
+                                                    <td style="width: 55%; padding: 2px 0; font-weight: bold; color: #1E293B; border-color: white;">
+                                                        <span t-field="doc.company_id.bank_account_number"/>
+                                                    </td>
+                                                </tr>
+                                                <tr t-if="doc.company_id.bank_iban and doc.company_id.is_saudi_company">
+                                                    <td style="width: 45%; padding: 2px 0; font-weight: bold; color: #475569; border-color: white;">IBAN / الآيبان:</td>
+                                                    <td style="width: 55%; padding: 2px 0; font-weight: bold; color: #1E293B; border-color: white;">
+                                                        <span t-field="doc.company_id.bank_iban"/>
+                                                    </td>
+                                                </tr>
+                                                <tr t-if="doc.company_id.bank_name">
+                                                    <td style="width: 45%; padding: 2px 0; font-weight: bold; color: #475569; border-color: white;">Bank Name / اسم البنك:</td>
+                                                    <td style="width: 55%; padding: 2px 0; font-weight: bold; color: #1E293B; border-color: white;">
+                                                        <span t-field="doc.company_id.bank_name"/>
+                                                    </td>
+                                                </tr>
+                                                <tr t-if="doc.company_id.bank_swift and doc.company_id.is_saudi_company">
+                                                    <td style="width: 45%; padding: 2px 0; font-weight: bold; color: #475569; border-color: white;">SWIFT / سويفت:</td>
+                                                    <td style="width: 55%; padding: 2px 0; font-weight: bold; color: #1E293B; border-color: white;">
+                                                        <span t-field="doc.company_id.bank_swift"/>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
                                     </div>
                                 </td>
 

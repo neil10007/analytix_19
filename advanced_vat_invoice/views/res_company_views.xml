@@ -7,6 +7,7 @@
         <field name="arch" type="xml">
 
             <xpath expr="//notebook" position="inside">
+                <!--
                 <page string="Company Arabic Details" name="company_arabic_details" invisible="not is_saudi_company">
                     <field name="is_saudi_company" invisible="1"/>
                     <group>
@@ -30,6 +31,20 @@
                             </group>
                         </group>
                     </div>
+                </page>
+                -->
+
+                <page string="Bank Details" name="company_bank_details">
+                    <field name="is_saudi_company" invisible="1"/>
+                    <group>
+                        <group string="Bank Account Details">
+                            <field name="bank_account_name"/>
+                            <field name="bank_account_number"/>
+                            <field name="bank_name"/>
+                            <field name="bank_iban" invisible="not is_saudi_company"/>
+                            <field name="bank_swift" invisible="not is_saudi_company"/>
+                        </group>
+                    </group>
                 </page>
             </xpath>
 
