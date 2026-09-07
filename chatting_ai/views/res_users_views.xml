@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Inherit res.users tree/list view -->
+        <record id="view_users_tree_inherit_chatting_ai" model="ir.ui.view">
+            <field name="name">res.users.tree.inherit.chatting.ai</field>
+            <field name="model">res.users</field>
+            <field name="inherit_id" ref="base.view_users_tree"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='login']" position="after">
+                    <field name="open_router_key" password="True" string="OpenRouter API Key"/>
+                    <field name="chatting_model" string="Chatting Model"/>
+                </xpath>
+            </field>
+        </record>
+
+        <!-- Inherit res.users form view -->
+        <record id="view_users_form_inherit_chatting_ai" model="ir.ui.view">
+            <field name="name">res.users.form.inherit.chatting.ai</field>
+            <field name="model">res.users</field>
+            <field name="inherit_id" ref="base.view_users_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//notebook" position="inside">
+                    <page string="AI Settings">
+                        <group>
+                            <field name="open_router_key" password="True" string="OpenRouter API Key"/>
+                            <field name="chatting_model" string="Chatting Model" placeholder="e.g. meta-llama/llama-3.3-70b-instruct:free"/>
+                            <field name="llama_api_key" password="True"/>
+                        </group>
+                    </page>
+                    <page string="Chatting Configuration">
+                        <group string="Custom AI System Prompt &amp; Instructions">
+                            <field name="chatting_system_prompt" string="System Prompt" placeholder="Enter custom AI prompt instructions here... (e.g. 'Always answer in Arabic and format invoices with VAT links.')"/>
+                        </group>
+                    </page>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>

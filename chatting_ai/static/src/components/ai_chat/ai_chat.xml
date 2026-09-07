@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates xml:space="preserve">
+    <t t-name="chatting_ai.AiChatWidget">
+        <div class="o_ai_chat_widget">
+            <!-- The Chat Window -->
+            <div t-if="state.isOpen" class="o_ai_chat_window shadow-lg border">
+                <!-- Header -->
+                <div class="o_ai_chat_header d-flex justify-content-between align-items-center p-3 border-bottom bg-white">
+                    <div class="d-flex align-items-center cursor-pointer">
+                        <span class="ai_gradient_logo me-2">Ai</span>
+                        <strong class="text-dark me-1" style="font-size: 15px; font-weight: 500;">Ask AI</strong>
+                        <i class="fa fa-caret-down text-muted" style="font-size: 12px;"></i>
+                    </div>
+                    <div>
+                        <button class="btn btn-sm btn-link text-muted p-1 m-0 me-2" t-on-click="toggleChat">
+                            <i class="fa fa-minus"></i>
+                        </button>
+                        <button class="btn btn-sm btn-link text-muted p-1 m-0" t-on-click="toggleChat">
+                            <i class="fa fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Body -->
+                <div class="o_ai_chat_body p-3 overflow-auto bg-white" t-on-click="onChatClick">
+                    <t t-if="state.messages.length === 0">
+                        <div class="mt-4 mb-4">
+                            <div class="d-flex align-items-center mb-2">
+                                <span class="ai_gradient_logo_large me-2">Ai</span>
+                                <strong class="text-dark" style="font-size: 20px; font-weight: 500;">Ask AI</strong>
+                            </div>
+                            <p class="text-muted mb-3" style="font-size: 14px;">Hello, what can I help you with?</p>
+                            
+                            <!-- Suggestions -->
+                            <div class="d-flex flex-column align-items-start gap-2 mt-3">
+                                <button class="btn rounded-3 text-start ai_suggestion_pill mb-2" t-on-click="() => this.clickSuggestion('Today total invoices ?')">
+                                    Today total invoices ?
+                                </button>
+                                <button class="btn rounded-3 text-start ai_suggestion_pill mb-2" t-on-click="() => this.clickSuggestion('Today total expense ?')">
+                                    Today total expense ?
+                                </button>
+                                <button class="btn rounded-3 text-start ai_suggestion_pill" t-on-click="() => this.clickSuggestion('Show today invoice list view')">
+                                    Show today invoice list view
+                                </button>
+                            </div>
+                        </div>
+                    </t>
+                    
+                    <t t-foreach="state.messages" t-as="msg" t-key="msg_index">
+                        <div t-attf-class="d-flex mb-3 {{ msg.role === 'user' ? 'justify-content-end' : 'justify-content-start' }}">
+                            <div t-attf-class="p-2 rounded-3 max-w-75 {{ msg.role === 'user' ? 'bg-light text-dark' : 'bg-white text-dark' }}" style="font-size: 14px;">
+                                <t t-if="msg.htmlContent">
+                                    <t t-out="msg.htmlContent" />
+                                </t>
+                                <t t-else="">
+                                    <t t-esc="msg.content" />
+                                </t>
+                            </div>
+                        </div>
+                    </t>
+                    
+                    <t t-if="state.isLoading">
+                        <div class="d-flex mb-3 justify-content-start">
+                            <div class="p-2 rounded-3 max-w-75 bg-white text-muted" style="font-size: 14px;">
+                                <i class="fa fa-circle-o-notch fa-spin"></i> Thinking...
+                            </div>
+                        </div>
+                    </t>
+                </div>
+                
+                <!-- Footer -->
+                <div class="o_ai_chat_footer p-3 bg-white">
+                    <div class="input-group ai_input_group rounded-3">
+                        <input type="text" class="form-control border-0 bg-transparent" placeholder="Message Ask AI..." t-model="state.inputValue" t-on-keydown="onKeydown"/>
+                        <button class="btn text-dark border-0 bg-transparent" t-on-click="sendMessage">
+                            <i class="fa fa-paper-plane-o"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- The Floating Button -->
+            <button t-if="!state.isOpen" class="btn btn-light border o_ai_chat_fab shadow-lg bg-white" t-on-click="toggleChat">
+                <span class="ai_gradient_logo_large">Ai</span>
+            </button>
+        </div>
+    </t>
+</templates>
