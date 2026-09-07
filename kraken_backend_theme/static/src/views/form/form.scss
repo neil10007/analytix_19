@@ -411,5 +411,75 @@ body:not(.kr_sp_theme_dark) .o_dialog .modal-body {
             }
         }
     }
+
+    /* ── Monetary field fix (global wizard/dialog - white theme) ───────────
+       The .o_field_monetary widget renders as an input-group:
+         [.o_monetary_currency / .input-group-text] + [input.o_input]
+       We must explicitly fix color & -webkit-text-fill-color on both parts
+       so the entered value and currency symbol are always visible.
+    ─────────────────────────────────────────────────────────────────────── */
+    .o_field_monetary,
+    .o_field_monetary .input-group,
+    .o_field_monetary .o_input_dropdown {
+        background-color: transparent !important;
+    }
+
+    .o_field_monetary input,
+    .o_field_monetary .o_input,
+    .o_field_monetary input.o_input,
+    .o_field_monetary .oe_currency_value,
+    .o_field_monetary .o_currency_value {
+        background-color: #ffffff !important;
+        color: #0f172a !important;
+        -webkit-text-fill-color: #0f172a !important;
+        border: 1px solid #cbd5e1 !important;
+        border-radius: 6px !important;
+        padding: 6px 10px !important;
+        font-size: 13px !important;
+        font-weight: 500 !important;
+        opacity: 1 !important;
+        box-shadow: none !important;
+
+        &:focus {
+            border-color: #0f172a !important;
+            box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.08) !important;
+        }
+
+        &::placeholder {
+            color: #94a3b8 !important;
+            -webkit-text-fill-color: #94a3b8 !important;
+        }
+    }
+
+    /* Currency symbol badge (SAR / USD etc.) */
+    .o_field_monetary .input-group-text,
+    .o_field_monetary .o_monetary_currency,
+    .o_field_monetary > span,
+    .o_field_monetary .o_currency_symbol {
+        background-color: #f1f5f9 !important;
+        color: #334155 !important;
+        -webkit-text-fill-color: #334155 !important;
+        border: 1px solid #cbd5e1 !important;
+        border-right: none !important;
+        border-radius: 6px 0 0 6px !important;
+        padding: 6px 10px !important;
+        font-size: 13px !important;
+        font-weight: 600 !important;
+        opacity: 1 !important;
+    }
+
+    /* Readonly / disabled monetary (displayed as span, not input) */
+    .o_field_monetary span.o_field_monetary,
+    .o_field_monetary .o_readonly .o_input,
+    .o_field_monetary[readonly] input,
+    .o_readonly_modifier .o_field_monetary span,
+    .o_readonly_modifier .o_field_monetary .oe_currency_value {
+        color: #0f172a !important;
+        -webkit-text-fill-color: #0f172a !important;
+        opacity: 1 !important;
+        background-color: transparent !important;
+    }
 }
 
+// Global monetary field fix for all wizard/dialog contexts is now handled
+// by wizard_monetary.scss (loaded after this file in web.assets_backend).

@@ -34,6 +34,7 @@
             "kraken_backend_theme/static/src/views/form/form_compiler.js",
             "kraken_backend_theme/static/src/views/form/button_box_patch.js",
             "kraken_backend_theme/static/src/views/form/form.scss",
+            "kraken_backend_theme/static/src/views/form/wizard_monetary.scss",
             "kraken_backend_theme/static/src/views/form/statusbar.scss",
             "kraken_backend_theme/static/src/views/graph/graph.scss",
             "kraken_backend_theme/static/src/views/apps/apps.scss",

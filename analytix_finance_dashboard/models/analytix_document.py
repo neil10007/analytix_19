@@ -625,6 +625,49 @@ class AnalytixDocument(models.Model):
                 parsed_data = self._regex_extract_json_fallback(cleaned)
 
         formatted_json = json.dumps(parsed_data, indent=4)
+
+        # Extract Token & Credit / Cost stats from API response
+        usage_info = getattr(response, 'usage', None)
+        prompt_tokens = 0
+        completion_tokens = 0
+        total_tokens = 0
+        cost = None
+
+        if usage_info:
+            if isinstance(usage_info, dict):
+                prompt_tokens = usage_info.get('prompt_tokens', 0) or 0
+                completion_tokens = usage_info.get('completion_tokens', 0) or 0
+                total_tokens = usage_info.get('total_tokens', 0) or 0
+                cost = usage_info.get('cost') or usage_info.get('total_cost')
+            else:
+                prompt_tokens = getattr(usage_info, 'prompt_tokens', 0) or 0
+                completion_tokens = getattr(usage_info, 'completion_tokens', 0) or 0
+                total_tokens = getattr(usage_info, 'total_tokens', 0) or 0
+                cost = getattr(usage_info, 'cost', None) or getattr(usage_info, 'total_cost', None)
+
+        if cost is None:
+            cost = getattr(response, 'cost', None) or getattr(response, 'total_cost', None)
+
+        response_model = getattr(response, 'model', model_name)
+
+        # Print prominent token & credit log to terminal stdout & Odoo server log
+        print("\n" + "=" * 80)
+        print(f">>> ANALYTIX AI MODEL TOKEN & CREDIT USAGE [DOCUMENT ID: {self.id}] <<<")
+        print("=" * 80)
+        print(f"  • AI Model Used          : {response_model}")
+        print(f"  • Prompt (Input) Tokens  : {prompt_tokens:,}")
+        print(f"  • Completion (Output)    : {completion_tokens:,}")
+        print(f"  • Total Tokens Consumed  : {total_tokens:,}")
+        if cost is not None:
+            print(f"  • OpenRouter Credit/Cost : ${cost:.6f}")
+        print("=" * 80 + "\n")
+
+        _logger.info(
+            "ANALYTIX AI USAGE STATS [Doc ID %s | Model: %s]: Prompt Tokens = %s, Completion Tokens = %s, Total Tokens = %s%s",
+            self.id, response_model, prompt_tokens, completion_tokens, total_tokens,
+            f", Cost = ${cost:.6f}" if cost is not None else ""
+        )
+
         print("\n" + "=" * 80)
         print(">>> ANALYTIX AI EXTRACTED JSON RESPONSE <<<")
         print("=" * 80)
@@ -1478,20 +1521,83 @@ class AnalytixDocument(models.Model):
             ) if items else 0.0
 
             if is_simplified_invoice:
-                _logger.info("Expense Bill: Simplified Invoice detected. Setting line price to total gross amount (%.2f) and clearing line tax.", json_total)
-                exp_price_unit = json_total if json_total > 0 else (
-                    (items_sum + json_tax) if (items_sum > 0 and json_tax > 0) else (
-                        (json_subtotal + json_tax) if (json_subtotal > 0 and json_tax > 0) else (items_sum or json_subtotal)
+                # Detect mixed tax rates — if items carry different VAT %, create individual lines
+                _simp_mixed = False
+                if items and len(items) > 1:
+                    _srates = []
+                    for it in items:
+                        _r = self._clean_float(it.get('tax_rate'))
+                        _va = self._clean_float(it.get('vat_amount') or it.get('tax_amount') or it.get('vat') or it.get('tax'))
+                        _p = self._clean_float(it.get('unit_price'))
+                        _q = self._clean_float(it.get('quantity')) or 1.0
+                        if _r <= 0 and _va > 0 and _p > 0:
+                            _s = _q * _p
+                            if _s > 0:
+                                _r = round((_va / _s) * 100, 2)
+                        _srates.append(round(_r, 2))
+                    if len(set(_srates)) > 1:
+                        _simp_mixed = True
+                        _logger.info("Simplified Expense Bill: Mixed tax rates %s. Creating individual lines.", list(set(_srates)))
+
+                if _simp_mixed:
+                    validation_warnings.append(
+                        f"• Document Classification: Simplified Invoice with Mixed VAT Rates detected. "
+                        f"Creating individual lines per item for correct tax calculation."
                     )
-                )
-                line_tax = False
-                json_tax = 0.0
-                validation_warnings.append(
-                    f"• Document Classification: Simplified Invoice / Retail Receipt detected. "
-                    f"Total gross amount ({exp_price_unit:.2f}) set directly as expense amount without separate line tax."
-                )
+                    exp_price_unit = 0.0
+                    for idx, it in enumerate(items):
+                        _iname = (it.get('product_name') or it.get('name') or it.get('description') or f"Item {idx+1}").strip()
+                        _iqty = self._clean_float(it.get('quantity')) or 1.0
+                        _iprice = self._clean_float(it.get('unit_price')) or 0.0
+                        _irate = self._clean_float(it.get('tax_rate'))
+                        _ivat = self._clean_float(it.get('vat_amount') or it.get('tax_amount') or it.get('vat') or it.get('tax'))
+                        _isub = round(_iqty * _iprice, 2)
+                        if _irate <= 0 and _ivat > 0 and _isub > 0:
+                            _irate = round((_ivat / _isub) * 100, 2)
+                        _iltax = None
+                        if _irate > 0 or _ivat > 0:
+                            _rtax = self._resolve_tax(move_type, tax_rate=_irate, tax_amount=_ivat, subtotal=_isub, total=_isub + _ivat)
+                            if _rtax:
+                                _iltax = _rtax
+                        _ilv = {'name': _iname, 'quantity': _iqty, 'price_unit': _iprice}
+                        if line_account and line_account.exists():
+                            _ilv['account_id'] = line_account.id
+                        if _iltax:
+                            _ilv['tax_ids'] = [(6, 0, [_iltax.id])]
+                        invoice_line_vals.append((0, 0, _ilv))
+                        exp_price_unit += _isub
+                        validation_warnings.append(
+                            f"   - Line {idx+1}: {_iname} (Qty: {_iqty:g}, Unit Price: {_iprice:.2f}, VAT Rate: {_irate:.2f}%, Line Total: {_isub:.2f})"
+                        )
+                    _logger.info("Created %d individual lines for Simplified Expense Bill with mixed VAT rates", len(items))
+
+                else:
+                    # Standard simplified: 1 gross line, no separate tax
+                    _logger.info("Expense Bill: Simplified Invoice. Setting line price to total gross (%.2f), clearing tax.", json_total)
+                    exp_price_unit = json_total if json_total > 0 else (
+                        (items_sum + json_tax) if (items_sum > 0 and json_tax > 0) else (
+                            (json_subtotal + json_tax) if (json_subtotal > 0 and json_tax > 0) else (items_sum or json_subtotal)
+                        )
+                    )
+                    line_tax = False
+                    json_tax = 0.0
+                    validation_warnings.append(
+                        f"• Document Classification: Simplified Invoice / Retail Receipt detected. "
+                        f"Total gross amount ({exp_price_unit:.2f}) set directly as expense amount without separate line tax."
+                    )
+                    exp_desc = data.get('summary') or data.get('description') or (partner and f"Expense Bill - {partner.name}") or "Expense Bill Summary"
+                    if items:
+                        _names = [(it.get('product_name') or it.get('name') or it.get('description') or '').strip() for it in items if (it.get('name') or it.get('description') or it.get('product_name'))]
+                        if _names:
+                            exp_desc = f"Expense Summary: {', '.join(_names[:5])}"
+                    _sl = {'name': exp_desc, 'quantity': 1.0, 'price_unit': exp_price_unit}
+                    if line_account and line_account.exists():
+                        _sl['account_id'] = line_account.id
+                    invoice_line_vals.append((0, 0, _sl))
+                    _logger.info("Created 1 simplified single line for Expense Bill (price_unit=%.2f, no tax)", exp_price_unit)
+
             elif is_foreign_country:
-                _logger.info("Expense Bill: Foreign Expense (outside country) detected. Setting line price to total gross amount (%.2f) and absorbing tax.", json_total)
+                _logger.info("Expense Bill: Foreign Expense detected. Setting line price to total gross (%.2f).", json_total)
                 exp_price_unit = json_total if json_total > 0 else (
                     (items_sum + json_tax) if (items_sum > 0 and json_tax > 0) else (
                         (json_subtotal + json_tax) if (json_subtotal > 0 and json_tax > 0) else (items_sum or json_subtotal)
@@ -1499,104 +1605,143 @@ class AnalytixDocument(models.Model):
                 )
                 line_tax = False
                 json_tax = 0.0
-
-                # Check if Foreign Expense GL account mapping exists in ai.gl.config
                 if ai_config and ai_config.foreign_expense_line_ids:
-                    foreign_expense_line = ai_config.foreign_expense_line_ids.filtered(lambda l: l.expense_stage == 'international_import')
-                    if foreign_expense_line and foreign_expense_line[0].account_id:
-                        line_account = foreign_expense_line[0].account_id
-                        if foreign_expense_line[0].tax_id:
-                            line_tax = foreign_expense_line[0].tax_id
-
+                    _fel = ai_config.foreign_expense_line_ids.filtered(lambda l: l.expense_stage == 'international_import')
+                    if _fel and _fel[0].account_id:
+                        line_account = _fel[0].account_id
+                        if _fel[0].tax_id:
+                            line_tax = _fel[0].tax_id
                 validation_warnings.append(
-                    f"• Document Classification: Expense From Foreign. Identified as an expense from outside the country (Foreign Expense Bill). "
-                    f"Total amount including foreign tax ({exp_price_unit:.2f}) set as total expense without local tax."
+                    f"• Document Classification: Expense From Foreign (outside country). "
+                    f"Total ({exp_price_unit:.2f}) set as expense without local tax."
                 )
+                exp_desc = data.get('summary') or data.get('description') or (partner and f"Expense Bill - {partner.name}") or "Expense Bill Summary"
+                if items:
+                    _names = [(it.get('product_name') or it.get('name') or it.get('description') or '').strip() for it in items if (it.get('name') or it.get('description') or it.get('product_name'))]
+                    if _names:
+                        exp_desc = f"Expense Summary: {', '.join(_names[:5])}"
+                _sl = {'name': exp_desc, 'quantity': 1.0, 'price_unit': exp_price_unit}
+                if line_account and line_account.exists():
+                    _sl['account_id'] = line_account.id
+                if line_tax:
+                    _sl['tax_ids'] = [(6, 0, [line_tax.id])]
+                invoice_line_vals.append((0, 0, _sl))
+                _logger.info("Created 1 foreign expense single line (price_unit=%.2f)", exp_price_unit)
+
             else:
-                # ── Standard Domestic Invoice Tax Resolution ──
+                # ── Standard Domestic Expense Bill ──
                 if json_tax <= 0 and items:
-                    item_taxes_sum = sum(self._clean_float(it.get('tax_amount') or it.get('vat') or it.get('tax')) for it in items)
-                    if item_taxes_sum > 0:
-                        json_tax = item_taxes_sum
+                    _itax_sum = sum(self._clean_float(it.get('tax_amount') or it.get('vat_amount') or it.get('vat') or it.get('tax')) for it in items)
+                    if _itax_sum > 0:
+                        json_tax = _itax_sum
                     elif json_total > 0 and items_sum > 0 and json_total > items_sum:
                         json_tax = json_total - items_sum
-
                 if json_tax > 0 and (not global_tax_rate or global_tax_rate <= 0):
-                    base_amt = items_sum if items_sum > 0 else (json_subtotal if json_subtotal > 0 else (json_total - json_tax))
-                    if base_amt > 0:
-                        global_tax_rate = round((json_tax / base_amt) * 100, 4)
+                    _base = items_sum if items_sum > 0 else (json_subtotal if json_subtotal > 0 else (json_total - json_tax))
+                    if _base > 0:
+                        global_tax_rate = round((json_tax / _base) * 100, 4)
 
-                if (json_tax > 0 or global_tax_rate > 0):
-                    resolved_tax = self._resolve_tax(
-                        move_type,
-                        tax_rate=global_tax_rate,
-                        tax_amount=json_tax,
-                        subtotal=items_sum or json_subtotal,
-                        total=json_total
+                # Detect mixed tax rates across items
+                has_mixed_tax_rates = False
+                if items and len(items) > 1:
+                    _rates = []
+                    for it in items:
+                        _r = self._clean_float(it.get('tax_rate'))
+                        _va = self._clean_float(it.get('vat_amount') or it.get('tax_amount') or it.get('vat') or it.get('tax'))
+                        _p = self._clean_float(it.get('unit_price'))
+                        _q = self._clean_float(it.get('quantity')) or 1.0
+                        if _r <= 0 and _va > 0 and _p > 0:
+                            _s = _q * _p
+                            if _s > 0:
+                                _r = round((_va / _s) * 100, 2)
+                        _rates.append(round(_r, 2))
+                    if len(set(_rates)) > 1:
+                        has_mixed_tax_rates = True
+                        _logger.info("Expense Bill: Mixed tax rates %s detected. Creating individual lines.", list(set(_rates)))
+
+                if has_mixed_tax_rates:
+                    # ── Multi-Line: one line per item with its own correct tax ──
+                    from .ai_gl_config import EXPENSE_BILLS_TYPES
+                    _cdict = dict(EXPENSE_BILLS_TYPES)
+                    _clabel = _cdict.get(detected_category, detected_category)
+                    _alabel = f"{line_account.code} {line_account.name}" if (line_account and line_account.code) else (line_account.name if line_account else "Default Expense")
+                    validation_warnings.append(
+                        f"• Document Classification: Standard Tax Invoice with Mixed VAT Rates detected. "
+                        f"Creating individual lines per item for correct tax calculation."
                     )
-                    if resolved_tax:
-                        line_tax = resolved_tax
+                    validation_warnings.append(f"• Expense Category Detected: {_clabel} [{detected_category}]")
+                    validation_warnings.append(f"• Applied GL Expense Account: {_alabel}")
+                    validation_warnings.append(f"• Extracted PDF Item Lines ({len(items)} items — INDIVIDUAL lines due to mixed VAT rates):")
+                    exp_price_unit = 0.0
+                    for idx, it in enumerate(items):
+                        _iname = (it.get('product_name') or it.get('name') or it.get('description') or f"Item {idx+1}").strip()
+                        _iqty = self._clean_float(it.get('quantity')) or 1.0
+                        _iprice = self._clean_float(it.get('unit_price')) or 0.0
+                        _irate = self._clean_float(it.get('tax_rate'))
+                        _ivat = self._clean_float(it.get('vat_amount') or it.get('tax_amount') or it.get('vat') or it.get('tax'))
+                        _isub = round(_iqty * _iprice, 2)
+                        if _irate <= 0 and _ivat > 0 and _isub > 0:
+                            _irate = round((_ivat / _isub) * 100, 2)
+                        _iltax = None
+                        if _irate > 0 or _ivat > 0:
+                            _rtax = self._resolve_tax(move_type, tax_rate=_irate, tax_amount=_ivat, subtotal=_isub, total=_isub + _ivat)
+                            if _rtax:
+                                _iltax = _rtax
+                        _ilv = {'name': _iname, 'quantity': _iqty, 'price_unit': _iprice}
+                        if line_account and line_account.exists():
+                            _ilv['account_id'] = line_account.id
+                        if _iltax:
+                            _ilv['tax_ids'] = [(6, 0, [_iltax.id])]
+                        invoice_line_vals.append((0, 0, _ilv))
+                        exp_price_unit += _isub
+                        validation_warnings.append(f"   - Line {idx+1}: {_iname} (Qty: {_iqty:g}, Unit Price: {_iprice:.2f}, VAT Rate: {_irate:.2f}%, Line Total: {_isub:.2f})")
+                    _logger.info("Created %d individual lines for Expense Bill with mixed VAT rates (category=%s)", len(items), detected_category)
 
-                # ── 4. Calculate Subtotal Price Unit for Consolidated Single Line ──
-                if items_sum > 0:
-                    if json_subtotal > 0 and abs(items_sum - json_subtotal) <= 0.5:
-                        exp_price_unit = json_subtotal
-                    elif json_total > 0 and json_tax > 0 and abs(items_sum - (json_total - json_tax)) <= 0.5:
-                        exp_price_unit = items_sum
-                    elif json_subtotal > 0 and abs(items_sum - json_subtotal) > 0.5:
-                        _logger.info("Expense Bill: Header subtotal (%.2f) differs from items sum (%.2f). Using items sum.", json_subtotal, items_sum)
-                        exp_price_unit = items_sum
-                    else:
-                        exp_price_unit = items_sum
                 else:
-                    exp_price_unit = json_subtotal if json_subtotal > 0 else (
-                        (json_total - json_tax) if (json_total > json_tax and json_tax > 0) else json_total
+                    # ── Single-Line: all items share the same tax rate ──
+                    if (json_tax > 0 or global_tax_rate > 0):
+                        _rtax = self._resolve_tax(move_type, tax_rate=global_tax_rate, tax_amount=json_tax, subtotal=items_sum or json_subtotal, total=json_total)
+                        if _rtax:
+                            line_tax = _rtax
+                    if items_sum > 0:
+                        if json_subtotal > 0 and abs(items_sum - json_subtotal) <= 0.5:
+                            exp_price_unit = json_subtotal
+                        elif json_total > 0 and json_tax > 0 and abs(items_sum - (json_total - json_tax)) <= 0.5:
+                            exp_price_unit = items_sum
+                        else:
+                            exp_price_unit = items_sum
+                    else:
+                        exp_price_unit = json_subtotal if json_subtotal > 0 else ((json_total - json_tax) if (json_total > json_tax and json_tax > 0) else json_total)
+                    validation_warnings.append(
+                        f"• Document Classification: Standard (Normal) Tax Invoice detected. "
+                        f"Extracted untaxed subtotal ({exp_price_unit:.2f}) and resolved standard VAT."
                     )
-
-                validation_warnings.append(
-                    f"• Document Classification: Standard (Normal) Tax Invoice detected. "
-                    f"Extracted untaxed subtotal ({exp_price_unit:.2f}) and resolved standard VAT."
-                )
-
-            # Construct summary description
-            exp_desc = data.get('summary') or data.get('description') or (partner and f"Expense Bill - {partner.name}") or "Expense Bill Summary"
-            if items:
-                item_names = [ (it.get('product_name') or it.get('name') or it.get('description') or '').strip() for it in items if (it.get('name') or it.get('description') or it.get('product_name')) ]
-                if item_names:
-                    exp_desc = f"Expense Summary: {', '.join(item_names[:5])}"
-
-            single_line_vals = {
-                'name': exp_desc,
-                'quantity': 1.0,
-                'price_unit': exp_price_unit,
-            }
-            if line_account and line_account.exists():
-                single_line_vals['account_id'] = line_account.id
-            if line_tax:
-                single_line_vals['tax_ids'] = [(6, 0, [line_tax.id])]
-
-            invoice_line_vals.append((0, 0, single_line_vals))
-            _logger.info("Created 1 consolidated single line entry for Expense Bill (category=%s, account=%s, price_unit=%.2f)",
-                         detected_category, line_account.name if line_account else 'None', exp_price_unit)
-
-            # ── 5. AI Validation & Product Line Audit Details ──
-            from .ai_gl_config import EXPENSE_BILLS_TYPES
-            cat_display_dict = dict(EXPENSE_BILLS_TYPES)
-            cat_label = cat_display_dict.get(detected_category, detected_category)
-            acc_label = f"{line_account.code} {line_account.name}" if (line_account and line_account.code) else (line_account.name if line_account else "Default Expense")
-
-            validation_warnings.append(f"• Expense Category Detected: {cat_label} [{detected_category}]")
-            validation_warnings.append(f"• Applied GL Expense Account: {acc_label}")
-
-            if items:
-                validation_warnings.append(f"• Extracted PDF Item Lines ({len(items)} items consolidated into single bill line):")
-                for idx, it in enumerate(items):
-                    it_name = (it.get('product_name') or it.get('name') or it.get('description') or f"Item {idx+1}").strip()
-                    it_qty = self._clean_float(it.get('quantity')) or 1.0
-                    it_price = self._clean_float(it.get('unit_price')) or 0.0
-                    it_total = round(it_qty * it_price, 2)
-                    validation_warnings.append(f"   - Line {idx+1}: {it_name} (Qty: {it_qty:g}, Unit Price: {it_price:.2f}, Line Total: {it_total:.2f})")
-
+                    exp_desc = data.get('summary') or data.get('description') or (partner and f"Expense Bill - {partner.name}") or "Expense Bill Summary"
+                    if items:
+                        _names = [(it.get('product_name') or it.get('name') or it.get('description') or '').strip() for it in items if (it.get('name') or it.get('description') or it.get('product_name'))]
+                        if _names:
+                            exp_desc = f"Expense Summary: {', '.join(_names[:5])}"
+                    _sl = {'name': exp_desc, 'quantity': 1.0, 'price_unit': exp_price_unit}
+                    if line_account and line_account.exists():
+                        _sl['account_id'] = line_account.id
+                    if line_tax:
+                        _sl['tax_ids'] = [(6, 0, [line_tax.id])]
+                    invoice_line_vals.append((0, 0, _sl))
+                    _logger.info("Created 1 consolidated single line for Expense Bill (category=%s, price_unit=%.2f)", detected_category, exp_price_unit)
+                    from .ai_gl_config import EXPENSE_BILLS_TYPES
+                    _cdict = dict(EXPENSE_BILLS_TYPES)
+                    _clabel = _cdict.get(detected_category, detected_category)
+                    _alabel = f"{line_account.code} {line_account.name}" if (line_account and line_account.code) else (line_account.name if line_account else "Default Expense")
+                    validation_warnings.append(f"• Expense Category Detected: {_clabel} [{detected_category}]")
+                    validation_warnings.append(f"• Applied GL Expense Account: {_alabel}")
+                    if items:
+                        validation_warnings.append(f"• Extracted PDF Item Lines ({len(items)} items consolidated into single bill line):")
+                        for idx, it in enumerate(items):
+                            _iname = (it.get('product_name') or it.get('name') or it.get('description') or f"Item {idx+1}").strip()
+                            _iqty = self._clean_float(it.get('quantity')) or 1.0
+                            _iprice = self._clean_float(it.get('unit_price')) or 0.0
+                            _itotal = round(_iqty * _iprice, 2)
+                            validation_warnings.append(f"   - Line {idx+1}: {_iname} (Qty: {_iqty:g}, Unit Price: {_iprice:.2f}, Line Total: {_itotal:.2f})")
         else:
             # ── Multi-Line Item Processing for Sales Invoices and Purchase Bills ──
             if move_type in ('out_invoice', 'out_refund'):
