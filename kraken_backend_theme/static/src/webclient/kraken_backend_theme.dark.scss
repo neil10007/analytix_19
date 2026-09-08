@@ -143,7 +143,14 @@ body.kr_sp_theme_dark :is(.o-mail-Chatter, .o-mail-Message, .o-mail-Message-auth
 }
 
 /* ── Tooltips & Popovers --------------------------------------- */
-body.kr_sp_theme_dark :is(.tooltip, .popover, [role="tooltip"], .tooltip-inner, .bs-tooltip-auto, .bs-tooltip-top, .bs-tooltip-bottom) {
+body.kr_sp_theme_dark :is(.tooltip, .o-tooltip, .popover, .o_popover, [role="tooltip"], .tooltip-inner, .bs-tooltip-auto, .bs-tooltip-top, .bs-tooltip-bottom, .bs-tooltip-start, .bs-tooltip-end, .bs-popover-auto, .bs-popover-top, .bs-popover-bottom, .bs-popover-start, .bs-popover-end) {
+    --bs-popover-bg: #18212f !important;
+    --bs-popover-border-color: #2b3647 !important;
+    --bs-popover-body-color: #e5e7eb !important;
+    --bs-popover-header-bg: #18212f !important;
+    --bs-popover-header-color: #ffffff !important;
+    --bs-tooltip-bg: #18212f !important;
+    --bs-tooltip-color: #ffffff !important;
     background-color: #18212f !important;
     background: #18212f !important;
     color: #ffffff !important;
@@ -152,10 +159,31 @@ body.kr_sp_theme_dark :is(.tooltip, .popover, [role="tooltip"], .tooltip-inner, 
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4) !important;
 }
 
-body.kr_sp_theme_dark .tooltip .tooltip-arrow::before {
-    border-top-color: #18212f !important;
-    border-bottom-color: #18212f !important;
+body.kr_sp_theme_dark :is(.o-tooltip, .tooltip-inner) {
+    background-color: #18212f !important;
+    background: #18212f !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
 }
+
+body.kr_sp_theme_dark :is(.o-tooltip, .tooltip-inner) :is(span, div, p, strong, small) {
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+}
+
+body.kr_sp_theme_dark .bs-popover-top > .popover-arrow::before    { border-top-color: #2b3647 !important; }
+body.kr_sp_theme_dark .bs-popover-top > .popover-arrow::after     { border-top-color: #18212f !important; }
+body.kr_sp_theme_dark .bs-popover-bottom > .popover-arrow::before { border-bottom-color: #2b3647 !important; }
+body.kr_sp_theme_dark .bs-popover-bottom > .popover-arrow::after  { border-bottom-color: #18212f !important; }
+body.kr_sp_theme_dark .bs-popover-start > .popover-arrow::before  { border-left-color: #2b3647 !important; }
+body.kr_sp_theme_dark .bs-popover-start > .popover-arrow::after   { border-left-color: #18212f !important; }
+body.kr_sp_theme_dark .bs-popover-end > .popover-arrow::before    { border-right-color: #2b3647 !important; }
+body.kr_sp_theme_dark .bs-popover-end > .popover-arrow::after     { border-right-color: #18212f !important; }
+
+body.kr_sp_theme_dark .bs-tooltip-top .tooltip-arrow::before      { border-top-color: #18212f !important; }
+body.kr_sp_theme_dark .bs-tooltip-bottom .tooltip-arrow::before   { border-bottom-color: #18212f !important; }
+body.kr_sp_theme_dark .bs-tooltip-start .tooltip-arrow::before    { border-left-color: #18212f !important; }
+body.kr_sp_theme_dark .bs-tooltip-end .tooltip-arrow::before      { border-right-color: #18212f !important; }
 body.kr_sp_theme_dark .fa,
 body.kr_sp_theme_dark i.fa,
 body.kr_sp_theme_dark .oi {
@@ -232,17 +260,45 @@ body.kr_sp_theme_dark .form-control::placeholder {
     opacity: 1 !important;
 }
 
-/* ── Exception: Breadcrumb nav is muted, active record title is white */
-body.kr_sp_theme_dark .o_control_panel .breadcrumb-item a,
-body.kr_sp_theme_dark .o_control_panel .o_back_button a {
-    color: #9ca3af !important;
-    -webkit-text-fill-color: #9ca3af !important;
-}
-body.kr_sp_theme_dark .o_control_panel .breadcrumb-item.active,
-body.kr_sp_theme_dark .o_control_panel .o_last_breadcrumb_item,
-body.kr_sp_theme_dark .o_control_panel .o_last_breadcrumb_item * {
-    color: #ffffff !important;
-    -webkit-text-fill-color: #ffffff !important;
+/* ── Exception: Breadcrumb nav is muted, active record title is white ── */
+:is(body.kr_sp_theme_dark, body.kr_sp_theme_dark.o_web_client, .kr_sp_theme_dark) .o_control_panel {
+    --bs-breadcrumb-bg: transparent !important;
+
+    .breadcrumb,
+    .o_breadcrumb,
+    .breadcrumb-item,
+    .o_back_button,
+    .o_last_breadcrumb_item,
+    .o_control_panel_breadcrumbs {
+        background: transparent !important;
+        background-color: transparent !important;
+        box-shadow: none !important;
+        border: none !important;
+    }
+
+    .breadcrumb-item a,
+    .o_back_button a {
+        background: transparent !important;
+        background-color: transparent !important;
+        color: #9ca3af !important;
+        -webkit-text-fill-color: #9ca3af !important;
+        box-shadow: none !important;
+        border: none !important;
+
+        &:hover {
+            color: #00d4c8 !important;
+            -webkit-text-fill-color: #00d4c8 !important;
+        }
+    }
+
+    .breadcrumb-item.active,
+    .o_last_breadcrumb_item,
+    .o_last_breadcrumb_item * {
+        background: transparent !important;
+        background-color: transparent !important;
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+    }
 }
 
 /* ================================================================
@@ -896,29 +952,68 @@ body.kr_sp_theme_dark .o_web_client .o_main_navbar .o_menu_systray .dropdown-tog
     color: var(--kr-dark-text);
 }
 
-body.kr_sp_theme_dark .o_web_client .o_control_panel .breadcrumb,
-body.kr_sp_theme_dark .o_web_client .o_control_panel .o_breadcrumb,
-body.kr_sp_theme_dark .o_web_client > .o_action_manager > .o_action.o_form_view .o_control_panel .breadcrumb-item,
-body.kr_sp_theme_dark .o_web_client > .o_action_manager > .o_action.o_form_view .o_control_panel .breadcrumb-item a,
-body.kr_sp_theme_dark .o_web_client > .o_action_manager > .o_action.o_form_view .o_control_panel .o_back_button a,
-body.kr_sp_theme_dark .o_web_client .o_control_panel .breadcrumb-item,
-body.kr_sp_theme_dark .o_web_client .o_control_panel .breadcrumb-item a,
-body.kr_sp_theme_dark .o_web_client .o_control_panel .o_back_button a,
-body.kr_sp_theme_dark .o_web_client .o_control_panel .o_last_breadcrumb_item {
-    color: #cbd5e1 !important;
-    font-weight: 600 !important;
-}
+:is(body.kr_sp_theme_dark, body.kr_sp_theme_dark.o_web_client, .kr_sp_theme_dark) .o_control_panel {
+    --bs-breadcrumb-bg: transparent !important;
+    --bs-breadcrumb-divider-color: #64748b !important;
+    --bs-breadcrumb-item-active-color: #ffffff !important;
 
-body.kr_sp_theme_dark .o_web_client > .o_action_manager > .o_action.o_form_view .o_control_panel .breadcrumb-item.active,
-body.kr_sp_theme_dark .o_web_client > .o_action_manager > .o_action.o_form_view .o_control_panel .o_last_breadcrumb_item,
-body.kr_sp_theme_dark .o_web_client .o_control_panel .breadcrumb-item.active,
-body.kr_sp_theme_dark .o_web_client .o_control_panel .o_last_breadcrumb_item {
-    color: #ffffff !important;
-    font-weight: 700 !important;
-}
+    .breadcrumb,
+    .o_breadcrumb,
+    .breadcrumb-item,
+    .o_back_button,
+    .o_last_breadcrumb_item,
+    .o_control_panel_breadcrumbs {
+        background: transparent !important;
+        background-color: transparent !important;
+        box-shadow: none !important;
+        border: none !important;
+    }
 
-.o_web_client .o_control_panel .breadcrumb-item + .breadcrumb-item::before {
-    color: #94a3b8 !important;
+    .breadcrumb-item,
+    .breadcrumb-item a,
+    .o_back_button,
+    .o_back_button a {
+        color: #cbd5e1 !important;
+        -webkit-text-fill-color: #cbd5e1 !important;
+        font-weight: 600 !important;
+        background: transparent !important;
+        background-color: transparent !important;
+        box-shadow: none !important;
+        border: none !important;
+
+        &:hover {
+            color: #00d4c8 !important;
+            -webkit-text-fill-color: #00d4c8 !important;
+        }
+    }
+
+    .breadcrumb-item.active,
+    .o_last_breadcrumb_item,
+    .o_last_breadcrumb_item * {
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+        font-weight: 700 !important;
+        background: transparent !important;
+        background-color: transparent !important;
+    }
+
+    .breadcrumb-item + .breadcrumb-item::before,
+    .o_back_button a::after {
+        color: #94a3b8 !important;
+        -webkit-text-fill-color: #94a3b8 !important;
+    }
+
+    .breadcrumb-item .btn-light {
+        background: transparent !important;
+        background-color: transparent !important;
+        border-color: transparent !important;
+        color: #94a3b8 !important;
+
+        &:hover {
+            color: #00d4c8 !important;
+            background: #202b3a !important;
+        }
+    }
 }
 
 .o_web_client .o_control_panel :is(
@@ -1744,22 +1839,32 @@ body.kr_sp_theme_dark .o_select_menu_menu :is(.dropdown-item, .o-dropdown-item, 
     color: #e5e7eb !important;
 }
 
-.dropdown-menu :is(.dropdown-item, .o-dropdown-item):hover,
-.dropdown-menu :is(.dropdown-item, .o-dropdown-item):focus,
-.dropdown-menu :is(.dropdown-item, .o-dropdown-item).active,
-.o-dropdown--menu :is(.dropdown-item, .o-dropdown-item):hover,
-.o-dropdown--menu :is(.dropdown-item, .o-dropdown-item):focus,
-.o-dropdown--menu :is(.dropdown-item, .o-dropdown-item).active,
+.dropdown-menu :is(.dropdown-item, .o-dropdown-item, .o_menu_item, button.o_menu_item):hover,
+.dropdown-menu :is(.dropdown-item, .o-dropdown-item, .o_menu_item, button.o_menu_item):focus,
+.dropdown-menu :is(.dropdown-item, .o-dropdown-item, .o_menu_item, button.o_menu_item).focus,
+.dropdown-menu :is(.dropdown-item, .o-dropdown-item, .o_menu_item, button.o_menu_item).active,
+.o-dropdown--menu :is(.dropdown-item, .o-dropdown-item, .o_menu_item, button.o_menu_item):hover,
+.o-dropdown--menu :is(.dropdown-item, .o-dropdown-item, .o_menu_item, button.o_menu_item):focus,
+.o-dropdown--menu :is(.dropdown-item, .o-dropdown-item, .o_menu_item, button.o_menu_item).focus,
+.o-dropdown--menu :is(.dropdown-item, .o-dropdown-item, .o_menu_item, button.o_menu_item).active,
 .o_select_menu_menu :is(.dropdown-item, .o-dropdown-item, .o_select_menu_item):hover,
 .o_select_menu_menu :is(.dropdown-item, .o-dropdown-item, .o_select_menu_item):focus,
+.o_select_menu_menu :is(.dropdown-item, .o-dropdown-item, .o_select_menu_item).focus,
 .o_select_menu_menu :is(.dropdown-item, .o-dropdown-item, .o_select_menu_item).active,
 .o_datetime_picker :is(.btn, button):hover,
 .o_datetime_picker :is(.btn, button).active,
-body.kr_sp_theme_dark .dropdown-menu :is(.dropdown-item, .o-dropdown-item):hover,
-body.kr_sp_theme_dark .o-dropdown--menu :is(.dropdown-item, .o-dropdown-item):hover,
+body.kr_sp_theme_dark .dropdown-menu :is(.dropdown-item, .o-dropdown-item, .o_menu_item, button.o_menu_item):hover,
+body.kr_sp_theme_dark .dropdown-menu :is(.dropdown-item, .o-dropdown-item, .o_menu_item, button.o_menu_item):focus,
+body.kr_sp_theme_dark .dropdown-menu :is(.dropdown-item, .o-dropdown-item, .o_menu_item, button.o_menu_item).focus,
+body.kr_sp_theme_dark .dropdown-menu :is(.dropdown-item, .o-dropdown-item, .o_menu_item, button.o_menu_item).active,
+body.kr_sp_theme_dark .o-dropdown--menu :is(.dropdown-item, .o-dropdown-item, .o_menu_item, button.o_menu_item):hover,
+body.kr_sp_theme_dark .o-dropdown--menu :is(.dropdown-item, .o-dropdown-item, .o_menu_item, button.o_menu_item):focus,
+body.kr_sp_theme_dark .o-dropdown--menu :is(.dropdown-item, .o-dropdown-item, .o_menu_item, button.o_menu_item).focus,
+body.kr_sp_theme_dark .o-dropdown--menu :is(.dropdown-item, .o-dropdown-item, .o_menu_item, button.o_menu_item).active,
 body.kr_sp_theme_dark .o_select_menu_menu :is(.dropdown-item, .o-dropdown-item, .o_select_menu_item):hover {
     background: #202b3a !important;
     color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
 }
 
 body.kr_sp_theme_dark .modal :is(.border, .border-top, .border-bottom, .border-start, .border-end),
@@ -1783,15 +1888,14 @@ body.kr_sp_theme_dark .o_model_field_selector_popover_footer {
     color: #e5e7eb !important;
 }
 
-body.kr_sp_theme_dark .popover-arrow::before,
-body.kr_sp_theme_dark .popover-arrow::after,
-body.kr_sp_theme_dark .o_popover > .popover-arrow::before,
-body.kr_sp_theme_dark .o_popover > .popover-arrow::after {
-    border-top-color: #18212f !important;
-    border-right-color: #18212f !important;
-    border-bottom-color: #18212f !important;
-    border-left-color: #18212f !important;
-}
+body.kr_sp_theme_dark .bs-popover-top > .popover-arrow::before    { border-top-color: #2b3647 !important; }
+body.kr_sp_theme_dark .bs-popover-top > .popover-arrow::after     { border-top-color: #18212f !important; }
+body.kr_sp_theme_dark .bs-popover-bottom > .popover-arrow::before { border-bottom-color: #2b3647 !important; }
+body.kr_sp_theme_dark .bs-popover-bottom > .popover-arrow::after  { border-bottom-color: #18212f !important; }
+body.kr_sp_theme_dark .bs-popover-start > .popover-arrow::before  { border-left-color: #2b3647 !important; }
+body.kr_sp_theme_dark .bs-popover-start > .popover-arrow::after   { border-left-color: #18212f !important; }
+body.kr_sp_theme_dark .bs-popover-end > .popover-arrow::before    { border-right-color: #2b3647 !important; }
+body.kr_sp_theme_dark .bs-popover-end > .popover-arrow::after     { border-right-color: #18212f !important; }
 
 body.kr_sp_theme_dark .o_model_field_selector_popover_item,
 body.kr_sp_theme_dark .o_model_field_selector_popover_item .btn,
@@ -2405,4 +2509,102 @@ body.kr_sp_theme_dark :is(.anx-chat-input-bar, .anx-chat-footer, [class*="anx-ch
             -webkit-text-fill-color: #9ca3af !important;
         }
     }
+}
+
+/* ================================================================
+   DARK MODE — FINAL WHITE BACKGROUND PURGE
+   Catches any remaining elements with white/light background that
+   slip through the earlier rules, including purchase dashboard cards,
+   list-view row backgrounds, and all Bootstrap bg-* utilities.
+   ================================================================ */
+
+/* --- Purchase Dashboard: Outer container & all sub-panels --- */
+body.kr_sp_theme_dark .o_view_controller.o_purchase_order_list,
+body.kr_sp_theme_dark .o_purchase_dashboard,
+body.kr_sp_theme_dark [class*="o_purchase_dashboard"] {
+    background: #111827 !important;
+    background-color: #111827 !important;
+    color: #e5e7eb !important;
+}
+
+/* Stat summary boxes shown at the top of Purchase list */
+body.kr_sp_theme_dark .o_purchase_dashboard .o_purchase_dashboard_card_sole,
+body.kr_sp_theme_dark .o_purchase_dashboard .o_purchase_dashboard_card_top,
+body.kr_sp_theme_dark .o_purchase_dashboard .o_purchase_dashboard_card_bottom,
+body.kr_sp_theme_dark .o_purchase_dashboard .purchase-dashboard-card {
+    background: #18212f !important;
+    background-color: #18212f !important;
+    color: #e5e7eb !important;
+    border-color: #2b3647 !important;
+}
+
+/* All text and nested elements inside those cards */
+body.kr_sp_theme_dark .o_purchase_dashboard .o_purchase_dashboard_card_sole *,
+body.kr_sp_theme_dark .o_purchase_dashboard .o_purchase_dashboard_card_top *,
+body.kr_sp_theme_dark .o_purchase_dashboard .o_purchase_dashboard_card_bottom *,
+body.kr_sp_theme_dark .o_purchase_dashboard .purchase-dashboard-card * {
+    background: transparent !important;
+    background-color: transparent !important;
+    color: #e5e7eb !important;
+    -webkit-text-fill-color: #e5e7eb !important;
+}
+
+/* --- Global list view: eliminate white row backgrounds --- */
+body.kr_sp_theme_dark .o_list_view .o_data_row,
+body.kr_sp_theme_dark .o_list_view .o_list_table tbody tr,
+body.kr_sp_theme_dark .o_list_view .o_group_header,
+body.kr_sp_theme_dark .o_list_renderer .o_data_row,
+body.kr_sp_theme_dark .o_list_renderer tbody tr {
+    background: #18212f !important;
+    background-color: #18212f !important;
+    color: #e5e7eb !important;
+}
+
+body.kr_sp_theme_dark .o_list_view .o_data_row:nth-child(even),
+body.kr_sp_theme_dark .o_list_renderer tbody tr:nth-child(even) {
+    background: #1a2333 !important;
+    background-color: #1a2333 !important;
+}
+
+body.kr_sp_theme_dark .o_list_view .o_data_row:hover td,
+body.kr_sp_theme_dark .o_list_view .o_list_table tbody tr:hover td,
+body.kr_sp_theme_dark .o_list_renderer tbody tr:hover td {
+    background: #202b3a !important;
+    background-color: #202b3a !important;
+}
+
+/* --- Bootstrap bg-* utility class purge (entire web client) --- */
+body.kr_sp_theme_dark .o_web_client :is(
+    .bg-white,
+    .bg-light,
+    .bg-body,
+    .bg-view,
+    .bg-100,
+    .text-bg-light,
+    .text-bg-100,
+    .bg-secondary-subtle,
+    .bg-primary-subtle,
+    .bg-info-subtle,
+    .bg-success-subtle,
+    .bg-warning-subtle,
+    .bg-danger-subtle
+) {
+    background: #18212f !important;
+    background-color: #18212f !important;
+    color: #e5e7eb !important;
+    border-color: #2b3647 !important;
+}
+
+/* Hard-override any element using inline white/light colors */
+body.kr_sp_theme_dark .o_web_client [style*="background: white"],
+body.kr_sp_theme_dark .o_web_client [style*="background: #fff"],
+body.kr_sp_theme_dark .o_web_client [style*="background: #ffffff"],
+body.kr_sp_theme_dark .o_web_client [style*="background-color: white"],
+body.kr_sp_theme_dark .o_web_client [style*="background-color: #fff"],
+body.kr_sp_theme_dark .o_web_client [style*="background-color: #ffffff"],
+body.kr_sp_theme_dark .o_web_client [style*="background-color: rgb(255, 255, 255)"],
+body.kr_sp_theme_dark .o_web_client [style*="background: rgb(255, 255, 255)"] {
+    background: #18212f !important;
+    background-color: #18212f !important;
+    color: #e5e7eb !important;
 }

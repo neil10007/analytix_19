@@ -1,8 +1,5 @@
 /** @odoo-module **/
 
-import { patch } from "@web/core/utils/patch";
-import { WebClient } from "@web/webclient/webclient";
-
 function ensureSarFontOnTextNode(textNode) {
     if (!textNode || !textNode.nodeValue) return;
     const val = textNode.nodeValue;
@@ -12,6 +9,7 @@ function ensureSarFontOnTextNode(textNode) {
 
     const parent = textNode.parentNode;
     if (!parent || parent.nodeType !== Node.ELEMENT_NODE) return;
+    if (parent.classList.contains("fa") || parent.classList.contains("oi") || parent.closest(".fa, .oi")) return;
 
     // Ensure 'sr_symbol' font family is included at the front of the stack
     const currentFont = parent.style ? parent.style.fontFamily : "";
@@ -40,41 +38,45 @@ function processNode(node) {
     }
 }
 
-patch(WebClient.prototype, {
-    setup() {
-        super.setup();
+function initSarSymbolObserver() {
+    const targetRoot = document.body || document.documentElement;
+    if (!targetRoot) return;
 
-        setTimeout(() => {
-            processNode(document.body);
-        }, 300);
+    processNode(targetRoot);
 
-        const observer = new MutationObserver((mutations) => {
-            observer.disconnect();
-            try {
-                for (const mutation of mutations) {
-                    if (mutation.type === "childList") {
-                        mutation.addedNodes.forEach((node) => {
-                            processNode(node);
-                        });
-                    } else if (mutation.type === "characterData") {
-                        ensureSarFontOnTextNode(mutation.target);
+    const observer = new MutationObserver((mutations) => {
+        observer.disconnect();
+        try {
+            for (const mutation of mutations) {
+                if (mutation.type === "childList") {
+                    for (let i = 0; i < mutation.addedNodes.length; i++) {
+                        processNode(mutation.addedNodes[i]);
                     }
+                } else if (mutation.type === "characterData") {
+                    ensureSarFontOnTextNode(mutation.target);
                 }
-            } catch (err) {
-                console.error("Error in SAR symbol observer:", err);
-            } finally {
-                observer.observe(document.body, {
-                    childList: true,
-                    subtree: true,
-                    characterData: true,
-                });
             }
-        });
+        } catch (err) {
+            console.error("Error in SAR symbol observer:", err);
+        } finally {
+            observer.observe(targetRoot, {
+                childList: true,
+                subtree: true,
+                characterData: true,
+            });
+        }
+    });
 
-        observer.observe(document.body, {
-            childList: true,
-            subtree: true,
-            characterData: true,
-        });
-    },
-});
+    observer.observe(targetRoot, {
+        childList: true,
+        subtree: true,
+        characterData: true,
+    });
+}
+
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initSarSymbolObserver);
+} else {
+    initSarSymbolObserver();
+}
+

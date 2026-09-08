@@ -3,85 +3,177 @@
     <t t-name="chatting_ai.AiChatWidget">
         <div class="o_ai_chat_widget">
             <!-- The Chat Window -->
-            <div t-if="state.isOpen" class="o_ai_chat_window shadow-lg border">
+            <div t-if="state.isOpen" class="o_ai_chat_window shadow-lg">
+                <!-- Brand Top Accent Bar -->
+                <div class="ai_top_accent_bar"></div>
+
                 <!-- Header -->
-                <div class="o_ai_chat_header d-flex justify-content-between align-items-center p-3 border-bottom bg-white">
-                    <div class="d-flex align-items-center cursor-pointer">
-                        <span class="ai_gradient_logo me-2">Ai</span>
-                        <strong class="text-dark me-1" style="font-size: 15px; font-weight: 500;">Ask AI</strong>
-                        <i class="fa fa-caret-down text-muted" style="font-size: 12px;"></i>
+                <div class="o_ai_chat_header d-flex justify-content-between align-items-center px-3 py-2">
+                    <div class="d-flex align-items-center">
+                        <div class="ai_header_avatar me-2 position-relative">
+                            <span class="ai_avatar_text">Ai</span>
+                            <span class="ai_online_status" title="Online &amp; Connected"></span>
+                        </div>
+                        <div class="d-flex flex-column">
+                            <div class="d-flex align-items-center">
+                                <span class="ai_header_title">Ask AI Assistant</span>
+                            </div>
+                            <span class="ai_header_subtitle">Financial &amp; Operational Intelligence</span>
+                        </div>
                     </div>
-                    <div>
-                        <button class="btn btn-sm btn-link text-muted p-1 m-0 me-2" t-on-click="toggleChat">
+                    <div class="d-flex align-items-center gap-1">
+                        <button class="btn btn-sm btn-icon-subtle" t-on-click="clearChat" title="Clear conversation">
+                            <i class="fa fa-refresh"></i>
+                        </button>
+                        <button class="btn btn-sm btn-icon-subtle" t-on-click="toggleChat" title="Minimize">
                             <i class="fa fa-minus"></i>
                         </button>
-                        <button class="btn btn-sm btn-link text-muted p-1 m-0" t-on-click="toggleChat">
+                        <button class="btn btn-sm btn-icon-subtle" t-on-click="toggleChat" title="Close">
                             <i class="fa fa-times"></i>
                         </button>
                     </div>
                 </div>
                 
                 <!-- Body -->
-                <div class="o_ai_chat_body p-3 overflow-auto bg-white" t-on-click="onChatClick">
+                <div class="o_ai_chat_body px-3 py-3" t-ref="chatBody" t-on-click="onChatClick">
                     <t t-if="state.messages.length === 0">
-                        <div class="mt-4 mb-4">
-                            <div class="d-flex align-items-center mb-2">
-                                <span class="ai_gradient_logo_large me-2">Ai</span>
-                                <strong class="text-dark" style="font-size: 20px; font-weight: 500;">Ask AI</strong>
+                        <div class="ai_welcome_card text-center my-3 p-3">
+                            <div class="ai_welcome_icon mb-2">
+                                <span class="ai_avatar_text_large">Ai</span>
                             </div>
-                            <p class="text-muted mb-3" style="font-size: 14px;">Hello, what can I help you with?</p>
+                            <h5 class="ai_welcome_title mb-1">How can I help you today?</h5>
+                            <p class="ai_welcome_desc mb-3">Ask about live invoices, bills, customer balances, or accounting activity.</p>
                             
-                            <!-- Suggestions -->
-                            <div class="d-flex flex-column align-items-start gap-2 mt-3">
-                                <button class="btn rounded-3 text-start ai_suggestion_pill mb-2" t-on-click="() => this.clickSuggestion('Today total invoices ?')">
-                                    Today total invoices ?
+                            <!-- Suggestions Grid -->
+                            <div class="d-flex flex-column gap-2 text-start">
+                                <button class="ai_suggestion_card" t-on-click="() => this.clickSuggestion('Which accounts have the highest transactions?')">
+                                    <div class="d-flex align-items-center">
+                                        <div class="ai_sugg_icon me-2 text-primary"><i class="fa fa-line-chart"></i></div>
+                                        <div>
+                                            <div class="ai_sugg_title">Which accounts have highest transactions?</div>
+                                            <div class="ai_sugg_sub">Activity analytics and volume breakdown</div>
+                                        </div>
+                                    </div>
                                 </button>
-                                <button class="btn rounded-3 text-start ai_suggestion_pill mb-2" t-on-click="() => this.clickSuggestion('Today total expense ?')">
-                                    Today total expense ?
+                                <button class="ai_suggestion_card" t-on-click="() => this.clickSuggestion('Today total invoices ?')">
+                                    <div class="d-flex align-items-center">
+                                        <div class="ai_sugg_icon me-2 text-success"><i class="fa fa-file-text-o"></i></div>
+                                        <div>
+                                            <div class="ai_sugg_title">Today total invoices?</div>
+                                            <div class="ai_sugg_sub">Review today's customer sales &amp; billing</div>
+                                        </div>
+                                    </div>
                                 </button>
-                                <button class="btn rounded-3 text-start ai_suggestion_pill" t-on-click="() => this.clickSuggestion('Show today invoice list view')">
-                                    Show today invoice list view
+                                <button class="ai_suggestion_card" t-on-click="() => this.clickSuggestion('Today total expense ?')">
+                                    <div class="d-flex align-items-center">
+                                        <div class="ai_sugg_icon me-2 text-warning"><i class="fa fa-credit-card"></i></div>
+                                        <div>
+                                            <div class="ai_sugg_title">Today total expense?</div>
+                                            <div class="ai_sugg_sub">Summary of recorded vendor bills</div>
+                                        </div>
+                                    </div>
+                                </button>
+                                <button class="ai_suggestion_card" t-on-click="() => this.clickSuggestion('Show today invoice list view')">
+                                    <div class="d-flex align-items-center">
+                                        <div class="ai_sugg_icon me-2 text-info"><i class="fa fa-list-alt"></i></div>
+                                        <div>
+                                            <div class="ai_sugg_title">Show today invoice list view</div>
+                                            <div class="ai_sugg_sub">Open filtered document records directly</div>
+                                        </div>
+                                    </div>
                                 </button>
                             </div>
                         </div>
                     </t>
                     
                     <t t-foreach="state.messages" t-as="msg" t-key="msg_index">
-                        <div t-attf-class="d-flex mb-3 {{ msg.role === 'user' ? 'justify-content-end' : 'justify-content-start' }}">
-                            <div t-attf-class="p-2 rounded-3 max-w-75 {{ msg.role === 'user' ? 'bg-light text-dark' : 'bg-white text-dark' }}" style="font-size: 14px;">
-                                <t t-if="msg.htmlContent">
-                                    <t t-out="msg.htmlContent" />
-                                </t>
-                                <t t-else="">
+                        <!-- User Message -->
+                        <t t-if="msg.role === 'user'">
+                            <div class="d-flex mb-3 justify-content-end align-items-end gap-2">
+                                <div class="ai_user_bubble shadow-sm">
                                     <t t-esc="msg.content" />
-                                </t>
+                                </div>
+                                <div class="ai_user_avatar" title="You">
+                                    <i class="fa fa-user"></i>
+                                </div>
                             </div>
-                        </div>
+                        </t>
+
+                        <!-- Assistant Message -->
+                        <t t-else="">
+                            <div class="d-flex mb-3 justify-content-start align-items-start gap-2">
+                                <div class="ai_assistant_avatar" title="Ask AI">
+                                    <span>Ai</span>
+                                </div>
+                                <div class="ai_assistant_card shadow-sm">
+                                    <div class="ai_message_content">
+                                        <t t-if="msg.htmlContent">
+                                            <t t-out="msg.htmlContent" />
+                                        </t>
+                                        <t t-else="">
+                                            <t t-esc="msg.content" />
+                                        </t>
+                                    </div>
+                                    <!-- Assistant Message Footer -->
+                                    <div class="ai_msg_actions">
+                                        <button class="ai_action_btn" t-on-click="() => this.copyMessage(msg_index)" title="Copy message">
+                                            <i t-attf-class="fa {{ msg.copied ? 'fa-check text-success' : 'fa-clipboard' }} me-1"></i>
+                                            <span t-esc="msg.copied ? 'Copied' : 'Copy'"/>
+                                        </button>
+                                        <span class="ai_timestamp ms-auto">
+                                            <t t-esc="msg.time || 'Just now'"/>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </t>
                     </t>
                     
+                    <!-- Loading / Thinking Indicator -->
                     <t t-if="state.isLoading">
-                        <div class="d-flex mb-3 justify-content-start">
-                            <div class="p-2 rounded-3 max-w-75 bg-white text-muted" style="font-size: 14px;">
-                                <i class="fa fa-circle-o-notch fa-spin"></i> Thinking...
+                        <div class="d-flex mb-3 justify-content-start align-items-start gap-2">
+                            <div class="ai_assistant_avatar" title="Ask AI">
+                                <span>Ai</span>
+                            </div>
+                            <div class="ai_assistant_card ai_loading_card shadow-sm">
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="ai_typing_dots">
+                                        <span class="ai_dot"></span>
+                                        <span class="ai_dot"></span>
+                                        <span class="ai_dot"></span>
+                                    </div>
+                                    <span class="ai_loading_text">Analyzing accounting data...</span>
+                                </div>
                             </div>
                         </div>
                     </t>
                 </div>
                 
                 <!-- Footer -->
-                <div class="o_ai_chat_footer p-3 bg-white">
-                    <div class="input-group ai_input_group rounded-3">
-                        <input type="text" class="form-control border-0 bg-transparent" placeholder="Message Ask AI..." t-model="state.inputValue" t-on-keydown="onKeydown"/>
-                        <button class="btn text-dark border-0 bg-transparent" t-on-click="sendMessage">
-                            <i class="fa fa-paper-plane-o"></i>
+                <div class="o_ai_chat_footer p-2 px-3">
+                    <div class="ai_input_wrapper d-flex align-items-center">
+                        <input type="text" 
+                               class="ai_chat_input border-0" 
+                               placeholder="Ask anything about invoices, bills, KPIs..." 
+                               t-model="state.inputValue" 
+                               t-on-keydown="onKeydown"/>
+                        <button class="btn ai_send_btn" 
+                                t-att-disabled="!state.inputValue.trim()"
+                                t-on-click="sendMessage" 
+                                title="Send Message">
+                            <i class="fa fa-paper-plane"></i>
                         </button>
+                    </div>
+                    <div class="ai_input_hint text-center mt-1">
+                        Press <kbd>Enter</kbd> to send • 360 Accounting AI
                     </div>
                 </div>
             </div>
             
             <!-- The Floating Button -->
-            <button t-if="!state.isOpen" class="btn btn-light border o_ai_chat_fab shadow-lg bg-white" t-on-click="toggleChat">
-                <span class="ai_gradient_logo_large">Ai</span>
+            <button t-if="!state.isOpen" class="btn o_ai_chat_fab shadow-lg" t-on-click="toggleChat" title="Open Ask AI Assistant">
+                <span class="ai_gradient_logo_fab">Ai</span>
+                <span class="ai_fab_pulse"></span>
             </button>
         </div>
     </t>

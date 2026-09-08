@@ -9,6 +9,9 @@
         Adds a floating button in Odoo that opens an AI chat window.
     """,
     'depends': ['base', 'web'],
+    'external_dependencies': {
+        'python': ['langchain_openai', 'langchain_classic', 'langchain_core'],
+    },
     'data': [
         'views/res_users_views.xml',
     ],

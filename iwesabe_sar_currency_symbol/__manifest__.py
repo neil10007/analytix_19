@@ -40,12 +40,25 @@
         ],
         'web.assets_frontend': [
             'iwesabe_sar_currency_symbol/static/src/css/style.css',
+            'iwesabe_sar_currency_symbol/static/src/js/main.js',
         ],
         'web.report_assets_common': [
             'iwesabe_sar_currency_symbol/static/src/css/style.css',
         ],
         'web.report_assets_pdf': [
             'iwesabe_sar_currency_symbol/static/src/css/style.css',
+        ],
+        'point_of_sale._assets_pos': [
+            'iwesabe_sar_currency_symbol/static/src/css/style.css',
+            'iwesabe_sar_currency_symbol/static/src/js/main.js',
+        ],
+        'point_of_sale.customer_display_assets': [
+            'iwesabe_sar_currency_symbol/static/src/css/style.css',
+            'iwesabe_sar_currency_symbol/static/src/js/main.js',
+        ],
+        'pos_self_order.assets': [
+            'iwesabe_sar_currency_symbol/static/src/css/style.css',
+            'iwesabe_sar_currency_symbol/static/src/js/main.js',
         ],
     },
     'images': ['static/description/banner.png'],

@@ -209,6 +209,16 @@ class ChattingAIController(http.Controller):
                     return name
                 return sym or "SAR"
 
+            def _get_vat_report_pdf_url(move_id):
+                env = request.env
+                if env.ref('advanced_vat_invoice.action_report_vat_report', raise_if_not_found=False):
+                    return f"/report/pdf/advanced_vat_invoice.action_report_vat_report/{move_id}"
+                elif env.ref('advanced_vat_invoice.action_vat_invoice', raise_if_not_found=False):
+                    return f"/report/pdf/advanced_vat_invoice.action_vat_invoice/{move_id}"
+                elif env.ref('account.report_invoice_with_payments', raise_if_not_found=False):
+                    return f"/report/pdf/account.report_invoice_with_payments/{move_id}"
+                return f"/report/pdf/advanced_vat_invoice.action_report_vat_report/{move_id}"
+
             def _format_value(val):
                 if isinstance(val, tuple) and len(val) == 2:
                     return {"id": val[0], "name": val[1]}
@@ -433,7 +443,10 @@ class ChattingAIController(http.Controller):
                     pay_status = "Partially Paid" if inv.payment_state == 'partial' else "Not Paid"
 
                     res += f"{idx}. **{inv_name}** ({doc_kind})\n"
-                    res += f"   • **Customer/Partner:** {partner}\n"
+                    if inv.partner_id:
+                        res += f"   • **Customer/Partner:** **[{partner}](ask:Show me all invoices and financial details for {partner})**\n"
+                    else:
+                        res += f"   • **Customer/Partner:** {partner}\n"
                     res += f"   • **Invoice Date:** {inv.invoice_date or 'N/A'} | **Due Date:** {inv.invoice_date_due or 'N/A'}\n"
                     res += f"   • **Status:** {inv.state.title()} | **Payment Status:** {pay_status}\n"
                     res += f"   • **Untaxed:** {inv.amount_untaxed:,.2f} {curr} | **Tax:** {inv.amount_tax:,.2f} {curr}\n"
@@ -441,7 +454,7 @@ class ChattingAIController(http.Controller):
                     res += f"   • **Amount Due (Residual):** {inv.amount_residual:,.2f} {curr}\n"
                     res += f"   • [View Document](/web#id={inv.id}&model=account.move&view_type=form)"
                     if inv.move_type == 'out_invoice':
-                        res += f" · [Download VAT Invoice PDF](/report/pdf/account.report_invoice_with_payments/{inv.id})"
+                        res += f" · [Download Tax Invoice PDF]({_get_vat_report_pdf_url(inv.id)})"
                     res += "\n\n"
 
                 res += f"**Summary:**\n"
@@ -498,9 +511,12 @@ class ChattingAIController(http.Controller):
 
                     lines_data = []
                     for idx, line in enumerate(move.invoice_line_ids, 1):
-                        if line.display_type in ('line_section', 'line_note'):
-                            continue
-                        prod_name = line.product_id.display_name if line.product_id else (line.name or 'Item')
+                        if line.product_id:
+                            p_clean = line.product_id.name
+                            p_disp = line.product_id.display_name
+                            prod_name = f"[{p_disp}](ask:Show details and sales history for product {p_clean})"
+                        else:
+                            prod_name = line.name or 'Item'
                         taxes_str = ', '.join(line.tax_ids.mapped('name')) if line.tax_ids else 'None'
                         lines_data.append({
                             'item_no': idx,
@@ -512,7 +528,10 @@ class ChattingAIController(http.Controller):
                         })
 
                     res = f"Found **{type_label}**: **{move.name or clean_ref}** (ID: {move.id})\n\n"
-                    res += f"• **{partner_role}:** {partner_name}\n"
+                    if move.partner_id:
+                        res += f"• **{partner_role}:** **[{partner_name}](ask:Show me all invoices and financial details for {partner_name})**\n"
+                    else:
+                        res += f"• **{partner_role}:** {partner_name}\n"
                     res += f"• **Bill/Invoice Date:** {move.invoice_date or 'N/A'}\n"
                     res += f"• **Due Date:** {move.invoice_date_due or 'N/A'}\n"
                     res += f"• **Document Status:** {state_label}\n"
@@ -532,7 +551,7 @@ class ChattingAIController(http.Controller):
 
                     res += f"\nDirect Document Action Links:\n"
                     if move.move_type in ('out_invoice', 'out_refund', 'in_invoice'):
-                        res += f"- [Download VAT Invoice PDF](/report/pdf/account.report_invoice_with_payments/{move.id})\n"
+                        res += f"- [Download Tax Invoice PDF]({_get_vat_report_pdf_url(move.id)})\n"
                     res += f"- [View Document](/web#id={move.id}&model=account.move&view_type=form)"
                     return res
 
@@ -647,10 +666,11 @@ class ChattingAIController(http.Controller):
                 res += "|---|-------------|------|---------|--------|---------|------|--------|\n"
                 for idx, p in enumerate(payments, 1):
                     partner = p.partner_id.name if p.partner_id else "N/A"
+                    p_link = f"**[{partner}](ask:Show me all invoices and financial details for {partner})**" if p.partner_id else "—"
                     curr = _currency_name(p.currency_id)
                     journal_name = p.journal_id.name if p.journal_id else "N/A"
                     type_str = "Customer (In)" if p.payment_type == 'inbound' else "Vendor (Out)"
-                    res += f"| {idx} | **{p.name or 'Draft'}** | {p.date} | {partner} | **{p.amount:,.2f} {curr}** | {journal_name} | {type_str} | {p.state.title()} |\n"
+                    res += f"| {idx} | **{p.name or 'Draft'}** | {p.date} | {p_link} | **{p.amount:,.2f} {curr}** | {journal_name} | {type_str} | {p.state.title()} |\n"
 
                 res += f"\n• **Total Payments Amount:** **{total_amt:,.2f} {comp_curr}**\n\n"
                 res += "Direct Action Links:\n"
@@ -774,9 +794,10 @@ class ChattingAIController(http.Controller):
                 res = f"### {title} ({len(notes)} found)\n\n"
                 for idx, n in enumerate(notes, 1):
                     partner = n.partner_id.name if n.partner_id else "N/A"
+                    p_link = f"**[{partner}](ask:Show me all invoices and financial details for {partner})**" if n.partner_id else "N/A"
                     c = _currency_name(n.currency_id)
                     kind = "Customer Credit Note" if n.move_type == 'out_refund' else ("Vendor Credit Note" if n.move_type == 'in_refund' else "Debit Note")
-                    res += f"{idx}. **{n.name}** ({kind}) | Partner: {partner} | Date: {n.invoice_date or 'N/A'} | Total: **{n.amount_total:,.2f} {c}** | Status: {n.state.title()}\n"
+                    res += f"{idx}. **{n.name}** ({kind}) | Partner: {p_link} | Date: {n.invoice_date or 'N/A'} | Total: **{n.amount_total:,.2f} {c}** | Status: {n.state.title()}\n"
                     res += f"   [View Document](/web#id={n.id}&model=account.move&view_type=form)\n\n"
                 return res
 
@@ -1084,7 +1105,8 @@ class ChattingAIController(http.Controller):
 
                 sorted_partners = sorted(partner_buckets.items(), key=lambda x: x[1]['total'], reverse=True)[:15]
                 for pname, b in sorted_partners:
-                    res += f"| **{pname}** | {b['current']:,.2f} | {b['1_30']:,.2f} | {b['31_60']:,.2f} | {b['61_90']:,.2f} | {b['91_plus']:,.2f} | **{b['total']:,.2f}** |\n"
+                    p_link = f"**[{pname}](ask:Show me all invoices and financial details for {pname})**" if pname != "Unknown" else "**Unknown**"
+                    res += f"| {p_link} | {b['current']:,.2f} | {b['1_30']:,.2f} | {b['31_60']:,.2f} | {b['61_90']:,.2f} | {b['91_plus']:,.2f} | **{b['total']:,.2f}** |\n"
 
                 total_all = tot_current + tot_1_30 + tot_31_60 + tot_61_90 + tot_91_plus
                 res += f"| **TOTAL** | **{tot_current:,.2f}** | **{tot_1_30:,.2f}** | **{tot_31_60:,.2f}** | **{tot_61_90:,.2f}** | **{tot_91_plus:,.2f}** | **{total_all:,.2f} {curr}** |\n\n"
@@ -1154,7 +1176,10 @@ class ChattingAIController(http.Controller):
                     p_map[pname] = p_map.get(pname, 0.0) + abs(r.amount_untaxed_signed)
                 top_drivers = sorted(p_map.items(), key=lambda x: x[1], reverse=True)[:5]
                 for pname, amt in top_drivers:
-                    res += f"• **{pname}:** {amt:,.2f} {curr}\n"
+                    if pname != "Other":
+                        res += f"• **[{pname}](ask:Show me all invoices and financial details for {pname})**: {amt:,.2f} {curr}\n"
+                    else:
+                        res += f"• **{pname}:** {amt:,.2f} {curr}\n"
 
                 return res
 
@@ -1191,7 +1216,8 @@ class ChattingAIController(http.Controller):
                     res += f"| # | {label} Name | Outstanding Balance ({curr}) |\n"
                     res += f"|---|---|---|\n"
                     for idx, (pname, amt) in enumerate(sorted_ranks, 1):
-                        res += f"| {idx} | **{pname}** | **{amt:,.2f}** |\n"
+                        plink = f"**[{pname}](ask:Show me all invoices and financial details for {pname})**" if pname != "N/A" else "**N/A**"
+                        res += f"| {idx} | {plink} | **{amt:,.2f}** |\n"
                     return res
 
                 elif 'payment' in crit:
@@ -1209,7 +1235,8 @@ class ChattingAIController(http.Controller):
                     res += f"| # | {label} Name | Total Payments ({curr}) |\n"
                     res += f"|---|---|---|\n"
                     for idx, (pname, amt) in enumerate(sorted_p, 1):
-                        res += f"| {idx} | **{pname}** | **{amt:,.2f}** |\n"
+                        plink = f"**[{pname}](ask:Show me all invoices and financial details for {pname})**" if pname != "N/A" else "**N/A**"
+                        res += f"| {idx} | {plink} | **{amt:,.2f}** |\n"
                     return res
 
                 else:
@@ -1231,7 +1258,8 @@ class ChattingAIController(http.Controller):
                     res += f"| # | {label} Name | Invoices | Total Volume ({curr}) |\n"
                     res += f"|---|---|---|---|\n"
                     for idx, (pname, amt) in enumerate(sorted_ranks, 1):
-                        res += f"| {idx} | **{pname}** | {partner_counts.get(pname, 0)} | **{amt:,.2f}** |\n"
+                        plink = f"**[{pname}](ask:Show me all invoices and financial details for {pname})**" if pname != "N/A" else "**N/A**"
+                        res += f"| {idx} | {plink} | {partner_counts.get(pname, 0)} | **{amt:,.2f}** |\n"
                     return res
 
             @tool
@@ -1279,8 +1307,188 @@ class ChattingAIController(http.Controller):
                 if top_prods:
                     res += f"#### Top 5 Products by Revenue:\n"
                     for idx, (pname, ptotal) in enumerate(top_prods, 1):
-                        res += f"{idx}. **{pname}:** {ptotal:,.2f} {curr}\n"
+                        res += f"{idx}. **[{pname}](ask:Show details and sales history for product {pname})**: {ptotal:,.2f} {curr}\n"
 
+                return res
+
+            @tool
+            def get_partner_details_and_history(partner_name: str) -> str:
+                """Retrieves full financial profile, contact information, total sales, vendor bills, outstanding due balances, and table of recent invoices/bills for a customer, vendor, or company partner.
+                'partner_name': Name of the customer, vendor, or company (e.g. 'ABC', 'sandeep', 'Dream Art Advertising')."""
+                env = request.env
+                clean_name = (partner_name or '').strip()
+                for prefix in [
+                    'ask:Show me all invoices and financial details for',
+                    'ask:show me all invoices and financial details for',
+                    'show me all invoices and financial details for',
+                    'show all invoices for',
+                    'financial details for',
+                    'invoices for',
+                ]:
+                    if clean_name.lower().startswith(prefix.lower()):
+                        clean_name = clean_name[len(prefix):].strip()
+                clean_name = clean_name.strip(' \'\":')
+
+                if not clean_name:
+                    return "Please provide a partner, customer, or vendor name."
+
+                partners = env['res.partner'].sudo().search([
+                    '|', ('name', 'ilike', clean_name), ('commercial_partner_id.name', 'ilike', clean_name)
+                ])
+                if not partners:
+                    return f"No customer or vendor found matching '{clean_name}' in 360 Accounting."
+
+                best_partner = partners[0]
+                best_moves_count = -1
+                for p in partners:
+                    cnt = env['account.move'].sudo().search_count([('partner_id', '=', p.id)])
+                    if cnt > best_moves_count:
+                        best_moves_count = cnt
+                        best_partner = p
+
+                partner = best_partner
+                request._viewed_doc = {'model': 'res.partner', 'id': partner.id, 'name': partner.name}
+                comp_curr = _currency_name(env.company.currency_id)
+
+                sales_invoices = env['account.move'].sudo().search([
+                    ('partner_id', '=', partner.id),
+                    ('move_type', 'in', ['out_invoice', 'out_refund']),
+                    ('state', '=', 'posted')
+                ])
+                tot_sales = sum(sales_invoices.mapped('amount_total_signed'))
+
+                vendor_bills = env['account.move'].sudo().search([
+                    ('partner_id', '=', partner.id),
+                    ('move_type', 'in', ['in_invoice', 'in_refund']),
+                    ('state', '=', 'posted')
+                ])
+                tot_bills = abs(sum(vendor_bills.mapped('amount_total_signed')))
+
+                unpaid_moves = env['account.move'].sudo().search([
+                    ('partner_id', '=', partner.id),
+                    ('state', '=', 'posted'),
+                    ('payment_state', 'in', ['not_paid', 'partial'])
+                ])
+                rec_due = sum(m.amount_residual for m in unpaid_moves if m.move_type == 'out_invoice')
+                pay_due = sum(m.amount_residual for m in unpaid_moves if m.move_type == 'in_invoice')
+
+                recent_moves = env['account.move'].sudo().search([
+                    ('partner_id', '=', partner.id),
+                    ('move_type', 'in', ['out_invoice', 'in_invoice', 'out_refund', 'in_refund'])
+                ], limit=10, order='invoice_date desc, id desc')
+
+                res = f"### Partner Profile: **{partner.name}**\n\n"
+                res += f"• **Customer/Vendor Name:** {partner.name}\n"
+                if getattr(partner, 'email', None):
+                    res += f"• **Email:** {partner.email}\n"
+                phone_num = getattr(partner, 'phone', None) or getattr(partner, 'mobile', None)
+                if phone_num:
+                    res += f"• **Phone:** {phone_num}\n"
+                if getattr(partner, 'city', None) or getattr(partner, 'country_id', None):
+                    loc = ', '.join(filter(None, [getattr(partner, 'street', None), getattr(partner, 'city', None), partner.country_id.name if partner.country_id else '']))
+                    if loc:
+                        res += f"• **Address:** {loc}\n"
+                if getattr(partner, 'vat', None):
+                    res += f"• **Tax ID / VAT:** {partner.vat}\n"
+
+                res += f"\n#### Financial Overview\n"
+                res += f"• **Total Sales Invoiced:** **{tot_sales:,.2f} {comp_curr}** ({len(sales_invoices)} invoice(s))\n"
+                res += f"• **Total Vendor Bills:** **{tot_bills:,.2f} {comp_curr}** ({len(vendor_bills)} bill(s))\n"
+                res += f"• **Outstanding Due (Receivable from Customer):** **{rec_due:,.2f} {comp_curr}**\n"
+                if pay_due > 0:
+                    res += f"• **Outstanding Due (Payable to Vendor):** **{pay_due:,.2f} {comp_curr}**\n"
+
+                if recent_moves:
+                    res += f"\n#### Recent Accounting Documents ({len(recent_moves)})\n\n"
+                    res += "| Date | Document # | Type | Total | Due | Status | Actions |\n"
+                    res += "|---|---|---|---|---|---|---|\n"
+                    for m in recent_moves:
+                        curr = _currency_name(m.currency_id)
+                        kind = "Invoice" if m.move_type == 'out_invoice' else ("Bill" if m.move_type == 'in_invoice' else "Refund")
+                        pay_st = m.payment_state.replace('_', ' ').title() if getattr(m, 'payment_state', None) else m.state.title()
+                        doc_name = m.name or f"Draft #{m.id}"
+                        actions = f"[View](/web#id={m.id}&model=account.move&view_type=form)"
+                        if m.move_type == 'out_invoice':
+                            actions += f" [PDF]({_get_vat_report_pdf_url(m.id)})"
+                        res += f"| {m.invoice_date or '—'} | **{doc_name}** | {kind} | {m.amount_total:,.2f} {curr} | {m.amount_residual:,.2f} | {pay_st} | {actions} |\n"
+
+                res += f"\nDirect Navigation:\n"
+                res += f"- [View Partner Profile in 360 Accounting](/web#id={partner.id}&model=res.partner&view_type=form)\n"
+                res += f"- [Show Unpaid Invoices](ask:Show unpaid invoices for {partner.name})\n"
+                res += f"- [Aged Balance Report](ask:Show aged balance for {partner.name})\n"
+                return res
+
+            @tool
+            def get_product_details_and_history(product_name: str) -> str:
+                """Retrieves product information, internal code, sales price, cost price, stock on hand, forecasted quantities, and recent invoices featuring this product.
+                'product_name': Name or reference of the product (e.g. 'Apple', 'goods', 'milk')."""
+                env = request.env
+                clean_name = (product_name or '').strip()
+                for prefix in [
+                    'ask:Show details and sales history for product',
+                    'ask:show details and sales history for product',
+                    'show details and sales history for product',
+                    'details for product',
+                    'sales history for product',
+                ]:
+                    if clean_name.lower().startswith(prefix.lower()):
+                        clean_name = clean_name[len(prefix):].strip()
+                clean_name = clean_name.strip(' \'\":')
+
+                if not clean_name:
+                    return "Please provide a product name or reference code."
+
+                prods = env['product.product'].sudo().search([
+                    '|', ('name', 'ilike', clean_name), ('default_code', 'ilike', clean_name)
+                ], limit=5)
+                if not prods:
+                    tmpls = env['product.template'].sudo().search([('name', 'ilike', clean_name)], limit=1)
+                    if tmpls:
+                        prods = tmpls.product_variant_ids[:1]
+
+                if not prods:
+                    return f"No product found matching '{clean_name}' in 360 Accounting."
+
+                prod = prods[0]
+                request._viewed_doc = {'model': 'product.product', 'id': prod.id, 'name': prod.name}
+                comp_curr = _currency_name(env.company.currency_id)
+                price = getattr(prod, 'lst_price', 0.0) or getattr(prod, 'list_price', 0.0)
+                cost = getattr(prod, 'standard_price', 0.0)
+                qty_hand = getattr(prod, 'qty_available', 0.0)
+                qty_forecast = getattr(prod, 'virtual_available', 0.0)
+                categ = prod.categ_id.name if prod.categ_id else 'All'
+
+                lines = env['account.move.line'].sudo().search([
+                    ('product_id', '=', prod.id),
+                    ('move_id.state', '=', 'posted')
+                ], limit=10, order='date desc, id desc')
+
+                res = f"### Product Profile: **{prod.name}**\n\n"
+                res += f"• **Product Name:** {prod.name}\n"
+                if prod.default_code:
+                    res += f"• **Internal Reference:** {prod.default_code}\n"
+                if getattr(prod, 'barcode', None):
+                    res += f"• **Barcode:** {prod.barcode}\n"
+                res += f"• **Category:** {categ}\n"
+                res += f"• **Sales Price:** **{price:,.2f} {comp_curr}**\n"
+                res += f"• **Cost Price:** {cost:,.2f} {comp_curr}\n"
+                res += f"• **Quantity on Hand:** **{qty_hand:,.2f}**\n"
+                res += f"• **Forecasted Quantity:** {qty_forecast:,.2f}\n"
+
+                if lines:
+                    res += f"\n#### Recent Sales & Invoices ({len(lines)})\n\n"
+                    res += "| Date | Document # | Customer / Partner | Quantity | Unit Price | Subtotal |\n"
+                    res += "|---|---|---|---|---|---|\n"
+                    for l in lines:
+                        pname = l.partner_id.name if l.partner_id else "N/A"
+                        doc_name = l.move_id.name or f"Draft #{l.move_id.id}"
+                        curr = _currency_name(l.currency_id or env.company.currency_id)
+                        plink = f"[{pname}](ask:Show me all invoices and financial details for {pname})" if pname != "N/A" else "—"
+                        res += f"| {l.date or '—'} | **{doc_name}** | {plink} | {l.quantity:,.2f} | {l.price_unit:,.2f} | {l.price_subtotal:,.2f} {curr} |\n"
+
+                res += f"\nDirect Navigation:\n"
+                res += f"- [View Product in 360 Accounting](/web#id={prod.id}&model=product.product&view_type=form)\n"
+                res += f"- [Available Stock in Inventory](ask:Show available products in inventory)\n"
                 return res
 
             # =========================================================================
@@ -1669,7 +1877,7 @@ class ChattingAIController(http.Controller):
                     res += f"• **Total Amount:** {total_amt:,.2f} {curr}\n\n"
                     res += f"Direct Document Action Links:\n"
                     if move_type == 'out_invoice':
-                        res += f"- [Download VAT Invoice PDF](/report/pdf/account.report_invoice_with_payments/{move.id})\n"
+                        res += f"- [Download Tax Invoice PDF]({_get_vat_report_pdf_url(move.id)})\n"
                     res += f"- [View Document](/web#id={move.id}&model=account.move&view_type=form)"
                     return res
                 except Exception as e:
@@ -1793,10 +2001,11 @@ class ChattingAIController(http.Controller):
 
                 for inv in invoices:
                     customer_name = inv.partner_id.name if inv.partner_id else "N/A"
+                    customer_link = f"[{customer_name}](ask:Show me all invoices and financial details for {customer_name})" if inv.partner_id else "N/A"
                     inv_name = inv.name or f"Invoice #{inv.id}"
                     curr = _currency_name(inv.currency_id)
-                    res += f"• **Invoice {inv_name}** (Customer: {customer_name}, Total: {inv.amount_total:,.2f} {curr}, Tax: {inv.amount_tax:,.2f} {curr}, Status: {inv.state})\n"
-                    res += f"  [Download VAT Invoice PDF ({inv_name})](/report/pdf/account.report_invoice_with_payments/{inv.id})\n"
+                    res += f"• **Invoice {inv_name}** (Customer: {customer_link}, Total: {inv.amount_total:,.2f} {curr}, Tax: {inv.amount_tax:,.2f} {curr}, Status: {inv.state})\n"
+                    res += f"  [Download Tax Invoice PDF ({inv_name})]({_get_vat_report_pdf_url(inv.id)})\n"
                     res += f"  [View Invoice ({inv_name})](/web#id={inv.id}&model=account.move&view_type=form)\n\n"
 
                 return res
@@ -1819,7 +2028,7 @@ class ChattingAIController(http.Controller):
                     for t in templates:
                         qty = getattr(t, 'qty_available', 0.0)
                         price = getattr(t, 'list_price', 0.0)
-                        res += f"• **{t.name}** (Code: {t.default_code or 'N/A'}, Price: {price:,.2f} {curr}, Qty Available: {qty})\n"
+                        res += f"• **[{t.name}](ask:Show details and sales history for product {t.name})** (Code: {t.default_code or 'N/A'}, Price: {price:,.2f} {curr}, Qty Available: {qty})\n"
                     return res
 
                 res = f"Found {len(products)} product(s) in inventory:\n\n"
@@ -1827,7 +2036,7 @@ class ChattingAIController(http.Controller):
                     qty = getattr(p, 'qty_available', 0.0)
                     price = getattr(p, 'lst_price', 0.0) or getattr(p, 'list_price', 0.0)
                     code = p.default_code or 'N/A'
-                    res += f"• **{p.display_name}** (Internal Ref: {code}, Sales Price: {price:,.2f} {curr}, On Hand Qty: {qty})\n"
+                    res += f"• **[{p.name}](ask:Show details and sales history for product {p.name})** (Internal Ref: {code}, Sales Price: {price:,.2f} {curr}, On Hand Qty: {qty})\n"
                 return res
 
             # =========================================================================
@@ -1855,6 +2064,8 @@ class ChattingAIController(http.Controller):
                 get_credit_and_debit_notes,
                 get_account_or_journal_transactions,
                 search_accounting_documents,
+                get_partner_details_and_history,
+                get_product_details_and_history,
                 # Level 3 Reports:
                 get_financial_report,
                 get_aged_partner_report,
@@ -1892,11 +2103,19 @@ class ChattingAIController(http.Controller):
                 "- NEVER invent, fabricate, or make up ANY customer name, vendor name, invoice number, date, or monetary amount.\n"
                 "- Every single invoice number, partner name, amount, and date in your response MUST come directly from database tool outputs.\n"
                 "- If a database tool returns no records, state clearly: 'No matching records found in 360 Accounting.' Under NO circumstances make up example or fake invoices.\n\n"
+                "CLICKABLE ENTITIES & INTELLIGENT NAVIGATION (CRITICAL):\n"
+                "- Whenever you mention ANY partner (customer, vendor, or company name) in your response (e.g. ABC, sandeep, Dream Art Advertising), ALWAYS make their name clickable:\n"
+                "  `[{{Partner Name}}](ask:Show me all invoices and financial details for {{Partner Name}})`\n"
+                "- Whenever you mention ANY product in your response, ALWAYS make its name clickable:\n"
+                "  `[{{Product Name}}](ask:Show details and sales history for product {{Product Name}})`\n"
+                "- Clicking these links automatically runs queries to show complete financial breakdowns, invoices, and sales history.\n\n"
                 "QUESTION CLASSIFICATION & TOOL ROUTING GUIDE:\n"
                 "🟢 LEVEL 1 — Basic Data Lookup:\n"
                 "- 'What is my current invoice balance?' / 'How much money do customers owe us?' / 'What is the current bank balance?' / 'What is the total receivable/payable amount?': Call `get_financial_balances()`.\n"
                 "- 'Show me all unpaid invoices' / 'Which bills are unpaid?': Call `get_unpaid_invoices_or_bills(doc_type='invoice' or 'bill')`.\n"
                 "- 'When is invoice INV/... due?' / 'Details of BILL/...': Call `get_document_details(reference=...)`.\n"
+                "- 'Show me all invoices for ABC' / 'Financial details for partner ABC' / 'Customer profile': Call `get_partner_details_and_history(partner_name=...)`.\n"
+                "- 'Details for product ...' / 'Sales history for product ...': Call `get_product_details_and_history(product_name=...)`.\n"
                 "- 'What payments were received today?' / 'Show me the last 10 payments': Call `get_recent_payments()`.\n"
                 "- 'Show me this month's expenses' / 'Total sales this month': Call `get_sales_and_expenses_summary()`.\n"
                 "- 'Show me all credit notes / debit notes': Call `get_credit_and_debit_notes()`.\n\n"
@@ -1925,9 +2144,12 @@ class ChattingAIController(http.Controller):
                 "- 'Cancel this invoice': Call `cancel_accounting_document(reference=...)`.\n"
                 "- 'Lock this accounting period': Call `lock_accounting_period_info(...)`.\n\n"
                 "RESPONSE FORMATTING RULES:\n"
-                "- Always present tables clearly using standard Markdown tables.\n"
-                "- Always format currency with commas and 2 decimals (e.g. 5,750.00 SAR).\n"
-                "- Always preserve direct action links like `[View Document](/web#id=...)` and `[Download VAT Invoice PDF](/report/pdf/...)`."
+                "- Structure your answers clearly with concise introductory summaries and clean Markdown section headers (e.g. `### Section Title`).\n"
+                "- When listing multiple accounts, documents, or items, use numbered lists (`1. **Account Name** – Details...`) followed by bullet points (`- Bullet detail...`) for outstanding clarity.\n"
+                "- Always format currency with commas and 2 decimals (e.g. 24,892.58 SAR).\n"
+                "- Present tables clearly using standard Markdown tables with aligned headers.\n"
+                "- Always preserve direct action links like `[View Document](/web#id=...)` and `[Download Tax Invoice PDF](/report/pdf/advanced_vat_invoice.action_report_vat_report/...)`.\n"
+                "- Keep explanations structured, executive-ready, and easy to read."
             )
 
             prompt = ChatPromptTemplate.from_messages([
@@ -1971,7 +2193,15 @@ class ChattingAIController(http.Controller):
                     ref_hint = f"\nSystem Detected Document Reference: '{detected_ref}'. Call `get_document_details(reference='{detected_ref}')` to retrieve complete details and line items."
 
             msg_lower = message.lower()
-            if any(k in msg_lower for k in ['bank balance', 'cash balance', 'current balance', 'how much money do customers owe', 'customer owe', 'total receivable', 'total payable', 'how much do we owe our vendors', 'vendor owe', 'invoice balance']):
+            if any(k in msg_lower for k in ['invoices and financial details for', 'financial details for', 'partner profile', 'customer details', 'vendor details']) or 'ask:show me all invoices and financial details for' in msg_lower:
+                m_p = re.search(r'(?:for|partner)\s+([A-Za-z0-9\s&.\-_]+?)(?:\.|\?|$)', message, flags=re.IGNORECASE)
+                p_cand = m_p.group(1).strip() if m_p else ""
+                ref_hint += f"\nSystem Directive: User is asking for complete details and invoices for a partner. Call `get_partner_details_and_history(partner_name='{p_cand}')`."
+            elif any(k in msg_lower for k in ['sales history for product', 'details for product', 'product profile']) or 'ask:show details and sales history for product' in msg_lower:
+                m_prod = re.search(r'product\s+([A-Za-z0-9\s&.\-_]+?)(?:\.|\?|$)', message, flags=re.IGNORECASE)
+                prod_cand = m_prod.group(1).strip() if m_prod else ""
+                ref_hint += f"\nSystem Directive: User is asking for product details and history. Call `get_product_details_and_history(product_name='{prod_cand}')`."
+            elif any(k in msg_lower for k in ['bank balance', 'cash balance', 'current balance', 'how much money do customers owe', 'customer owe', 'total receivable', 'total payable', 'how much do we owe our vendors', 'vendor owe', 'invoice balance']):
                 ref_hint += "\nSystem Directive: User is asking for company financial, bank, receivable, or payable balances. Call `get_financial_balances()`."
             elif any(k in msg_lower for k in ['profit and loss', 'p&l', 'trial balance', 'balance sheet', 'tax report', 'vat amount', 'vat return', 'net profit', 'total revenue this year', 'total expense this year']):
                 ref_hint += "\nSystem Directive: User is asking for an accounting report. Call `get_financial_report(...)` with the appropriate report_name."
@@ -2053,8 +2283,11 @@ class ChattingAIController(http.Controller):
                 }
             elif created_move_id:
                 move_id = int(created_move_id)
-                if '[Download VAT Invoice PDF]' in reply_text and f'/report/pdf/account.report_invoice_with_payments/{move_id}' not in reply_text:
-                    reply_text = reply_text.replace('[Download VAT Invoice PDF]', f'[Download VAT Invoice PDF](/report/pdf/account.report_invoice_with_payments/{move_id})')
+                move_pdf_url = _get_vat_report_pdf_url(move_id)
+                if '[Download Tax Invoice PDF]' in reply_text and move_pdf_url not in reply_text:
+                    reply_text = reply_text.replace('[Download Tax Invoice PDF]', f'[Download Tax Invoice PDF]({move_pdf_url})')
+                if '[Download VAT Invoice PDF]' in reply_text and move_pdf_url not in reply_text:
+                    reply_text = reply_text.replace('[Download VAT Invoice PDF]', f'[Download Tax Invoice PDF]({move_pdf_url})')
                 if '[View Document]' in reply_text and f'/web#id={move_id}' not in reply_text:
                     reply_text = reply_text.replace('[View Document]', f'[View Document](/web#id={move_id}&model=account.move&view_type=form)')
 
@@ -2069,8 +2302,11 @@ class ChattingAIController(http.Controller):
             elif viewed_doc:
                 doc_id = int(viewed_doc['id'])
                 doc_model = viewed_doc['model']
-                if '[Download VAT Invoice PDF]' in reply_text and f'/report/pdf/account.report_invoice_with_payments/{doc_id}' not in reply_text:
-                    reply_text = reply_text.replace('[Download VAT Invoice PDF]', f'[Download VAT Invoice PDF](/report/pdf/account.report_invoice_with_payments/{doc_id})')
+                doc_pdf_url = _get_vat_report_pdf_url(doc_id)
+                if '[Download Tax Invoice PDF]' in reply_text and doc_pdf_url not in reply_text:
+                    reply_text = reply_text.replace('[Download Tax Invoice PDF]', f'[Download Tax Invoice PDF]({doc_pdf_url})')
+                if '[Download VAT Invoice PDF]' in reply_text and doc_pdf_url not in reply_text:
+                    reply_text = reply_text.replace('[Download VAT Invoice PDF]', f'[Download Tax Invoice PDF]({doc_pdf_url})')
                 if '[View Document]' in reply_text and f'/web#id={doc_id}' not in reply_text:
                     reply_text = reply_text.replace('[View Document]', f'[View Document](/web#id={doc_id}&model={doc_model}&view_type=form)')
 
@@ -2084,15 +2320,49 @@ class ChattingAIController(http.Controller):
                         'target': 'current',
                     }
 
+            def _enhance_entity_links(text):
+                # 1. Partner bullet lines like: - ABC: 5,153.20 SAR
+                pattern_bullets = r'(?m)^(\s*[-•*]\s*)([A-Za-z0-9\s&.\'\-_]+?)(:\s*[\d,]+(?:\.\d+)?\s*[A-Z]{2,4})'
+                def _rep_b(m):
+                    prefix = m.group(1)
+                    name = m.group(2).strip(' *')
+                    suffix = m.group(3)
+                    if '[' in name or ']' in name or name.lower() in ('total', 'subtotal', 'average', 'tax', 'balance', 'variance', 'difference'):
+                        return m.group(0)
+                    return f"{prefix}**[{name}](ask:Show me all invoices and financial details for {name})**{suffix}"
+                text = re.sub(pattern_bullets, _rep_b, text)
+
+                # 2. Customer/Vendor lines like: Customer: ABC or - Customer: ABC
+                pattern_cust = r'(?m)^(\s*[-•*]?\s*(?:Customer|Vendor|Partner):\s*)([A-Za-z0-9\s&.\'\-_]+?)(\s*)$'
+                def _rep_c(m):
+                    prefix = m.group(1)
+                    name = m.group(2).strip(' *')
+                    suffix = m.group(3)
+                    if '[' in name or ']' in name or not name or name.lower() in ('n/a', 'none', 'unknown'):
+                        return m.group(0)
+                    return f"{prefix}**[{name}](ask:Show me all invoices and financial details for {name})**{suffix}"
+                text = re.sub(pattern_cust, _rep_c, text)
+                return text
+
+            reply_text = _enhance_entity_links(reply_text)
             reply_text = re.sub(r'\bOdoo\s+ERP\b', '360 Accounting', reply_text, flags=re.IGNORECASE)
             reply_text = re.sub(r'\bOdoo\b', '360 Accounting', reply_text, flags=re.IGNORECASE)
+            reply_text = re.sub(
+                r'/report/pdf/account\.report_invoice_with_payments/(\d+)',
+                r'/report/pdf/advanced_vat_invoice.action_report_vat_report/\1',
+                reply_text
+            )
+            reply_text = re.sub(r'\[Download VAT Invoice PDF\]', '[Download Tax Invoice PDF]', reply_text)
+            reply_text = re.sub(r'\[Download VAT Invoice PDF \(([^)]+)\)\]', r'[Download Tax Invoice PDF (\1)]', reply_text)
 
             res_data['reply'] = reply_text
             return res_data
 
         except ImportError as e:
+            missing_pkg = getattr(e, 'name', None) or str(e)
+            err_msg = f"Missing Python dependency on the server: '{missing_pkg}'. Please run: pip install langchain-openai langchain-classic langchain-core in your server's Python virtual environment, then restart the Odoo server."
             _logger.error(f"Chatbot Missing dependency: {str(e)}")
-            return {'error': "System configuration error. Please contact the administrator."}
+            return {'error': err_msg}
         except Exception as e:
             import traceback
             tb = traceback.format_exc()

@@ -9,6 +9,43 @@
         color: #e5e7eb;
     }
 
+    /* ── Form View Control Panel & Breadcrumbs (Remove whitish rectangle globally) ── */
+    .o_control_panel:has(+ .o_content .o_form_view),
+    .o_action.o_form_view .o_control_panel,
+    .o_form_view_container .o_control_panel,
+    .o_form_view .o_control_panel {
+        --bs-breadcrumb-bg: transparent !important;
+        --bs-breadcrumb-divider-color: #64748b !important;
+        --bs-breadcrumb-item-active-color: #ffffff !important;
+
+        .breadcrumb,
+        .o_breadcrumb,
+        .breadcrumb-item,
+        .o_back_button,
+        .o_last_breadcrumb_item,
+        .o_control_panel_breadcrumbs {
+            background: transparent !important;
+            background-color: transparent !important;
+            box-shadow: none !important;
+            border: none !important;
+        }
+
+        .breadcrumb-item a,
+        .o_back_button a {
+            background: transparent !important;
+            background-color: transparent !important;
+            color: #cbd5e1 !important;
+            -webkit-text-fill-color: #cbd5e1 !important;
+            box-shadow: none !important;
+            border: none !important;
+
+            &:hover {
+                color: #00d4c8 !important;
+                -webkit-text-fill-color: #00d4c8 !important;
+            }
+        }
+    }
+
     .o_content:has(.o_form_view),
     .o_web_client > .o_action_manager > .o_action.o_form_view,
     .o_web_client > .o_action_manager > .o_action.o_form_view > .o_content,

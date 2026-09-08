@@ -1,10 +1,12 @@
-body.kr_sp_theme_dark .o_web_client {
+:is(body.kr_sp_theme_dark, body.kr_sp_theme_dark.o_web_client, body.kr_sp_theme_dark .o_web_client, .kr_sp_theme_dark) {
+    /* ── Purchase Dashboard Outer Container ────────────────────── */
     .o_purchase_dashboard {
         border-color: var(--kr-dark-border) !important;
         background: #111827 !important;
-        color: var(--kr-dark-text);
+        color: var(--kr-dark-text) !important;
     }
 
+    /* ── All card variants: top, bottom, sole, no-hover ─────────── */
     .o_purchase_dashboard .purchase-dashboard-card,
     .o_purchase_dashboard .o_purchase_dashboard_card_top,
     .o_purchase_dashboard .o_purchase_dashboard_card_bottom,
@@ -12,41 +14,184 @@ body.kr_sp_theme_dark .o_web_client {
     .o_purchase_dashboard .o_no_hover {
         border-color: var(--kr-dark-border) !important;
         background: #18212f !important;
+        background-color: #18212f !important;
         color: var(--kr-dark-text) !important;
-        box-shadow: none;
+        box-shadow: none !important;
     }
 
+    /* All nested text elements inside cards */
+    .o_purchase_dashboard .purchase-dashboard-card *,
+    .o_purchase_dashboard .o_purchase_dashboard_card_top *,
+    .o_purchase_dashboard .o_purchase_dashboard_card_bottom *,
+    .o_purchase_dashboard .o_purchase_dashboard_card_sole *,
+    .o_purchase_dashboard .o_no_hover * {
+        background: transparent !important;
+        background-color: transparent !important;
+        color: var(--kr-dark-text) !important;
+        -webkit-text-fill-color: var(--kr-dark-text) !important;
+        border-color: var(--kr-dark-border) !important;
+    }
+
+    /* ── Card hover / focus state ─────────────────────────────── */
     .o_purchase_dashboard .purchase-dashboard-card:hover,
     .o_purchase_dashboard .purchase-dashboard-card:focus {
         border-color: rgba(0, 212, 200, 0.48) !important;
         background: #202b3a !important;
+        background-color: #202b3a !important;
         color: #ffffff !important;
     }
 
-    .o_purchase_dashboard .bg-view,
-    .o_purchase_dashboard .bg-secondary-subtle,
-    .o_purchase_dashboard .text-secondary-emphasis {
-        background: #202b3a !important;
-        color: var(--kr-dark-text) !important;
+    .o_purchase_dashboard .purchase-dashboard-card:hover *,
+    .o_purchase_dashboard .purchase-dashboard-card:focus * {
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+        background: transparent !important;
+        background-color: transparent !important;
     }
 
+    /* ── bg-view / bg-secondary-subtle / text-secondary-emphasis ─ */
+    .o_purchase_dashboard .bg-view,
+    .o_purchase_dashboard .bg-secondary-subtle,
+    .o_purchase_dashboard .bg-white,
+    .o_purchase_dashboard .bg-light,
+    .o_purchase_dashboard .bg-100,
+    .o_purchase_dashboard .bg-body,
+    .o_purchase_dashboard .text-secondary-emphasis {
+        background: #202b3a !important;
+        background-color: #202b3a !important;
+        color: var(--kr-dark-text) !important;
+        -webkit-text-fill-color: var(--kr-dark-text) !important;
+    }
+
+    /* ── Muted text and small labels ─────────────────────────────── */
     .o_purchase_dashboard .text-muted,
     .o_purchase_dashboard small {
         color: var(--kr-dark-muted) !important;
+        -webkit-text-fill-color: var(--kr-dark-muted) !important;
+        background: transparent !important;
+        background-color: transparent !important;
     }
 
-    .o_purchase_dashboard .text-danger,
-    .o_purchase_dashboard .text-warning,
-    .o_purchase_dashboard .text-success,
+    /* ── Status / semantic colored text — keep vibrant ────────── */
+    .o_purchase_dashboard .text-danger {
+        color: #f87171 !important;
+        -webkit-text-fill-color: #f87171 !important;
+        background: transparent !important;
+        background-color: transparent !important;
+    }
+    .o_purchase_dashboard .text-warning {
+        color: #facc15 !important;
+        -webkit-text-fill-color: #facc15 !important;
+        background: transparent !important;
+        background-color: transparent !important;
+    }
+    .o_purchase_dashboard .text-success {
+        color: #22d77b !important;
+        -webkit-text-fill-color: #22d77b !important;
+        background: transparent !important;
+        background-color: transparent !important;
+    }
     .o_purchase_dashboard .text-info {
-        filter: saturate(1.08) brightness(1.08);
+        color: #38bdf8 !important;
+        -webkit-text-fill-color: #38bdf8 !important;
+        background: transparent !important;
+        background-color: transparent !important;
     }
 
+    /* ── o_purchase_dashboard inline contains-filter boxes / grid ─ */
+    .o_purchase_dashboard .o_view_nocontent,
+    .o_purchase_dashboard .o_nocontent_help {
+        background: transparent !important;
+        color: var(--kr-dark-muted) !important;
+    }
+
+    /* ── Dashboard header / title area ────────────────────────── */
+    .o_purchase_dashboard .o_purchase_dashboard_header,
+    .o_purchase_dashboard .o_purchase_dashboard_header * {
+        background: transparent !important;
+        background-color: transparent !important;
+        color: var(--kr-dark-text) !important;
+        -webkit-text-fill-color: var(--kr-dark-text) !important;
+    }
+
+    /* ── Purchase Dashboard List View: table, rows, cells ──────── */
     .o_purchase_dashboard_list_view,
     .o_purchase_dashboard_list_view .o_list_renderer,
-    .o_purchase_dashboard_kanban,
-    .o_purchase_dashboard_kanban .o_kanban_renderer {
+    .o_purchase_dashboard_list_view .o_list_view,
+    .o_purchase_dashboard_list_view table,
+    .o_purchase_dashboard_list_view thead,
+    .o_purchase_dashboard_list_view tbody,
+    .o_purchase_dashboard_list_view tfoot,
+    .o_purchase_dashboard_list_view tr,
+    .o_purchase_dashboard_list_view th,
+    .o_purchase_dashboard_list_view td,
+    .o_purchase_dashboard_list_view .o_data_row,
+    .o_purchase_dashboard_list_view .o_data_cell,
+    .o_purchase_dashboard_list_view .o_field_cell {
         background: #111827 !important;
-        color: var(--kr-dark-text);
+        background-color: #111827 !important;
+        color: var(--kr-dark-text) !important;
+        -webkit-text-fill-color: var(--kr-dark-text) !important;
+        border-color: var(--kr-dark-border) !important;
     }
+
+    .o_purchase_dashboard_list_view thead th {
+        background: #0f1724 !important;
+        background-color: #0f1724 !important;
+        color: #9ca3af !important;
+        -webkit-text-fill-color: #9ca3af !important;
+    }
+
+    .o_purchase_dashboard_list_view tbody tr:hover td {
+        background: #202b3a !important;
+        background-color: #202b3a !important;
+    }
+
+    /* All text inside list view cells */
+    .o_purchase_dashboard_list_view .o_data_cell *,
+    .o_purchase_dashboard_list_view td *,
+    .o_purchase_dashboard_list_view th * {
+        color: var(--kr-dark-text) !important;
+        -webkit-text-fill-color: var(--kr-dark-text) !important;
+    }
+
+    /* ── Purchase Dashboard Kanban ─────────────────────────────── */
+    .o_purchase_dashboard_kanban,
+    .o_purchase_dashboard_kanban .o_kanban_renderer,
+    .o_purchase_dashboard_kanban .o_kanban_record,
+    .o_purchase_dashboard_kanban .o_kanban_record * {
+        background: #111827 !important;
+        background-color: #111827 !important;
+        color: var(--kr-dark-text) !important;
+        -webkit-text-fill-color: var(--kr-dark-text) !important;
+        border-color: var(--kr-dark-border) !important;
+    }
+}
+
+/* ── Override inline style white backgrounds in purchase dashboard ─ */
+body.kr_sp_theme_dark .o_purchase_dashboard [style*="background: white"],
+body.kr_sp_theme_dark .o_purchase_dashboard [style*="background: #fff"],
+body.kr_sp_theme_dark .o_purchase_dashboard [style*="background: #ffffff"],
+body.kr_sp_theme_dark .o_purchase_dashboard [style*="background-color: white"],
+body.kr_sp_theme_dark .o_purchase_dashboard [style*="background-color: #fff"],
+body.kr_sp_theme_dark .o_purchase_dashboard [style*="background-color: #ffffff"],
+body.kr_sp_theme_dark .o_purchase_dashboard_list_view [style*="background: white"],
+body.kr_sp_theme_dark .o_purchase_dashboard_list_view [style*="background-color: white"],
+body.kr_sp_theme_dark .o_purchase_dashboard_list_view [style*="background-color: #fff"],
+body.kr_sp_theme_dark .o_purchase_dashboard_list_view [style*="background: #fff"] {
+    background: #18212f !important;
+    background-color: #18212f !important;
+    color: var(--kr-dark-text) !important;
+}
+
+/* ── Global: any .o_purchase_dashboard descendant with a white bg ─ */
+body.kr_sp_theme_dark .o_purchase_dashboard :is(
+    .bg-white, .bg-light, .bg-body, .bg-view, .bg-100, .text-bg-light,
+    .bg-secondary-subtle, .bg-primary-subtle, .bg-info-subtle,
+    .bg-success-subtle, .bg-warning-subtle, .bg-danger-subtle
+) {
+    background: #202b3a !important;
+    background-color: #202b3a !important;
+    color: var(--kr-dark-text) !important;
+    border-color: var(--kr-dark-border) !important;
 }
