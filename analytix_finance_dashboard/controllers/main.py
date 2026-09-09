@@ -1738,29 +1738,57 @@ class AccountMove(models.Model):
         return result
 
     @api.model
-    def get_analytix_trial_balance_data(self, filter_name='this_month', date_from=None, date_to=None):
+    def get_analytix_trial_balance_data(self, filter_name='this_month', date_from=None, date_to=None, target_moves='posted', hide_zero='hide', hierarchy_level='none'):
         """Return trial balance data: per-account debit/credit/balance grouped by account type."""
         self = self.sudo()
         today = date.today()
-        if filter_name == 'this_month':
+
+        # Parse date_from and date_to if provided
+        parsed_from = None
+        parsed_to = None
+        if date_from:
+            try:
+                parsed_from = datetime.strptime(str(date_from)[:10], '%Y-%m-%d').date() if isinstance(date_from, str) else date_from
+            except Exception:
+                parsed_from = None
+        if date_to:
+            try:
+                parsed_to = datetime.strptime(str(date_to)[:10], '%Y-%m-%d').date() if isinstance(date_to, str) else date_to
+            except Exception:
+                parsed_to = None
+
+        if filter_name == 'custom' and parsed_from and parsed_to:
+            start_date = parsed_from
+            end_date = parsed_to
+        elif parsed_from and parsed_to and filter_name not in ('this_month', 'last_month', 'this_quarter', 'last_3_months', 'this_year', 'last_year'):
+            start_date = parsed_from
+            end_date = parsed_to
+        elif filter_name == 'this_month':
             start_date = today.replace(day=1)
             end_date = start_date + relativedelta(months=1, days=-1)
+        elif filter_name == 'last_month':
+            first_of_this_month = today.replace(day=1)
+            end_date = first_of_this_month - relativedelta(days=1)
+            start_date = end_date.replace(day=1)
+        elif filter_name == 'this_quarter':
+            q_month = ((today.month - 1) // 3) * 3 + 1
+            start_date = today.replace(month=q_month, day=1)
+            end_date = start_date + relativedelta(months=3, days=-1)
         elif filter_name == 'last_3_months':
             start_date = today.replace(day=1) - relativedelta(months=2)
             end_date = start_date + relativedelta(months=3, days=-1)
         elif filter_name == 'this_year':
             start_date = today.replace(month=1, day=1)
             end_date = today.replace(month=12, day=31)
-        elif filter_name == 'custom' and date_from and date_to:
-            try:
-                start_date = datetime.strptime(date_from, '%Y-%m-%d').date()
-                end_date   = datetime.strptime(date_to,   '%Y-%m-%d').date()
-            except Exception:
-                start_date = today.replace(day=1)
-                end_date   = start_date + relativedelta(months=1, days=-1)
+        elif filter_name == 'last_year':
+            start_date = today.replace(year=today.year - 1, month=1, day=1)
+            end_date = today.replace(year=today.year - 1, month=12, day=31)
+        elif parsed_from and parsed_to:
+            start_date = parsed_from
+            end_date = parsed_to
         else:
             start_date = today.replace(day=1)
-            end_date   = start_date + relativedelta(months=1, days=-1)
+            end_date = start_date + relativedelta(months=1, days=-1)
 
         company_ids = self.env.companies.ids or [self.env.company.id]
         company_currency = self.env.company.currency_id
@@ -1806,26 +1834,32 @@ class AccountMove(models.Model):
             'equity':    {'label': 'Equity',   'bg': '#f3e5f5', 'text': '#6a1b9a', 'dot': '#8e24aa', 'icon': 'fa-pie-chart'},
         }
 
-        # Read initial balances (posted lines before start_date)
+        # Target move domain condition
+        if target_moves == 'all':
+            move_state_domain = [('move_id.state', '!=', 'cancel')]
+        else:
+            move_state_domain = [('move_id.state', '=', 'posted')]
+
+        # Read initial balances (lines before start_date)
+        init_domain = move_state_domain + [
+            ('move_id.date', '<', start_date),
+            ('company_id', 'in', company_ids),
+        ]
         init_groups = self.env['account.move.line'].read_group(
-            domain=[
-                ('move_id.state', '=', 'posted'),
-                ('move_id.date', '<', start_date),
-                ('company_id', 'in', company_ids),
-            ],
+            domain=init_domain,
             fields=['account_id', 'debit:sum', 'credit:sum', 'company_id'],
             groupby=['account_id', 'company_id'],
             lazy=False,
         )
 
-        # Read period activity (posted lines from start_date to end_date)
+        # Read period activity (lines from start_date to end_date)
+        period_domain = move_state_domain + [
+            ('move_id.date', '>=', start_date),
+            ('move_id.date', '<=', end_date),
+            ('company_id', 'in', company_ids),
+        ]
         period_groups = self.env['account.move.line'].read_group(
-            domain=[
-                ('move_id.state', '=', 'posted'),
-                ('move_id.date', '>=', start_date),
-                ('move_id.date', '<=', end_date),
-                ('company_id', 'in', company_ids),
-            ],
+            domain=period_domain,
             fields=['account_id', 'debit:sum', 'credit:sum', 'company_id'],
             groupby=['account_id', 'company_id'],
             lazy=False,
@@ -1875,6 +1909,8 @@ class AccountMove(models.Model):
         total_period = 0.0
         total_ending = 0.0
 
+        is_hide_zero = hide_zero in (True, 'hide', 'Hide')
+
         for (acc_id, co_id), val in data_by_key.items():
             acc_obj = self.env['account.account'].browse(acc_id)
             if not acc_obj.exists():
@@ -1890,8 +1926,13 @@ class AccountMove(models.Model):
             period_bal = round(debit - credit, 2)
             ending_bal = round(init_bal + period_bal, 2)
 
-            if init_bal == 0.0 and debit == 0.0 and credit == 0.0 and period_bal == 0.0 and ending_bal == 0.0:
+            if is_hide_zero and init_bal == 0.0 and debit == 0.0 and credit == 0.0 and period_bal == 0.0 and ending_bal == 0.0:
                 continue
+
+            if hierarchy_level and hierarchy_level not in ('none', 'No limit', 'no_limit'):
+                max_digits = {'level_1': 2, 'level_2': 4, 'level_3': 6}.get(hierarchy_level)
+                if max_digits and len(acc_code) > max_digits:
+                    continue
 
             type_group = TYPE_GROUP_MAP.get(acc_type, 'asset')
             tcfg = TYPE_CFG.get(type_group, TYPE_CFG['asset'])
@@ -1950,4 +1991,8 @@ class AccountMove(models.Model):
             'company':        ', '.join(self.env.companies.mapped('name')),
             'companies':      [{'id': c.id, 'name': c.name, 'color': company_color_map.get(c.id, COMPANY_COLORS[0])} for c in companies],
             'date_range':     {'start': start_date.strftime('%Y-%m-%d'), 'end': end_date.strftime('%Y-%m-%d')},
+            'target_moves':   target_moves,
+            'hide_zero':      hide_zero,
+            'hierarchy_level': hierarchy_level,
+            'filter_name':    filter_name,
         }

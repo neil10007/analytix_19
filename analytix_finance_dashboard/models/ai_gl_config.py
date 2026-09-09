@@ -265,6 +265,19 @@ class AiGlConfig(models.Model):
                     ], limit=1)
                     if sale_tax:
                         vals['sale_tax_id'] = sale_tax.id
+                    if inc_acc:
+                        vals['foreign_service_line_ids'] = [
+                            (0, 0, {
+                                'service_stage': 'domestic_sales',
+                                'account_id': inc_acc.id,
+                                'tax_id': sale_tax.id if sale_tax else False,
+                            }),
+                            (0, 0, {
+                                'service_stage': 'international_sales',
+                                'account_id': inc_acc.id,
+                                'tax_id': False,
+                            }),
+                        ]
 
                 elif dtype == 'purchase_bill':
                     exp_acc = self.env['account.account'].search([
@@ -280,6 +293,19 @@ class AiGlConfig(models.Model):
                     ], limit=1)
                     if pur_tax:
                         vals['purchase_tax_id'] = pur_tax.id
+                    if exp_acc:
+                        vals['foreign_expense_line_ids'] = [
+                            (0, 0, {
+                                'expense_stage': 'domestic_purchase',
+                                'account_id': exp_acc.id,
+                                'tax_id': pur_tax.id if pur_tax else False,
+                            }),
+                            (0, 0, {
+                                'expense_stage': 'international_import',
+                                'account_id': exp_acc.id,
+                                'tax_id': False,
+                            }),
+                        ]
 
                 elif dtype == 'expense_bill':
                     exp_acc = self.env['account.account'].search([
@@ -324,6 +350,25 @@ class AiGlConfig(models.Model):
                 ('type', '=', target_type),
                 ('company_id', '=', company_id)
             ], limit=1)
+
+        # Graceful backfill: Ensure domestic stage line exists for existing records
+        if cfg and cfg.type == 'sales_invoice' and cfg.income_account_id:
+            if not cfg.foreign_service_line_ids.filtered(lambda l: l.service_stage == 'domestic_sales'):
+                self.env['ai.gl.config.foreign.service.line'].sudo().create({
+                    'config_id': cfg.id,
+                    'service_stage': 'domestic_sales',
+                    'account_id': cfg.income_account_id.id,
+                    'tax_id': cfg.sale_tax_id.id if cfg.sale_tax_id else False,
+                })
+        elif cfg and cfg.type == 'purchase_bill' and cfg.expense_account_id:
+            if not cfg.foreign_expense_line_ids.filtered(lambda l: l.expense_stage == 'domestic_purchase'):
+                self.env['ai.gl.config.foreign.expense.line'].sudo().create({
+                    'config_id': cfg.id,
+                    'expense_stage': 'domestic_purchase',
+                    'account_id': cfg.expense_account_id.id,
+                    'tax_id': cfg.purchase_tax_id.id if cfg.purchase_tax_id else False,
+                })
+
         return cfg
 
 

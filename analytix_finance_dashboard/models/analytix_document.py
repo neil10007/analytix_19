@@ -349,6 +349,7 @@ class AnalytixDocument(models.Model):
                 return 0.0
         return 0.0
 
+
     def _image_to_base64(self, image):
         """Convert a PIL Image to a fast, compressed base64 JPEG string (max 1200px) to prevent payload timeouts."""
         from PIL import Image
@@ -502,8 +503,9 @@ class AnalytixDocument(models.Model):
             '  "subtotal": number,\n'
             '  "tax": number,\n'
             '  "total": number,\n'
+            '  "global_discount": number,\n'
             '  "items": [\n'
-            '    {"description": "string", "quantity": number, "unit_price": number, "discount": number, "tax_rate": number, "vat_amount": number}\n'
+            '    {"description": "string", "quantity": number, "unit_price": number, "discount": number, "discount_amount": number, "line_total": number, "tax_rate": number, "vat_amount": number}\n'
             "  ]\n"
             "}\n"
             "Rules:\n"
@@ -511,22 +513,29 @@ class AnalytixDocument(models.Model):
             "  1. Set 'is_simplified_invoice' to true if the document is a simplified tax invoice, cash receipt, retail receipt, small customer purchase, restaurant bill, petrol station receipt, or retail invoice where seller details are present, but customer details (such as customer name, customer VAT number, customer CRN number) are NOT specified / omitted / absent, or if the document title contains 'Simplified Tax Invoice' / 'فاتورة ضريبية مبسطة' / 'Receipt'.\n"
             "  2. Set 'is_simplified_invoice' to false if the document is a standard B2B tax invoice where full customer details and customer VAT numbers are explicitly mentioned.\n"
             "- Extract full partner details for both vendor and customer including street, city, zip, country, and vat (tax ID).\n"
-            "- CRITICAL FOR CURRENCY EXTRACTION:\n"
-            "  1. Look carefully everywhere on the document (headers, table column headers like 'Taxable Amount (AED)', totals like 'AED 4,730.00' or 'SAR 500', currency labels, bank details, tax summary section, etc.).\n"
-            "  2. Extract the exact currency mentioned on the document and convert it to its 3-letter ISO 4217 code (e.g., 'AED' for AED/Dirham/Dhs, 'SAR' for SAR/SR/Saudi Riyal, 'USD' for $, 'EUR' for €, 'GBP' for £, 'QAR', 'KWD', 'BHD', 'OMR', 'EGP', etc.).\n"
-            "  3. If ANY currency is present or indicated anywhere on the document, return that 3-letter ISO code in 'currency'. ONLY if absolutely NO currency is mentioned or implied on the document, set 'currency' to null.\n"
+            "- CRITICAL FOR CURRENCY EXTRACTION (STRICT LINE-ITEM TRANSACTION CURRENCY RULE):\n"
+            "  1. THE INVOICE CURRENCY MUST BE DETERMINED DIRECTLY FROM THE INVOICE LINE ITEMS AND MAIN AMOUNTS (e.g., if line items show '$ 6,000.00' or '$ 36,000.00' or total shows '$ 54,480.00', the currency is USD).\n"
+            "  2. NEVER pick the currency from secondary tax summaries, exchange rate conversion boxes, or bank details (e.g., if an invoice has line items priced in '$' USD, but includes a ZATCA tax summary 'Tax Summary (1 $ = 3.75 SAR)' or Saudi bank IBAN, the currency of the invoice is USD, NEVER SAR!).\n"
+            "  3. Convert the detected line-item currency into its standard 3-letter ISO 4217 code (e.g., '$' -> 'USD', 'AED' / 'Dirham' / 'Dhs' -> 'AED', 'SAR' / 'SR' / 'ريال' -> 'SAR', 'EUR' / '€' -> 'EUR', 'GBP' / '£' -> 'GBP', 'QAR', 'KWD', 'BHD', 'OMR', 'INR' / '₹', etc.).\n"
+            "  4. The numbers in 'subtotal', 'total', 'unit_price', and 'line_total' MUST match the extracted 'currency'. For example, if line items total 54,480.00 in USD, 'currency' MUST be 'USD'.\n"
+            "  5. ONLY if no currency symbol or code is found on any line item or main total, check document headers. If completely absent, set 'currency' to null.\n"
             "- CRITICAL FOR SUBTOTAL, TAX & TOTAL ACCURACY:\n"
             "  1. 'subtotal' MUST be the exact untaxed subtotal before VAT. If not explicitly labeled as subtotal, calculate it as the sum of line item untaxed prices.\n"
             "  2. 'tax' MUST be the total VAT/tax amount listed on the document (e.g., 'Total Vat', 'VAT Amount', 'Tax').\n"
             "  3. 'total' MUST be the final gross total amount including VAT ('subtotal' + 'tax').\n"
-            "  4. For each item in 'items', extract 'vat_amount' (the specific VAT amount for that line) and 'tax_rate' (the percentage e.g. 15 for 15%).\n"
+            "  4. 'global_discount' MUST be any general or overall discount amount applied to the invoice subtotal or grand total (outside of individual line items). If no document-level discount, set to 0.\n"
+            "  5. For each item in 'items', extract 'vat_amount' (the specific VAT amount for that line) and 'tax_rate' (the percentage e.g. 15 for 15%).\n"
             "- tax_rate must be the tax percentage applied (e.g. 15 for 15%, 5 for 5%). If no tax, use 0.\n"
-            "- discount must be the discount percentage (0 to 100) applied on the line item. If discount is listed as an amount, convert it to the discount percentage (0 to 100). If no discount, use 0.\n"
+            "- CRITICAL FOR LINE ITEM UNIT PRICES, DISCOUNTS & TOTALS:\n"
+            "  1. 'discount' must be the discount percentage (0 to 100) applied on the line item. If no discount, use 0.\n"
+            "  2. 'discount_amount' must be the discount amount in currency for this line item if explicitly printed as an amount. If none, use 0.\n"
+            "  3. 'line_total' must be the final net untaxed total for this line item (after line discount, before VAT).\n"
+            "  4. 'unit_price' ANTI-DOUBLE-DISCOUNTING RULE:\n"
+            "     - If a line discount is present: 'unit_price' MUST be the single unit rate BEFORE discount (gross rate), so that quantity * unit_price * (1 - discount/100) equals 'line_total'. NEVER put the discounted net rate into 'unit_price' while also setting 'discount' > 0!\n"
+            "     - If NO line discount is present: 'unit_price' is the standard net rate.\n"
+            "  5. The sum of all 'line_total' values (minus 'global_discount' if present) MUST be consistent with 'subtotal'.\n"
+            "  6. Do NOT misread formatting commas or period delimiters as extra zeros (e.g. 20.23 is not 20230450).\n"
             "- numbers should be numeric without currency symbols.\n"
-            "- CRITICAL FOR LINE ITEM UNIT PRICES & AMOUNTS:\n"
-            "  1. The sum of (quantity * unit_price * (1 - discount/100)) across all items MUST be consistent with the document subtotal.\n"
-            "  2. Do NOT misread formatting commas or period delimiters as extra zeros (e.g. 20.23 is not 20230450).\n"
-            "  3. unit_price must be the single unit rate before discount if a discount percentage is extracted, or net rate if no discount.\n"
         )
 
         # ── OpenRouter Model Selection: Use Frontend Field if configured, else Fallback to Backend Default ──
@@ -1333,6 +1342,13 @@ class AnalytixDocument(models.Model):
         json_total = self._clean_float(
             data.get('total') or data.get('total_amount') or data.get('amount_total') or data.get('grand_total')
         )
+        json_global_discount = self._clean_float(
+            data.get('global_discount')
+            or data.get('document_discount')
+            or data.get('total_discount')
+            or data.get('invoice_discount')
+            or (data.get('discount_amount') if not items else 0.0)
+        )
 
         if json_subtotal > 0 and json_tax > 0:
             global_tax_rate = round((json_tax / json_subtotal) * 100, 4)
@@ -1341,36 +1357,67 @@ class AnalytixDocument(models.Model):
             global_tax_rate = round((json_tax / subtotal_calc) * 100, 4)
 
         # ── Smart Sanity Check & Normalization for Item Unit Prices ──
+        def _get_item_net_amount(it):
+            q = self._clean_float(it.get('quantity')) or 1.0
+            p = self._clean_float(it.get('unit_price'))
+            d = self._clean_float(
+                it.get('discount')
+                or it.get('discount_percentage')
+                or it.get('disc')
+                or it.get('discount_pct')
+                or it.get('discount_rate')
+            )
+            da = self._clean_float(
+                it.get('discount_amount')
+                or it.get('disc_amount')
+                or it.get('discount_val')
+            )
+            lt = self._clean_float(
+                it.get('line_total')
+                or it.get('total')
+                or it.get('subtotal')
+                or it.get('amount')
+            )
+            if lt > 0:
+                return lt
+            if d > 0 and d < 100.0 and p > 0:
+                return q * p * (1.0 - (d / 100.0))
+            if da > 0 and (q * p) > da:
+                return (q * p) - da
+            return q * p
+
         is_tax_inclusive_detected = False
         if items and (json_subtotal > 0 or json_total > 0):
-            valid_items_sum = sum(
-                (self._clean_float(it.get('quantity')) or 1.0) * self._clean_float(it.get('unit_price'))
-                for it in items
-            )
+            valid_items_sum = sum(_get_item_net_amount(it) for it in items)
             target_subtotal = json_subtotal if json_subtotal > 0 else (
                 (json_total - json_tax) if (json_total > json_tax and json_tax > 0) else json_total
             )
+
+            # Account for document-level discount if present
+            expected_line_base = target_subtotal + json_global_discount if json_global_discount > 0 else target_subtotal
 
             if target_subtotal > 0 and valid_items_sum > 0:
                 # 1. Check if extracted prices are tax-inclusive (sum of item prices matches total rather than untaxed subtotal)
                 if json_tax > 0 and json_total > target_subtotal:
                     diff_from_total = abs(valid_items_sum - json_total)
-                    diff_from_subtotal = abs(valid_items_sum - target_subtotal)
+                    diff_from_subtotal = abs(valid_items_sum - expected_line_base)
                     if diff_from_total < diff_from_subtotal and diff_from_total < (json_total * 0.05):
                         is_tax_inclusive_detected = True
 
-                # 2. Check if item sum diverges wildly or matches tax-inclusive total
-                is_wild_divergence = valid_items_sum > (target_subtotal * 1.5) or valid_items_sum < (target_subtotal * 0.5)
+                # 2. Check if item sum diverges wildly from expected base
+                is_wild_divergence = valid_items_sum > (expected_line_base * 1.5) or valid_items_sum < (expected_line_base * 0.5)
 
                 if is_tax_inclusive_detected or is_wild_divergence:
                     _logger.info(
-                        "Normalizing line item unit prices (tax_inclusive=%s, wild_divergence=%s). Extracted item sum: %.2f, Target subtotal: %.2f",
-                        is_tax_inclusive_detected, is_wild_divergence, valid_items_sum, target_subtotal
+                        "Normalizing line item unit prices (tax_inclusive=%s, wild_divergence=%s). Extracted item net sum: %.2f, Target subtotal: %.2f (base: %.2f)",
+                        is_tax_inclusive_detected, is_wild_divergence, valid_items_sum, target_subtotal, expected_line_base
                     )
-                    ratio = target_subtotal / valid_items_sum
+                    ratio = expected_line_base / valid_items_sum
                     for item in items:
                         orig_p = self._clean_float(item.get('unit_price'))
                         item['unit_price'] = round(orig_p * ratio, 4)
+                        if item.get('line_total'):
+                            item['line_total'] = round(self._clean_float(item.get('line_total')) * ratio, 4)
 
         validation_warnings = []
         detected_expense_type = False
@@ -1549,9 +1596,10 @@ class AnalytixDocument(models.Model):
                         _iname = (it.get('product_name') or it.get('name') or it.get('description') or f"Item {idx+1}").strip()
                         _iqty = self._clean_float(it.get('quantity')) or 1.0
                         _iprice = self._clean_float(it.get('unit_price')) or 0.0
+                        _idisc = self._clean_float(it.get('discount') or it.get('discount_percentage') or it.get('disc') or 0.0)
                         _irate = self._clean_float(it.get('tax_rate'))
                         _ivat = self._clean_float(it.get('vat_amount') or it.get('tax_amount') or it.get('vat') or it.get('tax'))
-                        _isub = round(_iqty * _iprice, 2)
+                        _isub = round(_iqty * _iprice * (1.0 - (_idisc / 100.0)), 2)
                         if _irate <= 0 and _ivat > 0 and _isub > 0:
                             _irate = round((_ivat / _isub) * 100, 2)
                         _iltax = None
@@ -1560,6 +1608,8 @@ class AnalytixDocument(models.Model):
                             if _rtax:
                                 _iltax = _rtax
                         _ilv = {'name': _iname, 'quantity': _iqty, 'price_unit': _iprice}
+                        if _idisc > 0:
+                            _ilv['discount'] = _idisc
                         if line_account and line_account.exists():
                             _ilv['account_id'] = line_account.id
                         if _iltax:
@@ -1740,8 +1790,10 @@ class AnalytixDocument(models.Model):
                             _iname = (it.get('product_name') or it.get('name') or it.get('description') or f"Item {idx+1}").strip()
                             _iqty = self._clean_float(it.get('quantity')) or 1.0
                             _iprice = self._clean_float(it.get('unit_price')) or 0.0
-                            _itotal = round(_iqty * _iprice, 2)
-                            validation_warnings.append(f"   - Line {idx+1}: {_iname} (Qty: {_iqty:g}, Unit Price: {_iprice:.2f}, Line Total: {_itotal:.2f})")
+                            _idisc = self._clean_float(it.get('discount') or it.get('discount_percentage') or it.get('disc') or 0.0)
+                            _itotal = round(_iqty * _iprice * (1.0 - (_idisc / 100.0)), 2)
+                            _disc_str = f", Disc: {_idisc:.2f}%" if _idisc > 0 else ""
+                            validation_warnings.append(f"   - Line {idx+1}: {_iname} (Qty: {_iqty:g}, Unit Price: {_iprice:.2f}{_disc_str}, Line Total: {_itotal:.2f})")
         else:
             # ── Multi-Line Item Processing for Sales Invoices and Purchase Bills ──
             if move_type in ('out_invoice', 'out_refund'):
@@ -1771,6 +1823,55 @@ class AnalytixDocument(models.Model):
                         "• Document Classification: Standard B2B Vendor Bill. Full vendor details and VAT extracted."
                     )
 
+            # Pre-compute document-level check: did OCR extract all unit prices as net?
+            def _get_item_net_amount(it):
+                q = self._clean_float(it.get('quantity')) or 1.0
+                p = self._clean_float(it.get('unit_price'))
+                d = self._clean_float(
+                    it.get('discount')
+                    or it.get('discount_percentage')
+                    or it.get('disc')
+                    or it.get('discount_pct')
+                    or it.get('discount_rate')
+                )
+                da = self._clean_float(
+                    it.get('discount_amount')
+                    or it.get('disc_amount')
+                    or it.get('discount_val')
+                )
+                lt = self._clean_float(
+                    it.get('line_total')
+                    or it.get('total')
+                    or it.get('subtotal')
+                    or it.get('amount')
+                )
+                if lt > 0:
+                    return lt
+                if d > 0 and d < 100.0 and p > 0:
+                    return q * p * (1.0 - (d / 100.0))
+                if da > 0 and (q * p) > da:
+                    return (q * p) - da
+                return q * p
+
+            target_subtotal = json_subtotal if json_subtotal > 0 else (
+                (json_total - json_tax) if (json_total > json_tax and json_tax > 0) else json_total
+            )
+            total_items_raw_gross = sum((self._clean_float(it.get('quantity')) or 1.0) * self._clean_float(it.get('unit_price')) for it in items)
+            total_items_discounted = sum(_get_item_net_amount(it) for it in items)
+            has_any_line_discount = any(
+                self._clean_float(it.get('discount') or it.get('discount_percentage') or it.get('disc') or it.get('discount_amount') or it.get('disc_amount')) > 0
+                for it in items
+            )
+            # If the raw (un-discounted) price sum matches target_subtotal, but lines have discounts,
+            # that confirms unit_price was globally extracted as net across items
+            global_all_net_extracted = (
+                has_any_line_discount
+                and target_subtotal > 0
+                and abs(total_items_raw_gross - target_subtotal) <= max(0.5, target_subtotal * 0.02)
+                and abs(total_items_raw_gross - target_subtotal) < abs(total_items_discounted - target_subtotal)
+            )
+
+            prepared_lines = []
             for idx, item in enumerate(items):
                 desc = (item.get('description') or 'Item').strip()
                 qty = self._clean_float(item.get('quantity')) or 1.0
@@ -1788,15 +1889,51 @@ class AnalytixDocument(models.Model):
                     or item.get('disc_amount')
                     or item.get('discount_val')
                 )
+                line_total = self._clean_float(
+                    item.get('line_total')
+                    or item.get('total')
+                    or item.get('subtotal')
+                    or item.get('amount')
+                )
 
-                if discount <= 0 and discount_amount > 0 and price > 0 and qty > 0:
-                    total_before_disc = price * qty
-                    discount = round((discount_amount / total_before_disc) * 100, 4)
+                # Target net amount for this single line
+                expected_line_net = line_total if line_total > 0 else (
+                    target_subtotal if (len(items) == 1 and target_subtotal > 0) else None
+                )
+
+                calc_raw = round(qty * price, 2)
+                diff_amt = 0.0
+
+                # 1. Anti-Double-Discounting Check: was unit_price already extracted as net?
+                is_net_extracted = False
+                if expected_line_net and abs(calc_raw - expected_line_net) <= max(0.05, expected_line_net * 0.02) and (discount > 0 or discount_amount > 0):
+                    is_net_extracted = True
+                elif global_all_net_extracted:
+                    is_net_extracted = True
+
+                if is_net_extracted:
+                    # Unit price is ALREADY net! Suppress duplicate discount to prevent double deduction
+                    discount = 0.0
+                    discount_amount = 0.0
+                    diff_amt = 0.0
+                    _logger.info("Line %d unit price %.2f already matches net amount %.2f; suppressed duplicate discount.", idx + 1, price, expected_line_net)
+                elif discount_amount > 0:
+                    diff_amt = discount_amount
+                elif expected_line_net and calc_raw > expected_line_net:
+                    diff_amt = round(calc_raw - expected_line_net, 2)
+                elif discount > 0 and calc_raw > 0:
+                    diff_amt = round(calc_raw * (discount / 100.0), 2)
+
+                # 2. Reconcile discount percentage directly on account.move.line
+                if diff_amt > 0.05 and price > 0 and qty > 0:
+                    discount = round((diff_amt / (price * qty)) * 100.0, 2)
+                elif discount > 0:
+                    discount = round(discount, 2)
 
                 if not tax_rate and global_tax_rate:
                     tax_rate = global_tax_rate
 
-                item_subtotal = (qty * price) if (qty > 0 and price > 0) else 0.0
+                item_subtotal = (qty * price * (1.0 - (discount / 100.0))) if (qty > 0 and price > 0) else 0.0
                 if (json_tax > 0 or tax_rate > 0):
                     resolved_tax = self._resolve_tax(
                         move_type,
@@ -1940,8 +2077,6 @@ class AnalytixDocument(models.Model):
                         else:
                             if foreign_service_line[0].tax_id:
                                 tax = foreign_service_line[0].tax_id
-                            else:
-                                tax = self.env['account.tax']
 
                 if is_international_sales:
                     # Absorb tax into price_unit: e.g. 100 + 15 = 115
@@ -1956,10 +2091,11 @@ class AnalytixDocument(models.Model):
                         price = round(price * (1.0 + ratio), 2)
                         _logger.info("Absorbed global tax ratio %.4f into price unit (original: %.2f, new: %.2f) for international sales", ratio, original_price, price)
                     
-                    # Add to validation warnings so it's highlighted for the accountant
-                    validation_warnings.append(
-                        f"• Line {idx + 1} (International Sales): Absorbed extracted tax into price unit (was {original_price:.2f}, now {price:.2f})."
-                    )
+                    if price != original_price:
+                        # Add to validation warnings so it's highlighted for the accountant
+                        validation_warnings.append(
+                            f"• Line {idx + 1} (International Sales): Absorbed extracted tax into price unit (was {original_price:.2f}, now {price:.2f})."
+                        )
 
                 # ── Foreign Expenses mapping for Purchase Bill line items ──
                 is_international_import = False
@@ -1978,8 +2114,6 @@ class AnalytixDocument(models.Model):
                         else:
                             if foreign_expense_line[0].tax_id:
                                 tax = foreign_expense_line[0].tax_id
-                            else:
-                                tax = self.env['account.tax']
 
                 if is_international_import:
                     # Absorb tax into price_unit: e.g. 100 + 15 = 115 total expense
@@ -1994,10 +2128,11 @@ class AnalytixDocument(models.Model):
                         price = round(price * (1.0 + ratio), 2)
                         _logger.info("Absorbed global tax ratio %.4f into price unit (original: %.2f, new: %.2f) for international import purchase", ratio, original_price, price)
                     
-                    # Add to validation warnings so it's highlighted for the accountant
-                    validation_warnings.append(
-                        f"• Line {idx + 1} (International Import Purchase): Absorbed extracted tax into price unit (was {original_price:.2f}, now {price:.2f})."
-                    )
+                    if price != original_price:
+                        # Add to validation warnings so it's highlighted for the accountant
+                        validation_warnings.append(
+                            f"• Line {idx + 1} (International Import Purchase): Absorbed extracted tax into price unit (was {original_price:.2f}, now {price:.2f})."
+                        )
 
                 item_display_name = raw_name or desc
                 line_vals = {
@@ -2014,7 +2149,23 @@ class AnalytixDocument(models.Model):
                 if tax:
                     line_vals['tax_ids'] = [(6, 0, [tax.id])]
 
-                invoice_line_vals.append((0, 0, line_vals))
+                prepared_lines.append(line_vals)
+
+            # ── Document-Level Discount (Distributed into lines' discount % field) ──
+            if json_global_discount > 0 and prepared_lines:
+                lines_gross_sum = sum(pl['quantity'] * pl['price_unit'] for pl in prepared_lines)
+                if lines_gross_sum > 0:
+                    global_disc_pct = round((json_global_discount / lines_gross_sum) * 100.0, 2)
+                    for pl in prepared_lines:
+                        existing_d = pl.get('discount', 0.0)
+                        combined_d = round((1.0 - ((1.0 - (existing_d / 100.0)) * (1.0 - (global_disc_pct / 100.0)))) * 100.0, 2)
+                        pl['discount'] = combined_d
+                    validation_warnings.append(
+                        f"• Document Discount: Applied global discount ({json_global_discount:.2f}, {global_disc_pct:.2f}%) to line discount field."
+                    )
+
+            for pl in prepared_lines:
+                invoice_line_vals.append((0, 0, pl))
 
         if not invoice_line_vals:
             total = json_total or json_subtotal
@@ -2055,8 +2206,6 @@ class AnalytixDocument(models.Model):
                     else:
                         if foreign_service_line[0].tax_id:
                             tax = foreign_service_line[0].tax_id
-                        else:
-                            tax = self.env['account.tax']
 
             if is_international_sales:
                 original_price = price_unit
@@ -2117,8 +2266,11 @@ class AnalytixDocument(models.Model):
             invoice_line_vals.append((0, 0, line_vals))
 
         # Check document total mismatch vs lines sum
-        if json_total > 0 and items:
-            lines_total = sum((self._clean_float(it.get('quantity')) or 1.0) * self._clean_float(it.get('unit_price')) for it in items)
+        if json_total > 0 and invoice_line_vals:
+            lines_total = sum(
+                (lv[2].get('quantity', 1.0) * lv[2].get('price_unit', 0.0) * (1.0 - (lv[2].get('discount', 0.0) / 100.0)))
+                for lv in invoice_line_vals
+            )
             eff_subtotal = exp_price_unit if (cfg_type == 'expense_bill' and 'exp_price_unit' in locals()) else json_subtotal
             if eff_subtotal > 0 and abs(lines_total - eff_subtotal) > 0.5 and abs((lines_total + json_tax) - json_total) > 0.5:
                 validation_warnings.append(
@@ -2137,7 +2289,8 @@ class AnalytixDocument(models.Model):
                 l_dict = tuple_val[2]
                 price_u = float(l_dict.get('price_unit') or 0.0)
                 q_val = float(l_dict.get('quantity') or 1.0)
-                debit_amt = round(price_u * q_val, 2)
+                disc_val = float(l_dict.get('discount') or 0.0)
+                debit_amt = round(price_u * q_val * (1.0 - (disc_val / 100.0)), 2)
                 if debit_amt <= 0 and json_total > 0:
                     debit_amt = json_total
 

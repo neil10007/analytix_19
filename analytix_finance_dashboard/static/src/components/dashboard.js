@@ -105,6 +105,16 @@ export class AnalytixFinanceDashboard extends Component {
             tbSortCol:       'code',
             tbSortDir:       'asc',
             tbCompanyFilter: 'all',
+            tbDateOption:     'this_month',
+            tbCustomFrom:     '',
+            tbCustomTo:       '',
+            tbShowDateDrop:   false,
+            tbTargetMoves:    'posted', // 'posted' | 'all'
+            tbShowTargetDrop: false,
+            tbHideZero:       'hide',   // 'hide' | 'show'
+            tbShowZeroDrop:   false,
+            tbHierarchyLevel: 'none',   // 'none' | 'level_1' | 'level_2' | 'level_3'
+            tbShowHierarchyDrop: false,
             // ── P&L Modal
             plData:          null,
             plLoading:       false,
@@ -249,6 +259,16 @@ export class AnalytixFinanceDashboard extends Component {
             this._unreadPollTimer = setInterval(() => {
                 this.updateUnreadCount();
             }, 5000);
+
+            this._onDocumentClick = (ev) => {
+                if (this.state.tbShowDateDrop) {
+                    const popoverWrap = ev.target.closest('.anx-tb-filter-dropdown-wrap');
+                    if (!popoverWrap) {
+                        this.state.tbShowDateDrop = false;
+                    }
+                }
+            };
+            document.addEventListener('click', this._onDocumentClick);
         });
         useEffect(() => {
             if (this.state.activeTab === 'overview') {
@@ -264,6 +284,9 @@ export class AnalytixFinanceDashboard extends Component {
             if (this._unreadPollTimer) {
                 clearInterval(this._unreadPollTimer);
                 this._unreadPollTimer = null;
+            }
+            if (this._onDocumentClick) {
+                document.removeEventListener('click', this._onDocumentClick);
             }
             this.store.discuss.isActive = false;
             this.stopChatPolling();
@@ -382,7 +405,12 @@ export class AnalytixFinanceDashboard extends Component {
         if (this.state.activeTab === 'expenses')      await this.fetchExpenseData();
         if (this.state.activeTab === 'vat')           await this.fetchVatData();
         if (this.state.activeTab === 'journals')      await this.fetchJournalData();
-        if (this.state.activeTab === 'trial_balance') await this.fetchTrialBalanceData();
+        if (this.state.activeTab === 'trial_balance') {
+            this.state.tbDateOption = this.state.filter;
+            this.state.tbCustomFrom = this.state.customFrom;
+            this.state.tbCustomTo   = this.state.customTo;
+            await this.fetchTrialBalanceData();
+        }
         if (this.state.activeTab === 'documents')     await this.fetchDocumentData();
         if (this.state.activeTab === 'inventory')     await this.fetchInventoryData();
     }
@@ -418,7 +446,12 @@ export class AnalytixFinanceDashboard extends Component {
         if (this.state.activeTab === 'expenses')      await this.fetchExpenseData();
         if (this.state.activeTab === 'vat')           await this.fetchVatData();
         if (this.state.activeTab === 'journals')      await this.fetchJournalData();
-        if (this.state.activeTab === 'trial_balance') await this.fetchTrialBalanceData();
+        if (this.state.activeTab === 'trial_balance') {
+            this.state.tbDateOption = 'custom';
+            this.state.tbCustomFrom = this.state.customFrom;
+            this.state.tbCustomTo   = this.state.customTo;
+            await this.fetchTrialBalanceData();
+        }
         if (this.state.activeTab === 'documents')     await this.fetchDocumentData();
         if (this.state.activeTab === 'inventory')     await this.fetchInventoryData();
     }
@@ -865,8 +898,24 @@ export class AnalytixFinanceDashboard extends Component {
     async fetchTrialBalanceData() {
         this.state.tbLoading = true;
         try {
+            const dateOption = this.state.tbDateOption || this.state.filter || 'this_month';
+            const dateFrom = this.state.tbCustomFrom || (dateOption === 'custom' ? this.state.customFrom : '');
+            const dateTo = this.state.tbCustomTo || (dateOption === 'custom' ? this.state.customTo : '');
+            const targetMoves = this.state.tbTargetMoves || 'posted';
+            const hideZero = this.state.tbHideZero || 'hide';
+            const hierarchy = this.state.tbHierarchyLevel || 'none';
+
             this.state.tbData = await this.orm.call('account.move', 'get_analytix_trial_balance_data',
-                [this.state.filter, this.state.customFrom, this.state.customTo]);
+                [dateOption, dateFrom, dateTo, targetMoves, hideZero, hierarchy]);
+
+            if (this.state.tbData && this.state.tbData.date_range) {
+                if (!this.state.tbCustomFrom || this.state.tbDateOption !== 'custom') {
+                    this.state.tbCustomFrom = this.state.tbData.date_range.start;
+                }
+                if (!this.state.tbCustomTo || this.state.tbDateOption !== 'custom') {
+                    this.state.tbCustomTo = this.state.tbData.date_range.end;
+                }
+            }
         } catch (e) {
             this.notification.add('Failed to load trial balance data.', { type: 'danger' });
         } finally {
@@ -874,11 +923,159 @@ export class AnalytixFinanceDashboard extends Component {
         }
     }
 
+    getTbDateOptions() {
+        const now = new Date();
+        const MN  = ['January','February','March','April','May','June',
+                     'July','August','September','October','November','December'];
+        const q    = Math.floor(now.getMonth() / 3);
+        const qSub = `${MN[q*3].slice(0,3)} - ${MN[Math.min(q*3+2,11)].slice(0,3)} ${now.getFullYear()}`;
+        const prevM = now.getMonth() === 0 ? 11 : now.getMonth() - 1;
+        const prevMY = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear();
+        return [
+            { key: 'this_month',    label: 'This Month',    sub: `${MN[now.getMonth()]} ${now.getFullYear()}` },
+            { key: 'last_month',    label: 'Last Month',    sub: `${MN[prevM]} ${prevMY}` },
+            { key: 'this_quarter',  label: 'This Quarter',  sub: qSub },
+            { key: 'last_3_months', label: 'Last 3 Months', sub: '' },
+            { key: 'this_year',     label: 'This Year',     sub: String(now.getFullYear()) },
+            { key: 'last_year',     label: 'Last Year',     sub: String(now.getFullYear() - 1) },
+            { key: 'custom',        label: 'Custom Range',  sub: '' },
+        ];
+    }
+
+    toggleTbDateDrop(ev) {
+        if (ev && ev.stopPropagation) ev.stopPropagation();
+        const next = !this.state.tbShowDateDrop;
+        this._closeAllTbDrops();
+        if (next && this.state.tbData && this.state.tbData.date_range) {
+            if (!this.state.tbCustomFrom) this.state.tbCustomFrom = this.state.tbData.date_range.start;
+            if (!this.state.tbCustomTo) this.state.tbCustomTo = this.state.tbData.date_range.end;
+        }
+        this.state.tbShowDateDrop = next;
+    }
+
+    async onTbDateOptClick(ev) {
+        const key = ev.currentTarget.dataset.key;
+        if (key) await this.selectTbDateOption(key);
+    }
+
+    async onTbPresetSelect(ev) {
+        const val = ev.target.value;
+        this.state.tbDateOption = val;
+        if (val !== 'custom') {
+            this.state.tbShowDateDrop = false;
+            await this.fetchTrialBalanceData();
+        }
+    }
+
+    async onTbTargetMovesChange(ev) {
+        this.state.tbTargetMoves = ev.target.value;
+        await this.fetchTrialBalanceData();
+    }
+
+    async onTbHideZeroChange(ev) {
+        this.state.tbHideZero = ev.target.value;
+        await this.fetchTrialBalanceData();
+    }
+
+    async onTbHierarchyChange(ev) {
+        this.state.tbHierarchyLevel = ev.target.value;
+        await this.fetchTrialBalanceData();
+    }
+
+    async selectTbDateOption(key) {
+        this.state.tbDateOption = key;
+        if (key === 'custom') {
+            return;
+        }
+        this.state.tbShowDateDrop = false;
+        await this.fetchTrialBalanceData();
+    }
+
+    onTbCustomFromChange(ev) {
+        this.state.tbCustomFrom = ev.target.value;
+        this.state.tbDateOption = 'custom';
+    }
+
+    onTbCustomToChange(ev) {
+        this.state.tbCustomTo = ev.target.value;
+        this.state.tbDateOption = 'custom';
+    }
+
+    async applyTbCustomDate() {
+        if (!this.state.tbCustomFrom || !this.state.tbCustomTo) {
+            this.notification.add('Please select both From and To dates.', { type: 'warning' });
+            return;
+        }
+        if (this.state.tbCustomFrom > this.state.tbCustomTo) {
+            this.notification.add('"From" date must be before "To" date.', { type: 'warning' });
+            return;
+        }
+        this.state.tbDateOption   = 'custom';
+        this.state.tbShowDateDrop = false;
+        await this.fetchTrialBalanceData();
+    }
+
+    toggleTbTargetDrop(ev) {
+        if (ev && ev.stopPropagation) ev.stopPropagation();
+        const next = !this.state.tbShowTargetDrop;
+        this._closeAllTbDrops();
+        this.state.tbShowTargetDrop = next;
+    }
+
+    async selectTbTargetMoves(mode) {
+        this.state.tbTargetMoves = mode;
+        this.state.tbShowTargetDrop = false;
+        await this.fetchTrialBalanceData();
+    }
+
+    toggleTbZeroDrop(ev) {
+        if (ev && ev.stopPropagation) ev.stopPropagation();
+        const next = !this.state.tbShowZeroDrop;
+        this._closeAllTbDrops();
+        this.state.tbShowZeroDrop = next;
+    }
+
+    async selectTbHideZero(val) {
+        this.state.tbHideZero = val;
+        this.state.tbShowZeroDrop = false;
+        await this.fetchTrialBalanceData();
+    }
+
+    toggleTbHierarchyDrop(ev) {
+        if (ev && ev.stopPropagation) ev.stopPropagation();
+        const next = !this.state.tbShowHierarchyDrop;
+        this._closeAllTbDrops();
+        this.state.tbShowHierarchyDrop = next;
+    }
+
+    async selectTbHierarchy(lvl) {
+        this.state.tbHierarchyLevel = lvl;
+        this.state.tbShowHierarchyDrop = false;
+        await this.fetchTrialBalanceData();
+    }
+
+    getTbHierarchyLabel() {
+        const map = {
+            'none': 'No limit',
+            'level_1': 'Level 1',
+            'level_2': 'Level 2',
+            'level_3': 'Level 3',
+        };
+        return map[this.state.tbHierarchyLevel] || 'No limit';
+    }
+
+    _closeAllTbDrops() {
+        this.state.tbShowDateDrop = false;
+        this.state.tbShowTargetDrop = false;
+        this.state.tbShowZeroDrop = false;
+        this.state.tbShowHierarchyDrop = false;
+    }
+
     onTbTypeFilter(ev)    { this.state.tbTypeFilter    = ev.currentTarget.dataset.atype   || 'all'; this.saveFilterState(); }
     onTbSearch(ev)        { this.state.tbSearch        = ev.target.value; }
     onTbCompanyFilter(ev) { this.state.tbCompanyFilter = ev.currentTarget.dataset.company || 'all'; this.saveFilterState(); }
-    onTbSort(ev) {
-        const col = ev.currentTarget.dataset.col;
+    onTbSort(arg) {
+        const col = typeof arg === 'string' ? arg : (arg && arg.currentTarget && arg.currentTarget.dataset.col);
         if (!col) return;
         if (this.state.tbSortCol === col) { this.state.tbSortDir = this.state.tbSortDir === 'asc' ? 'desc' : 'asc'; }
         else { this.state.tbSortCol = col; this.state.tbSortDir = 'asc'; }
@@ -886,7 +1083,7 @@ export class AnalytixFinanceDashboard extends Component {
 
     get filteredTrialBalance() {
         if (!this.state.tbData) return [];
-        let rows = this.state.tbData.records;
+        let rows = this.state.tbData.records || [];
         // Type filter
         if (this.state.tbTypeFilter !== 'all') {
             rows = rows.filter(r => r.type_group === this.state.tbTypeFilter);
@@ -896,17 +1093,28 @@ export class AnalytixFinanceDashboard extends Component {
             const cid = parseInt(this.state.tbCompanyFilter, 10);
             rows = rows.filter(r => r.company_id === cid);
         }
+        // Account at 0 filter
+        if (this.state.tbHideZero === 'hide') {
+            rows = rows.filter(r => !(r.initial_balance === 0 && r.debit === 0 && r.credit === 0 && r.period_balance === 0 && r.ending_balance === 0));
+        }
+        // Hierarchy level
+        if (this.state.tbHierarchyLevel && this.state.tbHierarchyLevel !== 'none') {
+            const maxLen = { 'level_1': 2, 'level_2': 4, 'level_3': 6 }[this.state.tbHierarchyLevel];
+            if (maxLen) {
+                rows = rows.filter(r => (r.code || '').length <= maxLen);
+            }
+        }
         // Text search
-        if (this.state.tbSearch.trim()) {
+        if (this.state.tbSearch && this.state.tbSearch.trim()) {
             const q = this.state.tbSearch.trim().toLowerCase();
             rows = rows.filter(r =>
-                r.name.toLowerCase().includes(q) ||
-                r.code.toLowerCase().includes(q) ||
-                r.type_label.toLowerCase().includes(q)
+                (r.name && r.name.toLowerCase().includes(q)) ||
+                (r.code && r.code.toLowerCase().includes(q)) ||
+                (r.type_label && r.type_label.toLowerCase().includes(q))
             );
         }
         // Sort
-        const col = this.state.tbSortCol;
+        const col = this.state.tbSortCol || 'code';
         const dir = this.state.tbSortDir === 'asc' ? 1 : -1;
         return [...rows].sort((a, b) => {
             let av = a[col] ?? '', bv = b[col] ?? '';
@@ -921,15 +1129,49 @@ export class AnalytixFinanceDashboard extends Component {
     get tbFilteredPeriod()  { return this.filteredTrialBalance.reduce((s, r) => s + (r.period_balance || 0), 0); }
     get tbFilteredEnding()  { return this.filteredTrialBalance.reduce((s, r) => s + (r.ending_balance || 0), 0); }
 
+    get tbFilteredInitialDisplay() {
+        const sym = (this.state.tbData && this.state.tbData.currency_sym) || '';
+        const v = this.tbFilteredInitial;
+        return `${sym} ${v < 0 ? '-' : ''}${Math.abs(v).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+    }
+    get tbFilteredDebitDisplay() {
+        const sym = (this.state.tbData && this.state.tbData.currency_sym) || '';
+        return `${sym} ${Math.abs(this.tbFilteredDebit).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+    }
+    get tbFilteredCreditDisplay() {
+        const sym = (this.state.tbData && this.state.tbData.currency_sym) || '';
+        return `${sym} ${Math.abs(this.tbFilteredCredit).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+    }
+    get tbFilteredPeriodDisplay() {
+        const sym = (this.state.tbData && this.state.tbData.currency_sym) || '';
+        const v = this.tbFilteredPeriod;
+        return `${sym} ${v < 0 ? '-' : ''}${Math.abs(v).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+    }
+    get tbFilteredEndingDisplay() {
+        const sym = (this.state.tbData && this.state.tbData.currency_sym) || '';
+        const v = this.tbFilteredEnding;
+        return `${sym} ${v < 0 ? '-' : ''}${Math.abs(v).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+    }
+
     openTrialBalanceAccount(ev) {
         const id = parseInt(ev.currentTarget.dataset.id, 10);
         if (!id) return;
         this._saveReturnTab(); // restore Trial Balance tab on Back
+        const domain = [['account_id', '=', id]];
+        if (this.state.tbTargetMoves === 'all') {
+            domain.push(['move_id.state', '!=', 'cancel']);
+        } else {
+            domain.push(['move_id.state', '=', 'posted']);
+        }
+        if (this.state.tbData && this.state.tbData.date_range) {
+            if (this.state.tbData.date_range.start) domain.push(['date', '>=', this.state.tbData.date_range.start]);
+            if (this.state.tbData.date_range.end)   domain.push(['date', '<=', this.state.tbData.date_range.end]);
+        }
         this.action.doAction({
             type:       'ir.actions.act_window',
             name:       'Account Entries',
             res_model:  'account.move.line',
-            domain:     [['account_id', '=', id], ['move_id.state', '=', 'posted']],
+            domain:     domain,
             views:      [[false, 'list'], [false, 'form']],
             target:     'current',
         });
@@ -3171,7 +3413,8 @@ export class AnalytixFinanceDashboard extends Component {
             return neg ? `<span style="color:#e53935">-${symSpan} ${s}</span>` : `${symSpan} ${s}`;
         };
 
-        const rows = (d.records || []).map(r => `
+        const recordsToPrint = (this.filteredTrialBalance && this.filteredTrialBalance.length) ? this.filteredTrialBalance : (d.records || []);
+        const rows = recordsToPrint.map(r => `
             <tr>
                 <td style="padding:8px 14px;border-bottom:1px solid #f0f1f5;font-family:monospace;text-align:left;">${r.code}</td>
                 <td style="padding:8px 14px;border-bottom:1px solid #f0f1f5;text-align:left;font-weight:600;color:#1e88e5;">${r.name}</td>
@@ -3182,6 +3425,12 @@ export class AnalytixFinanceDashboard extends Component {
                 <td style="padding:8px 14px;border-bottom:1px solid #f0f1f5;text-align:right;font-weight:600;color:#2e7d32;">${fmtN(r.ending_balance)}</td>
             </tr>
         `).join('');
+
+        const totInitial = this.tbFilteredInitial;
+        const totDebit   = this.tbFilteredDebit;
+        const totCredit  = this.tbFilteredCredit;
+        const totPeriod  = this.tbFilteredPeriod;
+        const totEnding  = this.tbFilteredEnding;
 
         const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Trial Balance</title>
 <style>
@@ -3217,11 +3466,11 @@ export class AnalytixFinanceDashboard extends Component {
     ${rows}
     <tr style="background:#0f1729;color:#fff;font-weight:800;">
       <td style="padding:12px 14px;" colspan="2">Totals</td>
-      <td style="padding:12px 14px;text-align:right;">${fmtN(d.total_initial)}</td>
-      <td style="padding:12px 14px;text-align:right;">${fmtN(d.total_debit)}</td>
-      <td style="padding:12px 14px;text-align:right;">${fmtN(d.total_credit)}</td>
-      <td style="padding:12px 14px;text-align:right;">${fmtN(d.total_period)}</td>
-      <td style="padding:12px 14px;text-align:right;">${fmtN(d.total_ending)}</td>
+      <td style="padding:12px 14px;text-align:right;">${fmtN(totInitial)}</td>
+      <td style="padding:12px 14px;text-align:right;">${fmtN(totDebit)}</td>
+      <td style="padding:12px 14px;text-align:right;">${fmtN(totCredit)}</td>
+      <td style="padding:12px 14px;text-align:right;">${fmtN(totPeriod)}</td>
+      <td style="padding:12px 14px;text-align:right;">${fmtN(totEnding)}</td>
     </tr>
   </tbody>
 </table>

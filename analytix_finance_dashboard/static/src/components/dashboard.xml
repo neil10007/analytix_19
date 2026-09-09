@@ -852,7 +852,7 @@
                         <div class="anx-inv-spinner"></div><span>Loading trial balance…</span>
                     </div>
                     <t t-if="!state.tbLoading and state.tbData">
-                        <div class="anx-tb-fullpage">
+                        <div class="anx-tb-fullpage" t-on-click="_closeAllTbDrops">
 
                             <!-- Report Title Bar -->
                             <div class="anx-tb-title-bar">
@@ -864,23 +864,49 @@
                                 </button>
                             </div>
 
-                            <!-- Filter bar -->
-                            <div class="anx-tb-filter-bar">
-                                <div class="anx-tb-filter-cell">
-                                    <div class="anx-tb-filter-label">Date range filter</div>
-                                    <div class="anx-tb-filter-val">From: <t t-esc="state.tbData.date_range.start"/> To <t t-esc="state.tbData.date_range.end"/></div>
+                            <!-- Action Toolbar: Filter Button with Date Popover & Live Search -->
+                            <div class="anx-tb-action-bar">
+                                <div class="anx-tb-left-controls">
+                                    <div class="anx-tb-filter-dropdown-wrap">
+                                        <button class="anx-tb-filter-btn" t-on-click="toggleTbDateDrop" title="Filter by date range">
+                                            <i class="fa fa-filter"/> Filter <i t-attf-class="fa {{ state.tbShowDateDrop ? 'fa-caret-up' : 'fa-caret-down' }}"/>
+                                        </button>
+
+                                        <!-- Active Date Range Display Badge -->
+                                        <div class="anx-tb-active-badge" t-if="state.tbData and state.tbData.date_range">
+                                            <i class="fa fa-calendar"/>
+                                            <span><t t-esc="state.tbData.date_range.start"/> → <t t-esc="state.tbData.date_range.end"/></span>
+                                        </div>
+
+                                        <!-- Filter Popover: Displayed ONLY when clicking Filter button -->
+                                        <div class="anx-tb-filter-popover" t-if="state.tbShowDateDrop" t-on-click.stop="">
+                                            <div class="anx-tb-popover-header">
+                                                <span class="anx-tb-popover-title"><i class="fa fa-calendar"/> Date Filter</span>
+                                                <button class="anx-tb-popover-close" t-on-click="toggleTbDateDrop" title="Close">×</button>
+                                            </div>
+                                            <div class="anx-tb-popover-body">
+                                                <div class="anx-tb-popover-range">
+                                                    <div class="anx-tb-filter-group">
+                                                        <label class="anx-tb-filter-lbl">From</label>
+                                                        <input type="date" class="anx-tb-date-input" t-att-value="state.tbCustomFrom" t-on-change="onTbCustomFromChange"/>
+                                                    </div>
+                                                    <div class="anx-tb-filter-group">
+                                                        <label class="anx-tb-filter-lbl">To</label>
+                                                        <input type="date" class="anx-tb-date-input" t-att-value="state.tbCustomTo" t-on-change="onTbCustomToChange"/>
+                                                    </div>
+                                                </div>
+                                                <div class="anx-tb-popover-footer">
+                                                    <button class="anx-tb-apply-btn" t-on-click="applyTbCustomDate">
+                                                        <i class="fa fa-check"/> Apply
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="anx-tb-filter-cell">
-                                    <div class="anx-tb-filter-label">Target moves filter</div>
-                                    <div class="anx-tb-filter-val">All posted entries</div>
-                                </div>
-                                <div class="anx-tb-filter-cell">
-                                    <div class="anx-tb-filter-label">Account at 0 filter</div>
-                                    <div class="anx-tb-filter-val">Hide</div>
-                                </div>
-                                <div class="anx-tb-filter-cell">
-                                    <div class="anx-tb-filter-label">Limit hierarchy levels</div>
-                                    <div class="anx-tb-filter-val">No limit</div>
+                                <div class="anx-tb-search-wrap">
+                                    <i class="fa fa-search anx-tb-search-icon"/>
+                                    <input type="text" class="anx-tb-search" placeholder="Search accounts or code…" t-att-value="state.tbSearch" t-on-input="onTbSearch"/>
                                 </div>
                             </div>
 
@@ -889,20 +915,34 @@
                                 <table class="anx-tb-report-table">
                                     <thead>
                                         <tr>
-                                            <th class="anx-tb-rth anx-tb-rth-code">Code</th>
-                                            <th class="anx-tb-rth anx-tb-rth-name">Account</th>
-                                            <th class="anx-tb-rth anx-tb-rth-num">Initial balance</th>
-                                            <th class="anx-tb-rth anx-tb-rth-num">Debit</th>
-                                            <th class="anx-tb-rth anx-tb-rth-num">Credit</th>
-                                            <th class="anx-tb-rth anx-tb-rth-num">Period balance</th>
-                                            <th class="anx-tb-rth anx-tb-rth-num">Ending balance</th>
+                                            <th class="anx-tb-rth anx-tb-rth-code" t-on-click="() => this.onTbSort('code')" style="cursor: pointer; user-select: none;">
+                                                Code <i t-if="state.tbSortCol === 'code'" t-attf-class="fa {{ state.tbSortDir === 'asc' ? 'fa-caret-up' : 'fa-caret-down' }}" style="margin-left: 4px;"/>
+                                            </th>
+                                            <th class="anx-tb-rth anx-tb-rth-name" t-on-click="() => this.onTbSort('name')" style="cursor: pointer; user-select: none;">
+                                                Account <i t-if="state.tbSortCol === 'name'" t-attf-class="fa {{ state.tbSortDir === 'asc' ? 'fa-caret-up' : 'fa-caret-down' }}" style="margin-left: 4px;"/>
+                                            </th>
+                                            <th class="anx-tb-rth anx-tb-rth-num" t-on-click="() => this.onTbSort('initial_balance')" style="cursor: pointer; user-select: none;">
+                                                Initial balance <i t-if="state.tbSortCol === 'initial_balance'" t-attf-class="fa {{ state.tbSortDir === 'asc' ? 'fa-caret-up' : 'fa-caret-down' }}" style="margin-left: 4px;"/>
+                                            </th>
+                                            <th class="anx-tb-rth anx-tb-rth-num" t-on-click="() => this.onTbSort('debit')" style="cursor: pointer; user-select: none;">
+                                                Debit <i t-if="state.tbSortCol === 'debit'" t-attf-class="fa {{ state.tbSortDir === 'asc' ? 'fa-caret-up' : 'fa-caret-down' }}" style="margin-left: 4px;"/>
+                                            </th>
+                                            <th class="anx-tb-rth anx-tb-rth-num" t-on-click="() => this.onTbSort('credit')" style="cursor: pointer; user-select: none;">
+                                                Credit <i t-if="state.tbSortCol === 'credit'" t-attf-class="fa {{ state.tbSortDir === 'asc' ? 'fa-caret-up' : 'fa-caret-down' }}" style="margin-left: 4px;"/>
+                                            </th>
+                                            <th class="anx-tb-rth anx-tb-rth-num" t-on-click="() => this.onTbSort('period_balance')" style="cursor: pointer; user-select: none;">
+                                                Period balance <i t-if="state.tbSortCol === 'period_balance'" t-attf-class="fa {{ state.tbSortDir === 'asc' ? 'fa-caret-up' : 'fa-caret-down' }}" style="margin-left: 4px;"/>
+                                            </th>
+                                            <th class="anx-tb-rth anx-tb-rth-num" t-on-click="() => this.onTbSort('ending_balance')" style="cursor: pointer; user-select: none;">
+                                                Ending balance <i t-if="state.tbSortCol === 'ending_balance'" t-attf-class="fa {{ state.tbSortDir === 'asc' ? 'fa-caret-up' : 'fa-caret-down' }}" style="margin-left: 4px;"/>
+                                            </th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <t t-if="state.tbData.records.length === 0">
+                                        <t t-if="filteredTrialBalance.length === 0">
                                             <tr><td colspan="7" class="anx-inv-empty">No accounts found for this period.</td></tr>
                                         </t>
-                                        <t t-foreach="state.tbData.records" t-as="acc" t-key="acc.id">
+                                        <t t-foreach="filteredTrialBalance" t-as="acc" t-key="acc.id">
                                             <tr class="anx-tb-rtd-row">
                                                 <td class="anx-tb-rtd anx-tb-rtd-code"><t t-esc="acc.code"/></td>
                                                 <td class="anx-tb-rtd anx-tb-rtd-name" style="color: #00d4c8 !important; font-weight: 700 !important;">
@@ -915,14 +955,14 @@
                                                 <td t-attf-class="anx-tb-rtd anx-tb-rtd-num {{ acc.ending_balance &lt; 0 ? 'anx-tb-rneg' : '' }}"><t t-esc="acc.ending_display"/></td>
                                             </tr>
                                         </t>
-                                        <t t-if="state.tbData.records.length > 0">
+                                        <t t-if="filteredTrialBalance.length > 0">
                                             <tr class="anx-tb-rtd-row anx-tb-total-row">
                                                 <td class="anx-tb-rtd" colspan="2" style="text-align: right; padding-right: 12px; font-weight: bold;">Total</td>
-                                                <td t-attf-class="anx-tb-rtd anx-tb-rtd-num {{ state.tbData.total_initial &lt; 0 ? 'anx-tb-rneg' : '' }}"><t t-esc="state.tbData.total_initial_display"/></td>
-                                                <td class="anx-tb-rtd anx-tb-rtd-num anx-tb-rdebit"><t t-esc="state.tbData.total_debit_display"/></td>
-                                                <td class="anx-tb-rtd anx-tb-rtd-num anx-tb-rcredit"><t t-esc="state.tbData.total_credit_display"/></td>
-                                                <td t-attf-class="anx-tb-rtd anx-tb-rtd-num {{ state.tbData.total_period &lt; 0 ? 'anx-tb-rneg' : '' }}"><t t-esc="state.tbData.total_period_display"/></td>
-                                                <td t-attf-class="anx-tb-rtd anx-tb-rtd-num {{ state.tbData.total_ending &lt; 0 ? 'anx-tb-rneg' : '' }}"><t t-esc="state.tbData.total_ending_display"/></td>
+                                                <td t-attf-class="anx-tb-rtd anx-tb-rtd-num {{ tbFilteredInitial &lt; 0 ? 'anx-tb-rneg' : '' }}"><t t-esc="tbFilteredInitialDisplay"/></td>
+                                                <td class="anx-tb-rtd anx-tb-rtd-num anx-tb-rdebit"><t t-esc="tbFilteredDebitDisplay"/></td>
+                                                <td class="anx-tb-rtd anx-tb-rtd-num anx-tb-rcredit"><t t-esc="tbFilteredCreditDisplay"/></td>
+                                                <td t-attf-class="anx-tb-rtd anx-tb-rtd-num {{ tbFilteredPeriod &lt; 0 ? 'anx-tb-rneg' : '' }}"><t t-esc="tbFilteredPeriodDisplay"/></td>
+                                                <td t-attf-class="anx-tb-rtd anx-tb-rtd-num {{ tbFilteredEnding &lt; 0 ? 'anx-tb-rneg' : '' }}"><t t-esc="tbFilteredEndingDisplay"/></td>
                                             </tr>
                                         </t>
                                     </tbody>

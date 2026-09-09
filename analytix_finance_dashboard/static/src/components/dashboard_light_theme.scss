@@ -321,14 +321,192 @@ html:not([data-color-scheme="dark"]):not(.o_dark) body:not(.kr_sp_theme_dark) {
         color: #0f172a !important;
         font-weight: 700 !important;
     }
+    /* ── Trial Balance Action Toolbar & Controls ── */
+    .anx-tb-action-bar {
+        background: #ffffff !important;
+        border: 1px solid #cbd5e1 !important;
+        box-shadow: 0 2px 10px rgba(15, 23, 42, 0.05) !important;
+
+        .anx-tb-active-badge {
+            background: #f0fdfa !important;
+            border-color: #99f6e4 !important;
+            color: #0f766e !important;
+        }
+
+        .anx-tb-filter-popover {
+            background: #ffffff !important;
+            border-color: #cbd5e1 !important;
+            box-shadow: 0 12px 28px rgba(15, 23, 42, 0.15), 0 0 0 1px rgba(0, 128, 119, 0.1) !important;
+
+            .anx-tb-popover-header {
+                border-bottom-color: #e2e8f0 !important;
+
+                .anx-tb-popover-title {
+                    color: #0f172a !important;
+                    i { color: #008077 !important; }
+                }
+
+                .anx-tb-popover-close {
+                    color: #64748b !important;
+                    &:hover { color: #0f172a !important; }
+                }
+            }
+
+            .anx-tb-popover-lbl {
+                color: #475569 !important;
+            }
+
+            .anx-tb-popover-range .anx-tb-filter-lbl {
+                color: #475569 !important;
+            }
+
+            .anx-tb-popover-footer {
+                border-top-color: #e2e8f0 !important;
+            }
+
+            .anx-tb-apply-btn {
+                background: linear-gradient(135deg, #008077 0%, #005f58 100%) !important;
+                color: #ffffff !important;
+                box-shadow: 0 2px 8px rgba(0, 128, 119, 0.3) !important;
+
+                &:hover {
+                    background: linear-gradient(135deg, #00968b 0%, #004d47 100%) !important;
+                    box-shadow: 0 4px 12px rgba(0, 128, 119, 0.45) !important;
+                }
+            }
+        }
+
+        .anx-tb-filter-title {
+            color: #0f172a !important;
+            i { color: #008077 !important; }
+        }
+
+        .anx-tb-period-select {
+            background: #f8fafc !important;
+            border: 1px solid #cbd5e1 !important;
+            color: #0f172a !important;
+
+            option {
+                background: #ffffff !important;
+                color: #0f172a !important;
+            }
+
+            &:hover {
+                background: #ffffff !important;
+                border-color: #008077 !important;
+            }
+
+            &:focus {
+                border-color: #008077 !important;
+                box-shadow: 0 0 0 3px rgba(0, 128, 119, 0.2) !important;
+            }
+        }
+
+        .anx-tb-filter-group .anx-tb-filter-lbl {
+            color: #475569 !important;
+        }
+
+        .anx-tb-date-input {
+            background: #f8fafc !important;
+            border: 1px solid #cbd5e1 !important;
+            color: #0f172a !important;
+            color-scheme: light !important;
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+
+            &::-webkit-calendar-picker-indicator {
+                filter: none !important;
+                opacity: 0.75;
+            }
+
+            &:hover {
+                background: #ffffff !important;
+                border-color: #008077 !important;
+            }
+
+            &:focus {
+                border-color: #008077 !important;
+                box-shadow: 0 0 0 3px rgba(0, 128, 119, 0.2) !important;
+            }
+        }
+
+        .anx-tb-filter-btn {
+            background: linear-gradient(135deg, #008077 0%, #005f58 100%) !important;
+            color: #ffffff !important;
+            box-shadow: 0 2px 8px rgba(0, 128, 119, 0.3) !important;
+
+            &:hover {
+                background: linear-gradient(135deg, #00968b 0%, #004d47 100%) !important;
+                box-shadow: 0 4px 12px rgba(0, 128, 119, 0.4) !important;
+            }
+        }
+
+        .anx-tb-search-wrap {
+            .anx-tb-search-icon {
+                color: #64748b !important;
+            }
+
+            .anx-tb-search {
+                background: #f8fafc !important;
+                border: 1px solid #cbd5e1 !important;
+                color: #0f172a !important;
+
+                &::placeholder {
+                    color: #94a3b8 !important;
+                }
+
+                &:hover {
+                    background: #ffffff !important;
+                    border-color: #008077 !important;
+                }
+
+                &:focus {
+                    background: #ffffff !important;
+                    border-color: #008077 !important;
+                    box-shadow: 0 0 0 3px rgba(0, 128, 119, 0.2) !important;
+                }
+            }
+        }
+    }
+
+    .anx-tb-card-select {
+        background: #f8fafc !important;
+        border: 1px solid #cbd5e1 !important;
+        color: #008077 !important;
+        font-weight: 600 !important;
+
+        option {
+            background: #ffffff !important;
+            color: #0f172a !important;
+        }
+
+        &:hover {
+            background: #ffffff !important;
+            border-color: #008077 !important;
+        }
+
+        &:focus {
+            border-color: #008077 !important;
+            box-shadow: 0 0 0 2px rgba(0, 128, 119, 0.2) !important;
+        }
+    }
+
+    .anx-tb-date-sub {
+        color: #64748b !important;
+    }
+
     .anx-tb-filter-bar {
         background: #ffffff !important;
         border: 1px solid #cbd5e1 !important;
         box-shadow: 0 2px 6px rgba(0,0,0,0.02) !important;
+        overflow: visible !important;
     }
     .anx-tb-filter-cell {
         border-right: 1px solid #cbd5e1 !important;
         &:last-child { border-right: none !important; }
+
+        &.anx-tb-cell-clickable:hover {
+            background: #f1f5f9 !important;
+        }
     }
     .anx-tb-filter-label {
         color: #475569 !important;
@@ -337,6 +515,35 @@ html:not([data-color-scheme="dark"]):not(.o_dark) body:not(.kr_sp_theme_dark) {
     .anx-tb-filter-val {
         color: #008077 !important;
         font-weight: 600 !important;
+        .anx-tb-caret {
+            color: #008077 !important;
+        }
+    }
+    .anx-tb-date-drop,
+    .anx-tb-filter-drop {
+        background: #ffffff !important;
+        border: 1px solid #cbd5e1 !important;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12) !important;
+
+        .anx-bs-date-opt {
+            color: #1e293b !important;
+            &:hover { background: #f1f5f9 !important; }
+            &.active { background: #e2e8f0 !important; color: #0f172a !important; font-weight: 600 !important; }
+            .anx-bs-date-opt-label { color: #0f172a !important; }
+            .anx-bs-date-opt-sub { color: #64748b !important; }
+        }
+
+        .anx-bs-specific-wrap {
+            border-top: 1px solid #e2e8f0 !important;
+            background: #f8fafc !important;
+
+            .anx-bs-specific-input {
+                background: #ffffff !important;
+                color: #0f172a !important;
+                border: 1px solid #cbd5e1 !important;
+                &:focus { border-color: #008077 !important; }
+            }
+        }
     }
     .anx-inv-row-overdue { background: #fff5f5 !important; }
     .anx-inv-row-overdue:hover { background: #fee2e2 !important; }

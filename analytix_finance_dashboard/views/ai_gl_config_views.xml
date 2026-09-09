@@ -9,12 +9,12 @@
                 <field name="name"/>
                 <field name="type"/>
                 <field name="company_id"/>
-                <field name="income_account_id" optional="show"/>
-                <field name="sale_tax_id" optional="show"/>
-                <field name="sale_tax_account_id" optional="show"/>
-                <field name="expense_account_id" optional="show"/>
-                <field name="purchase_tax_id" optional="show"/>
-                <field name="tax_account_id" optional="show"/>
+                <field name="income_account_id" optional="hide"/>
+                <field name="sale_tax_id" optional="hide"/>
+                <field name="sale_tax_account_id" optional="hide"/>
+                <field name="expense_account_id" optional="hide"/>
+                <field name="purchase_tax_id" optional="hide"/>
+                <field name="tax_account_id" optional="hide"/>
             </list>
         </field>
     </record>
@@ -40,44 +40,18 @@
                         </group>
                     </group>
 
-                    <!-- Section 1: Sales Invoice -->
-                    <group string="Sales Invoice Configuration" invisible="type != 'sales_invoice'">
-                        <group>
-                            <field name="income_account_id"
-                                   options="{'no_create': True}"
-                                   domain="[('account_type', 'in', ['income', 'income_other']), ('company_ids', 'in', company_id)]"
-                                   invisible="type != 'sales_invoice'"/>
-                            <field name="sale_tax_id"
-                                   options="{'no_create': True}"
-                                   domain="[('type_tax_use', '=', 'sale'), ('company_id', 'in', [company_id, False])]"
-                                   invisible="type != 'sales_invoice'"/>
-                            <field name="sale_tax_account_id"
-                                   options="{'no_create': True}"
-                                   domain="[('account_type', 'in', ['asset_current', 'liability_current', 'expense', 'expense_direct_cost']), ('company_ids', 'in', company_id)]"
-                                   invisible="type != 'sales_invoice'"/>
-                        </group>
-                    </group>
-
-                    <!-- Section 2: Purchase Bills -->
-                    <group string="Purchase Bills Configuration" invisible="type != 'purchase_bill'">
-                        <group>
-                            <field name="expense_account_id"
-                                   options="{'no_create': True}"
-                                   domain="[('account_type', 'in', ['expense', 'expense_depreciation', 'expense_direct_cost', 'cost_of_goods_sold']), ('company_ids', 'in', company_id)]"
-                                   invisible="type != 'purchase_bill'"/>
-                            <field name="purchase_tax_id"
-                                   options="{'no_create': True}"
-                                   domain="[('type_tax_use', '=', 'purchase'), ('company_id', 'in', [company_id, False])]"
-                                   invisible="type != 'purchase_bill'"/>
-                            <field name="tax_account_id"
-                                   options="{'no_create': True}"
-                                   domain="[('account_type', 'in', ['asset_current', 'liability_current', 'expense', 'expense_direct_cost']), ('company_ids', 'in', company_id)]"
-                                   invisible="type != 'purchase_bill'"/>
-                        </group>
+                    <!-- Hidden legacy header fields preserved for DB compatibility -->
+                    <group invisible="1">
+                        <field name="income_account_id" invisible="1"/>
+                        <field name="sale_tax_id" invisible="1"/>
+                        <field name="sale_tax_account_id" invisible="1"/>
+                        <field name="expense_account_id" invisible="1"/>
+                        <field name="purchase_tax_id" invisible="1"/>
+                        <field name="tax_account_id" invisible="1"/>
                     </group>
 
                     <notebook invisible="type not in ('sales_invoice', 'expense_bill', 'purchase_bill')">
-                        <page string="Foreign Services" invisible="type != 'sales_invoice'">
+                        <page string="Sales Services &amp; Stages" invisible="type != 'sales_invoice'">
                             <field name="foreign_service_line_ids">
                                 <list editable="bottom">
                                     <field name="service_stage"/>
@@ -86,7 +60,7 @@
                                 </list>
                             </field>
                         </page>
-                        <page string="Foreign Expenses" invisible="type not in ('purchase_bill')">
+                        <page string="Purchase Expenses &amp; Stages" invisible="type not in ('purchase_bill')">
                             <field name="foreign_expense_line_ids">
                                 <list editable="bottom">
                                     <field name="expense_stage"/>
