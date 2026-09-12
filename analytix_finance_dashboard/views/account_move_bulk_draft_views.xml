@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Reset to Draft Confirmation Wizard Form View -->
+    <record id="view_account_move_reset_draft_form" model="ir.ui.view">
+        <field name="name">account.move.reset.draft.form</field>
+        <field name="model">account.move.reset.draft</field>
+        <field name="arch" type="xml">
+            <form string="Reset Invoices to Draft">
+                <!-- Hidden count fields for dynamic view conditions -->
+                <field name="total_count" invisible="1"/>
+                <field name="posted_count" invisible="1"/>
+                <field name="cancel_count" invisible="1"/>
+                <field name="draft_count" invisible="1"/>
+                <field name="reconciled_count" invisible="1"/>
+
+                <!-- Header Summary Card -->
+                <div class="alert alert-info d-flex align-items-center mb-3 p-3 rounded" role="alert">
+                    <i class="fa fa-refresh fa-2x me-3 text-info" title="Reset to Draft" aria-label="Reset to Draft"/>
+                    <div>
+                        <h5 class="mb-1 fw-bold">Reset Selected Invoices to Draft</h5>
+                        <div>
+                            Total selected: <field name="total_count" class="fw-bold text-primary"/> invoice(s).
+                            <span invisible="posted_count == 0" class="badge rounded-pill bg-success ms-1"><field name="posted_count"/> Posted</span>
+                            <span invisible="cancel_count == 0" class="badge rounded-pill bg-secondary ms-1"><field name="cancel_count"/> Cancelled</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Warning when some records are already in Draft -->
+                <div class="alert alert-warning py-2 px-3 mb-2" role="alert" invisible="draft_count == 0">
+                    <i class="fa fa-info-circle me-1" title="Notice" aria-label="Notice"/>
+                    <strong>Notice:</strong> <field name="draft_count"/> selected invoice(s) are already in <b>Draft</b> state and will be skipped.
+                </div>
+
+                <!-- Warning when payments / reconciliations are detected -->
+                <div class="alert alert-warning py-2 px-3 mb-3" role="alert" invisible="reconciled_count == 0">
+                    <i class="fa fa-exclamation-triangle me-1" title="Payments Detected" aria-label="Payments Detected"/>
+                    <strong>Payments Detected:</strong> <field name="reconciled_count"/> selected invoice(s) have payments or reconciliations associated.
+                </div>
+
+                <!-- Wizard Configuration Options -->
+                <group>
+                    <field name="unreconcile_payments" widget="boolean_toggle"/>
+                </group>
+
+                <!-- Invoices Preview List -->
+                <notebook>
+                    <page string="Invoices to Reset" name="moves_page">
+                        <field name="move_ids" readonly="1">
+                            <list decoration-muted="state == 'draft'" decoration-info="state == 'posted'" create="0" delete="0">
+                                <field name="name" string="Number"/>
+                                <field name="partner_id" string="Customer / Vendor"/>
+                                <field name="invoice_date" string="Date"/>
+                                <field name="amount_total" string="Total" sum="Total"/>
+                                <field name="state" widget="badge" decoration-info="state == 'draft'" decoration-success="state == 'posted'" decoration-danger="state == 'cancel'"/>
+                                <field name="payment_state" widget="badge" optional="show"/>
+                            </list>
+                        </field>
+                    </page>
+                </notebook>
+
+                <!-- Action Buttons -->
+                <footer>
+                    <button string="Reset to Draft"
+                            name="action_reset_draft"
+                            type="object"
+                            class="btn-primary"
+                            data-hotkey="q"/>
+                    <button string="Cancel"
+                            class="btn-secondary"
+                            special="cancel"
+                            data-hotkey="x"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Bulk Action for account.move List & Kanban Views (Actions dropdown) -->
+    <record id="action_account_move_bulk_reset_draft" model="ir.actions.act_window">
+        <field name="name">Reset to Draft</field>
+        <field name="res_model">account.move.reset.draft</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="view_account_move_reset_draft_form"/>
+        <field name="target">new</field>
+        <field name="binding_model_id" ref="account.model_account_move"/>
+        <field name="binding_view_types">list,kanban</field>
+        <field name="group_ids" eval="[(4, ref('account.group_account_invoice'))]"/>
+    </record>
+</odoo>

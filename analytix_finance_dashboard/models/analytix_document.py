@@ -442,6 +442,12 @@ class AnalytixDocument(models.Model):
         customer_name = _extract_str('customer_name')
         invoice_date = _extract_str('invoice_date')
         currency = _extract_str('currency') or None
+        unit_price_currency = _extract_str('unit_price_currency')
+        total_currency = _extract_str('total_currency')
+        currency_symbol_found = _extract_str('currency_symbol_found')
+        secondary_currency = _extract_str('secondary_currency')
+        secondary_exchange_rate = _extract_num('secondary_exchange_rate') or _extract_num('exchange_rate')
+        secondary_currency_total = _extract_num('secondary_currency_total') or _extract_num('secondary_total')
         subtotal = _extract_num('subtotal')
         tax = _extract_num('tax')
         total = _extract_num('total') or (subtotal + tax)
@@ -460,6 +466,12 @@ class AnalytixDocument(models.Model):
             "customer_name": customer_name,
             "invoice_date": invoice_date,
             "currency": currency,
+            "unit_price_currency": unit_price_currency,
+            "total_currency": total_currency,
+            "currency_symbol_found": currency_symbol_found,
+            "secondary_currency": secondary_currency,
+            "secondary_exchange_rate": secondary_exchange_rate,
+            "secondary_currency_total": secondary_currency_total,
             "subtotal": subtotal,
             "tax": tax,
             "total": total,
@@ -499,11 +511,18 @@ class AnalytixDocument(models.Model):
             '  },\n'
             '  "invoice_number": "sequence / invoice / bill / reference number or null",\n'
             '  "invoice_date": "YYYY-MM-DD or null",\n'
-            '  "currency": "3-letter ISO code or null",\n'
+            '  "currency": "3-letter ISO code or null (MUST match unit_price and total display)",\n'
+            '  "unit_price_currency": "symbol or code attached to unit prices e.g. $, SAR, EUR, AED, GBP or null",\n'
+            '  "total_currency": "symbol or code attached to total display e.g. $, SAR, EUR, AED, GBP or null",\n'
+            '  "currency_symbol_found": "primary currency symbol found on line amounts e.g. $, €, £, SAR, AED or null",\n'
+            '  "secondary_currency": "3-letter ISO code if a secondary tax/exchange conversion box exists (e.g. SAR) or null",\n'
+            '  "secondary_exchange_rate": "exchange rate number if printed (e.g. 3.75) or null",\n'
+            '  "secondary_currency_total": "total amount in secondary currency if printed (e.g. 1221246.83) or null",\n'
             '  "subtotal": number,\n'
             '  "tax": number,\n'
             '  "total": number,\n'
             '  "global_discount": number,\n'
+            '  "global_discount_percent": number,\n'
             '  "items": [\n'
             '    {"description": "string", "quantity": number, "unit_price": number, "discount": number, "discount_amount": number, "line_total": number, "tax_rate": number, "vat_amount": number}\n'
             "  ]\n"
@@ -513,18 +532,24 @@ class AnalytixDocument(models.Model):
             "  1. Set 'is_simplified_invoice' to true if the document is a simplified tax invoice, cash receipt, retail receipt, small customer purchase, restaurant bill, petrol station receipt, or retail invoice where seller details are present, but customer details (such as customer name, customer VAT number, customer CRN number) are NOT specified / omitted / absent, or if the document title contains 'Simplified Tax Invoice' / 'فاتورة ضريبية مبسطة' / 'Receipt'.\n"
             "  2. Set 'is_simplified_invoice' to false if the document is a standard B2B tax invoice where full customer details and customer VAT numbers are explicitly mentioned.\n"
             "- Extract full partner details for both vendor and customer including street, city, zip, country, and vat (tax ID).\n"
-            "- CRITICAL FOR CURRENCY EXTRACTION (STRICT LINE-ITEM TRANSACTION CURRENCY RULE):\n"
-            "  1. THE INVOICE CURRENCY MUST BE DETERMINED DIRECTLY FROM THE INVOICE LINE ITEMS AND MAIN AMOUNTS (e.g., if line items show '$ 6,000.00' or '$ 36,000.00' or total shows '$ 54,480.00', the currency is USD).\n"
-            "  2. NEVER pick the currency from secondary tax summaries, exchange rate conversion boxes, or bank details (e.g., if an invoice has line items priced in '$' USD, but includes a ZATCA tax summary 'Tax Summary (1 $ = 3.75 SAR)' or Saudi bank IBAN, the currency of the invoice is USD, NEVER SAR!).\n"
-            "  3. Convert the detected line-item currency into its standard 3-letter ISO 4217 code (e.g., '$' -> 'USD', 'AED' / 'Dirham' / 'Dhs' -> 'AED', 'SAR' / 'SR' / 'ريال' -> 'SAR', 'EUR' / '€' -> 'EUR', 'GBP' / '£' -> 'GBP', 'QAR', 'KWD', 'BHD', 'OMR', 'INR' / '₹', etc.).\n"
-            "  4. The numbers in 'subtotal', 'total', 'unit_price', and 'line_total' MUST match the extracted 'currency'. For example, if line items total 54,480.00 in USD, 'currency' MUST be 'USD'.\n"
-            "  5. ONLY if no currency symbol or code is found on any line item or main total, check document headers. If completely absent, set 'currency' to null.\n"
-            "- CRITICAL FOR SUBTOTAL, TAX & TOTAL ACCURACY:\n"
-            "  1. 'subtotal' MUST be the exact untaxed subtotal before VAT. If not explicitly labeled as subtotal, calculate it as the sum of line item untaxed prices.\n"
+            "- CRITICAL FOR CURRENCY EXTRACTION (STRICT LINE-ITEM & TOTAL DISPLAY TRANSACTION CURRENCY RULE):\n"
+            "  1. 100% ABSOLUTE PRIORITY: THE INVOICE TRANSACTION CURRENCY MUST BE DETERMINED DIRECTLY FROM THE 'UNIT PRICE' COLUMN AND THE 'TOTAL' DISPLAY SECTION.\n"
+            "     - In virtually 100% of commercial invoices, the currency symbol (e.g., '$', '€', '£', 'SAR', 'AED', '¥') is explicitly printed next to each Unit Price (e.g., '$ 325,665.82') or in the Total/Subtotal display section (e.g., 'Total: $ 325,665.82').\n"
+            "     - You MUST extract 'unit_price_currency', 'total_currency', and 'currency_symbol_found' from these exact locations.\n"
+            "     - Convert the detected symbol into its 3-letter ISO 4217 code for 'currency' (e.g., '$' -> 'USD', 'AED' -> 'AED', 'SAR'/'SR'/'ريال'/'﷼' -> 'SAR', 'EUR'/'€' -> 'EUR', 'GBP'/'£' -> 'GBP', 'QAR', 'KWD', 'BHD', 'OMR', 'INR'/'₹', 'CNY'/'¥', etc.).\n"
+            "  2. ABSOLUTE PROHIBITION ON SECONDARY CONVERSION / BROKEN CURRENCIES:\n"
+            "     - NEVER pick the transaction currency from secondary tax summaries, exchange rate conversion boxes, or bank details!\n"
+            "     - Example: If line items show Unit Price '$ 325,665.82' (USD) and Total '$ 325,665.82' (USD), but the invoice includes a ZATCA tax summary 'Tax Summary (1 $ = 3.75 SAR)' or Saudi bank IBAN, the transaction currency is strictly 'USD', NEVER 'SAR'!\n"
+            "     - If such a conversion box exists, record 'secondary_currency': 'SAR', 'secondary_exchange_rate': 3.75, and 'secondary_currency_total': 1221246.83, but 'currency' MUST remain 'USD'.\n"
+            "  3. The numbers in 'subtotal', 'total', 'unit_price', and 'line_total' MUST match the extracted 'currency'. (e.g. if unit price is 325,665.82 in USD, 'currency' MUST be 'USD' and 'total' MUST be 325665.82).\n"
+            "  4. ONLY if no currency symbol or code is found on any line item or main total, check document headers. If completely absent, set 'currency' to null.\n"
+            "- CRITICAL FOR SUBTOTAL, TAX, DISCOUNT & TOTAL ACCURACY:\n"
+            "  1. 'subtotal' MUST be the untaxed subtotal before VAT. If not explicitly labeled, calculate it as the sum of line item gross untaxed prices before document-level discount.\n"
             "  2. 'tax' MUST be the total VAT/tax amount listed on the document (e.g., 'Total Vat', 'VAT Amount', 'Tax').\n"
-            "  3. 'total' MUST be the final gross total amount including VAT ('subtotal' + 'tax').\n"
-            "  4. 'global_discount' MUST be any general or overall discount amount applied to the invoice subtotal or grand total (outside of individual line items). If no document-level discount, set to 0.\n"
-            "  5. For each item in 'items', extract 'vat_amount' (the specific VAT amount for that line) and 'tax_rate' (the percentage e.g. 15 for 15%).\n"
+            "  3. 'total' MUST be the final gross total / grand total amount payable after all discounts and taxes as printed on the document.\n"
+            "  4. 'global_discount' MUST be any general, overall, document-level, invoice-level, or cash discount amount applied to the subtotal or grand total (outside or in addition to individual line items). If printed with a minus (e.g. '- 1,200' or '- SAR 1,200.00'), extract 1200 as a POSITIVE number. If printed as a percentage (e.g. 'Discount 5%'), extract the currency amount into 'global_discount' and the percentage (5) into 'global_discount_percent'. If no document-level discount, set to 0.\n"
+            "  5. DISCOUNT DETECTION ANYWHERE: Thoroughly scan the document for discounts — table line items, summary footer, header notes, or separate deduction lines (e.g. 'Discount', 'Total Discount', 'خصم', 'Rebate', 'Special Allowance', 'Trade Discount').\n"
+            "  6. For each item in 'items', extract 'vat_amount' (the specific VAT amount for that line) and 'tax_rate' (the percentage e.g. 15 for 15%).\n"
             "- tax_rate must be the tax percentage applied (e.g. 15 for 15%, 5 for 5%). If no tax, use 0.\n"
             "- CRITICAL FOR LINE ITEM UNIT PRICES, DISCOUNTS & TOTALS:\n"
             "  1. 'discount' must be the discount percentage (0 to 100) applied on the line item. If no discount, use 0.\n"
@@ -908,6 +933,42 @@ class AnalytixDocument(models.Model):
             _logger.warning("Base64 decode warning for doc %s: %s. Using raw bytes.", self.id, exc)
             return raw_clean
 
+    @api.model
+    def _format_validation_notes_html(self, warnings):
+        """Format validation warnings into clean, styled, line-by-line HTML bullet points."""
+        if not warnings:
+            return '<div class="py-1 text-success fw-bold">✓ All extracted line items, products, taxes, and totals match system configuration perfectly.</div>'
+
+        html_items = []
+        for w in warnings:
+            text = (w or '').strip()
+            if not text:
+                continue
+
+            # Check if this is a sub-item (e.g. line items details)
+            is_subitem = text.startswith('   -') or text.startswith('  -') or text.startswith(' -')
+            text_clean = text.lstrip('•- \t')
+
+            # Split by first colon to bold the label if present
+            parts = text_clean.split(':', 1)
+            if len(parts) == 2 and len(parts[0]) <= 50 and not parts[0].startswith('http'):
+                label = parts[0].strip()
+                desc = parts[1].strip()
+                content_html = f'<strong class="text-dark">{label}:</strong> <span class="text-dark">{desc}</span>'
+            else:
+                content_html = f'<span class="text-dark">{text_clean}</span>'
+
+            if is_subitem:
+                html_items.append(
+                    f'<li class="ms-4 mb-2 text-muted" style="list-style-type: circle; line-height: 1.45;">{content_html}</li>'
+                )
+            else:
+                html_items.append(
+                    f'<li class="mb-2 text-dark" style="list-style-type: disc; line-height: 1.5;">{content_html}</li>'
+                )
+
+        return f'<ul class="mb-0 ps-3" style="margin-top: 4px; padding-left: 1.25rem;">{"".join(html_items)}</ul>'
+
     def action_analyze_and_create_entry(self, override_account_id=None, override_line_accounts=None, override_tax_account_id=None):
         """Process the document file with OpenRouter (Gemini) and create corresponding accounting entry with product search & account validation."""
         self.ensure_one()
@@ -953,6 +1014,7 @@ class AnalytixDocument(models.Model):
 
         # Determine file format based on magic bytes or mimetype
         is_pdf = file_bytes.startswith(b'%PDF') or (self.mimetype and 'pdf' in self.mimetype.lower())
+        raw_doc_text = ""
 
         if is_pdf:
             # Process PDF via PyMuPDF in 1 single multi-image batch request to stay under Cloudflare timeout
@@ -967,6 +1029,10 @@ class AnalytixDocument(models.Model):
                 page_b64_list = []
                 for page_index in range(max_pages):
                     page = doc.load_page(page_index)
+                    try:
+                        raw_doc_text += "\n" + (page.get_text() or "")
+                    except Exception:
+                        pass
                     pix = page.get_pixmap(dpi=110, alpha=False)
                     image = Image.open(BytesIO(pix.tobytes("png"))).convert("RGB")
                     page_b64_list.append(self._image_to_base64(image))
@@ -1021,6 +1087,19 @@ class AnalytixDocument(models.Model):
 
         if not self.response_json:
             raise UserError("AI processing succeeded but did not return any JSON response.")
+
+        return self._create_entry_from_json(
+            override_account_id=override_account_id,
+            override_line_accounts=override_line_accounts,
+            override_tax_account_id=override_tax_account_id,
+            raw_doc_text=raw_doc_text,
+        )
+
+    def _create_entry_from_json(self, override_account_id=None, override_line_accounts=None, override_tax_account_id=None, raw_doc_text=""):
+        """Create accounting entry from self.response_json with full discount and tax matching logic."""
+        self.ensure_one()
+        if not self.response_json:
+            raise UserError("No extracted JSON found on this document record.")
 
         try:
             data = json.loads(self.response_json)
@@ -1128,10 +1207,15 @@ class AnalytixDocument(models.Model):
 
             country_id = False
             if target_pdict['country']:
-                c_name = target_pdict['country']
+                c_name = target_pdict['country'].strip()
+                # Prioritize exact match so 'India' does not match 'British Indian Ocean Territory'
                 country = self.env['res.country'].search([
-                    '|', ('name', 'ilike', c_name), ('code', '=ilike', c_name)
+                    '|', ('name', '=ilike', c_name), ('code', '=ilike', c_name)
                 ], limit=1)
+                if not country:
+                    country = self.env['res.country'].search([
+                        '|', ('name', 'ilike', c_name), ('code', '=ilike', c_name)
+                    ], limit=1)
                 if country:
                     country_id = country.id
 
@@ -1161,27 +1245,6 @@ class AnalytixDocument(models.Model):
                 if update_vals:
                     partner.write(update_vals)
 
-        # Determine if partner/invoice is outside the company's country
-        company = self.company_id or self.env.company
-        is_foreign_country = False
-        company_country = (company.country_id.code or 'SA').upper()
-        partner_country = (target_pdict.get('country') or '').strip().upper() if target_pdict else ''
-        partner_city = (target_pdict.get('city') or '').strip().upper() if target_pdict else ''
-        partner_street = (target_pdict.get('street') or '').strip().upper() if target_pdict else ''
-        partner_street2 = (target_pdict.get('street2') or '').strip().upper() if target_pdict else ''
-
-        if partner_country:
-            if partner_country not in (company_country, 'SA', 'SAU', 'SAUDI', 'SAUDI ARABIA', 'KSA', 'المملكة العربية السعودية', 'السعودية'):
-                is_foreign_country = True
-        if not is_foreign_country:
-            for val in (partner_country, partner_city, partner_street, partner_street2):
-                if any(kw in val for kw in ('DUBAI', 'UAE', 'UNITED ARAB EMIRATES', 'EMIRATES', 'دبي', 'الإمارات')):
-                    is_foreign_country = True
-                    break
-        if not is_foreign_country and partner and partner.country_id:
-            if partner.country_id.code != company_country:
-                is_foreign_country = True
-
         # Resolve Invoice Date
         from datetime import date as _date
         today_str = _date.today().strftime('%Y-%m-%d')
@@ -1191,20 +1254,98 @@ class AnalytixDocument(models.Model):
         except (ValueError, TypeError):
             invoice_date = today_str
 
-        # Resolve Currency: Extract from PDF or Fallback to Current Company Currency
-        raw_currency_code = (data.get('currency') or '').strip().upper()
+        validation_warnings = []
 
+        # ── CURRENCY RESOLUTION & 100% RELIABILITY ENGINE ──
+        # Priority: Extract from Unit Price column and Total display section where currency is printed.
+        # Strict Protection: Prevent picking secondary conversion currencies (e.g. ZATCA '1 $ = 3.75 SAR').
         CURRENCY_MAP = {
             'AED': 'AED', 'DIRHAM': 'AED', 'DIRHAMS': 'AED', 'DHS': 'AED', 'DH': 'AED', 'د.إ': 'AED',
-            'SAR': 'SAR', 'SR': 'SAR', 'RIYAL': 'SAR', 'RIYALS': 'SAR', 'SAUDI RIYAL': 'SAR', 'ر.س': 'SAR',
-            'USD': 'USD', '$': 'USD', 'US DOLLAR': 'USD', 'DOLLAR': 'USD',
+            'SAR': 'SAR', 'SR': 'SAR', 'RIYAL': 'SAR', 'RIYALS': 'SAR', 'SAUDI RIYAL': 'SAR', 'ر.س': 'SAR', '﷼': 'SAR',
+            'USD': 'USD', '$': 'USD', 'US DOLLAR': 'USD', 'DOLLAR': 'USD', 'US$': 'USD',
             'EUR': 'EUR', '€': 'EUR', 'EURO': 'EUR',
             'GBP': 'GBP', '£': 'GBP', 'POUND': 'GBP',
-            'QAR': 'QAR', 'KWD': 'KWD', 'BHD': 'BHD', 'OMR': 'OMR', 'EGP': 'EGP', 'INR': 'INR', '₹': 'INR',
+            'QAR': 'QAR', 'ر.ق': 'QAR', 'KWD': 'KWD', 'د.ك': 'KWD',
+            'BHD': 'BHD', 'د.ب': 'BHD', 'OMR': 'OMR', 'ر.ع': 'OMR',
+            'EGP': 'EGP', 'INR': 'INR', '₹': 'INR', 'RS': 'INR',
+            'CNY': 'CNY', 'RMB': 'CNY', '¥': 'CNY', 'JPY': 'JPY',
         }
 
-        currency_code = CURRENCY_MAP.get(raw_currency_code, raw_currency_code)
+        # 1. Gather AI currency hints
+        raw_currency_code = (data.get('currency') or '').strip().upper()
+        unit_price_curr_raw = (data.get('unit_price_currency') or '').strip().upper()
+        total_curr_raw = (data.get('total_currency') or '').strip().upper()
+        sym_found_raw = (data.get('currency_symbol_found') or '').strip().upper()
+        sec_curr_raw = (data.get('secondary_currency') or '').strip().upper()
+        sec_rate = self._clean_float(data.get('secondary_exchange_rate') or data.get('exchange_rate'))
+        sec_total = self._clean_float(data.get('secondary_currency_total') or data.get('secondary_total'))
 
+        ai_currency = CURRENCY_MAP.get(raw_currency_code, raw_currency_code)
+        unit_curr = CURRENCY_MAP.get(unit_price_curr_raw, unit_price_curr_raw)
+        total_curr = CURRENCY_MAP.get(total_curr_raw, total_curr_raw)
+        sym_curr = CURRENCY_MAP.get(sym_found_raw, sym_found_raw)
+        sec_curr = CURRENCY_MAP.get(sec_curr_raw, sec_curr_raw)
+
+        # 2. Inspect document text for exchange rate and currency symbols if PDF text available
+        doc_rate_found = False
+        doc_base_curr = None
+        doc_target_curr = None
+        doc_rate_val = 0.0
+
+        if raw_doc_text:
+            # Pattern: 1 $ = 3.75 SAR, 1 USD = 3.75 SAR, etc.
+            rate_match = re.search(r'1\s*([$€£A-Za-z]+)\s*=\s*([0-9.,]+)\s*([A-Za-z]+)', raw_doc_text)
+            if rate_match:
+                doc_base_curr = CURRENCY_MAP.get(rate_match.group(1).strip().upper(), rate_match.group(1).strip().upper())
+                doc_rate_val = self._clean_float(rate_match.group(2))
+                doc_target_curr = CURRENCY_MAP.get(rate_match.group(3).strip().upper(), rate_match.group(3).strip().upper())
+                doc_rate_found = True
+                if not sec_curr and doc_target_curr:
+                    sec_curr = doc_target_curr
+                if not sec_rate and doc_rate_val > 0:
+                    sec_rate = doc_rate_val
+
+        # 3. Determine Candidate Currency with strict priority on Unit Price and Total display
+        candidate_currency = None
+        currency_source = "AI Document Analysis"
+
+        # If Unit Price column currency is explicitly detected, that is 100% priority
+        if unit_curr and unit_curr in CURRENCY_MAP.values():
+            candidate_currency = unit_curr
+            currency_source = f"Unit Price column ({data.get('unit_price_currency')})"
+        elif total_curr and total_curr in CURRENCY_MAP.values():
+            candidate_currency = total_curr
+            currency_source = f"Total display section ({data.get('total_currency')})"
+        elif sym_curr and sym_curr in CURRENCY_MAP.values():
+            candidate_currency = sym_curr
+            currency_source = f"Line item currency symbol ({data.get('currency_symbol_found')})"
+        elif ai_currency:
+            candidate_currency = ai_currency
+            currency_source = "Document Header / AI Extraction"
+
+        # 4. Cross-Verification & Auto-Correction against Secondary Conversion Leaks
+        currency_overridden = False
+        old_currency = candidate_currency
+
+        # Check: Did document have an exchange rate where candidate currency is the secondary target?
+        if doc_rate_found and doc_base_curr and candidate_currency == doc_target_curr:
+            candidate_currency = doc_base_curr
+            currency_overridden = True
+            currency_source = f"Exchange Rate Base Currency ({doc_base_curr} vs secondary conversion {doc_target_curr})"
+
+        # Check: If candidate is SAR/AED, but '$' appears in raw_doc_text on amounts or line items
+        if candidate_currency in ('SAR', 'AED') and not (unit_curr in ('SAR', 'AED')):
+            if raw_doc_text and ('$' in raw_doc_text):
+                if raw_doc_text.count('$') >= 2:
+                    candidate_currency = 'USD'
+                    currency_overridden = True
+                    currency_source = "Unit Price & Line Item '$' symbol"
+            elif unit_curr == 'USD' or total_curr == 'USD' or sym_curr == 'USD':
+                candidate_currency = 'USD'
+                currency_overridden = True
+                currency_source = "Unit Price / Total Display 'USD'"
+
+        currency_code = candidate_currency or ''
         currency_id = False
         currency = False
 
@@ -1228,9 +1369,49 @@ class AnalytixDocument(models.Model):
                 currency_code = company_currency.name
                 _logger.info("Currency not mentioned in PDF or not found in system. Calling current company's currency '%s' (ID: %s)", currency_code, currency_id)
 
-        company = self.env.company
-        if currency_code and company.currency_id and currency_code.upper() != company.currency_id.name.upper():
+        # ── Populate Currency Validation Notes for Alert Box ──
+        curr_symbol = (currency.symbol or currency_code) if currency else currency_code
+
+        # Log Primary Currency Verification
+        validation_warnings.append(
+            f"• Transaction Currency: {currency_code} ({curr_symbol}) verified from {currency_source}."
+        )
+
+        # Log Auto-Correction Notice if overridden
+        if currency_overridden and old_currency:
+            validation_warnings.append(
+                f"• Currency Auto-Correction: AI originally flagged {old_currency}, but document transaction amounts are denominated in {currency_code} ({curr_symbol}) on line items / total display. Secondary conversion ({old_currency}) excluded from transaction currency."
+            )
+
+        # Log Secondary Tax Conversion Box if detected
+        if sec_curr and sec_curr != currency_code:
+            rate_info = f" (Exchange Rate: 1 {currency_code} = {sec_rate:g} {sec_curr}" if sec_rate > 0 else " ("
+            tot_info = f", Converted Total: {sec_total:,.2f} {sec_curr})" if sec_total > 0 else (")" if rate_info != " (" else "")
+            sec_desc = f"{rate_info}{tot_info}" if tot_info or rate_info != " (" else ""
+            validation_warnings.append(
+                f"• Secondary Tax Conversion Box Detected: Document includes secondary tax summary in {sec_curr}{sec_desc}. Primary transaction currency ({currency_code}) preserved for all accounting lines."
+            )
+
+        # ── DOMESTIC VS INTERNATIONAL / FOREIGN TRANSACTION CLASSIFICATION ──
+        # Check the transaction currency billed in the uploaded document against current company currency.
+        # Core Business Rule:
+        # If document currency == company currency (e.g. INR == INR, SAR == SAR):
+        #   -> Strictly DOMESTIC (domestic_sales, domestic_purchase, domestic expense).
+        # If document currency != company currency (e.g. USD != INR, USD != SAR):
+        #   -> INTERNATIONAL / FOREIGN (international_sales, international_import, foreign expense).
+        company = self.company_id or self.env.company
+        company_curr_name = (company.currency_id.name or '').strip().upper() if (company and company.currency_id) else ''
+        doc_curr_name = (currency_code or '').strip().upper()
+
+        is_foreign_country = False
+        if doc_curr_name and company_curr_name and doc_curr_name != company_curr_name:
             is_foreign_country = True
+            validation_warnings.append(
+                f"• Multi-Currency Notice: Transaction is denominated in {currency_code} ({curr_symbol}), differing from company currency ({company_curr_name}). Handled as international / foreign transaction."
+            )
+        else:
+            is_foreign_country = False
+            _logger.info("Transaction currency '%s' matches company currency '%s': classified as DOMESTIC.", doc_curr_name, company_curr_name)
 
         if move_type == 'entry':
             journal = self.env['account.journal'].search(
@@ -1342,19 +1523,68 @@ class AnalytixDocument(models.Model):
         json_total = self._clean_float(
             data.get('total') or data.get('total_amount') or data.get('amount_total') or data.get('grand_total')
         )
-        json_global_discount = self._clean_float(
+        json_global_discount = abs(self._clean_float(
             data.get('global_discount')
             or data.get('document_discount')
             or data.get('total_discount')
             or data.get('invoice_discount')
-            or (data.get('discount_amount') if not items else 0.0)
-        )
+            or data.get('overall_discount')
+            or data.get('general_discount')
+            or data.get('discount_total')
+            or data.get('discount_amount')
+            or (data.get('discount') if not items else 0.0)
+        ))
 
+        # Check for percentage-based document discount
+        if json_global_discount <= 0:
+            disc_pct = self._clean_float(data.get('global_discount_percent') or data.get('discount_percent') or data.get('discount_rate'))
+            if 0 < disc_pct <= 100 and json_subtotal > 0:
+                json_global_discount = round(json_subtotal * (disc_pct / 100.0), 2)
+
+        # Smart detection: Infer missing document discount from mathematical discrepancy
+        # If (subtotal + tax) exceeds total by more than 0.50, the document contains an unextracted discount
+        if json_global_discount <= 0 and json_subtotal > 0 and json_total > 0:
+            expected_gross_total = round(json_subtotal + json_tax, 2)
+            if expected_gross_total > (json_total + 0.5):
+                inferred_disc = round(expected_gross_total - json_total, 2)
+                _logger.info("Inferred missing document discount of %.2f from (subtotal %.2f + tax %.2f - total %.2f)", inferred_disc, json_subtotal, json_tax, json_total)
+                json_global_discount = inferred_disc
+
+        # Check if items have an explicit tax rate
+        item_tax_rates = [
+            self._clean_float(it.get('tax_rate'))
+            for it in items
+            if self._clean_float(it.get('tax_rate')) > 0
+        ]
+        nominal_tax_rate = item_tax_rates[0] if item_tax_rates else 0.0
+
+        # Determine global tax rate & whether document discount is pre-tax or post-tax
+        is_discount_pre_tax = False
         if json_subtotal > 0 and json_tax > 0:
-            global_tax_rate = round((json_tax / json_subtotal) * 100, 4)
+            rate_on_gross = round((json_tax / json_subtotal) * 100.0, 4)
+            rate_on_net = round((json_tax / max(0.01, json_subtotal - json_global_discount)) * 100.0, 4) if json_global_discount > 0 else rate_on_gross
+
+            if nominal_tax_rate > 0:
+                tax_post_calc = round(json_subtotal * (nominal_tax_rate / 100.0), 2)
+                tax_pre_calc = round(max(0.0, json_subtotal - json_global_discount) * (nominal_tax_rate / 100.0), 2)
+                if abs(json_tax - tax_pre_calc) < abs(json_tax - tax_post_calc) and abs(json_tax - tax_pre_calc) <= 0.5:
+                    is_discount_pre_tax = True
+                global_tax_rate = nominal_tax_rate
+            elif json_global_discount > 0:
+                dist_gross_int = abs(rate_on_gross - round(rate_on_gross))
+                dist_net_int = abs(rate_on_net - round(rate_on_net))
+                if dist_net_int < 0.05 and dist_net_int < dist_gross_int:
+                    is_discount_pre_tax = True
+                    global_tax_rate = round(rate_on_net, 2)
+                else:
+                    global_tax_rate = round(rate_on_gross, 2)
+            else:
+                global_tax_rate = rate_on_gross
         elif json_total > 0 and json_tax > 0 and json_total > json_tax:
-            subtotal_calc = json_total - json_tax
-            global_tax_rate = round((json_tax / subtotal_calc) * 100, 4)
+            subtotal_calc = json_total - json_tax + (json_global_discount if json_global_discount > 0 else 0.0)
+            global_tax_rate = round((json_tax / subtotal_calc) * 100.0, 4)
+
+        _logger.info("Document discount %.2f detected (is_discount_pre_tax=%s, global_tax_rate=%.2f%%)", json_global_discount, is_discount_pre_tax, global_tax_rate)
 
         # ── Smart Sanity Check & Normalization for Item Unit Prices ──
         def _get_item_net_amount(it):
@@ -1394,13 +1624,19 @@ class AnalytixDocument(models.Model):
             )
 
             # Account for document-level discount if present
-            expected_line_base = target_subtotal + json_global_discount if json_global_discount > 0 else target_subtotal
+            # If item sum already matches target_subtotal, items represent the gross base (not net of discount)
+            if abs(valid_items_sum - target_subtotal) <= 0.5:
+                expected_line_base = target_subtotal
+            elif json_global_discount > 0 and abs(valid_items_sum - (target_subtotal + json_global_discount)) <= 0.5:
+                expected_line_base = target_subtotal + json_global_discount
+            else:
+                expected_line_base = target_subtotal
 
             if target_subtotal > 0 and valid_items_sum > 0:
                 # 1. Check if extracted prices are tax-inclusive (sum of item prices matches total rather than untaxed subtotal)
                 if json_tax > 0 and json_total > target_subtotal:
                     diff_from_total = abs(valid_items_sum - json_total)
-                    diff_from_subtotal = abs(valid_items_sum - expected_line_base)
+                    diff_from_subtotal = min(abs(valid_items_sum - target_subtotal), abs(valid_items_sum - expected_line_base))
                     if diff_from_total < diff_from_subtotal and diff_from_total < (json_total * 0.05):
                         is_tax_inclusive_detected = True
 
@@ -1419,7 +1655,6 @@ class AnalytixDocument(models.Model):
                         if item.get('line_total'):
                             item['line_total'] = round(self._clean_float(item.get('line_total')) * ratio, 4)
 
-        validation_warnings = []
         detected_expense_type = False
 
         if cfg_type == 'expense_bill':
@@ -1562,10 +1797,12 @@ class AnalytixDocument(models.Model):
             print(f"[AI BILL DEBUG] FINAL ASSIGNED EXPENSE TAX -> {line_tax.name if line_tax else 'None'}")
             print("=================================================================\n")
 
-            items_sum = sum(
+            items_raw_gross = sum(
                 (self._clean_float(it.get('quantity')) or 1.0) * self._clean_float(it.get('unit_price'))
                 for it in items
             ) if items else 0.0
+            items_net_sum = sum(_get_item_net_amount(it) for it in items) if items else 0.0
+            items_sum = items_net_sum if items_net_sum > 0 else items_raw_gross
 
             if is_simplified_invoice:
                 # Detect mixed tax rates — if items carry different VAT %, create individual lines
@@ -1597,6 +1834,9 @@ class AnalytixDocument(models.Model):
                         _iqty = self._clean_float(it.get('quantity')) or 1.0
                         _iprice = self._clean_float(it.get('unit_price')) or 0.0
                         _idisc = self._clean_float(it.get('discount') or it.get('discount_percentage') or it.get('disc') or 0.0)
+                        _idisc_amt = self._clean_float(it.get('discount_amount') or it.get('disc_amount') or 0.0)
+                        if _idisc <= 0 and _idisc_amt > 0 and (_iqty * _iprice) > 0:
+                            _idisc = round((_idisc_amt / (_iqty * _iprice)) * 100.0, 2)
                         _irate = self._clean_float(it.get('tax_rate'))
                         _ivat = self._clean_float(it.get('vat_amount') or it.get('tax_amount') or it.get('vat') or it.get('tax'))
                         _isub = round(_iqty * _iprice * (1.0 - (_idisc / 100.0)), 2)
@@ -1616,17 +1856,29 @@ class AnalytixDocument(models.Model):
                             _ilv['tax_ids'] = [(6, 0, [_iltax.id])]
                         invoice_line_vals.append((0, 0, _ilv))
                         exp_price_unit += _isub
+                        _disc_text = f", Disc: {_idisc:.2f}%" if _idisc > 0 else ""
                         validation_warnings.append(
-                            f"   - Line {idx+1}: {_iname} (Qty: {_iqty:g}, Unit Price: {_iprice:.2f}, VAT Rate: {_irate:.2f}%, Line Total: {_isub:.2f})"
+                            f"   - Line {idx+1}: {_iname} (Qty: {_iqty:g}, Unit Price: {_iprice:.2f}{_disc_text}, VAT Rate: {_irate:.2f}%, Line Total: {_isub:.2f})"
                         )
+                    if json_global_discount > 0:
+                        _disc_line = {
+                            'name': 'Document Discount' if not data.get('discount_name') else str(data.get('discount_name')),
+                            'quantity': 1.0,
+                            'price_unit': -abs(json_global_discount),
+                            'tax_ids': [(6, 0, [])],
+                        }
+                        if line_account and line_account.exists():
+                            _disc_line['account_id'] = line_account.id
+                        invoice_line_vals.append((0, 0, _disc_line))
+                        validation_warnings.append(f"• Document Discount: Applied discount line of -{json_global_discount:.2f}.")
                     _logger.info("Created %d individual lines for Simplified Expense Bill with mixed VAT rates", len(items))
 
                 else:
                     # Standard simplified: 1 gross line, no separate tax
                     _logger.info("Expense Bill: Simplified Invoice. Setting line price to total gross (%.2f), clearing tax.", json_total)
                     exp_price_unit = json_total if json_total > 0 else (
-                        (items_sum + json_tax) if (items_sum > 0 and json_tax > 0) else (
-                            (json_subtotal + json_tax) if (json_subtotal > 0 and json_tax > 0) else (items_sum or json_subtotal)
+                        (items_net_sum + json_tax) if (items_net_sum > 0 and json_tax > 0) else (
+                            (json_subtotal + json_tax - json_global_discount) if (json_subtotal > 0 and json_tax > 0) else (items_net_sum or (json_subtotal - json_global_discount if json_subtotal > json_global_discount else json_subtotal))
                         )
                     )
                     line_tax = False
@@ -1649,8 +1901,8 @@ class AnalytixDocument(models.Model):
             elif is_foreign_country:
                 _logger.info("Expense Bill: Foreign Expense detected. Setting line price to total gross (%.2f).", json_total)
                 exp_price_unit = json_total if json_total > 0 else (
-                    (items_sum + json_tax) if (items_sum > 0 and json_tax > 0) else (
-                        (json_subtotal + json_tax) if (json_subtotal > 0 and json_tax > 0) else (items_sum or json_subtotal)
+                    (items_net_sum + json_tax) if (items_net_sum > 0 and json_tax > 0) else (
+                        (json_subtotal + json_tax - json_global_discount) if (json_subtotal > 0 and json_tax > 0) else (items_net_sum or (json_subtotal - json_global_discount if json_subtotal > json_global_discount else json_subtotal))
                     )
                 )
                 line_tax = False
@@ -1727,9 +1979,13 @@ class AnalytixDocument(models.Model):
                         _iname = (it.get('product_name') or it.get('name') or it.get('description') or f"Item {idx+1}").strip()
                         _iqty = self._clean_float(it.get('quantity')) or 1.0
                         _iprice = self._clean_float(it.get('unit_price')) or 0.0
+                        _idisc = self._clean_float(it.get('discount') or it.get('discount_percentage') or it.get('disc') or 0.0)
+                        _idisc_amt = self._clean_float(it.get('discount_amount') or it.get('disc_amount') or 0.0)
+                        if _idisc <= 0 and _idisc_amt > 0 and (_iqty * _iprice) > 0:
+                            _idisc = round((_idisc_amt / (_iqty * _iprice)) * 100.0, 2)
                         _irate = self._clean_float(it.get('tax_rate'))
                         _ivat = self._clean_float(it.get('vat_amount') or it.get('tax_amount') or it.get('vat') or it.get('tax'))
-                        _isub = round(_iqty * _iprice, 2)
+                        _isub = round(_iqty * _iprice * (1.0 - (_idisc / 100.0)), 2)
                         if _irate <= 0 and _ivat > 0 and _isub > 0:
                             _irate = round((_ivat / _isub) * 100, 2)
                         _iltax = None
@@ -1738,13 +1994,32 @@ class AnalytixDocument(models.Model):
                             if _rtax:
                                 _iltax = _rtax
                         _ilv = {'name': _iname, 'quantity': _iqty, 'price_unit': _iprice}
+                        if _idisc > 0:
+                            _ilv['discount'] = _idisc
                         if line_account and line_account.exists():
                             _ilv['account_id'] = line_account.id
                         if _iltax:
                             _ilv['tax_ids'] = [(6, 0, [_iltax.id])]
+                        else:
+                            _ilv['tax_ids'] = [(6, 0, [])]
                         invoice_line_vals.append((0, 0, _ilv))
                         exp_price_unit += _isub
-                        validation_warnings.append(f"   - Line {idx+1}: {_iname} (Qty: {_iqty:g}, Unit Price: {_iprice:.2f}, VAT Rate: {_irate:.2f}%, Line Total: {_isub:.2f})")
+                        _disc_text = f", Disc: {_idisc:.2f}%" if _idisc > 0 else ""
+                        validation_warnings.append(f"   - Line {idx+1}: {_iname} (Qty: {_iqty:g}, Unit Price: {_iprice:.2f}{_disc_text}, VAT Rate: {_irate:.2f}%, Line Total: {_isub:.2f})")
+                    if json_global_discount > 0:
+                        _disc_line = {
+                            'name': 'Document Discount' if not data.get('discount_name') else str(data.get('discount_name')),
+                            'quantity': 1.0,
+                            'price_unit': -abs(json_global_discount),
+                            'tax_ids': [(6, 0, [line_tax.id])] if is_discount_pre_tax and line_tax else [(6, 0, [])],
+                        }
+                        if line_account and line_account.exists():
+                            _disc_line['account_id'] = line_account.id
+                        invoice_line_vals.append((0, 0, _disc_line))
+                        validation_warnings.append(
+                            f"• Document Discount: Applied discount of -{json_global_discount:.2f} "
+                            f"({'Pre-Tax with ' + str(global_tax_rate) + '% VAT' if is_discount_pre_tax and line_tax else 'Post-Tax / Untaxed'})."
+                        )
                     _logger.info("Created %d individual lines for Expense Bill with mixed VAT rates (category=%s)", len(items), detected_category)
 
                 else:
@@ -1753,15 +2028,17 @@ class AnalytixDocument(models.Model):
                         _rtax = self._resolve_tax(move_type, tax_rate=global_tax_rate, tax_amount=json_tax, subtotal=items_sum or json_subtotal, total=json_total)
                         if _rtax:
                             line_tax = _rtax
-                    if items_sum > 0:
-                        if json_subtotal > 0 and abs(items_sum - json_subtotal) <= 0.5:
-                            exp_price_unit = json_subtotal
-                        elif json_total > 0 and json_tax > 0 and abs(items_sum - (json_total - json_tax)) <= 0.5:
-                            exp_price_unit = items_sum
-                        else:
-                            exp_price_unit = items_sum
+                    if json_subtotal > 0:
+                        exp_price_unit = json_subtotal
+                    elif items_raw_gross > 0 and json_global_discount > 0:
+                        exp_price_unit = items_raw_gross
+                    elif items_net_sum > 0:
+                        exp_price_unit = items_net_sum
+                    elif items_sum > 0:
+                        exp_price_unit = items_sum
                     else:
-                        exp_price_unit = json_subtotal if json_subtotal > 0 else ((json_total - json_tax) if (json_total > json_tax and json_tax > 0) else json_total)
+                        exp_price_unit = (json_total - json_tax + (json_global_discount if not is_discount_pre_tax else 0.0)) if (json_total > json_tax and json_tax > 0) else json_total
+
                     validation_warnings.append(
                         f"• Document Classification: Standard (Normal) Tax Invoice detected. "
                         f"Extracted untaxed subtotal ({exp_price_unit:.2f}) and resolved standard VAT."
@@ -1777,7 +2054,24 @@ class AnalytixDocument(models.Model):
                     if line_tax:
                         _sl['tax_ids'] = [(6, 0, [line_tax.id])]
                     invoice_line_vals.append((0, 0, _sl))
-                    _logger.info("Created 1 consolidated single line for Expense Bill (category=%s, price_unit=%.2f)", detected_category, exp_price_unit)
+
+                    # Append dedicated discount line if document-level discount is present
+                    if json_global_discount > 0:
+                        _disc_line = {
+                            'name': 'Document Discount' if not data.get('discount_name') else str(data.get('discount_name')),
+                            'quantity': 1.0,
+                            'price_unit': -abs(json_global_discount),
+                            'tax_ids': [(6, 0, [line_tax.id])] if is_discount_pre_tax and line_tax else [(6, 0, [])],
+                        }
+                        if line_account and line_account.exists():
+                            _disc_line['account_id'] = line_account.id
+                        invoice_line_vals.append((0, 0, _disc_line))
+                        validation_warnings.append(
+                            f"• Document Discount: Applied discount of -{json_global_discount:.2f} "
+                            f"({'Pre-Tax with ' + str(global_tax_rate) + '% VAT' if is_discount_pre_tax and line_tax else 'Post-Tax / Untaxed'})."
+                        )
+
+                    _logger.info("Created consolidated line (price_unit=%.2f) + discount (%.2f) for Expense Bill (category=%s)", exp_price_unit, json_global_discount, detected_category)
                     from .ai_gl_config import EXPENSE_BILLS_TYPES
                     _cdict = dict(EXPENSE_BILLS_TYPES)
                     _clabel = _cdict.get(detected_category, detected_category)
@@ -1930,15 +2224,39 @@ class AnalytixDocument(models.Model):
                 elif discount > 0:
                     discount = round(discount, 2)
 
-                if not tax_rate and global_tax_rate:
-                    tax_rate = global_tax_rate
+                # Check if item explicitly specifies 0% tax or has explicit tax rate
+                has_explicit_tax_info = (
+                    item.get('tax_rate') is not None
+                    or item.get('vat_rate') is not None
+                    or item.get('tax_percentage') is not None
+                )
+                raw_rate_val = item.get('tax_rate') if item.get('tax_rate') is not None else (item.get('vat_rate') or item.get('tax_percentage'))
+                is_zero_tax = False
+                if raw_rate_val is not None:
+                    try:
+                        is_zero_tax = (self._clean_float(raw_rate_val) == 0.0)
+                    except Exception:
+                        pass
 
-                item_subtotal = (qty * price * (1.0 - (discount / 100.0))) if (qty > 0 and price > 0) else 0.0
-                if (json_tax > 0 or tax_rate > 0):
+                if is_zero_tax or (has_explicit_tax_info and tax_rate <= 0):
+                    # Explicit 0% tax: leave tax empty in Odoo
+                    tax = None
+                elif tax_rate > 0:
+                    item_subtotal = (qty * price * (1.0 - (discount / 100.0))) if (qty > 0 and price > 0) else 0.0
                     resolved_tax = self._resolve_tax(
                         move_type,
                         tax_rate=tax_rate,
-                        tax_amount=json_tax if not tax_rate else 0.0,
+                        tax_amount=0.0,
+                        subtotal=item_subtotal or json_subtotal,
+                        total=json_total
+                    )
+                    tax = resolved_tax if resolved_tax else None
+                elif not has_explicit_tax_info and (global_tax_rate > 0 or json_tax > 0):
+                    item_subtotal = (qty * price * (1.0 - (discount / 100.0))) if (qty > 0 and price > 0) else 0.0
+                    resolved_tax = self._resolve_tax(
+                        move_type,
+                        tax_rate=global_tax_rate,
+                        tax_amount=json_tax if not global_tax_rate else 0.0,
                         subtotal=item_subtotal or json_subtotal,
                         total=json_total
                     )
@@ -2148,21 +2466,48 @@ class AnalytixDocument(models.Model):
                     line_vals['account_id'] = line_account.id
                 if tax:
                     line_vals['tax_ids'] = [(6, 0, [tax.id])]
+                else:
+                    line_vals['tax_ids'] = [(6, 0, [])]
 
                 prepared_lines.append(line_vals)
 
-            # ── Document-Level Discount (Distributed into lines' discount % field) ──
-            if json_global_discount > 0 and prepared_lines:
-                lines_gross_sum = sum(pl['quantity'] * pl['price_unit'] for pl in prepared_lines)
-                if lines_gross_sum > 0:
-                    global_disc_pct = round((json_global_discount / lines_gross_sum) * 100.0, 2)
-                    for pl in prepared_lines:
-                        existing_d = pl.get('discount', 0.0)
-                        combined_d = round((1.0 - ((1.0 - (existing_d / 100.0)) * (1.0 - (global_disc_pct / 100.0)))) * 100.0, 2)
-                        pl['discount'] = combined_d
-                    validation_warnings.append(
-                        f"• Document Discount: Applied global discount ({json_global_discount:.2f}, {global_disc_pct:.2f}%) to line discount field."
+            # ── Document-Level Discount (Dedicated Discount Line) ──
+            has_item_discount_row = any(
+                pl.get('price_unit', 0) < 0
+                or 'discount' in (pl.get('name') or '').lower()
+                or 'خصم' in (pl.get('name') or '')
+                for pl in prepared_lines
+            )
+            if json_global_discount > 0 and not has_item_discount_row:
+                disc_tax = None
+                if is_discount_pre_tax and (json_tax > 0 or global_tax_rate > 0):
+                    disc_tax = self._resolve_tax(
+                        move_type,
+                        tax_rate=global_tax_rate,
+                        tax_amount=0.0,
+                        subtotal=json_subtotal,
+                        total=json_total
                     )
+                    if not disc_tax:
+                        for pl in prepared_lines:
+                            if pl.get('tax_ids') and pl['tax_ids'][0][2]:
+                                disc_tax = self.env['account.tax'].browse(pl['tax_ids'][0][2][0])
+                                break
+                disc_line_vals = {
+                    'name': 'Document Discount' if not data.get('discount_name') else str(data.get('discount_name')),
+                    'quantity': 1.0,
+                    'price_unit': -abs(json_global_discount),
+                    'tax_ids': [(6, 0, [disc_tax.id])] if disc_tax else [(6, 0, [])],
+                }
+                if line_account and line_account.exists():
+                    disc_line_vals['account_id'] = line_account.id
+                elif default_account and default_account.exists():
+                    disc_line_vals['account_id'] = default_account.id
+                prepared_lines.append(disc_line_vals)
+                validation_warnings.append(
+                    f"• Document Discount: Applied discount line of -{json_global_discount:.2f} "
+                    f"({'Pre-Tax with ' + str(global_tax_rate) + '% tax' if disc_tax else 'Post-Tax / Untaxed'})."
+                )
 
             for pl in prepared_lines:
                 invoice_line_vals.append((0, 0, pl))
@@ -2272,7 +2617,8 @@ class AnalytixDocument(models.Model):
                 for lv in invoice_line_vals
             )
             eff_subtotal = exp_price_unit if (cfg_type == 'expense_bill' and 'exp_price_unit' in locals()) else json_subtotal
-            if eff_subtotal > 0 and abs(lines_total - eff_subtotal) > 0.5 and abs((lines_total + json_tax) - json_total) > 0.5:
+            expected_net_subtotal = (eff_subtotal - json_global_discount) if (eff_subtotal > json_global_discount and json_global_discount > 0 and abs(lines_total - (eff_subtotal - json_global_discount)) <= 0.5) else eff_subtotal
+            if eff_subtotal > 0 and abs(lines_total - expected_net_subtotal) > 0.5 and abs((lines_total + json_tax) - json_total) > 0.5:
                 validation_warnings.append(
                     f"• Amount Discrepancy: Extracted document subtotal ({eff_subtotal:.2f}) / total ({json_total:.2f}) differs from lines sum ({lines_total:.2f})."
                 )
@@ -2406,25 +2752,55 @@ class AnalytixDocument(models.Model):
         # Assign AI Validation notes and status
         if validation_warnings:
             move_vals['ai_validation_status'] = 'warning'
-            move_vals['ai_validation_notes'] = "\n".join(validation_warnings)
+            move_vals['ai_validation_notes'] = self._format_validation_notes_html(validation_warnings)
         else:
             move_vals['ai_validation_status'] = 'matched'
-            move_vals['ai_validation_notes'] = "✓ All extracted line items, products, taxes, and totals match system configuration perfectly."
+            move_vals['ai_validation_notes'] = self._format_validation_notes_html([])
 
         _logger.info("Creating draft entry %s with %d lines for partner %s", move_type, len(invoice_line_vals), partner.name if partner else 'None')
+
+        # If an old draft move exists, remove it cleanly before creating the new one
+        if self.created_move_id and self.created_move_id.exists() and self.created_move_id.state == 'draft':
+            try:
+                old_m = self.created_move_id
+                self.created_move_id = False
+                old_m.unlink()
+            except Exception as e:
+                _logger.warning("Could not unlink previous draft move: %s", e)
 
         move = self.env['account.move'].create(move_vals)
         self.created_move_id = move.id
 
+        # ── Exact 100% Total Reconciliation Guarantee ──
+        if json_total > 0 and move.amount_total and abs(move.amount_total - json_total) > 0.001:
+            total_diff = round(json_total - move.amount_total, 2)
+            # If difference is small (up to 2.0 currency units due to rounding / tax fractional cents)
+            if abs(total_diff) <= 2.0:
+                _logger.info("Reconciling small total discrepancy of %.2f on move %s (system: %.2f, doc: %.2f)", total_diff, move.id, move.amount_total, json_total)
+                target_line = move.invoice_line_ids.filtered(lambda l: 'discount' in (l.name or '').lower())
+                if not target_line:
+                    target_line = move.invoice_line_ids.filtered(lambda l: not l.tax_ids)
+                if not target_line and move.invoice_line_ids:
+                    target_line = move.invoice_line_ids[-1]
+
+                if target_line:
+                    new_price = round(target_line[0].price_unit + (total_diff / (target_line[0].quantity or 1.0)), 2)
+                    target_line[0].sudo().write({'price_unit': new_price})
+                    _logger.info("Adjusted line '%s' price_unit to %.2f to achieve 100%% total match (new total: %.2f)", target_line[0].name, new_price, move.amount_total)
+
         # Attach file data to created account.move
-        self.env['ir.attachment'].create({
-            'name':      self.file_name or self.name,
-            'res_model': 'account.move',
-            'res_id':    move.id,
-            'datas':     self.file_data,
-            'mimetype':  self.mimetype or 'application/octet-stream',
-            'type':      'binary',
-        })
+        if self.file_data:
+            try:
+                self.env['ir.attachment'].create({
+                    'name':      self.file_name or self.name,
+                    'res_model': 'account.move',
+                    'res_id':    move.id,
+                    'datas':     self.file_data,
+                    'mimetype':  self.mimetype or 'application/octet-stream',
+                    'type':      'binary',
+                })
+            except Exception as e:
+                _logger.warning("Could not attach file to move %s: %s", move.id, e)
 
         return {
             'type': 'ir.actions.act_window',

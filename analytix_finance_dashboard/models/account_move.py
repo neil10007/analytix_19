@@ -53,7 +53,8 @@ class AccountMove(models.Model):
         ('warning', 'Mismatch / Warning Detected'),
     ], string='AI Validation Status', default='matched')
 
-    ai_validation_notes = fields.Text(
+    ai_validation_notes = fields.Html(
         string='AI Validation Details & Mismatches',
-        help='Summarizes inventory, tax, and total mismatches detected during AI document parsing.'
+        help='Summarizes inventory, tax, and total mismatches detected during AI document parsing.',
+        sanitize=False,
     )

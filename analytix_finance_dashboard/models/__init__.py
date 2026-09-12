@@ -8,6 +8,7 @@ from . import res_partner
 from . import ai_gl_config
 from . import res_company
 from . import res_partner_bank
+from . import account_move_bulk_draft
 
 
 
