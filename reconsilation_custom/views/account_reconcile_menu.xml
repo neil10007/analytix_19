@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <!--
+        Standalone action for Transactions menu — no active_id dependency.
+        Opens the full OCA reconcile kanban interface (js_class="reconcile")
+        showing ALL bank statement lines across all journals.
+    -->
+    <record id="action_transactions_all_journals" model="ir.actions.act_window">
+        <field name="name">Reconcile bank statement lines</field>
+        <field name="res_model">account.bank.statement.line</field>
+        <field name="domain">[]</field>
+        <field name="context">{'view_ref': 'account_reconcile_oca.bank_statement_line_form_reconcile_view'}</field>
+        <field name="view_mode">kanban,list</field>
+        <field name="view_ids" eval="[(5, 0, 0),
+            (0, 0, {'view_mode': 'kanban', 'view_id': ref('account_reconcile_oca.bank_statement_line_reconcile_view')}),
+            (0, 0, {'view_mode': 'list',   'view_id': ref('account_statement_base.account_bank_statement_line_tree')})]"
+        />
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No transactions found
+            </p>
+        </field>
+    </record>
+
+    <record model="ir.ui.menu" id="menu_transactions_reconcile">
+        <field name="name">Transactions</field>
+        <field name="parent_id" ref="account.menu_finance_entries" />
+        <field name="action" ref="action_transactions_all_journals" />
+        <field name="sequence" eval="150" />
+    </record>
+</odoo>
+
