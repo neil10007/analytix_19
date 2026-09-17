@@ -80,4 +80,11 @@
               parent="account.menu_finance_configuration"
               sequence="15"/>
 
+    <!-- Tax Filing History under Reporting -->
+    <menuitem id="menu_analytix_tax_filing_history"
+              name="Tax Filing History"
+              action="action_analytix_tax_filing"
+              parent="account.menu_finance_reports"
+              sequence="25"/>
+
 </odoo>

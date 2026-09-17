@@ -57,37 +57,261 @@ html:not([data-color-scheme="dark"]):not(.o_dark) body:not(.kr_sp_theme_dark) {
         &:hover { background: #00968b !important; }
     }
 
-    /* ── VAT Custom Date Filter Section ── */
+    /* ── VAT Custom Date Filter & Standardized Toolbar ── */
+    .anx-vat-toolbar,
     .anx-vat-modal-filters {
         background: #ffffff !important;
-        border: 1px solid #cbd5e1 !important;
-        box-shadow: 0 2px 10px rgba(15, 23, 42, 0.05) !important;
+        border: 1px solid #e2e8f0 !important;
+        box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04) !important;
 
+        .anx-vat-group-label,
         .anx-vat-filter-title {
             color: #0f172a !important;
             i { color: #00b4a8 !important; }
         }
 
-        .anx-vat-filter-group label {
-            color: #475569 !important;
+        .anx-vat-date-box {
+            background: #f8fafc !important;
+            border: 1px solid #cbd5e1 !important;
+            &:focus-within {
+                border-color: #00b4a8 !important;
+                box-shadow: 0 0 0 2px rgba(0, 180, 168, 0.2) !important;
+            }
+        }
+
+        .anx-vat-field-tag {
+            color: #64748b !important;
         }
 
         .anx-vat-date-input {
-            background: #f8fafc !important;
-            border: 1px solid #cbd5e1 !important;
+            background: transparent !important;
             color: #0f172a !important;
             color-scheme: light !important;
-            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.04) !important;
             &::-webkit-calendar-picker-indicator { filter: none !important; opacity: 0.75; }
-            &:hover { background: #ffffff !important; border-color: #00b4a8 !important; }
-            &:focus { border-color: #00b4a8 !important; box-shadow: 0 0 0 3px rgba(0, 180, 168, 0.2) !important; }
         }
 
-        .anx-vat-filter-btn {
+        .anx-vat-sep {
+            background: #e2e8f0 !important;
+        }
+
+        .anx-vat-prior-card {
+            background: #f8fafc !important;
+            border: 1px solid #cbd5e1 !important;
+            .anx-vat-locked-prior-title { color: #475569 !important; }
+        }
+
+        .anx-vat-prior-label {
+            color: #0f172a !important;
+        }
+
+        .anx-vat-tag-active {
+            background: #ecfdf5 !important;
+            color: #059669 !important;
+            border: 1px solid #a7f3d0 !important;
+        }
+
+        .anx-vat-tag-warn {
+            background: #fffbeb !important;
+            color: #b45309 !important;
+            border: 1px solid #fde68a !important;
+        }
+
+        .anx-vat-tag-muted {
+            color: #64748b !important;
+        }
+
+        .anx-vat-btn-pill {
+            background: #eff6ff !important;
+            border: 1px solid #bfdbfe !important;
+            color: #1d4ed8 !important;
+            &:hover { background: #dbeafe !important; }
+        }
+
+        .anx-vat-status-badge {
+            background: #ecfdf5 !important;
+            border: 1px solid #a7f3d0 !important;
+            color: #059669 !important;
+        }
+
+        .anx-vat-btn-primary {
             background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%) !important;
             color: #ffffff !important;
             &:hover { background: linear-gradient(135deg, #0369a1 0%, #1d4ed8 100%) !important; }
         }
+
+        .anx-vat-btn-light,
+        .anx-vat-clear-btn {
+            background: #f1f5f9 !important;
+            border: 1px solid #cbd5e1 !important;
+            color: #475569 !important;
+            box-shadow: none !important;
+            &:hover {
+                background: #fee2e2 !important;
+                border-color: #fca5a5 !important;
+                color: #dc2626 !important;
+                box-shadow: 0 2px 8px rgba(220, 38, 38, 0.15) !important;
+            }
+        }
+
+        .anx-vat-btn-outline {
+            background: #f8fafc !important;
+            border: 1px solid #cbd5e1 !important;
+            color: #334155 !important;
+            &:hover { background: #f1f5f9 !important; border-color: #94a3b8 !important; }
+        }
+
+        .anx-vat-validation-alert {
+            background: #fef2f2 !important;
+            border: 1px solid #fca5a5 !important;
+            color: #991b1b !important;
+            .anx-vat-alert-icon { color: #dc2626 !important; }
+            .anx-vat-alert-dismiss { color: #dc2626 !important; }
+        }
+    }
+
+    /* ── Standardized VAT KPI Cards (Light Mode) ── */
+    .anx-vat-kpi-card {
+        background: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
+        box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04) !important;
+
+        &:hover {
+            border-color: #cbd5e1 !important;
+            box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08) !important;
+        }
+
+        .anx-kpi-value {
+            color: #0f172a !important;
+        }
+        .anx-kpi-label {
+            color: #64748b !important;
+        }
+        .anx-kpi-sub {
+            color: #94a3b8 !important;
+        }
+    }
+
+    /* ── ZATCA Return Section Panels (Light Mode) ── */
+    .anx-vat-section-panel {
+        background: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
+        box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04) !important;
+
+        .anx-vat-panel-header {
+            background: #f8fafc !important;
+            border-bottom: 1px solid #e2e8f0 !important;
+        }
+
+        .anx-vat-header-title {
+            color: #0f172a !important;
+        }
+        .anx-vat-header-sub {
+            color: #64748b !important;
+        }
+
+        .anx-vat-icon-sales {
+            background: #e0f2fe !important;
+            color: #0284c7 !important;
+        }
+        .anx-vat-icon-purchases {
+            background: #ffe4e6 !important;
+            color: #e11d48 !important;
+        }
+        .anx-vat-icon-net {
+            background: #d1fae5 !important;
+            color: #059669 !important;
+        }
+
+        .anx-pill-sales {
+            background: #eff6ff !important;
+            color: #1d4ed8 !important;
+            border: 1px solid #bfdbfe !important;
+        }
+        .anx-pill-purchases {
+            background: #fff1f2 !important;
+            color: #be123c !important;
+            border: 1px solid #fecdd3 !important;
+        }
+        .anx-pill-net-pay {
+            background: #f0fdf4 !important;
+            color: #15803d !important;
+            border: 1px solid #bbf7d0 !important;
+        }
+        .anx-pill-net-refund {
+            background: #eff6ff !important;
+            color: #1d4ed8 !important;
+            border: 1px solid #bfdbfe !important;
+        }
+
+        .anx-vat-box-badge {
+            background: #f1f5f9 !important;
+            color: #475569 !important;
+        }
+        .anx-vat-adj-badge {
+            background: #ecfdf5 !important;
+            color: #059669 !important;
+            border: 1px solid #a7f3d0 !important;
+        }
+        .anx-vat-adj-purchases {
+            background: #fffbeb !important;
+            color: #b45309 !important;
+            border: 1px solid #fde68a !important;
+        }
+
+        .anx-vat-row-total {
+            border-top: 2px solid #cbd5e1 !important;
+            border-bottom: 2px solid #cbd5e1 !important;
+        }
+        .anx-vat-row-total-sales {
+            background-color: #f0f9ff !important;
+        }
+        .anx-vat-row-total-purchases {
+            background-color: #fff1f2 !important;
+        }
+        .anx-vat-row-total-net {
+            background-color: #f0fdf4 !important;
+        }
+
+        .anx-vat-row-adj {
+            background-color: #f0fdf4 !important;
+            color: #047857 !important;
+        }
+        .anx-vat-row-adj-purchases {
+            background-color: #fffbeb !important;
+            color: #b45309 !important;
+        }
+        .anx-vat-row-correction {
+            background-color: #f0f9ff !important;
+        }
+
+        .anx-vat-clickable-row {
+            &:hover td {
+                background-color: #f0f9ff !important;
+                color: #0f172a !important;
+            }
+        }
+
+        .anx-vat-inline-count {
+            background: #e0f2fe !important;
+            border: 1px solid #bae6fd !important;
+            color: #0284c7 !important;
+
+            &.anx-vat-inline-count-purchases {
+                background: #ffe4e6 !important;
+                border-color: #fecdd3 !important;
+                color: #e11d48 !important;
+            }
+
+            &.anx-vat-inline-count-net {
+                background: #ecfdf5 !important;
+                border-color: #a7f3d0 !important;
+                color: #059669 !important;
+            }
+        }
+    }
+
+    .anx-vat-company-legend .anx-vat-co-legend-title {
+        color: #475569 !important;
     }
 
     /* ── Tab Bar ── */
@@ -262,6 +486,41 @@ html:not([data-color-scheme="dark"]):not(.o_dark) body:not(.kr_sp_theme_dark) {
         background: #ffffff !important;
         border-bottom: 1px solid #e2e8f0 !important;
         &:hover { background: #f8fafc !important; }
+    }
+    .anx-tb-section-header-row {
+        background: #f1f5f9 !important;
+        border-bottom: 2px solid #cbd5e1 !important;
+        border-top: 1px solid #e2e8f0 !important;
+        &:hover { background: #f1f5f9 !important; }
+        td.anx-tb-section-header-cell {
+            padding: 8px 14px !important;
+            text-align: left !important;
+            background: #f1f5f9 !important;
+            border-right: none !important;
+        }
+    }
+    .anx-tb-rtd-type {
+        text-align: center !important;
+    }
+    .anx-tb-type-pill {
+        display: inline-block;
+        padding: 3px 10px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: capitalize;
+        letter-spacing: 0.3px;
+    }
+    .anx-tb-section-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 3px 12px;
+        border-radius: 6px;
+        font-size: 11.5px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
     }
     .anx-inv-td,
     .anx-td,
@@ -596,6 +855,8 @@ html:not([data-color-scheme="dark"]):not(.o_dark) body:not(.kr_sp_theme_dark) {
         background: #ffffff !important;
         color: #1e293b !important;
     }
+
+
 
     /* Empty states / loading */
     .anx-empty-state,

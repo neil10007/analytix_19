@@ -15,6 +15,7 @@
         'security/ir.model.access.csv',
         'views/dashboard_action.xml',
         'views/finance_alert_views.xml',
+        'views/analytix_tax_filing_views.xml',
         'views/menu_views.xml',
         'views/set_home_action.xml',
         'views/account_move_views.xml',

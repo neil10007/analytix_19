@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-from odoo import models, api, fields
+from odoo import models, api, fields, _
+from odoo.exceptions import UserError, ValidationError
 from dateutil.relativedelta import relativedelta
 from datetime import date, datetime
 
@@ -674,10 +675,12 @@ class AccountMove(models.Model):
         }
 
     @api.model
-    def get_analytix_vat_data(self, filter_name='this_month', date_from=None, date_to=None):
+    def get_analytix_vat_data(self, filter_name='this_month', date_from=None, date_to=None, include_prior=False):
         """Return VAT tax lines split into output (invoices) and input (bills), plus ZATCA VAT Return structure."""
         self = self.sudo()
         today = date.today()
+        include_prior = bool(include_prior)
+
         if filter_name == 'this_month':
             start_date = today.replace(day=1)
             end_date = start_date + relativedelta(months=1, days=-1)
@@ -712,92 +715,153 @@ class AccountMove(models.Model):
 
         # Initialize ZATCA VAT Return structure
         sales_boxes = {
-            '1':   {'box': '1',   'description': 'Standard rated domestic sales (15%)', 'amount': 0.0, 'adjustment': 0.0, 'vat_amount': 0.0},
-            '1.1': {'box': '1.1', 'description': 'Standard rated domestic sales (5%)',  'amount': 0.0, 'adjustment': 0.0, 'vat_amount': 0.0},
-            '2':   {'box': '2',   'description': 'Private Healthcare/Private Education/First house sales to citizens', 'amount': 0.0, 'adjustment': 0.0, 'vat_amount': 0.0},
-            '3':   {'box': '3',   'description': 'Zero rated domestic sales',           'amount': 0.0, 'adjustment': 0.0, 'vat_amount': 0.0},
-            '4':   {'box': '4',   'description': 'Exports',                             'amount': 0.0, 'adjustment': 0.0, 'vat_amount': 0.0},
-            '5':   {'box': '5',   'description': 'Exempt sales',                         'amount': 0.0, 'adjustment': 0.0, 'vat_amount': 0.0},
+            '1':   {'box': '1',   'description': 'Standard rated domestic sales (15%)', 'amount': 0.0, 'adjustment': 0.0, 'vat_amount': 0.0, 'move_ids': set(), 'invoices_map': {}},
+            '1.1': {'box': '1.1', 'description': 'Standard rated domestic sales (5%)',  'amount': 0.0, 'adjustment': 0.0, 'vat_amount': 0.0, 'move_ids': set(), 'invoices_map': {}},
+            '2':   {'box': '2',   'description': 'Private Healthcare/Private Education/First house sales to citizens', 'amount': 0.0, 'adjustment': 0.0, 'vat_amount': 0.0, 'move_ids': set(), 'invoices_map': {}},
+            '3':   {'box': '3',   'description': 'Zero rated domestic sales',           'amount': 0.0, 'adjustment': 0.0, 'vat_amount': 0.0, 'move_ids': set(), 'invoices_map': {}},
+            '4':   {'box': '4',   'description': 'Exports',                             'amount': 0.0, 'adjustment': 0.0, 'vat_amount': 0.0, 'move_ids': set(), 'invoices_map': {}},
+            '5':   {'box': '5',   'description': 'Exempt sales',                         'amount': 0.0, 'adjustment': 0.0, 'vat_amount': 0.0, 'move_ids': set(), 'invoices_map': {}},
         }
 
         purchase_boxes = {
-            '7':   {'box': '7',   'description': 'Standard rated domestic purchases (15%)', 'amount': 0.0, 'adjustment': 0.0, 'vat_amount': 0.0},
-            '7.1': {'box': '7.1', 'description': 'Standard rated domestic purchases (5%)',  'amount': 0.0, 'adjustment': 0.0, 'vat_amount': 0.0},
-            '8':   {'box': '8',   'description': 'Imports subject to VAT paid at customs (15%)', 'amount': 0.0, 'adjustment': 0.0, 'vat_amount': 0.0},
-            '8.1': {'box': '8.1', 'description': 'Imports subject to VAT paid at customs (5%)',  'amount': 0.0, 'adjustment': 0.0, 'vat_amount': 0.0},
-            '9':   {'box': '9',   'description': 'Imports subject to VAT accounted for through reverse charge mechanism (15%)', 'amount': 0.0, 'adjustment': 0.0, 'vat_amount': 0.0},
-            '9.1': {'box': '9.1', 'description': 'Imports subject to VAT accounted for through reverse charge mechanism (5%)',  'amount': 0.0, 'adjustment': 0.0, 'vat_amount': 0.0},
-            '10':  {'box': '10',  'description': 'Zero rated purchases', 'amount': 0.0, 'adjustment': 0.0, 'vat_amount': 0.0},
-            '11':  {'box': '11',  'description': 'Exempt purchases',     'amount': 0.0, 'adjustment': 0.0, 'vat_amount': 0.0},
+            '7':   {'box': '7',   'description': 'Standard rated domestic purchases (15%)', 'amount': 0.0, 'adjustment': 0.0, 'vat_amount': 0.0, 'move_ids': set(), 'invoices_map': {}},
+            '7.1': {'box': '7.1', 'description': 'Standard rated domestic purchases (5%)',  'amount': 0.0, 'adjustment': 0.0, 'vat_amount': 0.0, 'move_ids': set(), 'invoices_map': {}},
+            '8':   {'box': '8',   'description': 'Imports subject to VAT paid at customs (15%)', 'amount': 0.0, 'adjustment': 0.0, 'vat_amount': 0.0, 'move_ids': set(), 'invoices_map': {}},
+            '8.1': {'box': '8.1', 'description': 'Imports subject to VAT paid at customs (5%)',  'amount': 0.0, 'adjustment': 0.0, 'vat_amount': 0.0, 'move_ids': set(), 'invoices_map': {}},
+            '9':   {'box': '9',   'description': 'Imports subject to VAT accounted for through reverse charge mechanism (15%)', 'amount': 0.0, 'adjustment': 0.0, 'vat_amount': 0.0, 'move_ids': set(), 'invoices_map': {}},
+            '9.1': {'box': '9.1', 'description': 'Imports subject to VAT accounted for through reverse charge mechanism (5%)',  'amount': 0.0, 'adjustment': 0.0, 'vat_amount': 0.0, 'move_ids': set(), 'invoices_map': {}},
+            '10':  {'box': '10',  'description': 'Zero rated purchases', 'amount': 0.0, 'adjustment': 0.0, 'vat_amount': 0.0, 'move_ids': set(), 'invoices_map': {}},
+            '11':  {'box': '11',  'description': 'Exempt purchases',     'amount': 0.0, 'adjustment': 0.0, 'vat_amount': 0.0, 'move_ids': set(), 'invoices_map': {}},
         }
 
+        # Check for overlapping filed tax periods
+        overlapping_filings = self.env['analytix.tax.filing'].search([
+            ('company_id', 'in', company_ids),
+            ('status', '=', 'filed'),
+            ('date_from', '<=', end_date),
+            ('date_to', '>=', start_date),
+        ], order='date_from asc')
+
+        exact_match = (
+            len(overlapping_filings) == 1 and
+            overlapping_filings[0].date_from == start_date and
+            overlapping_filings[0].date_to == end_date
+        )
+
+        if overlapping_filings and not exact_match:
+            conflict_msgs = []
+            for f in overlapping_filings:
+                if f.date_from == start_date and f.date_to == end_date:
+                    continue
+                month_name = f.date_from.strftime('%B %Y') if (f.date_from.month == f.date_to.month and f.date_from.year == f.date_to.year) else f"{f.date_from} to {f.date_to}"
+                next_valid_date = f.date_to + relativedelta(days=1)
+                conflict_msgs.append(
+                    _("Tax filing has already been completed and locked for the period %(period)s (%(d_from)s to %(d_to)s).\n\n"
+                      "You cannot select a date range that overlaps with an already filed tax period. "
+                      "Please adjust your date range to start after %(d_to)s (e.g. from %(next_date)s), or reopen / unlock the %(period)s tax filing first.") % {
+                        'period': month_name,
+                        'd_from': f.date_from,
+                        'd_to': f.date_to,
+                        'next_date': next_valid_date,
+                    }
+                )
+            raise ValidationError("\n\n".join(conflict_msgs))
+
+        existing_filing = overlapping_filings[0] if exact_match else self.env['analytix.tax.filing'].browse()
+        is_period_filed = bool(existing_filing)
+        if is_period_filed and existing_filing:
+            include_prior = bool(existing_filing.prior_move_ids)
+
         def fetch_lines(move_types):
-            return self.env['account.move.line'].search([
+            if existing_filing:
+                curr_lines = self.env['account.move.line'].search([
+                    ('move_id', 'in', existing_filing.move_ids.ids),
+                    ('move_id.move_type', 'in', move_types),
+                    ('tax_line_id', '!=', False),
+                ], order='move_id desc')
+                prior_lines = self.env['account.move.line'].search([
+                    ('move_id', 'in', existing_filing.prior_move_ids.ids),
+                    ('move_id.move_type', 'in', move_types),
+                    ('tax_line_id', '!=', False),
+                ], order='move_id desc')
+                return curr_lines, prior_lines
+
+            # 1. Regular current period posted lines (with invoice_date or date fallback)
+            curr_lines = self.env['account.move.line'].search([
                 ('move_id.state', '=', 'posted'),
                 ('move_id.move_type', 'in', move_types),
-                ('move_id.invoice_date', '>=', start_date),
-                ('move_id.invoice_date', '<=', end_date),
+                '|',
+                '&', ('move_id.invoice_date', '!=', False),
+                     '&', ('move_id.invoice_date', '>=', start_date),
+                          ('move_id.invoice_date', '<=', end_date),
+                '&', ('move_id.invoice_date', '=', False),
+                     '&', ('move_id.date', '>=', start_date),
+                          ('move_id.date', '<=', end_date),
                 ('move_id.company_id', 'in', company_ids),
                 ('tax_line_id', '!=', False),
             ], order='move_id desc')
 
-        def build_records(lines, type_use):
+            # 2. Prior unfiled posted lines (e.g. February invoice entered late)
+            prior_domain = [
+                ('move_id.state', '=', 'posted'),
+                ('move_id.move_type', 'in', move_types),
+                '|',
+                '&', ('move_id.invoice_date', '!=', False), ('move_id.invoice_date', '<', start_date),
+                '&', ('move_id.invoice_date', '=', False), ('move_id.date', '<', start_date),
+                ('move_id.company_id', 'in', company_ids),
+                ('tax_line_id', '!=', False),
+                '|', ('move_id.tax_filing_status', '=', 'unfiled'), ('move_id.tax_filing_status', '=', False)
+            ]
+            prior_lines = self.env['account.move.line'].search(prior_domain, order='move_id desc')
+            return curr_lines, prior_lines
+
+        prior_invoices_map = {}
+
+        def build_records(curr_lines, prior_lines, type_use):
             rows = []
-            total = 0.0
-            for line in lines:
+            curr_vat_total = 0.0
+            prior_vat_total = 0.0
+            prior_base_total = 0.0
+
+            # 1. Process current period lines
+            for line in curr_lines:
                 move = line.move_id
                 amt = abs(line.balance)
                 total_amt = move.amount_total
                 base_amt = abs(line.tax_base_amount)
+                m_date = move.invoice_date or move.date or today
 
                 if move.company_id.currency_id != company_currency:
                     try:
                         amt = move.company_id.currency_id._convert(
-                            amt, company_currency, move.company_id, move.invoice_date or today)
+                            amt, company_currency, move.company_id, m_date)
                     except Exception:
                         pass
                     try:
                         total_amt = move.company_id.currency_id._convert(
-                            total_amt, company_currency, move.company_id, move.invoice_date or today)
+                            total_amt, company_currency, move.company_id, m_date)
                     except Exception:
                         pass
                     try:
                         base_amt = move.company_id.currency_id._convert(
-                            base_amt, company_currency, move.company_id, move.invoice_date or today)
+                            base_amt, company_currency, move.company_id, m_date)
                     except Exception:
                         pass
 
-                total += amt
+                is_refund = move.move_type in ['out_refund', 'in_refund']
+                if is_refund:
+                    curr_vat_total -= amt
+                else:
+                    curr_vat_total += amt
+
                 co = company_color_map.get(move.company_id.id, COMPANY_COLORS[0])
-                rows.append({
-                    'id':           move.id,
-                    'move_name':    move.name or '/',
-                    'partner':      move.partner_id.name or '—',
-                    'tax_name':     line.tax_line_id.name or '—',
-                    'tax_amount':   amt,
-                    'tax_display':  '{} {:,.2f}'.format(
-                        self._get_currency_symbol(move.currency_id),
-                        abs(line.balance)),
-                    'total_amount': total_amt,
-                    'total_display':'{} {:,.2f}'.format(
-                        self._get_currency_symbol(move.currency_id),
-                        move.amount_total),
-                    'invoice_date': move.invoice_date.strftime('%Y-%m-%d') if move.invoice_date else '',
-                    'move_type':    move.move_type,
-                    'company_id':   move.company_id.id,
-                    'company_name': move.company_id.name,
-                    'company_color':co,
-                    'currency_sym': self._get_currency_symbol(move.currency_id),
-                })
+                tax = line.tax_line_id
+                name_lower = (tax.name or '').lower()
+                rate = abs(tax.amount)
+                box_key = None
+                box_desc = ''
 
-                # Classify into ZATCA Boxes
                 if type_use == 'sale':
-                    tax = line.tax_line_id
-                    name_lower = (tax.name or '').lower()
-                    rate = abs(tax.amount)
-                    is_refund = move.move_type == 'out_refund'
-
-                    box_key = None
                     if rate == 15.0:
                         box_key = '1'
                     elif rate == 5.0:
@@ -815,6 +879,7 @@ class AccountMove(models.Model):
                         box_key = '1' if rate > 0 else '3'
 
                     box = sales_boxes[box_key]
+                    box_desc = box['description']
                     if is_refund:
                         box['adjustment'] += base_amt
                         box['vat_amount'] -= amt
@@ -822,13 +887,37 @@ class AccountMove(models.Model):
                         box['amount'] += base_amt
                         box['vat_amount'] += amt
 
-                elif type_use == 'purchase':
-                    tax = line.tax_line_id
-                    name_lower = (tax.name or '').lower()
-                    rate = abs(tax.amount)
-                    is_refund = move.move_type == 'in_refund'
+                    box['move_ids'].add(move.id)
+                    inv_map = box['invoices_map']
+                    signed_base = -base_amt if is_refund else base_amt
+                    signed_vat = -amt if is_refund else amt
+                    if move.id in inv_map:
+                        inv_map[move.id]['base_amount'] += signed_base
+                        inv_map[move.id]['tax_amount'] += signed_vat
+                    else:
+                        inv_map[move.id] = {
+                            'id': move.id,
+                            'move_name': move.name or '/',
+                            'partner_name': move.partner_id.name or '—',
+                            'invoice_date': (move.invoice_date or move.date).strftime('%Y-%m-%d') if (move.invoice_date or move.date) else '',
+                            'tax_name': line.tax_line_id.name or '—',
+                            'tax_rate': rate,
+                            'base_amount': signed_base,
+                            'tax_amount': signed_vat,
+                            'total_amount': total_amt,
+                            'move_type': move.move_type,
+                            'tax_filing_status': move.tax_filing_status or 'unfiled',
+                            'is_locked': bool(move.tax_filing_status == 'filed'),
+                            'tax_filing_period': move.tax_filing_period or '',
+                            'tax_filing_date': move.tax_filing_date.strftime('%Y-%m-%d') if move.tax_filing_date else '',
+                            'state': move.state,
+                            'currency_sym': self._get_currency_symbol(move.currency_id),
+                            'company_name': move.company_id.name,
+                            'box_key': box_key,
+                            'box_desc': box_desc,
+                        }
 
-                    box_key = None
+                elif type_use == 'purchase':
                     if rate == 15.0:
                         if any(k in name_lower for k in ['import', 'custom', 'الجمارك', 'استيراد']):
                             box_key = '8'
@@ -852,6 +941,7 @@ class AccountMove(models.Model):
                         box_key = '7' if rate > 0 else '10'
 
                     box = purchase_boxes[box_key]
+                    box_desc = box['description']
                     if is_refund:
                         box['adjustment'] += base_amt
                         box['vat_amount'] -= amt
@@ -859,69 +949,331 @@ class AccountMove(models.Model):
                         box['amount'] += base_amt
                         box['vat_amount'] += amt
 
-            return rows, total
+                    box['move_ids'].add(move.id)
+                    inv_map = box['invoices_map']
+                    signed_base = -base_amt if is_refund else base_amt
+                    signed_vat = -amt if is_refund else amt
+                    if move.id in inv_map:
+                        inv_map[move.id]['base_amount'] += signed_base
+                        inv_map[move.id]['tax_amount'] += signed_vat
+                    else:
+                        inv_map[move.id] = {
+                            'id': move.id,
+                            'move_name': move.name or '/',
+                            'partner_name': move.partner_id.name or '—',
+                            'invoice_date': (move.invoice_date or move.date).strftime('%Y-%m-%d') if (move.invoice_date or move.date) else '',
+                            'tax_name': line.tax_line_id.name or '—',
+                            'tax_rate': rate,
+                            'base_amount': signed_base,
+                            'tax_amount': signed_vat,
+                            'total_amount': total_amt,
+                            'move_type': move.move_type,
+                            'tax_filing_status': move.tax_filing_status or 'unfiled',
+                            'is_locked': bool(move.tax_filing_status == 'filed'),
+                            'tax_filing_period': move.tax_filing_period or '',
+                            'tax_filing_date': move.tax_filing_date.strftime('%Y-%m-%d') if move.tax_filing_date else '',
+                            'state': move.state,
+                            'currency_sym': self._get_currency_symbol(move.currency_id),
+                            'company_name': move.company_id.name,
+                            'box_key': box_key,
+                            'box_desc': box_desc,
+                        }
 
-        out_lines = fetch_lines(['out_invoice', 'out_refund'])
-        in_lines  = fetch_lines(['in_invoice',  'in_refund'])
-        out_records, output_vat = build_records(out_lines, 'sale')
-        in_records,  input_vat  = build_records(in_lines, 'purchase')
+                rows.append({
+                    'id':           move.id,
+                    'move_name':    move.name or '/',
+                    'partner':      move.partner_id.name or '—',
+                    'tax_name':     line.tax_line_id.name or '—',
+                    'tax_rate':     rate,
+                    'tax_amount':   amt,
+                    'tax_display':  '{} {:,.2f}'.format(self._get_currency_symbol(move.currency_id), abs(line.balance)),
+                    'base_amount':  base_amt,
+                    'base_display': '{} {:,.2f}'.format(self._get_currency_symbol(move.currency_id), base_amt),
+                    'total_amount': total_amt,
+                    'total_display':'{} {:,.2f}'.format(self._get_currency_symbol(move.currency_id), move.amount_total),
+                    'invoice_date': (move.invoice_date or move.date).strftime('%Y-%m-%d') if (move.invoice_date or move.date) else '',
+                    'move_type':    move.move_type,
+                    'company_id':   move.company_id.id,
+                    'company_name': move.company_id.name,
+                    'company_color':co,
+                    'currency_sym': self._get_currency_symbol(move.currency_id),
+                    'box_key':      box_key or '—',
+                    'box_desc':     box_desc,
+                    'is_locked':    bool(move.tax_filing_status == 'filed'),
+                    'is_prior_period': False,
+                    'tax_filing_status': move.tax_filing_status or 'unfiled',
+                    'status':       move.state,
+                })
 
-        # Compute Totals for Sales
+            # 2. Process prior period lines (compute totals always; add to rows only if include_prior)
+            prior_rows = []
+            for line in prior_lines:
+                move = line.move_id
+                amt = abs(line.balance)
+                total_amt = move.amount_total
+                base_amt = abs(line.tax_base_amount)
+                m_date = move.invoice_date or move.date or today
+
+                if move.company_id.currency_id != company_currency:
+                    try:
+                        amt = move.company_id.currency_id._convert(
+                            amt, company_currency, move.company_id, m_date)
+                    except Exception:
+                        pass
+                    try:
+                        total_amt = move.company_id.currency_id._convert(
+                            total_amt, company_currency, move.company_id, m_date)
+                    except Exception:
+                        pass
+                    try:
+                        base_amt = move.company_id.currency_id._convert(
+                            base_amt, company_currency, move.company_id, m_date)
+                    except Exception:
+                        pass
+
+                is_refund = move.move_type in ['out_refund', 'in_refund']
+                if is_refund:
+                    prior_vat_total -= amt
+                    prior_base_total -= base_amt
+                else:
+                    prior_vat_total += amt
+                    prior_base_total += base_amt
+
+                co = company_color_map.get(move.company_id.id, COMPANY_COLORS[0])
+                tax = line.tax_line_id
+                rate = abs(tax.amount)
+
+                signed_base = -base_amt if is_refund else base_amt
+                signed_vat = -amt if is_refund else amt
+                if move.id in prior_invoices_map:
+                    prior_invoices_map[move.id]['base_amount'] += signed_base
+                    prior_invoices_map[move.id]['tax_amount'] += signed_vat
+                else:
+                    prior_invoices_map[move.id] = {
+                        'id': move.id,
+                        'move_name': move.name or '/',
+                        'partner_name': move.partner_id.name or '—',
+                        'invoice_date': (move.invoice_date or move.date).strftime('%Y-%m-%d') if (move.invoice_date or move.date) else '',
+                        'tax_name': line.tax_line_id.name or '—',
+                        'tax_rate': rate,
+                        'base_amount': signed_base,
+                        'tax_amount': signed_vat,
+                        'total_amount': total_amt,
+                        'move_type': move.move_type,
+                        'tax_filing_status': move.tax_filing_status or 'unfiled',
+                        'is_locked': bool(move.tax_filing_status == 'filed'),
+                        'tax_filing_period': move.tax_filing_period or '',
+                        'tax_filing_date': move.tax_filing_date.strftime('%Y-%m-%d') if move.tax_filing_date else '',
+                        'state': move.state,
+                        'currency_sym': self._get_currency_symbol(move.currency_id),
+                        'company_name': move.company_id.name,
+                        'box_key': '14',
+                        'box_desc': 'Prior Period Adjustment',
+                    }
+
+                prior_rows.append({
+                    'id':           move.id,
+                    'move_name':    move.name or '/',
+                    'partner':      move.partner_id.name or '—',
+                    'tax_name':     line.tax_line_id.name or '—',
+                    'tax_rate':     rate,
+                    'tax_amount':   amt,
+                    'tax_display':  '{} {:,.2f}'.format(self._get_currency_symbol(move.currency_id), abs(line.balance)),
+                    'base_amount':  base_amt,
+                    'base_display': '{} {:,.2f}'.format(self._get_currency_symbol(move.currency_id), base_amt),
+                    'total_amount': total_amt,
+                    'total_display':'{} {:,.2f}'.format(self._get_currency_symbol(move.currency_id), move.amount_total),
+                    'invoice_date': (move.invoice_date or move.date).strftime('%Y-%m-%d') if (move.invoice_date or move.date) else '',
+                    'move_type':    move.move_type,
+                    'company_id':   move.company_id.id,
+                    'company_name': move.company_id.name,
+                    'company_color':co,
+                    'currency_sym': self._get_currency_symbol(move.currency_id),
+                    'box_key':      '14',
+                    'box_desc':     'Prior Period Adjustment (Unfiled)',
+                    'is_locked':    bool(move.tax_filing_status == 'filed'),
+                    'is_prior_period': True,
+                    'tax_filing_status': move.tax_filing_status or 'unfiled',
+                    'status':       move.state,
+                })
+
+            if include_prior:
+                rows.extend(prior_rows)
+
+            return rows, curr_vat_total, prior_vat_total, prior_base_total
+
+        out_curr_lines, out_prior_lines = fetch_lines(['out_invoice', 'out_refund'])
+        in_curr_lines, in_prior_lines   = fetch_lines(['in_invoice',  'in_refund'])
+
+        out_records, curr_sales_vat, prior_sales_adj, prior_sales_base = build_records(out_curr_lines, out_prior_lines, 'sale')
+        in_records,  curr_purch_vat, prior_purch_adj, prior_purch_base = build_records(in_curr_lines,  in_prior_lines,  'purchase')
+
+        prior_out_moves = set(l.move_id.id for l in out_prior_lines)
+        prior_in_moves  = set(l.move_id.id for l in in_prior_lines)
+        prior_move_ids  = list(prior_out_moves.union(prior_in_moves))
+        prior_unfiled_count = len(prior_move_ids)
+        prior_sales_count   = len(prior_out_moves)
+        prior_purch_count   = len(prior_in_moves)
+        prior_net_adj       = prior_sales_adj - prior_purch_adj
+
+        # Finalize Sales Boxes lists and aggregated invoices
+        for b in sales_boxes.values():
+            b['move_ids'] = sorted(list(b.get('move_ids', set())))
+            b['count'] = len(b['move_ids'])
+            b['invoices'] = list(b.get('invoices_map', {}).values())
+            b.pop('invoices_map', None)
+
+        sales_total_moves = set()
+        sales_total_invs = {}
+        for b in [sales_boxes['1'], sales_boxes['1.1'], sales_boxes['2'], sales_boxes['3'], sales_boxes['4'], sales_boxes['5']]:
+            sales_total_moves.update(b.get('move_ids', []))
+            for inv in b.get('invoices', []):
+                if inv['id'] in sales_total_invs:
+                    sales_total_invs[inv['id']]['base_amount'] += inv['base_amount']
+                    sales_total_invs[inv['id']]['tax_amount'] += inv['tax_amount']
+                else:
+                    sales_total_invs[inv['id']] = dict(inv)
+
+        sales_list = [
+            sales_boxes['1'], sales_boxes['1.1'], sales_boxes['2'],
+            sales_boxes['3'], sales_boxes['4'], sales_boxes['5'],
+        ]
         total_sales_amt = sum(b['amount'] for b in sales_boxes.values())
         total_sales_adj = sum(b['adjustment'] for b in sales_boxes.values())
         total_sales_vat = sum(b['vat_amount'] for b in sales_boxes.values())
+
         sales_total_box = {
             'box': '6',
             'description': 'Total Sales',
             'amount': total_sales_amt,
             'adjustment': total_sales_adj,
-            'vat_amount': total_sales_vat
+            'vat_amount': total_sales_vat,
+            'move_ids': sorted(list(sales_total_moves)),
+            'count': len(sales_total_moves),
+            'invoices': list(sales_total_invs.values()),
         }
+        sales_list.append(sales_total_box)
 
-        # Compute Totals for Purchases
+        # Finalize Purchases Boxes list and aggregated invoices
+        for b in purchase_boxes.values():
+            b['move_ids'] = sorted(list(b.get('move_ids', set())))
+            b['count'] = len(b['move_ids'])
+            b['invoices'] = list(b.get('invoices_map', {}).values())
+            b.pop('invoices_map', None)
+
+        purch_total_moves = set()
+        purch_total_invs = {}
+        for b in [purchase_boxes['7'], purchase_boxes['7.1'], purchase_boxes['8'], purchase_boxes['8.1'], purchase_boxes['9'], purchase_boxes['9.1'], purchase_boxes['10'], purchase_boxes['11']]:
+            purch_total_moves.update(b.get('move_ids', []))
+            for inv in b.get('invoices', []):
+                if inv['id'] in purch_total_invs:
+                    purch_total_invs[inv['id']]['base_amount'] += inv['base_amount']
+                    purch_total_invs[inv['id']]['tax_amount'] += inv['tax_amount']
+                else:
+                    purch_total_invs[inv['id']] = dict(inv)
+
+        purchases_list = [
+            purchase_boxes['7'], purchase_boxes['7.1'], purchase_boxes['8'],
+            purchase_boxes['8.1'], purchase_boxes['9'], purchase_boxes['9.1'],
+            purchase_boxes['10'], purchase_boxes['11'],
+        ]
         total_purch_amt = sum(b['amount'] for b in purchase_boxes.values())
         total_purch_adj = sum(b['adjustment'] for b in purchase_boxes.values())
         total_purch_vat = sum(b['vat_amount'] for b in purchase_boxes.values())
+
         purch_total_box = {
             'box': '12',
             'description': 'Total purchases',
             'amount': total_purch_amt,
             'adjustment': total_purch_adj,
-            'vat_amount': total_purch_vat
+            'vat_amount': total_purch_vat,
+            'move_ids': sorted(list(purch_total_moves)),
+            'count': len(purch_total_moves),
+            'invoices': list(purch_total_invs.values()),
         }
+        purchases_list.append(purch_total_box)
 
-        # Net VAT
+        # Net VAT (Section 3: Net VAT Due / (Refundable))
+        # Prior adjustments are ONLY displayed here in Box 14, in the VAT Amount column.
+        curr_net_vat = curr_sales_vat - curr_purch_vat
+        curr_all_move_ids = sorted(list(sales_total_moves.union(purch_total_moves)))
+        curr_all_invoices = list(sales_total_invs.values()) + list(purch_total_invs.values())
+
         net_vat_box = {
             'box': '13',
             'description': 'Total VAT due for current period',
             'amount': 0.0,
             'adjustment': 0.0,
-            'vat_amount': total_sales_vat - total_purch_vat
-        }
-        corrections_box = {
-            'box': '14',
-            'description': 'Corrections from previous period (between SAR -15,000 and SAR 15,000)',
-            'amount': 0.0,
-            'adjustment': 0.0,
-            'vat_amount': 0.0
+            'vat_amount': curr_net_vat,
+            'move_ids': curr_all_move_ids,
+            'count': len(curr_all_move_ids),
+            'invoices': curr_all_invoices,
         }
 
-        # Build list in order
-        sales_list = [
-            sales_boxes['1'], sales_boxes['1.1'], sales_boxes['2'],
-            sales_boxes['3'], sales_boxes['4'], sales_boxes['5'],
-            sales_total_box
-        ]
-        purchases_list = [
-            purchase_boxes['7'], purchase_boxes['7.1'], purchase_boxes['8'],
-            purchase_boxes['8.1'], purchase_boxes['9'], purchase_boxes['9.1'],
-            purchase_boxes['10'], purchase_boxes['11'],
-            purch_total_box
-        ]
+        prior_invoices_list = list(prior_invoices_map.values())
+        if include_prior:
+            corrections_box = {
+                'box': '14',
+                'description': f'Corrections from previous periods ({prior_unfiled_count} unfiled transactions adjusted)' if prior_unfiled_count else 'Corrections from previous periods',
+                'amount': 0.0,
+                'adjustment': prior_net_adj,
+                'vat_amount': prior_net_adj,
+                'is_active': True,
+                'move_ids': sorted(list(prior_move_ids)),
+                'count': prior_unfiled_count,
+                'invoices': prior_invoices_list,
+            }
+            final_net_due = curr_net_vat + prior_net_adj
+            output_vat = curr_sales_vat
+            input_vat = curr_purch_vat
+        else:
+            corrections_box = {
+                'box': '14',
+                'description': 'Corrections from previous periods',
+                'amount': 0.0,
+                'adjustment': 0.0,
+                'vat_amount': 0.0,
+                'is_active': False,
+                'move_ids': [],
+                'count': 0,
+                'invoices': [],
+            }
+            final_net_due = curr_net_vat
+            output_vat = curr_sales_vat
+            input_vat = curr_purch_vat
+
+        all_due_move_ids = sorted(list(set(curr_all_move_ids).union(set(prior_move_ids if include_prior else []))))
+        all_due_invoices = curr_all_invoices + (prior_invoices_list if include_prior else [])
+        net_due_box = {
+            'box': '15',
+            'description': 'Net VAT due (or reclaimed)',
+            'amount': 0.0,
+            'adjustment': 0.0,
+            'vat_amount': final_net_due,
+            'move_ids': all_due_move_ids,
+            'count': len(all_due_move_ids),
+            'invoices': all_due_invoices,
+        }
+
         net_list = [
             net_vat_box,
-            corrections_box
+            corrections_box,
+            net_due_box
         ]
+
+        active_comp = self.env.company
+        addr_parts = [p for p in [active_comp.street, active_comp.city, active_comp.country_id.name] if p]
+        company_info = {
+            'id': active_comp.id,
+            'name': active_comp.name,
+            'vat': active_comp.vat or '',
+            'cr': getattr(active_comp, 'company_registry', '') or '',
+            'address': ', '.join(addr_parts),
+            'phone': active_comp.phone or '',
+            'email': active_comp.email or '',
+            'website': active_comp.website or '',
+            'currency': active_comp.currency_id.name or '',
+        }
 
         sym = self._get_currency_symbol(company_currency)
         return {
@@ -929,26 +1281,47 @@ class AccountMove(models.Model):
             'input_records':  in_records,
             'output_count':   len(out_records),
             'input_count':    len(in_records),
-                'total_count':    len(out_records) + len(in_records),
+            'total_count':    len(out_records) + len(in_records),
             'output_vat':     output_vat,
             'input_vat':      input_vat,
-            'net_vat':        output_vat - input_vat,
+            'net_vat':        final_net_due,
+            'curr_output_vat':curr_sales_vat,
+            'curr_input_vat': curr_purch_vat,
+            'curr_net_vat':   curr_net_vat,
             'currency_sym':   sym,
-            'companies':      [{'id': c.id, 'name': c.name, 'color': company_color_map.get(c.id, COMPANY_COLORS[0])} for c in companies],
+            'company_info':   company_info,
+            'companies':      [{'id': c.id, 'name': c.name, 'vat': c.vat or '', 'color': company_color_map.get(c.id, COMPANY_COLORS[0])} for c in companies],
             'date_range':     {'start': start_date.strftime('%Y-%m-%d'), 'end': end_date.strftime('%Y-%m-%d')},
             'vat_return_sales': sales_list,
             'vat_return_purchases': purchases_list,
             'vat_return_net': net_list,
+            'is_period_locked': is_period_filed,
+            'filing_id':       existing_filing.id if existing_filing else False,
+            'filing_name':     existing_filing.name if existing_filing else None,
+            'filing_date':     existing_filing.filing_date.strftime('%Y-%m-%d') if (existing_filing and existing_filing.filing_date) else None,
+            'lock_status_label': 'Filed & Locked' if is_period_filed else 'Open / To-be Filed',
+            'include_prior':   include_prior,
+            'prior_count':     prior_unfiled_count,
+            'prior_unfiled_count': prior_unfiled_count,
+            'prior_sales_count':   prior_sales_count,
+            'prior_purch_count':   prior_purch_count,
+            'prior_sales_base':    prior_sales_base,
+            'prior_sales_adj':     prior_sales_adj,
+            'prior_purch_base':    prior_purch_base,
+            'prior_purch_adj':     prior_purch_adj,
+            'prior_net_adj':       prior_net_adj,
+            'prior_move_ids':      prior_move_ids,
         }
 
+
     @api.model
-    def export_analytix_vat_xlsx(self, filter_name='this_month', date_from=None, date_to=None):
+    def export_analytix_vat_xlsx(self, filter_name='this_month', date_from=None, date_to=None, include_prior=False):
         """Generate and return a base64 encoded native .xlsx binary file for ZATCA VAT Return."""
         import io
         import base64
         import xlsxwriter
 
-        vat_data = self.get_analytix_vat_data(filter_name=filter_name, date_from=date_from, date_to=date_to)
+        vat_data = self.get_analytix_vat_data(filter_name=filter_name, date_from=date_from, date_to=date_to, include_prior=include_prior)
         sym = vat_data.get('currency_sym', '')
         date_range = vat_data.get('date_range', {})
         start_str = date_range.get('start', '')
@@ -1014,6 +1387,21 @@ class AccountMove(models.Model):
             'bold': True, 'font_size': 11, 'font_name': 'Arial',
             'bg_color': '#f1f5f9', 'num_format': '#,##0.00', 'border': 1, 'border_color': '#cbd5e1', 'align': 'right', 'valign': 'vcenter'
         })
+        adj_lbl_fmt = workbook.add_format({
+            'bold': True, 'font_size': 11, 'font_name': 'Arial', 'italic': True,
+            'bg_color': '#f0fdf4', 'font_color': '#166534',
+            'border': 1, 'border_color': '#bbf7d0', 'align': 'left', 'valign': 'vcenter'
+        })
+        adj_num_fmt = workbook.add_format({
+            'bold': True, 'font_size': 11, 'font_name': 'Arial',
+            'bg_color': '#f0fdf4', 'font_color': '#166534',
+            'num_format': '#,##0.00', 'border': 1, 'border_color': '#bbf7d0', 'align': 'right', 'valign': 'vcenter'
+        })
+        adj_box_fmt = workbook.add_format({
+            'bold': True, 'font_size': 11, 'font_name': 'Arial',
+            'bg_color': '#f0fdf4', 'font_color': '#166534',
+            'border': 1, 'border_color': '#bbf7d0', 'align': 'center', 'valign': 'vcenter'
+        })
         net_lbl_fmt = workbook.add_format({
             'bold': True, 'font_size': 12, 'font_name': 'Arial',
             'bg_color': '#f0fdf4', 'font_color': '#166534',
@@ -1051,15 +1439,17 @@ class AccountMove(models.Model):
         for box in sales_data:
             row += 1
             worksheet.set_row(row, 22)
-            fmt_lbl = total_lbl_fmt if box['box'] == '6' else cell_desc_fmt
-            fmt_num = total_num_fmt if box['box'] == '6' else cell_num_fmt
-            fmt_box = total_lbl_fmt if box['box'] == '6' else cell_box_fmt
+            is_tot = (box['box'] == '6')
+            is_adj = bool(box.get('is_adjustment_row'))
+            fmt_lbl = total_lbl_fmt if is_tot else (adj_lbl_fmt if is_adj else cell_desc_fmt)
+            fmt_num = total_num_fmt if is_tot else (adj_num_fmt if is_adj else cell_num_fmt)
+            fmt_box = total_lbl_fmt if is_tot else (adj_box_fmt if is_adj else cell_box_fmt)
             
             worksheet.write(row, 0, box['box'], fmt_box)
             worksheet.write(row, 1, box['description'], fmt_lbl)
-            worksheet.write(row, 2, box['amount'], fmt_num)
+            worksheet.write(row, 2, '' if is_adj else box['amount'], fmt_num)
             worksheet.write(row, 3, box['adjustment'], fmt_num)
-            worksheet.write(row, 4, box['vat_amount'], fmt_num)
+            worksheet.write(row, 4, '' if is_adj else box['vat_amount'], fmt_num)
 
         row += 2
         # 2. VAT on Purchases
@@ -1072,15 +1462,17 @@ class AccountMove(models.Model):
         for box in purchases_data:
             row += 1
             worksheet.set_row(row, 22)
-            fmt_lbl = total_lbl_fmt if box['box'] == '12' else cell_desc_fmt
-            fmt_num = total_num_fmt if box['box'] == '12' else cell_num_fmt
-            fmt_box = total_lbl_fmt if box['box'] == '12' else cell_box_fmt
+            is_tot = (box['box'] == '12')
+            is_adj = bool(box.get('is_adjustment_row'))
+            fmt_lbl = total_lbl_fmt if is_tot else (adj_lbl_fmt if is_adj else cell_desc_fmt)
+            fmt_num = total_num_fmt if is_tot else (adj_num_fmt if is_adj else cell_num_fmt)
+            fmt_box = total_lbl_fmt if is_tot else (adj_box_fmt if is_adj else cell_box_fmt)
             
             worksheet.write(row, 0, box['box'], fmt_box)
             worksheet.write(row, 1, box['description'], fmt_lbl)
-            worksheet.write(row, 2, box['amount'], fmt_num)
+            worksheet.write(row, 2, '' if is_adj else box['amount'], fmt_num)
             worksheet.write(row, 3, box['adjustment'], fmt_num)
-            worksheet.write(row, 4, box['vat_amount'], fmt_num)
+            worksheet.write(row, 4, '' if is_adj else box['vat_amount'], fmt_num)
 
         row += 2
         # 3. Net VAT Due
@@ -1093,15 +1485,17 @@ class AccountMove(models.Model):
         for box in net_data:
             row += 1
             worksheet.set_row(row, 24)
-            fmt_lbl = net_lbl_fmt if box['box'] == '13' else cell_desc_fmt
-            fmt_num = net_num_fmt if box['box'] == '13' else cell_num_fmt
-            fmt_box = net_lbl_fmt if box['box'] == '13' else cell_box_fmt
+            is_net_final = (box['box'] == '15')
+            is_box_14 = (box['box'] == '14')
+            fmt_lbl = net_lbl_fmt if is_net_final else (adj_lbl_fmt if (is_box_14 and box.get('is_active')) else cell_desc_fmt)
+            fmt_num = net_num_fmt if is_net_final else (adj_num_fmt if (is_box_14 and box.get('is_active')) else cell_num_fmt)
+            fmt_box = net_lbl_fmt if is_net_final else (adj_box_fmt if (is_box_14 and box.get('is_active')) else cell_box_fmt)
             
             worksheet.write(row, 0, box['box'], fmt_box)
             worksheet.write(row, 1, box['description'], fmt_lbl)
-            worksheet.write(row, 2, box['amount'], fmt_num)
-            worksheet.write(row, 3, box['adjustment'], fmt_num)
-            worksheet.write(row, 4, box['vat_amount'], fmt_num)
+            worksheet.write(row, 2, box['amount'] if box.get('amount') else '', fmt_num)
+            worksheet.write(row, 3, box['adjustment'] if (not is_box_14 and box.get('adjustment')) else '', fmt_num)
+            worksheet.write(row, 4, box['vat_amount'] if (box.get('vat_amount') or is_net_final or (is_box_14 and box.get('is_active'))) else '', fmt_num)
 
         workbook.close()
         output.seek(0)
@@ -1114,13 +1508,13 @@ class AccountMove(models.Model):
         }
 
     @api.model
-    def export_analytix_vat_detailed_xlsx(self, filter_name='custom', date_from=None, date_to=None, company_filter='all', search_query='', sort_col=None, sort_dir='asc'):
+    def export_analytix_vat_detailed_xlsx(self, filter_name='custom', date_from=None, date_to=None, company_filter='all', search_query='', sort_col=None, sort_dir='asc', include_prior=False):
         """Generate and return a base64 encoded native .xlsx binary file for Detailed VAT Return."""
         import io
         import base64
         import xlsxwriter
 
-        vat_data = self.get_analytix_vat_data(filter_name=filter_name, date_from=date_from, date_to=date_to)
+        vat_data = self.get_analytix_vat_data(filter_name=filter_name, date_from=date_from, date_to=date_to, include_prior=include_prior)
         sym = vat_data.get('currency_sym', '')
         date_range = vat_data.get('date_range', {})
         start_str = date_range.get('start', '')
@@ -1826,12 +2220,20 @@ class AccountMove(models.Model):
             'off_balance':           'equity',
         }
 
+        TYPE_ORDER = {
+            'asset':     1,
+            'liability': 2,
+            'equity':    3,
+            'income':    4,
+            'expense':   5,
+        }
+
         TYPE_CFG = {
-            'asset':     {'label': 'Asset',    'bg': '#e3f2fd', 'text': '#1565c0', 'dot': '#1e88e5', 'icon': 'fa-bank'},
-            'liability': {'label': 'Liability', 'bg': '#fce4ec', 'text': '#c62828', 'dot': '#e53935', 'icon': 'fa-credit-card'},
-            'income':    {'label': 'Income',   'bg': '#e8f5e9', 'text': '#2e7d32', 'dot': '#43a047', 'icon': 'fa-arrow-up'},
-            'expense':   {'label': 'Expense',  'bg': '#fff3e0', 'text': '#e65100', 'dot': '#fb8c00', 'icon': 'fa-arrow-down'},
-            'equity':    {'label': 'Equity',   'bg': '#f3e5f5', 'text': '#6a1b9a', 'dot': '#8e24aa', 'icon': 'fa-pie-chart'},
+            'asset':     {'label': 'Assets',      'bg': '#e3f2fd', 'text': '#1565c0', 'dot': '#1e88e5', 'icon': 'fa-bank'},
+            'liability': {'label': 'Liabilities', 'bg': '#fce4ec', 'text': '#c62828', 'dot': '#e53935', 'icon': 'fa-credit-card'},
+            'equity':    {'label': 'Equities',    'bg': '#f3e5f5', 'text': '#6a1b9a', 'dot': '#8e24aa', 'icon': 'fa-pie-chart'},
+            'income':    {'label': 'Income',      'bg': '#e8f5e9', 'text': '#2e7d32', 'dot': '#43a047', 'icon': 'fa-arrow-up'},
+            'expense':   {'label': 'Expense',     'bg': '#fff3e0', 'text': '#e65100', 'dot': '#fb8c00', 'icon': 'fa-arrow-down'},
         }
 
         # Target move domain condition
@@ -1950,6 +2352,7 @@ class AccountMove(models.Model):
                 'name':                 acc_name,
                 'account_type':         acc_type,
                 'type_group':           type_group,
+                'type_seq':             TYPE_ORDER.get(type_group, 99),
                 'type_label':           tcfg['label'],
                 'type_bg':              tcfg['bg'],
                 'type_text':            tcfg['text'],
@@ -1971,8 +2374,16 @@ class AccountMove(models.Model):
                 'currency_sym':         sym,
             })
 
-        # Default sort by account code
-        records.sort(key=lambda r: (r['code'] or '', r['name']))
+        # Default sort by Main Type sequence: Assets (1), Liabilities (2), Equities (3), Income (4), Expense (5), then by Code
+        records.sort(key=lambda r: (r.get('type_seq', 99), r['code'] or '', r['name'] or ''))
+
+        last_type = None
+        for r in records:
+            if r.get('type_group') != last_type:
+                r['is_first_of_group'] = True
+                last_type = r.get('type_group')
+            else:
+                r['is_first_of_group'] = False
 
         return {
             'records':        records,

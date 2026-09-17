@@ -590,51 +590,195 @@
                     </div>
                     <t t-if="!state.vatLoading">
                         
-                        <!-- VAT Custom Date Filter -->
-                        <div class="anx-vat-modal-filters" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
-                            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-                                <span class="anx-vat-filter-title"><i class="fa fa-calendar"/> Custom Date Range:</span>
-                                <div class="anx-vat-filter-group">
-                                    <label class="anx-vat-filter-lbl">From</label>
-                                    <input type="date" class="anx-vat-date-input" data-field="from" t-att-value="state.vatFilterFrom" t-on-change="onVatFilterDateChange" />
+                        <!-- VAT TOOLBAR (Standardized Filter Bar) -->
+                        <div class="anx-vat-toolbar anx-panel">
+                            <div class="anx-vat-toolbar-main">
+                                <!-- Date Range Group -->
+                                <div class="anx-vat-toolbar-group">
+                                    <span class="anx-vat-group-label"><i class="fa fa-calendar"/> Date Period</span>
+                                    <div class="anx-vat-date-fields">
+                                        <div class="anx-vat-date-box">
+                                            <span class="anx-vat-field-tag">From</span>
+                                            <input type="date" class="anx-vat-date-input" data-field="from" t-att-value="state.vatFilterFrom" t-on-change="onVatFilterDateChange" />
+                                        </div>
+                                        <div class="anx-vat-date-box">
+                                            <span class="anx-vat-field-tag">To</span>
+                                            <input type="date" class="anx-vat-date-input" data-field="to" t-att-value="state.vatFilterTo" t-on-change="onVatFilterDateChange" />
+                                        </div>
+                                        <button class="anx-vat-action-btn anx-vat-btn-primary" t-on-click="applyVatFilter" title="Apply Custom Date Filter">
+                                            <i class="fa fa-filter"/> Filter
+                                        </button>
+                                        <button class="anx-vat-action-btn anx-vat-btn-light" t-on-click="clearVatFilter" title="Reset custom dates and restore current period">
+                                            <i class="fa fa-refresh"/> Reset
+                                        </button>
+                                    </div>
                                 </div>
-                                <div class="anx-vat-filter-group">
-                                    <label class="anx-vat-filter-lbl">To</label>
-                                    <input type="date" class="anx-vat-date-input" data-field="to" t-att-value="state.vatFilterTo" t-on-change="onVatFilterDateChange" />
+
+                                <div class="anx-vat-sep"></div>
+
+                                <!-- Prior Unfiled Adjustment Widget -->
+                                <div t-if="state.vatData and !state.vatData.is_period_locked" class="anx-vat-toolbar-group">
+                                    <div class="anx-vat-prior-card">
+                                        <label class="anx-vat-prior-label">
+                                            <input type="checkbox" t-att-checked="state.includePriorUnfiled" t-on-change="toggleIncludePriorUnfiled" />
+                                            <span>Adjust Prior Unfiled</span>
+                                        </label>
+                                        <t t-if="state.vatData.prior_unfiled_count > 0">
+                                            <span t-if="state.includePriorUnfiled" class="anx-vat-tag anx-vat-tag-active" title="Prior unfiled invoices are included in this return">
+                                                <i class="fa fa-check-circle"/> <t t-esc="state.vatData.prior_unfiled_count"/> unfiled (<t t-esc="state.vatData.currency_sym"/>&#160;<t t-esc="formatShort(state.vatData.prior_net_adj)"/>)
+                                            </span>
+                                            <span t-else="" class="anx-vat-tag anx-vat-tag-warn" title="Prior unfiled invoices are excluded from this return">
+                                                <i class="fa fa-ban"/> <t t-esc="state.vatData.prior_unfiled_count"/> unfiled (Excluded)
+                                            </span>
+                                            <button class="anx-vat-btn-pill" t-on-click="viewPriorUnfiledInvoices" title="View all unfiled transactions from previous periods">
+                                                <i class="fa fa-list"/> View
+                                            </button>
+                                        </t>
+                                        <t t-else="">
+                                            <span class="anx-vat-tag anx-vat-tag-muted">0 unfiled</span>
+                                        </t>
+                                    </div>
                                 </div>
-                                <button class="anx-vat-filter-btn" t-on-click="applyVatFilter">
-                                    <i class="fa fa-filter"/> Filter
-                                </button>
+                                <div t-if="state.vatData and state.vatData.is_period_locked" class="anx-vat-toolbar-group">
+                                    <div class="anx-vat-prior-card">
+                                        <span class="anx-vat-locked-prior-title">Prior Adjustments:</span>
+                                        <span t-if="state.vatData.prior_unfiled_count > 0" class="anx-vat-tag anx-vat-tag-active">
+                                            <t t-esc="state.vatData.prior_unfiled_count"/> adjusted (<t t-esc="state.vatData.currency_sym"/>&#160;<t t-esc="formatShort(state.vatData.prior_net_adj)"/>)
+                                        </span>
+                                        <span t-else="" class="anx-vat-tag anx-vat-tag-muted">None</span>
+                                        <button t-if="state.vatData.prior_unfiled_count > 0" class="anx-vat-btn-pill" t-on-click="viewPriorUnfiledInvoices">
+                                            <i class="fa fa-list"/> View
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="anx-vat-sep"></div>
+
+                                <!-- Status & Lock Controls -->
+                                <div t-if="state.vatData" class="anx-vat-toolbar-group">
+                                    <button t-if="!state.vatData.is_period_locked" class="anx-vat-action-btn anx-vat-btn-lock" t-on-click="openLockTaxModal" title="Mark this tax period as filed and locked">
+                                        <i class="fa fa-lock"/> Tax Filed &amp; Locked
+                                    </button>
+                                    <t t-if="state.vatData.is_period_locked">
+                                        <span class="anx-vat-status-badge">
+                                            <i class="fa fa-check-circle"/> Filed &amp; Locked
+                                        </span>
+                                        <button class="anx-vat-action-btn anx-vat-btn-reopen" t-on-click="openUnlockTaxModal" title="Reopen or unfile this tax period">
+                                            <i class="fa fa-undo"/> Reopen
+                                        </button>
+                                    </t>
+                                    <button class="anx-vat-action-btn anx-vat-btn-outline" t-on-click="openTaxFilingHistory" title="View standard all-time tax filing history">
+                                        <i class="fa fa-history"/> Filing History
+                                    </button>
+                                </div>
                             </div>
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                                <button class="anx-vat-filter-btn" t-on-click="printVatReport" t-if="state.vatData" style="background: linear-gradient(135deg, #1e88e5 0%, #1565c0 100%); border: none; color: #fff; padding: 6px 14px; border-radius: 6px; font-weight: 600; font-size: 13px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(30, 136, 229, 0.3);">
+
+                            <!-- Export buttons (Right side) -->
+                            <div class="anx-vat-toolbar-exports" t-if="state.vatData">
+                                <button class="anx-vat-action-btn anx-vat-btn-pdf" t-on-click="printVatReport" title="Print Official ZATCA PDF Report">
                                     <i class="fa fa-print"/> Print PDF
                                 </button>
-                                <button class="anx-vat-filter-btn" t-on-click="exportVatExcel" t-if="state.vatData" style="background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%); border: none; color: #fff; padding: 6px 14px; border-radius: 6px; font-weight: 600; font-size: 13px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(46, 125, 50, 0.3);">
+                                <button class="anx-vat-action-btn anx-vat-btn-excel" t-on-click="exportVatExcel" title="Export ZATCA VAT Return to Excel">
                                     <i class="fa fa-file-excel-o"/> Export Excel
+                                </button>
+                            </div>
+
+                            <!-- Validation Error Alert Banner -->
+                            <div t-if="state.vatValidationError" class="anx-vat-validation-alert">
+                                <i class="fa fa-exclamation-triangle anx-vat-alert-icon"/>
+                                <div class="anx-vat-alert-text">
+                                    <t t-esc="state.vatValidationError"/>
+                                </div>
+                                <button class="anx-vat-alert-dismiss" t-on-click="dismissVatValidationError" title="Dismiss">
+                                    <i class="fa fa-times"/>
                                 </button>
                             </div>
                         </div>
 
-                        <!-- KPI bar -->
-                        <div class="anx-inv-kpi-bar" t-if="state.vatData">
-                            <div class="anx-inv-kpi-pill anx-vat-kpi-output">
-                                <span class="anx-inv-kpi-pill-label">Output VAT (Sales)</span>
-                                <span class="anx-inv-kpi-pill-val"><span class="anx-currency-sym"><t t-esc="state.vatData.currency_sym"/></span>&#160;<t t-esc="formatShort(state.vatData.output_vat)"/></span>
+                        <!-- VAT DATA CONTENT (when loaded successfully) -->
+                        <t t-if="state.vatData">
+                            <!-- 4 KPI Cards (Full Width Grid) -->
+                            <div class="anx-kpi-row anx-vat-kpi-row">
+                                <!-- Card 1: Output VAT (Sales) -->
+                                <div class="anx-kpi-card anx-vat-kpi-card">
+                                    <div class="anx-kpi-top">
+                                        <div class="anx-kpi-icon anx-icon-blue"><i class="fa fa-arrow-up"/></div>
+                                        <span class="anx-kpi-badge badge-up">
+                                            <i class="fa fa-tag"/> Box 6
+                                        </span>
+                                    </div>
+                                    <div class="anx-kpi-value"><span class="anx-currency-sym"><t t-esc="state.vatData.currency_sym"/></span>&#160;<t t-esc="formatShort(state.vatData.output_vat)"/></div>
+                                    <div class="anx-kpi-label">Output VAT (Sales)</div>
+                                    <div class="anx-kpi-sub">
+                                        <i class="fa fa-shield" style="color:#0284c7;"/>
+                                        &#160;Tax collected from customer sales
+                                    </div>
+                                </div>
+
+                                <!-- Card 2: Input VAT (Bills) -->
+                                <div class="anx-kpi-card anx-vat-kpi-card">
+                                    <div class="anx-kpi-top">
+                                        <div class="anx-kpi-icon anx-icon-red"><i class="fa fa-arrow-down"/></div>
+                                        <span class="anx-kpi-badge badge-down">
+                                            <i class="fa fa-tag"/> Box 12
+                                        </span>
+                                    </div>
+                                    <div class="anx-kpi-value"><span class="anx-currency-sym"><t t-esc="state.vatData.currency_sym"/></span>&#160;<t t-esc="formatShort(state.vatData.input_vat)"/></div>
+                                    <div class="anx-kpi-label">Input VAT (Bills)</div>
+                                    <div class="anx-kpi-sub">
+                                        <i class="fa fa-shopping-cart" style="color:#e11d48;"/>
+                                        &#160;Deductible tax paid on purchases
+                                    </div>
+                                </div>
+
+                                <!-- Card 3: Net VAT Payable / Refundable -->
+                                <div class="anx-kpi-card anx-vat-kpi-card">
+                                    <div class="anx-kpi-top">
+                                        <div t-attf-class="anx-kpi-icon {{ state.vatData.net_vat >= 0 ? 'anx-icon-emerald' : 'anx-icon-teal' }}">
+                                            <i class="fa fa-calculator"/>
+                                        </div>
+                                        <span t-attf-class="anx-kpi-badge {{ state.vatData.net_vat >= 0 ? 'badge-up' : 'badge-down' }}">
+                                            <i t-attf-class="fa {{ state.vatData.net_vat >= 0 ? 'fa-credit-card' : 'fa-reply' }}"/>
+                                            <t t-esc="state.vatData.net_vat >= 0 ? 'Net Payable' : 'Refundable'"/>
+                                        </span>
+                                    </div>
+                                    <div class="anx-kpi-value" t-attf-style="{{ state.vatData.net_vat >= 0 ? 'color: #059669;' : 'color: #0284c7;' }}">
+                                        <span class="anx-currency-sym"><t t-esc="state.vatData.currency_sym"/></span>&#160;<t t-esc="formatShort(state.vatData.net_vat)"/>
+                                    </div>
+                                    <div class="anx-kpi-label">Net VAT Due to ZATCA</div>
+                                    <div class="anx-kpi-sub">
+                                        <i class="fa fa-balance-scale" style="color:#059669;"/>
+                                        &#160;Output &#8722; Input &#177; Adjustments
+                                    </div>
+                                </div>
+
+                                <!-- Card 4: Total Tax Lines / Period Audit -->
+                                <div class="anx-kpi-card anx-vat-kpi-card">
+                                    <div class="anx-kpi-top">
+                                        <div class="anx-kpi-icon anx-icon-purple"><i class="fa fa-check-square-o"/></div>
+                                        <span t-if="state.vatData.is_period_locked" class="anx-kpi-badge badge-up">
+                                            <i class="fa fa-lock"/> Locked
+                                        </span>
+                                        <span t-else="" class="anx-kpi-badge badge-draft">
+                                            <i class="fa fa-unlock-alt"/> Draft
+                                        </span>
+                                    </div>
+                                    <div class="anx-kpi-value"><t t-esc="state.vatData.total_count"/> <span style="font-size: 13px; font-weight: 500; opacity: 0.65;">lines</span></div>
+                                    <div class="anx-kpi-label">Total Tax Transactions</div>
+                                    <div class="anx-kpi-sub">
+                                        <t t-if="state.vatData.prior_unfiled_count > 0">
+                                            <i class="fa fa-history" style="color:#d97706;"/>&#160;<t t-esc="state.vatData.prior_unfiled_count"/> prior unfiled items
+                                        </t>
+                                        <t t-else="">
+                                            <i class="fa fa-check" style="color:#10b981;"/>&#160;Current period fully audited
+                                        </t>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="anx-inv-kpi-pill anx-vat-kpi-input">
-                                <span class="anx-inv-kpi-pill-label">Input VAT (Bills)</span>
-                                <span class="anx-inv-kpi-pill-val"><span class="anx-currency-sym"><t t-esc="state.vatData.currency_sym"/></span>&#160;<t t-esc="formatShort(state.vatData.input_vat)"/></span>
-                            </div>
-                            <div class="anx-inv-kpi-pill anx-vat-kpi-net">
-                                <span class="anx-inv-kpi-pill-label">Net VAT Payable</span>
-                                <span class="anx-inv-kpi-pill-val"><span class="anx-currency-sym"><t t-esc="state.vatData.currency_sym"/></span>&#160;<t t-esc="formatShort(state.vatData.net_vat)"/></span>
-                            </div>
-                            <div class="anx-inv-kpi-pill anx-inv-kpi-total">
-                                <span class="anx-inv-kpi-pill-label">Total Tax Lines</span>
-                                <span class="anx-inv-kpi-pill-val"><t t-esc="state.vatData.total_count"/></span>
-                            </div>
-                            <div class="anx-inv-company-legend" t-if="state.vatData.companies.length > 1">
+
+                            <!-- Company Multi-Filter (if multiple companies) -->
+                            <div class="anx-inv-company-legend anx-vat-company-legend" t-if="state.vatData.companies and state.vatData.companies.length > 1">
+                                <span class="anx-vat-co-legend-title"><i class="fa fa-building-o"/> Filter by Company:</span>
                                 <t t-foreach="state.vatData.companies" t-as="comp" t-key="comp.id">
                                     <span t-attf-class="anx-inv-co-legend-item {{ state.vatCompanyFilter == comp.id ? 'active' : '' }}"
                                           t-attf-style="color:{{ comp.color.text }};"
@@ -643,93 +787,226 @@
                                         <t t-esc="comp.name"/>
                                     </span>
                                 </t>
-                                <span t-if="state.vatCompanyFilter !== 'all'" class="anx-inv-co-legend-item anx-inv-co-clear" data-company="all" t-on-click="onVatCompanyFilter">✕ All</span>
+                                <span t-if="state.vatCompanyFilter !== 'all'" class="anx-inv-co-legend-item anx-inv-co-clear" data-company="all" t-on-click="onVatCompanyFilter">✕ All Companies</span>
                             </div>
-                        </div>
-                        <!-- ZATCA VAT Return tables -->
-                        <div class="anx-section-label" style="margin-top:20px; font-weight: 700; color: #1e3a8a;">
-                            <i class="fa fa-arrow-up"/> 1. VAT on Sales
-                        </div>
-                        <div class="anx-inv-table-wrap anx-panel" style="margin-bottom:20px;">
-                            <table class="anx-inv-table">
-                                <thead>
-                                    <tr>
-                                        <th class="anx-inv-th anx-inv-th-center" style="width: 10%; text-align: center;">Box #</th>
-                                        <th class="anx-inv-th" style="width: 50%;">Description</th>
-                                        <th class="anx-inv-th anx-inv-th-right" style="width: 15%; text-align: right;">Amount (Base)</th>
-                                        <th class="anx-inv-th anx-inv-th-right" style="width: 15%; text-align: right;">Adjustment</th>
-                                        <th class="anx-inv-th anx-inv-th-right" style="width: 15%; text-align: right;">VAT Amount</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <t t-foreach="state.vatData.vat_return_sales" t-as="b" t-key="b.box">
-                                        <tr t-attf-style="{{ (b.box === '6') ? 'font-weight: 700; background-color: rgba(30, 58, 138, 0.05);' : '' }}">
-                                            <td class="anx-inv-td anx-inv-td-center" style="text-align: center;"><t t-esc="b.box"/></td>
-                                            <td class="anx-inv-td" t-attf-style="{{ (b.box === '6') ? 'font-weight: 700;' : '' }}"><t t-esc="b.description"/></td>
-                                            <td class="anx-inv-td anx-inv-td-amount" style="text-align: right;"><span class="anx-currency-sym"><t t-esc="state.vatData.currency_sym"/></span>&#160;<t t-esc="formatShort(b.amount)"/></td>
-                                            <td class="anx-inv-td anx-inv-td-amount" style="text-align: right;"><span class="anx-currency-sym"><t t-esc="state.vatData.currency_sym"/></span>&#160;<t t-esc="formatShort(b.adjustment)"/></td>
-                                            <td class="anx-inv-td anx-inv-td-amount" t-attf-style="text-align: right; {{ (b.box === '6') ? 'color: #1e88e5; font-weight: 700;' : '' }}"><span class="anx-currency-sym"><t t-esc="state.vatData.currency_sym"/></span>&#160;<t t-esc="formatShort(b.vat_amount)"/></td>
-                                        </tr>
-                                    </t>
-                                </tbody>
-                            </table>
-                        </div>
 
-                        <div class="anx-section-label" style="margin-top:20px; font-weight: 700; color: #7f1d1d;">
-                            <i class="fa fa-arrow-down"/> 2. VAT on Purchases
-                        </div>
-                        <div class="anx-inv-table-wrap anx-panel" style="margin-bottom:20px;">
-                            <table class="anx-inv-table">
-                                <thead>
-                                    <tr>
-                                        <th class="anx-inv-th anx-inv-th-center" style="width: 10%; text-align: center;">Box #</th>
-                                        <th class="anx-inv-th" style="width: 50%;">Description</th>
-                                        <th class="anx-inv-th anx-inv-th-right" style="width: 15%; text-align: right;">Amount (Base)</th>
-                                        <th class="anx-inv-th anx-inv-th-right" style="width: 15%; text-align: right;">Adjustment</th>
-                                        <th class="anx-inv-th anx-inv-th-right" style="width: 15%; text-align: right;">VAT Amount</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <t t-foreach="state.vatData.vat_return_purchases" t-as="b" t-key="b.box">
-                                        <tr t-attf-style="{{ (b.box === '12') ? 'font-weight: 700; background-color: rgba(127, 29, 29, 0.05);' : '' }}">
-                                            <td class="anx-inv-td anx-inv-td-center" style="text-align: center;"><t t-esc="b.box"/></td>
-                                            <td class="anx-inv-td" t-attf-style="{{ (b.box === '12') ? 'font-weight: 700;' : '' }}"><t t-esc="b.description"/></td>
-                                            <td class="anx-inv-td anx-inv-td-amount" style="text-align: right;"><span class="anx-currency-sym"><t t-esc="state.vatData.currency_sym"/></span>&#160;<t t-esc="formatShort(b.amount)"/></td>
-                                            <td class="anx-inv-td anx-inv-td-amount" style="text-align: right;"><span class="anx-currency-sym"><t t-esc="state.vatData.currency_sym"/></span>&#160;<t t-esc="formatShort(b.adjustment)"/></td>
-                                            <td class="anx-inv-td anx-inv-td-amount" t-attf-style="text-align: right; {{ (b.box === '12') ? 'color: #e53935; font-weight: 700;' : '' }}"><span class="anx-currency-sym"><t t-esc="state.vatData.currency_sym"/></span>&#160;<t t-esc="formatShort(b.vat_amount)"/></td>
-                                        </tr>
-                                    </t>
-                                </tbody>
-                            </table>
-                        </div>
+                            <!-- SECTION 1: VAT on Sales -->
+                            <div class="anx-panel anx-vat-section-panel">
+                                <div class="anx-vat-panel-header anx-vat-header-sales">
+                                    <div class="anx-vat-header-left">
+                                        <div class="anx-vat-header-icon anx-vat-icon-sales">
+                                            <i class="fa fa-arrow-up"/>
+                                        </div>
+                                        <div>
+                                            <div class="anx-vat-header-title">1. VAT on Sales (Output Tax)</div>
+                                            <div class="anx-vat-header-sub">ZATCA Standard Tax Return • Boxes 1 to 6</div>
+                                        </div>
+                                    </div>
+                                    <div class="anx-vat-header-right">
+                                        <span class="anx-vat-header-pill anx-pill-sales">
+                                            Output VAT Total:&#160;<strong><t t-esc="state.vatData.currency_sym"/>&#160;<t t-esc="formatShort(state.vatData.output_vat)"/></strong>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="anx-inv-table-wrap">
+                                    <table class="anx-inv-table">
+                                        <thead>
+                                            <tr>
+                                                <th class="anx-inv-th anx-inv-th-center" style="width: 8%; text-align: center;">Box #</th>
+                                                <th class="anx-inv-th" style="width: 42%;">Description</th>
+                                                <th class="anx-inv-th anx-inv-th-right" style="width: 20%; text-align: right;">Amount (Base)</th>
+                                                <th class="anx-inv-th anx-inv-th-right" style="width: 15%; text-align: right;">Adjustment</th>
+                                                <th class="anx-inv-th anx-inv-th-right" style="width: 15%; text-align: right;">VAT Amount</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <t t-foreach="state.vatData.vat_return_sales or []" t-as="b" t-key="b.box">
+                                                <tr t-attf-class="anx-vat-clickable-row {{ (b.box === '6') ? 'anx-vat-row-total anx-vat-row-total-sales' : '' }} {{ b.count > 0 ? 'has-invoices' : '' }}" t-on-click="() => this.openVatBoxInOdoo(b)" t-attf-title="{{ b.count > 0 ? ('Click to view ' + b.count + ' associated invoice(s) in Odoo') : 'No associated transactions' }}">
+                                                    <td class="anx-inv-td anx-inv-td-center" style="text-align: center;">
+                                                        <span class="anx-vat-box-badge"><t t-esc="b.box"/></span>
+                                                    </td>
+                                                    <td class="anx-inv-td" t-attf-style="{{ (b.box === '6') ? 'font-weight: 700;' : '' }}">
+                                                        <t t-esc="b.description"/>
+                                                        <span t-if="b.count > 0" class="anx-vat-inline-count ms-2" title="Click to view in Odoo">
+                                                            <i class="fa fa-external-link"/> <t t-esc="b.count"/>
+                                                        </span>
+                                                    </td>
+                                                    <td class="anx-inv-td anx-inv-td-amount" style="text-align: right;">
+                                                        <span class="anx-currency-sym"><t t-esc="state.vatData.currency_sym"/></span>&#160;<t t-esc="formatShort(b.amount)"/>
+                                                    </td>
+                                                    <td class="anx-inv-td anx-inv-td-amount" t-attf-style="text-align: right; {{ (b.box === '6' and b.adjustment != 0.0) ? 'color: #047857; font-weight: 700;' : '' }}">
+                                                        <t t-if="b.adjustment and b.adjustment != 0.0">
+                                                            <span class="anx-currency-sym"><t t-esc="state.vatData.currency_sym"/></span>&#160;<t t-esc="formatShort(b.adjustment)"/>
+                                                        </t>
+                                                        <t t-else="">&#8212;</t>
+                                                    </td>
+                                                    <td class="anx-inv-td anx-inv-td-amount" t-attf-style="text-align: right; {{ (b.box === '6') ? 'color: #0284c7; font-weight: 700;' : '' }}">
+                                                        <span class="anx-currency-sym"><t t-esc="state.vatData.currency_sym"/></span>&#160;<t t-esc="formatShort(b.vat_amount)"/>
+                                                    </td>
+                                                </tr>
+                                            </t>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
 
-                        <div class="anx-section-label" style="margin-top:20px; font-weight: 700; color: #166534;">
-                            <i class="fa fa-calculator"/> 3. Net VAT Due
-                        </div>
-                        <div class="anx-inv-table-wrap anx-panel" style="margin-bottom:20px;">
-                            <table class="anx-inv-table">
-                                <thead>
-                                    <tr>
-                                        <th class="anx-inv-th anx-inv-th-center" style="width: 10%; text-align: center;">Box #</th>
-                                        <th class="anx-inv-th" style="width: 50%;">Description</th>
-                                        <th class="anx-inv-th anx-inv-th-right" style="width: 15%; text-align: right;">Amount (Base)</th>
-                                        <th class="anx-inv-th anx-inv-th-right" style="width: 15%; text-align: right;">Adjustment</th>
-                                        <th class="anx-inv-th anx-inv-th-right" style="width: 15%; text-align: right;">VAT Amount</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <t t-foreach="state.vatData.vat_return_net" t-as="b" t-key="b.box">
-                                        <tr style="font-weight: 700; background-color: rgba(22, 101, 52, 0.05);">
-                                            <td class="anx-inv-td anx-inv-td-center" style="text-align: center;"><t t-esc="b.box"/></td>
-                                            <td class="anx-inv-td"><t t-esc="b.description"/></td>
-                                            <td class="anx-inv-td anx-inv-td-amount" style="text-align: right;">&#8212;</td>
-                                            <td class="anx-inv-td anx-inv-td-amount" style="text-align: right;">&#8212;</td>
-                                            <td class="anx-inv-td anx-inv-td-amount" style="text-align: right; color: #2e7d32; font-weight: 700;"><span class="anx-currency-sym"><t t-esc="state.vatData.currency_sym"/></span>&#160;<t t-esc="formatShort(b.vat_amount)"/></td>
-                                        </tr>
+                            <!-- SECTION 2: VAT on Purchases -->
+                            <div class="anx-panel anx-vat-section-panel">
+                                <div class="anx-vat-panel-header anx-vat-header-purchases">
+                                    <div class="anx-vat-header-left">
+                                        <div class="anx-vat-header-icon anx-vat-icon-purchases">
+                                            <i class="fa fa-arrow-down"/>
+                                        </div>
+                                        <div>
+                                            <div class="anx-vat-header-title">2. VAT on Purchases (Input Tax)</div>
+                                            <div class="anx-vat-header-sub">ZATCA Standard Tax Return • Boxes 7 to 12</div>
+                                        </div>
+                                    </div>
+                                    <div class="anx-vat-header-right">
+                                        <span class="anx-vat-header-pill anx-pill-purchases">
+                                            Input VAT Total:&#160;<strong><t t-esc="state.vatData.currency_sym"/>&#160;<t t-esc="formatShort(state.vatData.input_vat)"/></strong>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="anx-inv-table-wrap">
+                                    <table class="anx-inv-table">
+                                        <thead>
+                                            <tr>
+                                                <th class="anx-inv-th anx-inv-th-center" style="width: 8%; text-align: center;">Box #</th>
+                                                <th class="anx-inv-th" style="width: 42%;">Description</th>
+                                                <th class="anx-inv-th anx-inv-th-right" style="width: 20%; text-align: right;">Amount (Base)</th>
+                                                <th class="anx-inv-th anx-inv-th-right" style="width: 15%; text-align: right;">Adjustment</th>
+                                                <th class="anx-inv-th anx-inv-th-right" style="width: 15%; text-align: right;">VAT Amount</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <t t-foreach="state.vatData.vat_return_purchases or []" t-as="b" t-key="b.box">
+                                                <tr t-attf-class="anx-vat-clickable-row {{ (b.box === '12') ? 'anx-vat-row-total anx-vat-row-total-purchases' : '' }} {{ b.count > 0 ? 'has-invoices' : '' }}" t-on-click="() => this.openVatBoxInOdoo(b)" t-attf-title="{{ b.count > 0 ? ('Click to view ' + b.count + ' associated bill(s) in Odoo') : 'No associated transactions' }}">
+                                                    <td class="anx-inv-td anx-inv-td-center" style="text-align: center;">
+                                                        <span class="anx-vat-box-badge"><t t-esc="b.box"/></span>
+                                                    </td>
+                                                    <td class="anx-inv-td" t-attf-style="{{ (b.box === '12') ? 'font-weight: 700;' : '' }}">
+                                                        <t t-esc="b.description"/>
+                                                        <span t-if="b.count > 0" class="anx-vat-inline-count anx-vat-inline-count-purchases ms-2" title="Click to view in Odoo">
+                                                            <i class="fa fa-external-link"/> <t t-esc="b.count"/>
+                                                        </span>
+                                                    </td>
+                                                    <td class="anx-inv-td anx-inv-td-amount" style="text-align: right;">
+                                                        <span class="anx-currency-sym"><t t-esc="state.vatData.currency_sym"/></span>&#160;<t t-esc="formatShort(b.amount)"/>
+                                                    </td>
+                                                    <td class="anx-inv-td anx-inv-td-amount" t-attf-style="text-align: right; {{ (b.box === '12' and b.adjustment != 0.0) ? 'color: #b45309; font-weight: 700;' : '' }}">
+                                                        <t t-if="b.adjustment and b.adjustment != 0.0">
+                                                            <span class="anx-currency-sym"><t t-esc="state.vatData.currency_sym"/></span>&#160;<t t-esc="formatShort(b.adjustment)"/>
+                                                        </t>
+                                                        <t t-else="">&#8212;</t>
+                                                    </td>
+                                                    <td class="anx-inv-td anx-inv-td-amount" t-attf-style="text-align: right; {{ (b.box === '12') ? 'color: #e11d48; font-weight: 700;' : '' }}">
+                                                        <span class="anx-currency-sym"><t t-esc="state.vatData.currency_sym"/></span>&#160;<t t-esc="formatShort(b.vat_amount)"/>
+                                                    </td>
+                                                </tr>
+                                            </t>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- SECTION 3: Net VAT Due -->
+                            <div class="anx-panel anx-vat-section-panel">
+                                <div class="anx-vat-panel-header anx-vat-header-net">
+                                    <div class="anx-vat-header-left">
+                                        <div class="anx-vat-header-icon anx-vat-icon-net">
+                                            <i class="fa fa-calculator"/>
+                                        </div>
+                                        <div>
+                                            <div class="anx-vat-header-title">3. Net VAT Due / (Refundable)</div>
+                                            <div class="anx-vat-header-sub">ZATCA Standard Tax Return • Boxes 13 to 16</div>
+                                        </div>
+                                    </div>
+                                    <div class="anx-vat-header-right">
+                                        <span t-attf-class="anx-vat-header-pill {{ state.vatData.net_vat >= 0 ? 'anx-pill-net-pay' : 'anx-pill-net-refund' }}">
+                                            Net VAT:&#160;<strong><t t-esc="state.vatData.currency_sym"/>&#160;<t t-esc="formatShort(state.vatData.net_vat)"/></strong>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="anx-inv-table-wrap">
+                                    <table class="anx-inv-table">
+                                        <thead>
+                                            <tr>
+                                                <th class="anx-inv-th anx-inv-th-center" style="width: 8%; text-align: center;">Box #</th>
+                                                <th class="anx-inv-th" style="width: 42%;">Description</th>
+                                                <th class="anx-inv-th anx-inv-th-right" style="width: 20%; text-align: right;">Amount (Base)</th>
+                                                <th class="anx-inv-th anx-inv-th-right" style="width: 15%; text-align: right;">Adjustment</th>
+                                                <th class="anx-inv-th anx-inv-th-right" style="width: 15%; text-align: right;">VAT Amount</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <t t-foreach="state.vatData.vat_return_net or []" t-as="b" t-key="b.box">
+                                                <tr t-attf-class="anx-vat-clickable-row {{ (b.box === '15') ? 'anx-vat-row-total anx-vat-row-total-net' : (b.box === '14' ? 'anx-vat-row-correction' : '') }} {{ b.count > 0 ? 'has-invoices' : '' }}" t-on-click="() => this.openVatBoxInOdoo(b)" t-attf-title="{{ b.count > 0 ? ('Click to view ' + b.count + ' associated transaction(s) in Odoo') : 'No associated transactions' }}">
+                                                    <td class="anx-inv-td anx-inv-td-center" style="text-align: center;">
+                                                        <span class="anx-vat-box-badge"><t t-esc="b.box"/></span>
+                                                    </td>
+                                                    <td class="anx-inv-td">
+                                                        <t t-esc="b.description"/>
+                                                        <span t-if="b.box === '14' and b.is_active" class="anx-vat-tag anx-vat-tag-active" style="margin-left: 8px;">INCLUDED</span>
+                                                        <span t-if="b.count > 0" class="anx-vat-inline-count anx-vat-inline-count-net ms-2" title="Click to view in Odoo">
+                                                            <i class="fa fa-external-link"/> <t t-esc="b.count"/>
+                                                        </span>
+                                                    </td>
+                                                    <td class="anx-inv-td anx-inv-td-amount" style="text-align: right;">
+                                                        <t t-if="b.amount and b.amount != 0.0">
+                                                            <span class="anx-currency-sym"><t t-esc="state.vatData.currency_sym"/></span>&#160;<t t-esc="formatShort(b.amount)"/>
+                                                        </t>
+                                                        <t t-else="">&#8212;</t>
+                                                    </td>
+                                                    <td class="anx-inv-td anx-inv-td-amount" style="text-align: right;">
+                                                        <t t-if="b.box === '14'">
+                                                            <t t-if="b.is_active and b.adjustment and b.adjustment != 0.0">
+                                                                <span class="anx-currency-sym"><t t-esc="state.vatData.currency_sym"/></span>&#160;<t t-esc="formatShort(b.adjustment)"/>
+                                                            </t>
+                                                            <t t-else="">&#8212;</t>
+                                                        </t>
+                                                        <t t-elif="b.adjustment and b.adjustment != 0.0">
+                                                            <span class="anx-currency-sym"><t t-esc="state.vatData.currency_sym"/></span>&#160;<t t-esc="formatShort(b.adjustment)"/>
+                                                        </t>
+                                                        <t t-else="">&#8212;</t>
+                                                    </td>
+                                                    <td class="anx-inv-td anx-inv-td-amount" t-attf-style="text-align: right; {{ (b.box === '15') ? 'color: #059669; font-weight: 800; font-size: 14.5px;' : (b.box === '14' ? 'color: #0284c7; font-weight: 700;' : 'color: #334155; font-weight: 700;') }}">
+                                                        <t t-if="b.box === '14'">
+                                                            <t t-if="b.is_active and b.vat_amount and b.vat_amount != 0.0">
+                                                                <span class="anx-currency-sym"><t t-esc="state.vatData.currency_sym"/></span>&#160;<t t-esc="formatShort(b.vat_amount)"/>
+                                                            </t>
+                                                            <t t-else="">&#8212;</t>
+                                                        </t>
+                                                        <t t-else="">
+                                                            <t t-if="b.vat_amount and b.vat_amount != 0.0">
+                                                                <span class="anx-currency-sym"><t t-esc="state.vatData.currency_sym"/></span>&#160;<t t-esc="formatShort(b.vat_amount)"/>
+                                                            </t>
+                                                            <t t-else="">
+                                                                <span class="anx-currency-sym"><t t-esc="state.vatData.currency_sym"/></span>&#160;0.00
+                                                            </t>
+                                                        </t>
+                                                    </td>
+                                                </tr>
+                                            </t>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </t>
+                        <t t-else="">
+                            <div class="anx-inv-empty" style="padding: 48px 20px; text-align: center; margin-top: 24px; background: rgba(15, 23, 42, 0.4); border: 1px dashed rgba(255, 255, 255, 0.1); border-radius: 12px;">
+                                <i class="fa fa-calculator fa-3x" style="color: #64748b; display: block; margin-bottom: 14px;"/>
+                                <div style="font-size: 15px; font-weight: 600; color: #cbd5e1; margin-bottom: 6px;">No VAT Return Data Available</div>
+                                <div style="font-size: 13px; color: #94a3b8; max-width: 550px; margin: 0 auto; line-height: 1.6;">
+                                    <t t-if="state.vatValidationError">
+                                        Please resolve the date range conflict shown in the alert above, or choose a different date range.
                                     </t>
-                                </tbody>
-                            </table>
-                        </div>
+                                    <t t-else="">
+                                        No tax transactions were found for the selected period.
+                                    </t>
+                                </div>
+                            </div>
+                        </t>
                     </t>
                 </t>
 
@@ -921,6 +1198,9 @@
                                             <th class="anx-tb-rth anx-tb-rth-name" t-on-click="() => this.onTbSort('name')" style="cursor: pointer; user-select: none;">
                                                 Account <i t-if="state.tbSortCol === 'name'" t-attf-class="fa {{ state.tbSortDir === 'asc' ? 'fa-caret-up' : 'fa-caret-down' }}" style="margin-left: 4px;"/>
                                             </th>
+                                            <th class="anx-tb-rth anx-tb-rth-type" t-on-click="() => this.onTbSort('main_type')" style="cursor: pointer; user-select: none;">
+                                                Main Type <i t-if="state.tbSortCol === 'main_type'" t-attf-class="fa {{ state.tbSortDir === 'asc' ? 'fa-caret-up' : 'fa-caret-down' }}" style="margin-left: 4px;"/>
+                                            </th>
                                             <th class="anx-tb-rth anx-tb-rth-num" t-on-click="() => this.onTbSort('initial_balance')" style="cursor: pointer; user-select: none;">
                                                 Initial balance <i t-if="state.tbSortCol === 'initial_balance'" t-attf-class="fa {{ state.tbSortDir === 'asc' ? 'fa-caret-up' : 'fa-caret-down' }}" style="margin-left: 4px;"/>
                                             </th>
@@ -940,13 +1220,27 @@
                                     </thead>
                                     <tbody>
                                         <t t-if="filteredTrialBalance.length === 0">
-                                            <tr><td colspan="7" class="anx-inv-empty">No accounts found for this period.</td></tr>
+                                            <tr><td colspan="8" class="anx-inv-empty">No accounts found for this period.</td></tr>
                                         </t>
                                         <t t-foreach="filteredTrialBalance" t-as="acc" t-key="acc.id">
+                                            <t t-if="acc.is_first_of_group">
+                                                <tr class="anx-tb-section-header-row">
+                                                    <td colspan="8" class="anx-tb-section-header-cell">
+                                                        <span class="anx-tb-section-badge" t-attf-style="background-color: {{ acc.type_bg }}; color: {{ acc.type_text }};">
+                                                            <i t-attf-class="fa {{ acc.type_icon or 'fa-tag' }} me-1"/> <t t-esc="acc.type_label"/>
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                            </t>
                                             <tr class="anx-tb-rtd-row">
                                                 <td class="anx-tb-rtd anx-tb-rtd-code"><t t-esc="acc.code"/></td>
                                                 <td class="anx-tb-rtd anx-tb-rtd-name" style="color: #00d4c8 !important; font-weight: 700 !important;">
                                                     <span class="anx-tb-acc-link" style="color: #00d4c8 !important; font-weight: 700 !important; cursor: pointer; display: inline;" t-att-data-id="acc.id" t-on-click="openTrialBalanceAccount"><t t-esc="acc.name"/></span>
+                                                </td>
+                                                <td class="anx-tb-rtd anx-tb-rtd-type">
+                                                    <span class="anx-tb-type-pill" t-attf-style="background-color: {{ acc.type_bg }}; color: {{ acc.type_text }};">
+                                                        <t t-esc="acc.type_label"/>
+                                                    </span>
                                                 </td>
                                                 <td t-attf-class="anx-tb-rtd anx-tb-rtd-num {{ acc.initial_balance &lt; 0 ? 'anx-tb-rneg' : '' }}"><t t-esc="acc.initial_display"/></td>
                                                 <td class="anx-tb-rtd anx-tb-rtd-num anx-tb-rdebit"><t t-esc="acc.debit_display"/></td>
@@ -957,7 +1251,7 @@
                                         </t>
                                         <t t-if="filteredTrialBalance.length > 0">
                                             <tr class="anx-tb-rtd-row anx-tb-total-row">
-                                                <td class="anx-tb-rtd" colspan="2" style="text-align: right; padding-right: 12px; font-weight: bold;">Total</td>
+                                                <td class="anx-tb-rtd" colspan="3" style="text-align: right; padding-right: 12px; font-weight: bold;">Total</td>
                                                 <td t-attf-class="anx-tb-rtd anx-tb-rtd-num {{ tbFilteredInitial &lt; 0 ? 'anx-tb-rneg' : '' }}"><t t-esc="tbFilteredInitialDisplay"/></td>
                                                 <td class="anx-tb-rtd anx-tb-rtd-num anx-tb-rdebit"><t t-esc="tbFilteredDebitDisplay"/></td>
                                                 <td class="anx-tb-rtd anx-tb-rtd-num anx-tb-rcredit"><t t-esc="tbFilteredCreditDisplay"/></td>
@@ -2402,6 +2696,109 @@
             </div>
         </div>
 
+            <!-- ZOHO TAX FILING LOCK CONFIRMATION MODAL -->
+            <div t-if="state.showLockTaxModal" class="anx-pl-overlay anx-tb-overlay" t-on-click.self="closeLockTaxModal">
+                <div class="anx-vat-confirm-modal">
+                    <div class="anx-vat-confirm-header">
+                        <div class="anx-vat-confirm-header-left">
+                            <div class="anx-vat-confirm-icon-lock">
+                                <i class="fa fa-lock"/>
+                            </div>
+                            <div>
+                                <div class="anx-vat-confirm-title">Tax Filed and Locked</div>
+                                <div class="anx-vat-confirm-sub">Zoho Accounting Tax Filing &amp; Adjustment Compliance</div>
+                            </div>
+                        </div>
+                        <button class="anx-pl-close-btn" t-on-click="closeLockTaxModal">
+                            <i class="fa fa-times"/>
+                        </button>
+                    </div>
+
+                    <div class="anx-vat-confirm-body" t-if="state.vatData">
+                        <div class="anx-vat-confirm-alert">
+                            <i class="fa fa-shield"/>
+                            <div>
+                                <strong>Filing Period: <t t-esc="state.vatData.date_range.start"/> to <t t-esc="state.vatData.date_range.end"/></strong>
+                                <p>All transactions in this period will be marked as <strong>Filed &amp; Locked</strong>. Any invoices or bills entered later with dates prior to <t t-esc="state.vatData.date_range.start"/> will not be blocked, and will automatically be included as <strong>Prior Period Adjustments</strong> in the subsequent filing return.</p>
+                            </div>
+                        </div>
+
+                        <div t-if="state.vatData.prior_unfiled_count > 0 and state.includePriorUnfiled" style="margin-bottom: 14px; padding: 10px 14px; background: rgba(5, 150, 105, 0.15); border: 1px solid rgba(5, 150, 105, 0.4); border-radius: 8px; font-size: 12.5px; color: #6ee7b7;">
+                            <i class="fa fa-check-circle"/> <strong>Adjusting <t t-esc="state.vatData.prior_unfiled_count"/> Prior Period Transaction(s):</strong> Totaling <strong><t t-esc="state.vatData.currency_sym"/>&#160;<t t-esc="formatShort(state.vatData.prior_net_adj)"/></strong> Net VAT will be filed and locked in this return.
+                        </div>
+                        <div t-elif="state.vatData.prior_unfiled_count > 0 and !state.includePriorUnfiled" style="margin-bottom: 14px; padding: 10px 14px; background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.4); border-radius: 8px; font-size: 12.5px; color: #fef08a;">
+                            <i class="fa fa-info-circle"/> <strong>Prior Adjustments Excluded:</strong> <t t-esc="state.vatData.prior_unfiled_count"/> unfiled transaction(s) from earlier periods are excluded and will remain open for subsequent filings.
+                        </div>
+
+                        <div class="anx-vat-confirm-metrics">
+                            <div class="anx-vat-metric-card">
+                                <span class="anx-vat-metric-lbl">Output VAT (Sales)</span>
+                                <span class="anx-vat-metric-val sales"><span class="anx-currency-sym"><t t-esc="state.vatData.currency_sym"/></span>&#160;<t t-esc="formatShort(state.vatData.output_vat)"/></span>
+                                <span class="anx-vat-metric-count"><t t-esc="state.vatData.output_count"/> lines</span>
+                            </div>
+                            <div class="anx-vat-metric-card">
+                                <span class="anx-vat-metric-lbl">Input VAT (Bills)</span>
+                                <span class="anx-vat-metric-val purchases"><span class="anx-currency-sym"><t t-esc="state.vatData.currency_sym"/></span>&#160;<t t-esc="formatShort(state.vatData.input_vat)"/></span>
+                                <span class="anx-vat-metric-count"><t t-esc="state.vatData.input_count"/> lines</span>
+                            </div>
+                            <div class="anx-vat-metric-card">
+                                <span class="anx-vat-metric-lbl">Net VAT Payable</span>
+                                <span class="anx-vat-metric-val net"><span class="anx-currency-sym"><t t-esc="state.vatData.currency_sym"/></span>&#160;<t t-esc="formatShort(state.vatData.net_vat)"/></span>
+                                <span class="anx-vat-metric-count"><t t-esc="state.vatData.total_count"/> total lines</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="anx-vat-confirm-footer">
+                        <button class="anx-vat-btn-cancel" t-on-click="closeLockTaxModal">Cancel</button>
+                        <button class="anx-vat-btn-confirm-lock" t-on-click="confirmLockTaxFiling" t-att-disabled="state.lockTaxLoading">
+                            <i t-if="state.lockTaxLoading" class="fa fa-spinner fa-spin"/>
+                            <i t-else="" class="fa fa-lock"/>
+                            <span>Confirm Tax Filed &amp; Locked</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ZOHO TAX FILING UNLOCK CONFIRMATION MODAL -->
+            <div t-if="state.showUnlockTaxModal" class="anx-pl-overlay anx-tb-overlay" t-on-click.self="closeUnlockTaxModal">
+                <div class="anx-vat-confirm-modal">
+                    <div class="anx-vat-confirm-header">
+                        <div class="anx-vat-confirm-header-left">
+                            <div class="anx-vat-confirm-icon-unlock">
+                                <i class="fa fa-undo"/>
+                            </div>
+                            <div>
+                                <div class="anx-vat-confirm-title">Reopen / Unfile Tax Period</div>
+                                <div class="anx-vat-confirm-sub">Reset Transactions to Unfiled Status</div>
+                            </div>
+                        </div>
+                        <button class="anx-pl-close-btn" t-on-click="closeUnlockTaxModal">
+                            <i class="fa fa-times"/>
+                        </button>
+                    </div>
+
+                    <div class="anx-vat-confirm-body" t-if="state.vatData">
+                        <div class="anx-vat-confirm-alert warning">
+                            <i class="fa fa-exclamation-triangle"/>
+                            <div>
+                                <strong>Reopening Period: <t t-esc="state.vatData.date_range.start"/> to <t t-esc="state.vatData.date_range.end"/></strong>
+                                <p>This will reset all filed transactions for this period back to <strong>Unfiled</strong> status, allowing recalculation or adjustments.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="anx-vat-confirm-footer">
+                        <button class="anx-vat-btn-cancel" t-on-click="closeUnlockTaxModal">Cancel</button>
+                        <button class="anx-vat-btn-confirm-unlock" t-on-click="confirmUnlockTaxFiling" t-att-disabled="state.lockTaxLoading">
+                            <i t-if="state.lockTaxLoading" class="fa fa-spinner fa-spin"/>
+                            <i t-else="" class="fa fa-undo"/>
+                            <span>Confirm Reopen Period</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
             <!-- VAT SUMMARY MODAL -->
             <div t-if="state.showVatModal" class="anx-pl-overlay anx-tb-overlay" t-on-click.self="closeVatModal">
                 <div class="anx-pl-modal anx-tb-modal-pl" style="max-width: 1400px; width: 95%;">
@@ -2453,6 +2850,9 @@
                                 <button class="anx-vat-filter-btn" t-on-click="applyVatFilter">
                                     <i class="fa fa-filter"/> Filter
                                 </button>
+                                <button class="anx-vat-filter-btn anx-vat-clear-btn" t-on-click="clearVatFilter" title="Clear custom dates and reset to default period">
+                                    <i class="fa fa-times"/> Clear
+                                </button>
                             </div>
                             <div style="display: flex; align-items: center; gap: 8px;">
                                 <button class="anx-vat-filter-btn" t-on-click="printVatReport" t-if="state.vatData" style="background: linear-gradient(135deg, #1e88e5 0%, #1565c0 100%); border: none; color: #fff; padding: 6px 14px; border-radius: 6px; font-weight: 600; font-size: 13px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(30, 136, 229, 0.3);">
@@ -2460,6 +2860,16 @@
                                 </button>
                                 <button class="anx-vat-filter-btn" t-on-click="exportVatExcel" t-if="state.vatData" style="background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%); border: none; color: #fff; padding: 6px 14px; border-radius: 6px; font-weight: 600; font-size: 13px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(46, 125, 50, 0.3);">
                                     <i class="fa fa-file-excel-o"/> Export Excel
+                                </button>
+                            </div>
+                            <!-- Validation Error Alert Banner -->
+                            <div t-if="state.vatValidationError" class="anx-vat-validation-alert" style="width: 100%; margin-top: 10px; padding: 12px 16px; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.4); border-radius: 8px; color: #fca5a5; font-size: 13px; line-height: 1.5; display: flex; align-items: flex-start; gap: 10px;">
+                                <i class="fa fa-exclamation-triangle" style="font-size: 17px; margin-top: 2px; color: #ef4444; flex-shrink: 0;"/>
+                                <div style="flex: 1; white-space: pre-line; font-weight: 500;">
+                                    <t t-esc="state.vatValidationError"/>
+                                </div>
+                                <button t-on-click="dismissVatValidationError" style="background: none; border: none; color: #fca5a5; cursor: pointer; padding: 0 4px; font-size: 14px;" title="Dismiss">
+                                    <i class="fa fa-times"/>
                                 </button>
                             </div>
                         </div>
@@ -2654,6 +3064,7 @@
                                 <tr>
                                     <th class="anx-tb-rth anx-tb-rth-code">Code</th>
                                     <th class="anx-tb-rth anx-tb-rth-name">Account</th>
+                                    <th class="anx-tb-rth anx-tb-rth-type">Main Type</th>
                                     <th class="anx-tb-rth anx-tb-rth-num">Initial balance</th>
                                     <th class="anx-tb-rth anx-tb-rth-num">Debit</th>
                                     <th class="anx-tb-rth anx-tb-rth-num">Credit</th>
@@ -2663,9 +3074,23 @@
                             </thead>
                             <tbody>
                                 <t t-foreach="state.tbModalData.records" t-as="acc" t-key="acc.id">
+                                    <t t-if="acc.is_first_of_group">
+                                        <tr class="anx-tb-section-header-row">
+                                            <td colspan="8" class="anx-tb-section-header-cell">
+                                                <span class="anx-tb-section-badge" t-attf-style="background-color: {{ acc.type_bg }}; color: {{ acc.type_text }};">
+                                                    <i t-attf-class="fa {{ acc.type_icon or 'fa-tag' }} me-1"/> <t t-esc="acc.type_label"/>
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    </t>
                                     <tr class="anx-tb-rtd-row">
                                         <td class="anx-tb-rtd anx-tb-rtd-code"><t t-esc="acc.code"/></td>
                                         <td class="anx-tb-rtd anx-tb-rtd-name" style="color: #00d4c8 !important; font-weight: 700 !important;"><span class="anx-tb-acc-link" style="color: #00d4c8 !important; font-weight: 700 !important;"><t t-esc="acc.name"/></span></td>
+                                        <td class="anx-tb-rtd anx-tb-rtd-type">
+                                            <span class="anx-tb-type-pill" t-attf-style="background-color: {{ acc.type_bg }}; color: {{ acc.type_text }};">
+                                                <t t-esc="acc.type_label"/>
+                                            </span>
+                                        </td>
                                         <td t-attf-class="anx-tb-rtd anx-tb-rtd-num {{ acc.initial_balance &lt; 0 ? 'anx-tb-rneg' : '' }}"><t t-esc="acc.initial_display"/></td>
                                         <td class="anx-tb-rtd anx-tb-rtd-num anx-tb-rdebit"><t t-esc="acc.debit_display"/></td>
                                         <td class="anx-tb-rtd anx-tb-rtd-num anx-tb-rcredit"><t t-esc="acc.credit_display"/></td>
@@ -2675,7 +3100,7 @@
                                 </t>
                                 <t t-if="state.tbModalData.records.length > 0">
                                     <tr class="anx-tb-rtd-row anx-tb-total-row" style="font-weight: bold; background-color: #f8f9fa;">
-                                        <td class="anx-tb-rtd" colspan="2" style="text-align: right; padding-right: 12px;">Total</td>
+                                        <td class="anx-tb-rtd" colspan="3" style="text-align: right; padding-right: 12px;">Total</td>
                                         <td t-attf-class="anx-tb-rtd anx-tb-rtd-num {{ state.tbModalData.total_initial &lt; 0 ? 'anx-tb-rneg' : '' }}"><t t-esc="state.tbModalData.total_initial_display"/></td>
                                         <td class="anx-tb-rtd anx-tb-rtd-num anx-tb-rdebit"><t t-esc="state.tbModalData.total_debit_display"/></td>
                                         <td class="anx-tb-rtd anx-tb-rtd-num anx-tb-rcredit"><t t-esc="state.tbModalData.total_credit_display"/></td>

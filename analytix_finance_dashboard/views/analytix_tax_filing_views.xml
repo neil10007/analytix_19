@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- List View -->
+    <record id="view_analytix_tax_filing_list" model="ir.ui.view">
+        <field name="name">analytix.tax.filing.list</field>
+        <field name="model">analytix.tax.filing</field>
+        <field name="arch" type="xml">
+            <list string="Tax Filing History" decoration-success="status == 'filed'" decoration-muted="status == 'unfiled'">
+                <field name="name"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+                <field name="currency_id" column_invisible="1"/>
+                <field name="date_from"/>
+                <field name="date_to"/>
+                <field name="period_type" widget="badge"
+                       decoration-info="period_type == 'quarterly'"
+                       decoration-primary="period_type == 'monthly'"
+                       decoration-warning="period_type == 'semi_annual'"
+                       decoration-success="period_type == 'yearly'"/>
+                <field name="filing_date"/>
+                <field name="output_vat" sum="Total Output VAT"/>
+                <field name="input_vat" sum="Total Input VAT"/>
+                <field name="sales_adjustment" optional="hide"/>
+                <field name="purchase_adjustment" optional="hide"/>
+                <field name="net_vat" sum="Total Net VAT" class="fw-bold"/>
+                <field name="current_count" string="Invoices"/>
+                <field name="prior_count" string="Prior Adj" optional="show"/>
+                <field name="total_count" string="Total Docs" optional="hide"/>
+                <field name="status" widget="badge" decoration-success="status == 'filed'" decoration-warning="status == 'unfiled'"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Form View -->
+    <record id="view_analytix_tax_filing_form" model="ir.ui.view">
+        <field name="name">analytix.tax.filing.form</field>
+        <field name="model">analytix.tax.filing</field>
+        <field name="arch" type="xml">
+            <form string="Tax Return Filing">
+                <header>
+                    <button name="action_reopen_filing"
+                            string="Reopen / Unfile Period"
+                            type="object"
+                            class="btn-secondary"
+                            invisible="status != 'filed'"
+                            confirm="Are you sure you want to reopen this filing? All associated transactions will be marked as Unfiled."/>
+                    <field name="status" widget="statusbar" statusbar_visible="filed,unfiled"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_invoices"
+                                type="object"
+                                class="oe_stat_button"
+                                icon="fa-file-text-o">
+                            <field name="current_count" widget="statinfo" string="Invoices &amp; Bills"/>
+                        </button>
+                        <button name="action_view_prior_adjustments"
+                                type="object"
+                                class="oe_stat_button"
+                                icon="fa-bolt"
+                                invisible="prior_count == 0">
+                            <field name="prior_count" widget="statinfo" string="Prior Adjustments"/>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <label for="name" string="Filing Title"/>
+                        <h1>
+                            <field name="name" placeholder="VAT Return Reference"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Period &amp; Organization">
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="currency_id" invisible="1"/>
+                            <field name="date_from"/>
+                            <field name="date_to"/>
+                            <field name="period_type"/>
+                            <field name="filing_date"/>
+                        </group>
+                        <group string="Tax Return Summary">
+                            <field name="total_sales"/>
+                            <field name="output_vat"/>
+                            <field name="total_purchases"/>
+                            <field name="input_vat"/>
+                            <field name="sales_adjustment" invisible="sales_adjustment == 0"/>
+                            <field name="purchase_adjustment" invisible="purchase_adjustment == 0"/>
+                            <field name="net_vat" class="fw-bold fs-5"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Filed Invoices &amp; Bills" name="invoices">
+                            <field name="move_ids" readonly="1">
+                                <list string="Invoices &amp; Bills" limit="20">
+                                    <field name="name"/>
+                                    <field name="partner_id"/>
+                                    <field name="invoice_date"/>
+                                    <field name="move_type"/>
+                                    <field name="amount_untaxed"/>
+                                    <field name="amount_tax"/>
+                                    <field name="amount_total"/>
+                                    <field name="state" widget="badge" decoration-success="state == 'posted'"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Prior Period Adjustments" name="prior_adjustments" invisible="prior_count == 0">
+                            <field name="prior_move_ids" readonly="1">
+                                <list string="Prior Adjustments" limit="20">
+                                    <field name="name"/>
+                                    <field name="partner_id"/>
+                                    <field name="invoice_date"/>
+                                    <field name="move_type"/>
+                                    <field name="amount_untaxed"/>
+                                    <field name="amount_tax"/>
+                                    <field name="amount_total"/>
+                                    <field name="state" widget="badge" decoration-success="state == 'posted'"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Internal Notes" name="notes">
+                            <field name="notes" placeholder="Add filing notes, ZATCA acknowledgment numbers, payment confirmations, etc..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Search View -->
+    <record id="view_analytix_tax_filing_search" model="ir.ui.view">
+        <field name="name">analytix.tax.filing.search</field>
+        <field name="model">analytix.tax.filing</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="company_id"/>
+                <field name="period_type"/>
+                <filter name="filter_filed" string="Filed &amp; Locked" domain="[('status', '=', 'filed')]"/>
+                <filter name="filter_unfiled" string="Reopened / Draft" domain="[('status', '=', 'unfiled')]"/>
+                <separator/>
+                <filter name="filter_monthly" string="Monthly" domain="[('period_type', '=', 'monthly')]"/>
+                <filter name="filter_quarterly" string="Quarterly (3M)" domain="[('period_type', '=', 'quarterly')]"/>
+                <filter name="filter_semi_annual" string="Semi-Annual (6M)" domain="[('period_type', '=', 'semi_annual')]"/>
+                <filter name="filter_yearly" string="Yearly" domain="[('period_type', '=', 'yearly')]"/>
+                <separator/>
+                <filter name="group_company" string="Company" context="{'group_by': 'company_id'}"/>
+                <filter name="group_period_type" string="Frequency" context="{'group_by': 'period_type'}"/>
+                <filter name="group_status" string="Status" context="{'group_by': 'status'}"/>
+                <filter name="group_filing_date" string="Filing Date" context="{'group_by': 'filing_date:month'}"/>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_analytix_tax_filing" model="ir.actions.act_window">
+        <field name="name">Tax Filing History</field>
+        <field name="res_model">analytix.tax.filing</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_analytix_tax_filing_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No tax filings found.
+            </p>
+            <p>
+                When you file and lock VAT periods in the Finance Dashboard, each filing is permanently recorded here with its full tax calculation, filed invoices, and prior period adjustments.
+            </p>
+        </field>
+    </record>
+</odoo>

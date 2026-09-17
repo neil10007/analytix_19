@@ -87,8 +87,22 @@ export class AnalytixFinanceDashboard extends Component {
             vatSortDir:     'desc',
             vatCompanyFilter: 'all',
             showVatModal:   false,
-            vatFilterFrom:  '',
-            vatFilterTo:    '',
+            vatFilterFrom:          '',
+            vatFilterTo:            '',
+            vatCustomFilterApplied: false,
+            vatSubTab:              'summary',
+            showLockTaxModal:       false,
+            showUnlockTaxModal:     false,
+            lockTaxLoading:         false,
+            includePriorUnfiled:    false,
+            vatValidationError:     null,
+            // ── VAT Box Invoices Modal
+            showVatBoxModal:        false,
+            vatBoxModalData:        null,
+            vatBoxSearch:           '',
+            vatBoxSortCol:          'invoice_date',
+            vatBoxSortDir:          'desc',
+            vatBoxStatusFilter:     'all',
             // ── Journals tab
             jrnData:         null,
             jrnLoading:      false,
@@ -102,7 +116,7 @@ export class AnalytixFinanceDashboard extends Component {
             tbLoading:       false,
             tbTypeFilter:    'all',   // all | asset | liability | income | expense | equity
             tbSearch:        '',
-            tbSortCol:       'code',
+            tbSortCol:       'main_type',
             tbSortDir:       'asc',
             tbCompanyFilter: 'all',
             tbDateOption:     'this_month',
@@ -297,25 +311,28 @@ export class AnalytixFinanceDashboard extends Component {
     saveFilterState() {
         try {
             const filterState = {
-                filter:           this.state.filter,
-                customFrom:       this.state.customFrom,
-                customTo:         this.state.customTo,
-                showCustomPicker: this.state.showCustomPicker,
-                // activeTab is intentionally NOT saved — dashboard always opens on Overview
-                invTypeFilter:    this.state.invTypeFilter,
-                invStatusFilter:  this.state.invStatusFilter,
-                invCompanyFilter: this.state.invCompanyFilter,
-                expStatusFilter:  this.state.expStatusFilter,
-                expCompanyFilter: this.state.expCompanyFilter,
-                vatTypeFilter:    this.state.vatTypeFilter,
-                vatCompanyFilter: this.state.vatCompanyFilter,
-                jrnTypeFilter:    this.state.jrnTypeFilter,
-                jrnCompanyFilter: this.state.jrnCompanyFilter,
-                tbTypeFilter:     this.state.tbTypeFilter,
-                tbCompanyFilter:  this.state.tbCompanyFilter,
+                activeTab:              this.state.activeTab,
+                filter:                 this.state.filter,
+                customFrom:             this.state.customFrom,
+                customTo:               this.state.customTo,
+                showCustomPicker:       this.state.showCustomPicker,
+                invTypeFilter:          this.state.invTypeFilter,
+                invStatusFilter:        this.state.invStatusFilter,
+                invCompanyFilter:       this.state.invCompanyFilter,
+                expStatusFilter:        this.state.expStatusFilter,
+                expCompanyFilter:       this.state.expCompanyFilter,
+                vatTypeFilter:          this.state.vatTypeFilter,
+                vatCompanyFilter:       this.state.vatCompanyFilter,
+                vatFilterFrom:          this.state.vatFilterFrom,
+                vatFilterTo:            this.state.vatFilterTo,
+                vatCustomFilterApplied: !!this.state.vatCustomFilterApplied,
+                includePriorUnfiled:    !!this.state.includePriorUnfiled,
+                jrnTypeFilter:          this.state.jrnTypeFilter,
+                jrnCompanyFilter:       this.state.jrnCompanyFilter,
+                tbTypeFilter:           this.state.tbTypeFilter,
+                tbCompanyFilter:        this.state.tbCompanyFilter,
             };
             sessionStorage.setItem('anx_dashboard_filters', JSON.stringify(filterState));
-            // Do NOT persist active tab — always reset to overview on re-entry
         } catch (e) {
             console.error("Failed to save filter state:", e);
         }
@@ -330,7 +347,6 @@ export class AnalytixFinanceDashboard extends Component {
                 if (p.customFrom !== undefined) this.state.customFrom = p.customFrom;
                 if (p.customTo !== undefined)   this.state.customTo   = p.customTo;
                 if (p.showCustomPicker !== undefined) this.state.showCustomPicker = p.showCustomPicker;
-                // activeTab is intentionally NOT restored — always open on Overview
                 if (p.invTypeFilter)    this.state.invTypeFilter    = p.invTypeFilter;
                 if (p.invStatusFilter)  this.state.invStatusFilter  = p.invStatusFilter;
                 if (p.invCompanyFilter) this.state.invCompanyFilter = p.invCompanyFilter;
@@ -338,21 +354,22 @@ export class AnalytixFinanceDashboard extends Component {
                 if (p.expCompanyFilter) this.state.expCompanyFilter = p.expCompanyFilter;
                 if (p.vatTypeFilter)    this.state.vatTypeFilter    = p.vatTypeFilter;
                 if (p.vatCompanyFilter) this.state.vatCompanyFilter = p.vatCompanyFilter;
+                if (p.vatFilterFrom !== undefined) this.state.vatFilterFrom = p.vatFilterFrom;
+                if (p.vatFilterTo !== undefined)   this.state.vatFilterTo   = p.vatFilterTo;
+                if (p.vatCustomFilterApplied !== undefined) this.state.vatCustomFilterApplied = p.vatCustomFilterApplied;
+                if (p.includePriorUnfiled !== undefined) this.state.includePriorUnfiled = p.includePriorUnfiled;
                 if (p.jrnTypeFilter)    this.state.jrnTypeFilter    = p.jrnTypeFilter;
                 if (p.jrnCompanyFilter) this.state.jrnCompanyFilter = p.jrnCompanyFilter;
                 if (p.tbTypeFilter)     this.state.tbTypeFilter     = p.tbTypeFilter;
                 if (p.tbCompanyFilter)  this.state.tbCompanyFilter  = p.tbCompanyFilter;
+                if (p.activeTab)        this.state.activeTab        = p.activeTab;
             }
-            // If user came back from a record opened INSIDE the dashboard, restore that tab.
-            // Otherwise (navigating from a different module) always show Overview.
+            // If user came back from a record opened INSIDE the dashboard, prefer returnTab
             const returnTab = sessionStorage.getItem('anx_return_tab');
             if (returnTab) {
                 this.state.activeTab = returnTab;
                 sessionStorage.removeItem('anx_return_tab');
-            } else {
-                this.state.activeTab = 'overview';
             }
-            // Clean up any stale legacy tab keys
             sessionStorage.removeItem('anx_active_tab');
         } catch (e) {
             console.error("Failed to restore filter state:", e);
@@ -397,8 +414,10 @@ export class AnalytixFinanceDashboard extends Component {
         this.state.showCustomPicker = false;
         this.state.customFrom = '';
         this.state.customTo   = '';
-        this.state.vatFilterFrom = '';
-        this.state.vatFilterTo   = '';
+        if (!this.state.vatCustomFilterApplied) {
+            this.state.vatFilterFrom = '';
+            this.state.vatFilterTo   = '';
+        }
         this.saveFilterState();
         await this.fetchData();
         if (this.state.activeTab === 'invoices')      await this.fetchInvoiceData();
@@ -438,8 +457,10 @@ export class AnalytixFinanceDashboard extends Component {
             this.notification.add('"From" date must be before "To" date.', { type: 'warning' });
             return;
         }
-        this.state.vatFilterFrom = this.state.customFrom;
-        this.state.vatFilterTo   = this.state.customTo;
+        if (!this.state.vatCustomFilterApplied) {
+            this.state.vatFilterFrom = this.state.customFrom;
+            this.state.vatFilterTo   = this.state.customTo;
+        }
         this.saveFilterState();
         await this.fetchData();
         if (this.state.activeTab === 'invoices')      await this.fetchInvoiceData();
@@ -475,6 +496,7 @@ export class AnalytixFinanceDashboard extends Component {
             await this.fetchExpenseData();
         }
         if (tab === 'vat') {
+            this.state.vatLoading = true;
             await this.fetchVatData();
         }
         if (tab === 'journals') {
@@ -789,7 +811,10 @@ export class AnalytixFinanceDashboard extends Component {
 
     // ── VAT data fetch ────────────────────────────────────────────────
     async fetchVatData() {
-        if (this.state.filter === 'custom' && this.state.customFrom && this.state.customTo) {
+        this.state.vatLoading = true;
+        if (this.state.vatCustomFilterApplied && this.state.vatFilterFrom && this.state.vatFilterTo) {
+            // Retain user applied custom VAT dates
+        } else if (this.state.filter === 'custom' && this.state.customFrom && this.state.customTo) {
             this.state.vatFilterFrom = this.state.customFrom;
             this.state.vatFilterTo   = this.state.customTo;
         } else if (!this.state.vatFilterFrom || !this.state.vatFilterTo) {
@@ -833,12 +858,267 @@ export class AnalytixFinanceDashboard extends Component {
         if (!this.state.vatData) return [];
         return this._filterSortVat(this.state.vatData.input_records);
     }
+    get filteredAllVat() {
+        if (!this.state.vatData) return [];
+        const all = [...(this.state.vatData.output_records || []), ...(this.state.vatData.input_records || [])];
+        return this._filterSortVat(all);
+    }
+    setVatSubTab(tab) {
+        this.state.vatSubTab = tab;
+    }
+    async setVatQuarter(quarter) {
+        const year = new Date().getFullYear();
+        let from = '', to = '';
+        if (quarter === 'q1') {
+            from = `${year}-01-01`;
+            to   = `${year}-03-31`;
+        } else if (quarter === 'q2') {
+            from = `${year}-04-01`;
+            to   = `${year}-06-30`;
+        } else if (quarter === 'q3') {
+            from = `${year}-07-01`;
+            to   = `${year}-09-30`;
+        } else if (quarter === 'q4') {
+            from = `${year}-10-01`;
+            to   = `${year}-12-31`;
+        } else if (quarter === 'this_month') {
+            const today = new Date();
+            const y = today.getFullYear();
+            const m = String(today.getMonth() + 1).padStart(2, '0');
+            const lastDay = new Date(y, today.getMonth() + 1, 0).getDate();
+            from = `${y}-${m}-01`;
+            to   = `${y}-${m}-${String(lastDay).padStart(2, '0')}`;
+        } else if (quarter === 'this_year') {
+            from = `${year}-01-01`;
+            to   = `${year}-12-31`;
+        }
+        const prevFrom = this.state.vatFilterFrom;
+        const prevTo = this.state.vatFilterTo;
+        const prevApplied = this.state.vatCustomFilterApplied;
+        this.state.vatFilterFrom = from;
+        this.state.vatFilterTo = to;
+        this.state.vatCustomFilterApplied = true;
+        this.state.includePriorUnfiled = false;
+        const success = await this.fetchVatFilterData();
+        if (!success) {
+            this.state.vatFilterFrom = prevFrom;
+            this.state.vatFilterTo = prevTo;
+            this.state.vatCustomFilterApplied = prevApplied;
+        } else {
+            this.saveFilterState();
+        }
+    }
+    dismissVatValidationError() {
+        this.state.vatValidationError = null;
+    }
+    openLockTaxModal() {
+        this.state.showLockTaxModal = true;
+    }
+    closeLockTaxModal() {
+        this.state.showLockTaxModal = false;
+    }
+    async confirmLockTaxFiling() {
+        if (!this.state.vatFilterTo) return;
+        this.state.lockTaxLoading = true;
+        try {
+            const res = await this.orm.call('account.move', 'mark_tax_filed_and_locked', [
+                this.state.vatFilterFrom,
+                this.state.vatFilterTo,
+                this.state.includePriorUnfiled
+            ]);
+            this.notification.add(res.message || 'Tax filing locked successfully.', { type: 'success' });
+            this.state.showLockTaxModal = false;
+            await this.fetchVatFilterData();
+        } catch (e) {
+            let errorMsg = 'Failed to file and lock tax period.';
+            if (e && e.data && e.data.message) {
+                errorMsg = e.data.message;
+            } else if (e && e.data && e.data.arguments && e.data.arguments[0]) {
+                errorMsg = e.data.arguments[0];
+            } else if (e && e.message) {
+                errorMsg = e.message;
+            }
+            this.notification.add(errorMsg, { type: 'danger', sticky: true });
+        } finally {
+            this.state.lockTaxLoading = false;
+        }
+    }
+    async toggleIncludePriorUnfiled(ev) {
+        this.state.includePriorUnfiled = ev.target.checked;
+        this.saveFilterState();
+        await this.fetchVatFilterData();
+    }
+    viewPriorUnfiledInvoices() {
+        if (!this.state.vatData || !this.state.vatData.prior_move_ids || !this.state.vatData.prior_move_ids.length) {
+            this.notification.add('No prior unfiled transactions to view.', { type: 'info' });
+            return;
+        }
+        this._saveReturnTab();
+        this.action.doAction({
+            type: 'ir.actions.act_window',
+            name: 'Prior Unfiled Invoices & Bills (To be Adjusted)',
+            res_model: 'account.move',
+            view_mode: 'list,form',
+            views: [[false, 'list'], [false, 'form']],
+            domain: [['id', 'in', this.state.vatData.prior_move_ids]],
+            target: 'current',
+        });
+    }
+    openUnlockTaxModal() {
+        this.state.showUnlockTaxModal = true;
+    }
+    closeUnlockTaxModal() {
+        this.state.showUnlockTaxModal = false;
+    }
+    async confirmUnlockTaxFiling() {
+        this.state.lockTaxLoading = true;
+        try {
+            const res = await this.orm.call('account.move', 'unfile_tax_period', [
+                this.state.vatFilterFrom,
+                this.state.vatFilterTo
+            ]);
+            this.notification.add(res.message || 'Tax filing reopened successfully.', { type: 'success' });
+            this.state.showUnlockTaxModal = false;
+            await this.fetchVatFilterData();
+        } catch (e) {
+            let errorMsg = 'Failed to unlock tax filing period.';
+            if (e && e.data && e.data.message) {
+                errorMsg = e.data.message;
+            } else if (e && e.data && e.data.arguments && e.data.arguments[0]) {
+                errorMsg = e.data.arguments[0];
+            } else if (e && e.message) {
+                errorMsg = e.message;
+            }
+            this.notification.add(errorMsg, { type: 'danger', sticky: true });
+        } finally {
+            this.state.lockTaxLoading = false;
+        }
+    }
     openVatDoc(ev) {
         const id = parseInt(ev.currentTarget.dataset.id, 10);
         if (!id) return;
         this._saveReturnTab(); // restore VAT tab on Back
         this.action.doAction({ type: 'ir.actions.act_window', res_model: 'account.move', res_id: id, views: [[false, 'form']], target: 'current' });
     }
+    openTaxFilingHistory() {
+        this._saveReturnTab();
+        this.action.doAction({
+            type: 'ir.actions.act_window',
+            name: 'Tax Filing History',
+            res_model: 'analytix.tax.filing',
+            view_mode: 'list,form',
+            views: [[false, 'list'], [false, 'form']],
+            target: 'current',
+        });
+    }
+
+    // ── VAT Box Invoices Modal Handlers ──────────────────────────────
+    openVatBoxModal(box) {
+        if (!box) return;
+        this.state.vatBoxModalData = {
+            box: String(box.box || ''),
+            description: box.description || '',
+            amount: box.amount || 0.0,
+            adjustment: box.adjustment || 0.0,
+            vat_amount: box.vat_amount || 0.0,
+            count: box.count || (box.invoices ? box.invoices.length : 0),
+            move_ids: box.move_ids || [],
+            invoices: box.invoices || [],
+            currency_sym: (this.state.vatData && this.state.vatData.currency_sym) || '',
+            date_range: (this.state.vatData && this.state.vatData.date_range) || {},
+            is_period_locked: (this.state.vatData && this.state.vatData.is_period_locked) || false,
+        };
+        this.state.vatBoxSearch = '';
+        this.state.vatBoxSortCol = 'invoice_date';
+        this.state.vatBoxSortDir = 'desc';
+        this.state.vatBoxStatusFilter = 'all';
+        this.state.showVatBoxModal = true;
+    }
+
+    closeVatBoxModal() {
+        this.state.showVatBoxModal = false;
+        this.state.vatBoxModalData = null;
+    }
+
+    onVatBoxSearch(ev) {
+        this.state.vatBoxSearch = ev.target.value;
+    }
+
+    onVatBoxSort(col) {
+        if (!col) return;
+        if (this.state.vatBoxSortCol === col) {
+            this.state.vatBoxSortDir = this.state.vatBoxSortDir === 'asc' ? 'desc' : 'asc';
+        } else {
+            this.state.vatBoxSortCol = col;
+            this.state.vatBoxSortDir = 'asc';
+        }
+    }
+
+    onVatBoxStatusFilter(status) {
+        this.state.vatBoxStatusFilter = status || 'all';
+    }
+
+    get filteredVatBoxInvoices() {
+        if (!this.state.vatBoxModalData || !this.state.vatBoxModalData.invoices) return [];
+        let rows = [...this.state.vatBoxModalData.invoices];
+        if (this.state.vatBoxStatusFilter && this.state.vatBoxStatusFilter !== 'all') {
+            rows = rows.filter(r => r.tax_filing_status === this.state.vatBoxStatusFilter);
+        }
+        if (this.state.vatBoxSearch && this.state.vatBoxSearch.trim()) {
+            const q = this.state.vatBoxSearch.trim().toLowerCase();
+            rows = rows.filter(r =>
+                (r.move_name && r.move_name.toLowerCase().includes(q)) ||
+                (r.partner_name && r.partner_name.toLowerCase().includes(q)) ||
+                (r.tax_name && r.tax_name.toLowerCase().includes(q)) ||
+                (r.invoice_date && r.invoice_date.toLowerCase().includes(q))
+            );
+        }
+        const col = this.state.vatBoxSortCol;
+        const dir = this.state.vatBoxSortDir === 'asc' ? 1 : -1;
+        return rows.sort((a, b) => {
+            let av = a[col], bv = b[col];
+            if (typeof av === 'string') { av = av.toLowerCase(); bv = bv.toLowerCase(); }
+            if (av < bv) return -1 * dir;
+            if (av > bv) return 1 * dir;
+            return 0;
+        });
+    }
+
+    openVatBoxInOdoo(box = null) {
+        const targetBox = box || this.state.vatBoxModalData;
+        if (!targetBox || !targetBox.move_ids || !targetBox.move_ids.length) {
+            const boxNum = targetBox && targetBox.box ? `Box ${targetBox.box}` : 'this tax line';
+            this.notification.add(`No associated transactions found for ${boxNum}.`, { type: 'info' });
+            return;
+        }
+        this._saveReturnTab();
+        if (this.state.showVatBoxModal) {
+            this.closeVatBoxModal();
+        }
+        this.action.doAction({
+            type: 'ir.actions.act_window',
+            name: `VAT Return — Box ${targetBox.box}: ${targetBox.description}`,
+            res_model: 'account.move',
+            view_mode: 'list,form',
+            views: [[false, 'list'], [false, 'form']],
+            domain: [['id', 'in', targetBox.move_ids]],
+            target: 'current',
+        });
+    }
+
+    openVatBoxInvoice(id) {
+        if (!id) return;
+        this._saveReturnTab();
+        this.closeVatBoxModal();
+        this.action.doAction({
+            type: 'ir.actions.act_window',
+            res_model: 'account.move',
+            res_id: id,
+            views: [[false, 'form']],
+            target: 'current',
+        });
+    }
+
 
 
     async fetchJournalData() {
@@ -1114,12 +1394,51 @@ export class AnalytixFinanceDashboard extends Component {
             );
         }
         // Sort
+        const TYPE_ORDER = {
+            'asset':     1,
+            'liability': 2,
+            'equity':    3,
+            'income':    4,
+            'expense':   5,
+        };
         const col = this.state.tbSortCol || 'code';
         const dir = this.state.tbSortDir === 'asc' ? 1 : -1;
-        return [...rows].sort((a, b) => {
+
+        const sorted = [...rows].sort((a, b) => {
+            if (col === 'main_type' || col === 'type_seq') {
+                const aSeq = a.type_seq || TYPE_ORDER[a.type_group] || 99;
+                const bSeq = b.type_seq || TYPE_ORDER[b.type_group] || 99;
+                if (aSeq !== bSeq) {
+                    return (aSeq - bSeq) * dir;
+                }
+                const aCode = (a.code || '').toLowerCase();
+                const bCode = (b.code || '').toLowerCase();
+                if (aCode < bCode) return -1;
+                if (aCode > bCode) return 1;
+                return 0;
+            }
+            if (col === 'code') {
+                const aCode = (a.code || '').toLowerCase();
+                const bCode = (b.code || '').toLowerCase();
+                if (aCode < bCode) return -1 * dir;
+                if (aCode > bCode) return 1 * dir;
+                return 0;
+            }
             let av = a[col] ?? '', bv = b[col] ?? '';
             if (typeof av === 'string') { av = av.toLowerCase(); bv = bv.toLowerCase(); }
-            if (av < bv) return -1 * dir; if (av > bv) return 1 * dir; return 0;
+            if (av < bv) return -1 * dir;
+            if (av > bv) return 1 * dir;
+            return 0;
+        });
+
+        // Tag first item of each group for section headers when in standard type order
+        let lastType = null;
+        return sorted.map(r => {
+            const isFirst = (col === 'main_type' || col === 'type_seq') && r.type_group !== lastType;
+            if (col === 'main_type' || col === 'type_seq') {
+                lastType = r.type_group;
+            }
+            return { ...r, is_first_of_group: isFirst };
         });
     }
 
@@ -1652,13 +1971,29 @@ export class AnalytixFinanceDashboard extends Component {
     async fetchVatFilterData() {
         this.state.vatLoading = true;
         try {
-            this.state.vatData = await this.orm.call(
+            const data = await this.orm.call(
                 'account.move', 'get_analytix_vat_data',
-                ['custom', this.state.vatFilterFrom, this.state.vatFilterTo]
+                ['custom', this.state.vatFilterFrom, this.state.vatFilterTo, this.state.includePriorUnfiled]
             );
+            this.state.vatData = data;
+            this.state.vatValidationError = null;
+            if (this.state.vatData && this.state.vatData.is_period_locked) {
+                this.state.includePriorUnfiled = !!this.state.vatData.include_prior;
+            }
+            return true;
         } catch (e) {
-            this.notification.add('Failed to load VAT data.', { type: 'danger' });
-            this.state.showVatModal = false;
+            let errorMsg = 'Failed to load VAT data.';
+            if (e && e.data && e.data.message) {
+                errorMsg = e.data.message;
+            } else if (e && e.data && e.data.arguments && e.data.arguments[0]) {
+                errorMsg = e.data.arguments[0];
+            } else if (e && e.message) {
+                errorMsg = e.message;
+            }
+            this.state.vatValidationError = errorMsg;
+            this.state.vatData = null;
+            this.notification.add(errorMsg, { type: 'danger', sticky: true });
+            return false;
         } finally {
             this.state.vatLoading = false;
         }
@@ -1668,10 +2003,48 @@ export class AnalytixFinanceDashboard extends Component {
         const field = ev.currentTarget.dataset.field;
         if (field === 'from') this.state.vatFilterFrom = ev.target.value;
         if (field === 'to')   this.state.vatFilterTo   = ev.target.value;
+        this.state.vatValidationError = null;
     }
 
     async applyVatFilter() {
-        await this.fetchVatFilterData();
+        if (!this.state.vatFilterFrom || !this.state.vatFilterTo) {
+            this.notification.add('Please select both From and To dates.', { type: 'warning' });
+            return;
+        }
+        if (this.state.vatFilterFrom > this.state.vatFilterTo) {
+            this.notification.add('"From" date must be before "To" date.', { type: 'warning' });
+            return;
+        }
+        const prevApplied = this.state.vatCustomFilterApplied;
+        this.state.vatCustomFilterApplied = true;
+        const success = await this.fetchVatFilterData();
+        if (!success) {
+            this.state.vatCustomFilterApplied = prevApplied;
+        } else {
+            this.saveFilterState();
+        }
+    }
+
+    async clearVatFilter() {
+        this.state.vatCustomFilterApplied = false;
+        this.state.vatValidationError = null;
+        let start = (this.state.data && this.state.data.date_range && this.state.data.date_range.start) || '';
+        let end   = (this.state.data && this.state.data.date_range && this.state.data.date_range.end) || '';
+        if (!start || !end) {
+            const today = new Date();
+            const y = today.getFullYear();
+            const m = String(today.getMonth() + 1).padStart(2, '0');
+            const lastDay = new Date(y, today.getMonth() + 1, 0).getDate();
+            start = `${y}-${m}-01`;
+            end   = `${y}-${m}-${String(lastDay).padStart(2, '0')}`;
+        }
+        this.state.vatFilterFrom = start;
+        this.state.vatFilterTo   = end;
+        this.state.includePriorUnfiled = false;
+        const success = await this.fetchVatFilterData();
+        if (success) {
+            this.saveFilterState();
+        }
     }
 
     closeVatModal() {
@@ -1680,343 +2053,373 @@ export class AnalytixFinanceDashboard extends Component {
 
     printVatReport() {
         if (!this.state.vatData) return;
-        
-        if (this.state.showVatModal) {
-            const outputRows = this.filteredOutputVat;
-            const inputRows = this.filteredInputVat;
-            
-            const totalOutputVat = outputRows.reduce((sum, r) => sum + (r.tax_amount || 0), 0);
-            const totalInputVat = inputRows.reduce((sum, r) => sum + (r.tax_amount || 0), 0);
-            const netVatPayable = totalOutputVat - totalInputVat;
-            const totalLinesCount = outputRows.length + inputRows.length;
-            
-            const sym = this.state.vatData.currency_sym || '';
-            const isSar = /^(SAR|SR|﷼|ر\.?س\.?|\uE900|)$/i.test(String(sym).trim()) || String(sym).includes('\uE900') || String(sym).includes('');
-            const symSpan = isSar ? `<span class="anx-currency-sym" style="font-family:'sr_symbol', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;">&#xe900;</span>` : `<span>${sym}</span>`;
-
-            const fmtN = v => {
-                const num = Number(v) || 0;
-                const neg = num < 0;
-                const s = Math.abs(num).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                return neg ? `<span style="color:#e53935">-${symSpan}${s}</span>` : `${symSpan}${s}`;
-            };
-
-            let companyName = user.activeCompany?.name || 'All Companies';
-            if (this.state.vatData && this.state.vatData.companies && Array.isArray(this.state.vatData.companies)) {
-                companyName = this.state.vatData.companies.map(c => c.name).join(', ');
-            } else if (this.state.data && typeof this.state.data.companies === 'string') {
-                companyName = this.state.data.companies;
-            }
-
-            const buildDetailedRows = (rows) => {
-                if (!rows || rows.length === 0) {
-                    return `<tr><td colspan="7" style="padding:16px;text-align:center;color:#64748b;">No data found.</td></tr>`;
-                }
-                return rows.map(r => `
-                    <tr>
-                        <td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;text-align:center;font-weight:600;color:#0f172a;">${r.move_name}</td>
-                        <td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;">${r.partner}</td>
-                        <td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;text-align:center;"><span style="background:#f1f5f9;color:#475569;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;">${r.tax_name}</span></td>
-                        <td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;">${r.company_name}</td>
-                        <td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;text-align:center;color:#475569;">${r.invoice_date}</td>
-                        <td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;text-align:right;">${fmtN(r.total_amount)}</td>
-                        <td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;text-align:right;font-weight:600;">${fmtN(r.tax_amount)}</td>
-                    </tr>
-                `).join('');
-            };
-
-            const outTotalAmt = outputRows.reduce((sum, r) => sum + (r.total_amount || 0), 0);
-            const inTotalAmt = inputRows.reduce((sum, r) => sum + (r.total_amount || 0), 0);
-
-            const outRowsHtml = buildDetailedRows(outputRows);
-            const inRowsHtml = buildDetailedRows(inputRows);
-
-            const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>VAT Detailed Summary Report</title>
-<style>
-  @font-face {
-      font-family: "sr_symbol";
-      src: url("/iwesabe_sar_currency_symbol/static/src/fonts/sr.ttf") format("truetype"),
-           url("data:font/truetype;base64,AAEAAAALAIAAAwAwT1MvMg8SBTgAAAC8AAAAYGNtYXAXVtKIAAABHAAAAFRnYXNwAAAAEAAAAXAAAAAIZ2x5ZjrqSMoAAAF4AAAYDGhlYWQqn96bAAAZhAAAADZoaGVhB1YDxwAAGbwAAAAkaG10eA0oAAAAABngAAAAGGxvY2EMLgwGAAAZ+AAAAA5tYXhwAAkLQQAAGggAAAAgbmFtZZlKCfsAABooAAABhnBvc3QAAwAAAAAbsAAAACAAAwMNAZAABQAAApkCzAAAAI8CmQLMAAAB6wAzAQkAAAAAAAAAAAAAAAAAAAABEAAAAAAAAAAAAAAAAAAAAABAAADpAQPA/8AAQAPAAEAAAAABAAAAAAAAAAAAAAAgAAAAAAADAAAAAwAAABwAAQADAAAAHAADAAEAAAAcAAQAOAAAAAoACAACAAIAAQAg6QH//f//AAAAAAAg6QD//f//AAH/4xcEAAMAAQAAAAAAAAAAAAAAAQAB//8ADwABAAD/wAAAA8AAAgAANzkBAAAAAAEAAP/AAAADwAACAAA3OQEAAAAAAQAA/8AAAAPAAAIAADc5AQAAAAACAAD/wAOUA8AItQs+AAABDgEjDgEVIgYHFAYHDgExOAExMCIxMAYxDgExMCIVIgYxDgEHMAYxIgYxOAExMAYxDgExIgYxDgEHIgYHFCIxMCIVMAYHDgEHDgEHMAYxMAYVIgYPARUcATEiMCMwBgcqASMwBiMGIiMUIjEwBiMiBiMOASMGIgcwIiMwBjEwIiMwIgciBiMiBgcqATEwBiMGIjEwBiMiBiMwIjEiBiMUIiMiBiMiBiMwBiMwIhUqATEqAQciBjEqAQcwIiMiBiMwIjEiBiMqASMGIiMwIjEwIgcwIgcqATEOASMiBgciBiMwBiMiBiMwBiMGIjEGIiMiBgcwIjEUMCMUMDEUBjEOARUwFAccATEwBhUOATEwFDEUBhUOATEwBhUUBjEOAQcUBgcGFBUwBhUUBhUwFDEUBjEcATEGFDEcASMwFBUwFCMcATEUBjEcARUUBhUUBhUcARUGMjMwNjMyNjMyNjEyNjMyNjcwMjM+ATM6ATEwNjMyNjc6ATMyNjMyNjMyNjM+ATMyNjMyNjMwMjM+ATM6ATc6ATU6ATU6ATMyNjE6ATEwMjUyNjMyNjM6ATcwMjMwNhUwNjMwMjcyNjcyNjE6ATcyNjM6ATEwNjMwNjM+ATMyNjMyNjMyNjMyNjMyNjc6ATcwMjcyNjMwMjcwMjM2MjE2MjM+ATE6ATEyNjMwMjM3FRwBIzAGBzAGIw4BIyoBByoBMQYiIzAiIzAGIyIGBzAiMTAiIxQGIzAGIwYiMSIGMSoBIxQiMTAiByoBMSIGIyoBIzAGIyIGIyIGIyoBBzAiByoBByIGIyIGIyIGIyIGMSIGIwYiMTAGIyIGBw4BIwYiByoBIzAGMSIGMSIGIwYiMQYiIzAGIzAiMTAiFSoBIw4BIyoBIzAGMSIGByIGIwYiByIGIyIGByoBBzAiBw4BIw4BFTAUMQYUMTAGFRQGMTAGBzAUBxQGMRQGMTAGMTAGBw4BFQ4BBwYUBzAGMRwBBxwBMRQGFQ4BFRQGFRQGFRQGFTAUFRQGFQYUFRQGFRQWNzYyMzA2MzYyMTYyNzI2MzoBNzI2MzoBNTAyMzA2Mz4BMzA2MTI2Mz4BMTAyNzoBMzA2MzAyNz4BMzAyNzoBMTI0MzAyMzAyMTA2MzYyNzYyMTI2MzYyMzI2MzoBNToBMTI2MToBMTI2MToBMTI2Mz4BMzI2MzI2MzYyMzI2MzoBMTgBNzAyMz4BMzI2MzoBMTYyMzA2MzAyMzA2MzYyMTI2MTAyNzI2MzI2MzAyMzA2MzoBNzI2MzoBNzoBNzA2MzI2MTI2NzI2MzoBNzAyMTYyMTAyMzYyNzI2MzAyMzA2MzoBMTI2MzoBMT4BMzoBNzI2MzoBNzQ2NTA2NTA0MTA0MzQ2NTQ2MTQ2NTQ2MTI0MTA0NTI4MTwBMT4BNTA0MzA0MTA2NTQ2NTA0MzQ2MTA2NzwBNTI0NTQ2NTQ2NTQ2MTQ2NTA2NTwBMTA2NTwBNTY0MTAGIwGsAQMBAQMBCwICAQECAQEBAQEBAQEFAQIBAQEBAQEBAQEBAQIBAQECAgMYAQECAQEBAQIBAgEBBgEBAQEDAgIDAQEDAgIEAQEFAgMDAQIBAgEBAgEBBAIBAwMBAgEBAgEBAQEBAQEDAgIEAQEFAgMDAQIBAgEBAgEBBAIBAwMBAgQBAgMCAQIFAQECAgQCAQECAQEDAQMBAgEBAQEBAgUBAQECAQEBAQEBAQEBAQEBAQEBAQECAQEDBAcBAQUCAwQBAgICCwMDAgEEAQEBAQgDAQEBAQIBAQEBAgEBAQEBAQEBAQEBAQEBAQECAQEBAQIDAQEDAQECAgQCAQQCAgECBAEBAQcBAQQCAQEBAQYCAQIBAQQCAgQBAQMBAQIBAgEBBAIBAQEBAwECAgEBAQECAQECAQQBAQMBAQEBAgEBAQECAQMEAwIDAQMBAgMBAQEGAgMCAgUBAQIBAQIBAgMCAQMBAQQCAQMBBAIBAwECAQMBAgIBAgEDBAEBAQEBAQEBAQYCBAMCBQEBAgEBAgEBAQEBAgEBBAMCAQEFAwMCAgMBAQECAQIBAQECAQUBAQEBAgEBBAEBAQEBAgEDAQEDAQEDAQEDAQEDAQICAQMBBAICAQMEBAYHAwIDAQEBAQICBQEDAgEEAQEBAQECAgECAQIEAQEBAQIBBQQBBAIBBAEBAwECBAQBAQEEAwIGAQMDAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBBQMDAQMBAgMBAwIBAwEDBgIDAQECAgEDAQQGAQICBAIBBgIBAQEBAQEEAwIEAgICAQEBAQEBAgEBAwEBAwEEAwEBAQIBAQMBAQMBAQEBAQEBAQIBBAIEAwIBAgIBAwEDBgEBAgECAwEDAgIDAQIBAgMCBAYBAwEFAwIFAQMDCAECAQMCAQMBAgIBAgEBAgEBAgEBAwECBAECAwEBAwECAgEBAgEBAQECAQIJAQECAQIBAQMBAQMCAgMBBQICAQIBAgECBAECBAECAQMDAQEBAgEFAwIEAQEEAQEBAQECAQMGAwIBAgECAQEBAQEBAgEDAQEBAQEBAQEBAQEBAgEFAQEBAgEBAQEBAQMBAgEBAQEBAwEBAQEBAQEDAQEBAQICAwEBAQEBAQEBAQECAQIBAQMCAgQFAwECBAEBAQIBAQEBAQIBAQECAQICAQEDAQEBAQECAQEBAQEBAQEDAwECAQMCAQMBDQEBAQEBAQEBCwECBQEDAQEDAQMCAgQBAgEBAgEBBQIBAgECAQECAQMCAgUBAgIBAgEDAgQEAQEBAQMCAgMDAgIDAwIBBAEBBAICBAECBgEBAQEBAQECAQEBAgEBAQEBAQIBAgEBAgECAQEBAQEBAgEBAQECAQIBAQMCCgIBAgEBAQkBAgICBgIBAQEDAgIFAQEBAQIBAgEBAQIBAwEBAwECAwEBAQIBAQEBAQECAgQBAQIBAgIBAQEBAwEBAQEBAQEBAQIBAQEBAQEBAQECAQEBAQECAQO/AQIBAQEHAQEBAQEBAQEBAQEBAwECAQEBAQEBAQECAQEBAgEDGAIBAgEBAQEDAQLXa2sBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQIBAQEBAwEBAQIBAQEBAQIEAQEBAQEBAQEDAQEDAQIDAgEBAgMFAgEEAgIDAQEBAQIBAQEBAQIBAgEBAgEDAQIBCAEBAQEDAQIEAQICAQEBAQEBAQEBAQIBAQIBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQFGMRQBAQEBAQEBAQEBAQEBAQEBAQIBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQECAgEBAQEBAQIDAQEBAQIBAQQEAgIEAQEEBQEDAQMBAgEBAQEDAgEEAQEDAgEDAQEBAQICAQQCAgMBAQMCAwEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQECAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQIBAQEBAQEBAQEBAgEBAQEBBwEBAQEEAQEBAQEBAQEFAQECAQIBAgEBBAEBAQEBAQEBAQEBAQQCAgEDAwQBAgEBAgEBAQECAQEBBAEBBQIEFDAaJQEBAQEBAQEBAQEBAQEBAQEBAQMBH09uAwEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQECAQECAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQIBAQIBAQEBAgEBAQEBCwMCAgEBAQEBAQECAQMCAgUCAwQBAgUFAQIBBAQBAQICAQQCBAUBAQIBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBARsbNwEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQECAgMBAQEBAQUCAgEBAgEBAQQCAwMBAgEBAgEBAwEDCwUBAwEBAQEBAgEBBgIBAwECAQgJAQEBAQEBAQEBAQEBAQECAgEBAQEBAQEBAQEBAQEBAQEBAQIBAQEBAQEBAgEBAQEBAgEBAQHGZGIBAQEBAQEEAQEBAQEBAQEBAQEFAQEBAQECAQECAQECBAEFBgYDBQIBAQIBAQIBAQIBAgKkpQEBAQIBAQEBAQEBAQEBAQEBAQIB95VjAfy/AQEBAQEBAQEBAQEBAQEBAQEBAQQBAQEBAQEBAQEBAQEBAQEBAQEBAQIBAQECAQEBAQEBAQEBAgEBAQEBAQEBAQEBAgEBAQICAQEJAQEBAQEBAQEBAQEBAQEBAQEBAgEDAgMDAgEDAgEKBAECAQMCAgMBAgEDDgMCAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQIBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBBgEBAQEBAQEBAQEBAQIBAgEBAQEBAQEFAgIBAgEBAgEBAgQEAgEBAQEBAQIBAgYCAQIBBgIDAQECAgEBAwECCAEAAAEAAP/AAjIDwAAIAAABBzc+ATEwBgcCMAICAQEBAQNIAgIBAQEBAAABAAAAAAAAsksaaV8PPPUACwQAAAAAAOP2zQ8AAAAA4/bNDwAA/8ADlAPAAAAACAACAAAAAAAAAAEAAAPA/8AAAAQAAAAAAAOUAAEAAAAAAAAAAAAAAAAAAAAGBAAAAAAAAAAAAAAAAgAAAAOUAAADlAAAAAAAAAAKABQAHgvyDAYAAAABAAAABgs/AAIAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAADgCuAAEAAAAAAAEABwAAAAEAAAAAAAIABwBgAAEAAAAAAAMABwA2AAEAAAAAAAQABwB1AAEAAAAAAAUACwAVAAEAAAAAAAYABwBLAAEAAAAAAAoAGgCKAAMAAQQJAAEADgAHAAMAAQQJAAIADgBnAAMAAQQJAAMADgA9AAMAAQQJAAQADgB8AAMAAQQJAAUAFgAgAAMAAQQJAAYADgBSAAMAAQQJAAoANACkaWNvbW9vbgBpAGMAbwBtAG8AbwBuVmVyc2lvbiAxLjAAVgBlAHIAcwBpAG8AbgAgADEALgAwaWNvbW9vbgBpAGMAbwBtAG8AbwBuUmVndWxhcgBSAGUAZwB1AGwAYQByaWNvbW9vbgBpAGMAbwBtAG8AbwBuRm9udCBnZW5lcmF0ZWQgYnkgSWNvTW9vbi4ARgBvAG4AdAAgAGcAZQBuAGUAcgBhAHQAZQBk ACAAYgB5 ACAASQBjAG8ATQBvAG8AbnAuAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==") format("truetype");
-      font-weight: normal; font-style: normal; unicode-range: U+E900;
-  }
-  .anx-currency-sym, .o_sar_symbol, .icon-sr, [class*="sr_symbol"] { font-family: 'sr_symbol', "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important; display: inline-block; }
-  body { font-family: 'sr_symbol', Inter, Arial, sans-serif; padding: 32px; color: #1f2937; line-height: 1.5; }
-  .hdr-box { text-align: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 16px; margin-bottom: 24px; }
-  h2 { margin: 0 0 4px; font-size: 24px; color: #0f172a; letter-spacing: -0.5px; }
-  p.sub { color: #64748b; margin: 0; font-size: 13px; font-weight: 500; }
-  .kpi-row { display: flex; gap: 16px; margin-bottom: 28px; justify-content: space-between; }
-  .kpi-card { flex: 1; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px; text-align: center; }
-  .kpi-lbl { font-size: 11px; text-transform: uppercase; font-weight: 700; color: #64748b; margin-bottom: 4px; }
-  .kpi-val { font-size: 18px; font-weight: 800; color: #0f172a; }
-  .kpi-val.output { color: #1e88e5; }
-  .kpi-val.input { color: #e53935; }
-  .kpi-val.net { color: #2e7d32; }
-  .sec-hdr { font-size: 14px; font-weight: 700; padding: 10px 14px; background: #1e3a8a; color: #fff; border-radius: 6px 6px 0 0; margin-top: 24px; display: flex; justify-content: space-between; align-items: center; }
-  .sec-hdr.purchases { background: #7f1d1d; }
-  table { width: 100%; border-collapse: collapse; font-size: 11.5px; margin-bottom: 24px; border: 1px solid #e2e8f0; }
-  th { text-align: left; padding: 10px 12px; background: #f1f5f9; border-bottom: 2px solid #cbd5e1; color: #475569; font-weight: 700; text-transform: uppercase; font-size: 10px; }
-  th.num-col { text-align: right; }
-  th.center-col { text-align: center; }
-  td { padding: 8px 12px; border-bottom: 1px solid #e2e8f0; }
-  tr.tot-row { background: #f8fafc; font-weight: 700; }
-  tr.tot-row td { padding: 10px 12px; border-top: 2px solid #cbd5e1; font-size: 12px; }
-  @media print { button { display:none } body { padding: 15px; } }
-</style></head><body>
-<div class="hdr-box">
-  <h2>VAT Detailed Report &mdash; ${companyName}</h2>
-  <p class="sub">Date Range: ${this.state.vatFilterFrom || 'Beginning'} to ${this.state.vatFilterTo || 'Present'}</p>
-</div>
-
-<div class="kpi-row">
-  <div class="kpi-card">
-    <div class="kpi-lbl">Total Output VAT</div>
-    <div class="kpi-val output">${fmtN(totalOutputVat)}</div>
-  </div>
-  <div class="kpi-card">
-    <div class="kpi-lbl">Total Input VAT</div>
-    <div class="kpi-val input">${fmtN(totalInputVat)}</div>
-  </div>
-  <div class="kpi-card">
-    <div class="kpi-lbl">Net VAT Payable</div>
-    <div class="kpi-val net">${fmtN(netVatPayable)}</div>
-  </div>
-  <div class="kpi-card">
-    <div class="kpi-lbl">Total Tax Lines</div>
-    <div class="kpi-val">${totalLinesCount}</div>
-  </div>
-</div>
-
-<div class="sec-hdr">
-  <span>1. Output VAT &mdash; Customer Invoices</span>
-</div>
-<table>
-  <thead>
-    <tr>
-      <th class="center-col" style="width:15%">Document</th>
-      <th style="width:25%">Customer</th>
-      <th class="center-col" style="width:12%">Tax</th>
-      <th style="width:15%">Company</th>
-      <th class="center-col" style="width:11%">Date</th>
-      <th class="num-col" style="width:11%">Total Amount</th>
-      <th class="num-col" style="width:11%">VAT Amount</th>
-    </tr>
-  </thead>
-  <tbody>
-    ${outRowsHtml}
-    <tr class="tot-row">
-      <td colspan="5" style="border-top: 2px solid #cbd5e1;">Total</td>
-      <td style="text-align:right;border-top: 2px solid #cbd5e1;">${fmtN(outTotalAmt)}</td>
-      <td style="text-align:right;border-top: 2px solid #cbd5e1;">${fmtN(totalOutputVat)}</td>
-    </tr>
-  </tbody>
-</table>
-
-<div class="sec-hdr purchases">
-  <span>2. Input VAT &mdash; Vendor Bills</span>
-</div>
-<table>
-  <thead>
-    <tr>
-      <th class="center-col" style="width:15%">Document</th>
-      <th style="width:25%">Vendor</th>
-      <th class="center-col" style="width:12%">Tax</th>
-      <th style="width:15%">Company</th>
-      <th class="center-col" style="width:11%">Date</th>
-      <th class="num-col" style="width:11%">Total Amount</th>
-      <th class="num-col" style="width:11%">VAT Amount</th>
-    </tr>
-  </thead>
-  <tbody>
-    ${inRowsHtml}
-    <tr class="tot-row">
-      <td colspan="5" style="border-top: 2px solid #cbd5e1;">Total</td>
-      <td style="text-align:right;border-top: 2px solid #cbd5e1;">${fmtN(inTotalAmt)}</td>
-      <td style="text-align:right;border-top: 2px solid #cbd5e1;">${fmtN(totalInputVat)}</td>
-    </tr>
-  </tbody>
-</table>
-
-</body></html>`;
-
-            const win = window.open('', '_blank', 'width=1100,height=800');
-            win.document.write(html);
-            win.document.close();
-            if (win.document.fonts && win.document.fonts.load) {
-                win.document.fonts.load("12px sr_symbol", "\uE900").then(() => {
-                    setTimeout(() => win.print(), 100);
-                }).catch(() => {
-                    setTimeout(() => win.print(), 400);
-                });
-            } else {
-                setTimeout(() => win.print(), 400);
-            }
-            return;
-        }
 
         const d = this.state.vatData;
-        const sym = d.currency_sym || '';
-        const isSar = /^(SAR|SR|﷼|ر\.?س\.?|\uE900|)$/i.test(String(sym).trim()) || String(sym).includes('\uE900') || String(sym).includes('');
-        const symSpan = isSar ? `<span class="anx-currency-sym" style="font-family:'sr_symbol', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;">&#xe900;</span>` : `<span>${sym}</span>`;
+        const compInfo = d.company_info || {};
+        const compId = compInfo.id || user.activeCompany?.id || (d.companies && d.companies[0]?.id) || 1;
+        const compVat = compInfo.vat || (d.companies && d.companies[0]?.vat) || '';
+        const compCr = compInfo.cr || '';
+        const compAddress = compInfo.address || '';
+        const compPhone = compInfo.phone || '';
+        const compEmail = compInfo.email || '';
 
-        const fmtN = v => {
-            const num = Number(v) || 0;
-            const neg = num < 0;
-            const s = Math.abs(num).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            return neg ? `<span style="color:#e53935">-${symSpan}${s}</span>` : `${symSpan}${s}`;
-        };
-
-        let companyName = user.activeCompany?.name || 'All Companies';
-        if (d && d.companies && Array.isArray(d.companies)) {
+        let companyName = compInfo.name || user.activeCompany?.name || 'Company';
+        if (d.companies && Array.isArray(d.companies) && d.companies.length === 1) {
+            companyName = d.companies[0].name;
+        } else if (d.companies && Array.isArray(d.companies) && d.companies.length > 1) {
             companyName = d.companies.map(c => c.name).join(', ');
         } else if (this.state.data && typeof this.state.data.companies === 'string') {
             companyName = this.state.data.companies;
         }
 
-        const buildRows = (boxes, totalBox) => {
+        const formatZatcaDate = (dateVal) => {
+            if (!dateVal) return '';
+            const dStr = String(dateVal).trim();
+            const parts = dStr.split('-');
+            if (parts.length === 3) {
+                const y = parts[0];
+                const mIdx = parseInt(parts[1], 10) - 1;
+                const day = String(parseInt(parts[2], 10)).padStart(2, '0');
+                const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                return `${day} ${months[mIdx] || ''} ${y}`;
+            }
+            const dObj = new Date(dateVal);
+            if (!isNaN(dObj.getTime())) {
+                const day = String(dObj.getDate()).padStart(2, '0');
+                const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                return `${day} ${months[dObj.getMonth()]} ${dObj.getFullYear()}`;
+            }
+            return dStr;
+        };
+
+        const startStr = formatZatcaDate(d.date_range?.start || this.state.vatFilterFrom);
+        const endStr = formatZatcaDate(d.date_range?.end || this.state.vatFilterTo);
+
+        const now = new Date();
+        const pad = n => String(n).padStart(2, '0');
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const printDateTime = `${pad(now.getDate())} ${months[now.getMonth()]} ${now.getFullYear()} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+
+        const fmt = (v) => {
+            if (v === '' || v === undefined || v === null) return '';
+            const n = Number(v);
+            if (isNaN(n)) return '';
+            return n.toFixed(2);
+        };
+
+        const isBlankVatBox = (box) => ['2', '3', '4', '5', '10', '11'].includes(String(box));
+
+        const buildStandardRows = (boxes, totalBox) => {
             return (boxes || []).map(b => {
-                const isTotal = b.box === totalBox || b.box === '13' || b.box === '14';
-                const rowStyle = isTotal ? 'font-weight: 700; background-color: #f1f5f9;' : '';
-                const numStyle = isTotal ? 'font-weight: 700; text-align: right;' : 'text-align: right;';
-                const boxStyle = isTotal ? 'font-weight: 700; text-align: center;' : 'text-align: center; color: #4b5563;';
-                
-                const amtVal = (b.box === '13' || b.box === '14') ? '—' : fmtN(b.amount);
-                const adjVal = (b.box === '13' || b.box === '14') ? '—' : fmtN(b.adjustment);
-                
+                const isTotal = String(b.box) === String(totalBox);
+                const amtVal = fmt(b.amount);
+                const adjVal = fmt(b.adjustment);
+                const vatVal = isBlankVatBox(b.box) ? '' : fmt(b.vat_amount);
+
                 return `
-                    <tr style="${rowStyle}">
-                        <td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;${boxStyle}">${b.box}</td>
-                        <td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;font-weight:${isTotal?'700':'normal'};">${b.description}</td>
-                        <td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;${numStyle}">${amtVal}</td>
-                        <td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;${numStyle}">${adjVal}</td>
-                        <td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;${numStyle}">${fmtN(b.vat_amount)}</td>
+                    <tr class="${isTotal ? 'total-row' : ''}">
+                        <td class="center-col">${b.box}</td>
+                        <td>${b.description}</td>
+                        <td class="num-col">${amtVal}</td>
+                        <td class="num-col">${adjVal}</td>
+                        <td class="num-col">${vatVal}</td>
                     </tr>
                 `;
             }).join('');
         };
 
-        const salesRows = buildRows(d.vat_return_sales, '6');
-        const purchaseRows = buildRows(d.vat_return_purchases, '12');
-        const netRows = buildRows(d.vat_return_net, '');
+        const salesRowsHtml = buildStandardRows(d.vat_return_sales, '6');
+        const purchaseRowsHtml = buildStandardRows(d.vat_return_purchases, '12');
 
-        const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>VAT Return Summary</title>
+        const netRowsHtml = (d.vat_return_net || []).map(b => {
+            const isTotal = String(b.box) === '15';
+            let desc = b.description;
+            if (String(b.box) === '14') {
+                desc = 'Corrections from previous period (between SAR -15,000 and SAR 15,000)';
+            }
+            let vatVal = '0.00';
+            if (String(b.box) === '14') {
+                vatVal = b.is_active ? fmt(b.vat_amount || d.prior_net_adj || 0) : '0.00';
+            } else {
+                vatVal = fmt(b.vat_amount);
+            }
+
+            return `
+                <tr class="${isTotal ? 'total-row' : ''}">
+                    <td class="center-col">${b.box}</td>
+                    <td>${desc}</td>
+                    <td class="num-col">${vatVal}</td>
+                </tr>
+            `;
+        }).join('');
+
+        const pageTitle = 'VAT Return';
+
+        const html = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>${pageTitle}</title>
 <style>
-  @font-face {
-      font-family: "sr_symbol";
-      src: url("/iwesabe_sar_currency_symbol/static/src/fonts/sr.ttf") format("truetype"),
-           url("data:font/truetype;base64,AAEAAAALAIAAAwAwT1MvMg8SBTgAAAC8AAAAYGNtYXAXVtKIAAABHAAAAFRnYXNwAAAAEAAAAXAAAAAIZ2x5ZjrqSMoAAAF4AAAYDGhlYWQqn96bAAAZhAAAADZoaGVhB1YDxwAAGbwAAAAkaG10eA0oAAAAABngAAAAGGxvY2EMLgwGAAAZ+AAAAA5tYXhwAAkLQQAAGggAAAAgbmFtZZlKCfsAABooAAABhnBvc3QAAwAAAAAbsAAAACAAAwMNAZAABQAAApkCzAAAAI8CmQLMAAAB6wAzAQkAAAAAAAAAAAAAAAAAAAABEAAAAAAAAAAAAAAAAAAAAABAAADpAQPA/8AAQAPAAEAAAAABAAAAAAAAAAAAAAAgAAAAAAADAAAAAwAAABwAAQADAAAAHAADAAEAAAAcAAQAOAAAAAoACAACAAIAAQAg6QH//f//AAAAAAAg6QD//f//AAH/4xcEAAMAAQAAAAAAAAAAAAAAAQAB//8ADwABAAD/wAAAA8AAAgAANzkBAAAAAAEAAP/AAAADwAACAAA3OQEAAAAAAQAA/8AAAAPAAAIAADc5AQAAAAACAAD/wAOUA8AItQs+AAABDgEjDgEVIgYHFAYHDgExOAExMCIxMAYxDgExMCIVIgYxDgEHMAYxIgYxOAExMAYxDgExIgYxDgEHIgYHFCIxMCIVMAYHDgEHDgEHMAYxMAYVIgYPARUcATEiMCMwBgcqASMwBiMGIiMUIjEwBiMiBiMOASMGIgcwIiMwBjEwIiMwIgciBiMiBgcqATEwBiMGIjEwBiMiBiMwIjEiBiMUIiMiBiMiBiMwBiMwIhUqATEqAQciBjEqAQcwIiMiBiMwIjEiBiMqASMGIiMwIjEwIgcwIgcqATEOASMiBgciBiMwBiMiBiMwBiMGIjEGIiMiBgcwIjEUMCMUMDEUBjEOARUwFAccATEwBhUOATEwFDEUBhUOATEwBhUUBjEOAQcUBgcGFBUwBhUUBhUwFDEUBjEcATEGFDEcASMwFBUwFCMcATEUBjEcARUUBhUUBhUcARUGMjMwNjMyNjMyNjEyNjMyNjcwMjM+ATM6ATEwNjMyNjc6ATMyNjMyNjMyNjM+ATMyNjMyNjMwMjM+ATM6ATc6ATU6ATU6ATMyNjE6ATEwMjUyNjMyNjM6ATcwMjMwNhUwNjMwMjcyNjcyNjE6ATcyNjM6ATEwNjMwNjM+ATMyNjMyNjMyNjMyNjMyNjc6ATcwMjcyNjMwMjcwMjM2MjE2MjM+ATE6ATEyNjMwMjM3FRwBIzAGBzAGIw4BIyoBByoBMQYiIzAiIzAGIyIGBzAiMTAiIxQGIzAGIwYiMSIGMSoBIxQiMTAiByoBMSIGIyoBIzAGIyIGIyIGIyoBBzAiByoBByIGIyIGIyIGIyIGMSIGIwYiMTAGIyIGBw4BIwYiByoBIzAGMSIGMSIGIwYiMQYiIzAGIzAiMTAiFSoBIw4BIyoBIzAGMSIGByIGIwYiByIGIyIGByoBBzAiBw4BIw4BFTAUMQYUMTAGFRQGMTAGBzAUBxQGMRQGMTAGMTAGBw4BFQ4BBwYUBzAGMRwBBxwBMRQGFQ4BFRQGFRQGFRQGFTAUFRQGFQYUFRQGFRQWNzYyMzA2MzYyMTYyNzI2MzoBNzI2MzoBNTAyMzA2Mz4BMzA2MTI2Mz4BMTAyNzoBMzA2MzAyNz4BMzAyNzoBMTI0MzAyMzAyMTA2MzYyNzYyMTI2MzYyMzI2MzoBNToBMTI2MToBMTI2MToBMTI2Mz4BMzI2MzI2MzYyMzI2MzoBMTgBNzAyMz4BMzI2MzoBMTYyMzA2MzAyMzA2MzYyMTI2MTAyNzI2MzI2MzAyMzA2MzoBNzI2MzoBNzoBNzA2MzI2MTI2NzI2MzoBNzAyMTYyMTAyMzYyNzI2MzAyMzA2MzoBMTI2MzoBMT4BMzoBNzI2MzoBNzQ2NTA2NTA0MTA0MzQ2NTQ2MTQ2NTQ2MTI0MTA0NTI4MTwBMT4BNTA0MzA0MTA2NTQ2NTA0MzQ2MTA2NzwBNTI0NTQ2NTQ2NTQ2MTQ2NTA2NTwBMTA2NTwBNTY0MTAGIwGsAQMBAQMBCwICAQECAQEBAQEBAQEFAQIBAQEBAQEBAQEBAQIBAQECAgMYAQECAQEBAQIBAgEBBgEBAQEDAgIDAQEDAgIEAQEFAgMDAQIBAgEBAgEBBAIBAwMBAgEBAgEBAQEBAQEDAgIEAQEFAgMDAQIBAgEBAgEBBAIBAwMBAgQBAgMCAQIFAQECAgQCAQECAQEDAQMBAgEBAQEBAgUBAQECAQEBAQEBAQEBAQEBAQEBAQECAQEDBAcBAQUCAwQBAgICCwMDAgEEAQEBAQgDAQEBAQIBAQEBAgEBAQEBAQEBAQEBAQEBAQECAQEBAQIDAQEDAQECAgQCAQQCAgECBAEBAQcBAQQCAQEBAQYCAQIBAQQCAgQBAQMBAQIBAgEBBAIBAQEBAwECAgEBAQECAQECAQQBAQMBAQEBAgEBAQECAQMEAwIDAQMBAgMBAQEGAgMCAgUBAQIBAQIBAgMCAQMBAQQCAQMBBAIBAwECAQMBAgIBAgEDBAEBAQEBAQEBAQYCBAMCBQEBAgEBAgEBAQEBAgEBBAMCAQEFAwMCAgMBAQECAQIBAQECAQUBAQEBAgEBBAEBAQEBAgEDAQEDAQEDAQEDAQEDAQICAQMBBAICAQMEBAYHAwIDAQEBAQICBQEDAgEEAQEBAQECAgECAQIEAQEBAQIBBQQBBAIBBAEBAwECBAQBAQEEAwIGAQMDAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBBQMDAQMBAgMBAwIBAwEDBgIDAQECAgEDAQQGAQICBAIBBgIBAQEBAQEEAwIEAgICAQEBAQEBAgEBAwEBAwEEAwEBAQIBAQMBAQMBAQEBAQEBAQIBBAIEAwIBAgIBAwEDBgEBAgECAwEDAgIDAQIBAgMCBAYBAwEFAwIFAQMDCAECAQMCAQMBAgIBAgEBAgEBAgEBAwECBAECAwEBAwECAgEBAgEBAQECAQIJAQECAQIBAQMBAQMCAgMBBQICAQIBAgECBAECBAECAQMDAQEBAgEFAwIEAQEEAQEBAQECAQMGAwIBAgECAQEBAQEBAgEDAQEBAQEBAQEBAQEBAgEFAQEBAgEBAQEBAQMBAgEBAQEBAwEBAQEBAQEDAQEBAQICAwEBAQEBAQEBAQECAQIBAQMCAgQFAwECBAEBAQIBAQEBAQIBAQECAQICAQEDAQEBAQECAQEBAQEBAQEDAwECAQMCAQMBDQEBAQEBAQEBCwECBQEDAQEDAQMCAgQBAgEBAgEBBQIBAgECAQECAQMCAgUBAgIBAgEDAgQEAQEBAQMCAgMDAgIDAwIBBAEBBAICBAECBgEBAQEBAQECAQEBAgEBAQEBAQIBAgEBAgECAQEBAQEBAgEBAQECAQIBAQMCCgIBAgEBAQkBAgICBgIBAQEDAgIFAQEBAQIBAgEBAQIBAwEBAwECAwEBAQIBAQEBAQECAgQBAQIBAgIBAQEBAwEBAQEBAQEBAQIBAQEBAQEBAQECAQEBAQECAQO/AQIBAQEHAQEBAQEBAQEBAQEBAwECAQEBAQEBAQECAQEBAgEDGAIBAgEBAQEDAQLXa2sBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQIBAQEBAwEBAQIBAQEBAQIEAQEBAQEBAQEDAQEDAQIDAgEBAgMFAgEEAgIDAQEBAQIBAQEBAQIBAgEBAgEDAQIBCAEBAQEDAQIEAQICAQEBAQEBAQEBAQIBAQIBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQFGMRQBAQEBAQEBAQEBAQEBAQEBAQIBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQECAgEBAQEBAQIDAQEBAQIBAQQEAgIEAQEEBQEDAQMBAgEBAQEDAgEEAQEDAgEDAQEBAQICAQQCAgMBAQMCAwEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQECAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQIBAQEBAQEBAQEBAgEBAQEBBwEBAQEEAQEBAQEBAQEFAQECAQIBAgEBBAEBAQEBAQEBAQEBAQQCAgEDAwQBAgEBAgEBAQECAQEBBAEBBQIEFDAaJQEBAQEBAQEBAQEBAQEBAQEBAQMBH09uAwEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQECAQECAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQIBAQIBAQEBAgEBAQEBCwMCAgEBAQEBAQECAQMCAgUCAwQBAgUFAQIBBAQBAQICAQQCBAUBAQIBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBARsbNwEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQECAgMBAQEBAQUCAgEBAgEBAQQCAwMBAgEBAgEBAwEDCwUBAwEBAQEBAgEBBgIBAwECAQgJAQEBAQEBAQEBAQEBAQECAgEBAQEBAQEBAQEBAQEBAQEBAQIBAQEBAQEBAgEBAQEBAgEBAQHGZGIBAQEBAQEEAQEBAQEBAQEBAQEFAQEBAQECAQECAQECBAEFBgYDBQIBAQIBAQIBAQIBAgKkpQEBAQIBAQEBAQEBAQEBAQEBAQIB95VjAfy/AQEBAQEBAQEBAQEBAQEBAQEBAQQBAQEBAQEBAQEBAQEBAQEBAQEBAQIBAQECAQEBAQEBAQEBAgEBAQEBAQEBAQEBAgEBAQICAQEJAQEBAQEBAQEBAQEBAQEBAQEBAgEDAgMDAgEDAgEKBAECAQMCAgMBAgEDDgMCAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQIBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBBgEBAQEBAQEBAQEBAQIBAgEBAQEBAQEFAgIBAgEBAgEBAgQEAgEBAQEBAQIBAgYCAQIBBgIDAQECAgEBAwECCAEAAAEAAP/AAjIDwAAIAAABBzc+ATEwBgcCMAICAQEBAQNIAgIBAQEBAAABAAAAAAAAsksaaV8PPPUACwQAAAAAAOP2zQ8AAAAA4/bNDwAA/8ADlAPAAAAACAACAAAAAAAAAAEAAAPA/8AAAAQAAAAAAAOUAAEAAAAAAAAAAAAAAAAAAAAGBAAAAAAAAAAAAAAAAgAAAAOUAAADlAAAAAAAAAAKABQAHgvyDAYAAAABAAAABgs/AAIAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAADgCuAAEAAAAAAAEABwAAAAEAAAAAAAIABwBgAAEAAAAAAAMABwA2AAEAAAAAAAQABwB1AAEAAAAAAAUACwAVAAEAAAAAAAYABwBLAAEAAAAAAAoAGgCKAAMAAQQJAAEADgAHAAMAAQQJAAIADgBnAAMAAQQJAAMADgA9AAMAAQQJAAQADgB8AAMAAQQJAAUAFgAgAAMAAQQJAAYADgBSAAMAAQQJAAoANACkaWNvbW9vbgBpAGMAbwBtAG8AbwBuVmVyc2lvbiAxLjAAVgBlAHIAcwBpAG8AbgAgADEALgAwaWNvbW9vbgBpAGMAbwBtAG8AbwBuUmVndWxhcgBSAGUAZwB1AGwAYQByaWNvbW9vbgBpAGMAbwBtAG8AbwBuRm9udCBnZW5lcmF0ZWQgYnkgSWNvTW9vbi4ARgBvAG4AdAAgAGcAZQBuAGUAcgBhAHQAZQBk ACAAYgB5 ACAASQBjAG8ATQBvAG8AbnAuAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==") format("truetype");
-      font-weight: normal; font-style: normal; unicode-range: U+E900;
+  @page {
+      size: A4 portrait;
+      margin: 0mm !important;
   }
-  .anx-currency-sym, .o_sar_symbol, .icon-sr, [class*="sr_symbol"] { font-family: 'sr_symbol', "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important; display: inline-block; }
-  body { font-family: 'sr_symbol', Inter, Arial, sans-serif; padding: 32px; color: #1f2937; line-height: 1.5; }
-  .hdr-box { text-align: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 16px; margin-bottom: 24px; }
-  h2 { margin: 0 0 4px; font-size: 24px; color: #0f172a; letter-spacing: -0.5px; }
-  p.sub { color: #64748b; margin: 0; font-size: 13px; font-weight: 500; }
-  .kpi-row { display: flex; gap: 16px; margin-bottom: 28px; justify-content: space-between; }
-  .kpi-card { flex: 1; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px; text-align: center; }
-  .kpi-lbl { font-size: 11px; text-transform: uppercase; font-weight: 700; color: #64748b; margin-bottom: 4px; }
-  .kpi-val { font-size: 18px; font-weight: 800; color: #0f172a; }
-  .kpi-val.output { color: #1e88e5; }
-  .kpi-val.input { color: #e53935; }
-  .kpi-val.net { color: #2e7d32; }
-  .sec-hdr { font-size: 14px; font-weight: 700; padding: 10px 14px; background: #1e3a8a; color: #fff; border-radius: 6px 6px 0 0; margin-top: 24px; display: flex; justify-content: space-between; align-items: center; }
-  .sec-hdr.purchases { background: #7f1d1d; }
-  .sec-hdr.net-due { background: #166534; }
-  table { width: 100%; border-collapse: collapse; font-size: 12.5px; margin-bottom: 24px; border: 1px solid #e2e8f0; }
-  th { text-align: left; padding: 10px 12px; background: #f1f5f9; border-bottom: 2px solid #cbd5e1; color: #475569; font-weight: 700; text-transform: uppercase; font-size: 10.5px; }
-  th.num-col { text-align: right; }
-  th.box-col { text-align: center; }
-  tr.tot-row { background: #f8fafc; font-weight: 700; }
-  tr.tot-row td { padding: 10px 12px; border-top: 2px solid #cbd5e1; font-size: 13px; }
-  @media print { button { display:none } body { padding: 15px; } }
-</style></head><body>
-<div class="hdr-box">
-  <h2>VAT Return Summary Report &mdash; ${companyName}</h2>
-  <p class="sub">Date Range: ${this.state.vatFilterFrom || 'Beginning'} to ${this.state.vatFilterTo || 'Present'}</p>
-</div>
+  * {
+      box-sizing: border-box;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+  }
+  body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      color: #111827;
+      background-color: #ffffff;
+      margin: 0 !important;
+      padding: 12mm 15mm 25mm 15mm !important;
+      line-height: 1.35;
+  }
+  .doc-header {
+      margin-bottom: 16px;
+  }
+  .company-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      padding-bottom: 10px;
+  }
+  .company-header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+  }
+  .company-logo {
+      max-height: 48px;
+      max-width: 140px;
+      object-fit: contain;
+  }
+  .company-details {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+  }
+  .company-name {
+      font-size: 17px;
+      font-weight: 700;
+      color: #111827;
+      letter-spacing: -0.2px;
+  }
+  .company-sub {
+      font-size: 10px;
+      color: #4b5563;
+      line-height: 1.3;
+  }
+  .company-header-right {
+      text-align: right;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      flex-shrink: 0;
+  }
+  .header-divider {
+      border: 0;
+      border-top: 1.5px solid #e5e7eb;
+      margin: 6px 0 14px 0;
+  }
+  .report-title-section {
+      text-align: center;
+      margin-bottom: 16px;
+  }
+  .report-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #111827;
+      margin: 0 0 3px 0;
+      letter-spacing: -0.2px;
+  }
+  .report-period {
+      font-size: 11px;
+      color: #374151;
+      margin: 0;
+  }
+  .report-period b {
+      color: #000000;
+      font-weight: 700;
+  }
+  .section-heading {
+      font-size: 13px;
+      font-weight: 700;
+      color: #000000;
+      margin-top: 18px;
+      margin-bottom: 7px;
+  }
+  .vat-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 10.5px;
+      table-layout: fixed;
+      margin-bottom: 12px;
+      page-break-inside: avoid;
+  }
+  .vat-table th,
+  .vat-table td {
+      border: 1px solid #e5e7eb;
+      padding: 4.5px 7px;
+      color: #111827;
+      vertical-align: middle;
+  }
+  .vat-table th {
+      background-color: #f3f4f6;
+      font-weight: 700;
+      color: #111827;
+      text-align: left;
+  }
+  .vat-table th.box-col {
+      text-align: left;
+  }
+  .vat-table td.center-col {
+      text-align: center;
+  }
+  .vat-table th.num-col,
+  .vat-table td.num-col {
+      text-align: right;
+  }
+  .vat-table tr.total-row td {
+      font-weight: 700;
+      color: #000000;
+  }
+  .doc-footer {
+      margin-top: 20px;
+      padding-top: 6px;
+      border-top: 1px solid #e5e7eb;
+      font-size: 9.5px;
+      color: #6b7280;
+      page-break-inside: avoid;
+  }
+  .footer-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+  }
+  @media print {
+      body {
+          padding: 0;
+          padding-bottom: 25px;
+      }
+      .vat-table {
+          page-break-inside: avoid;
+      }
+      .section-heading {
+          page-break-after: avoid;
+      }
+      .doc-footer {
+          position: fixed;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          background: #ffffff;
+      }
+  }
+</style>
+</head>
+<body>
+  <header class="doc-header">
+    <div class="company-header">
+      <div class="company-header-left">
+        <img src="/web/image/res.company/${compId}/logo" class="company-logo" onerror="this.style.display='none'" alt="" />
+        <div class="company-details">
+          <div class="company-name">${companyName}</div>
+          ${compVat ? `<div class="company-sub"><b>VAT / Tax ID:</b> ${compVat}</div>` : ''}
+          ${compCr ? `<div class="company-sub"><b>CR No:</b> ${compCr}</div>` : ''}
+          ${compAddress ? `<div class="company-sub">${compAddress}</div>` : ''}
+        </div>
+      </div>
+      <div class="company-header-right">
+        ${compPhone ? `<div class="company-sub"><b>Tel:</b> ${compPhone}</div>` : ''}
+        ${compEmail ? `<div class="company-sub"><b>Email:</b> ${compEmail}</div>` : ''}
+        <div class="company-sub" style="margin-top: 3px;"><b>Basis:</b> Accrual</div>
+      </div>
+    </div>
 
-<div class="kpi-row">
-  <div class="kpi-card">
-    <div class="kpi-lbl">Total Output VAT</div>
-    <div class="kpi-val output">${fmtN(d.output_vat)}</div>
-  </div>
-  <div class="kpi-card">
-    <div class="kpi-lbl">Total Input VAT</div>
-    <div class="kpi-val input">${fmtN(d.input_vat)}</div>
-  </div>
-  <div class="kpi-card">
-    <div class="kpi-lbl">Net VAT Payable</div>
-    <div class="kpi-val net">${fmtN(d.net_vat)}</div>
-  </div>
-</div>
+    <div class="header-divider"></div>
 
-<div class="sec-hdr">
-  <span>1. VAT on Sales</span>
-</div>
-<table>
-  <thead>
-    <tr>
-      <th class="box-col" style="width:10%">Box #</th>
-      <th style="width:45%">Description</th>
-      <th class="num-col" style="width:15%">Amount (Base)</th>
-      <th class="num-col" style="width:15%">Adjustment</th>
-      <th class="num-col" style="width:15%">VAT Amount</th>
-    </tr>
-  </thead>
-  <tbody>
-    ${salesRows}
-  </tbody>
-</table>
+    <div class="report-title-section">
+      <div class="report-title">VAT Return</div>
+      <div class="report-period">From <b>${startStr}</b> To <b>${endStr}</b></div>
+    </div>
+  </header>
 
-<div class="sec-hdr purchases">
-  <span>2. VAT on Purchases</span>
-</div>
-<table>
-  <thead>
-    <tr>
-      <th class="box-col" style="width:10%">Box #</th>
-      <th style="width:45%">Description</th>
-      <th class="num-col" style="width:15%">Amount (Base)</th>
-      <th class="num-col" style="width:15%">Adjustment</th>
-      <th class="num-col" style="width:15%">VAT Amount</th>
-    </tr>
-  </thead>
-  <tbody>
-    ${purchaseRows}
-  </tbody>
-</table>
+  <div class="section-heading">VAT on Sales</div>
+  <table class="vat-table">
+    <thead>
+      <tr>
+        <th class="box-col" style="width: 7%;">Box#</th>
+        <th style="width: 53%;">Description</th>
+        <th class="num-col" style="width: 13%;">Amount</th>
+        <th class="num-col" style="width: 12%;">Adjustment</th>
+        <th class="num-col" style="width: 15%;">VAT Amount</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${salesRowsHtml}
+    </tbody>
+  </table>
 
-<div class="sec-hdr net-due">
-  <span>3. Net VAT Due</span>
-</div>
-<table>
-  <thead>
-    <tr>
-      <th class="box-col" style="width:10%">Box #</th>
-      <th style="width:45%">Description</th>
-      <th class="num-col" style="width:15%">Amount (Base)</th>
-      <th class="num-col" style="width:15%">Adjustment</th>
-      <th class="num-col" style="width:15%">VAT Amount</th>
-    </tr>
-  </thead>
-  <tbody>
-    ${netRows}
-  </tbody>
-</table>
+  <div class="section-heading">VAT on Purchases</div>
+  <table class="vat-table">
+    <thead>
+      <tr>
+        <th class="box-col" style="width: 7%;">Box#</th>
+        <th style="width: 53%;">Description</th>
+        <th class="num-col" style="width: 13%;">Amount</th>
+        <th class="num-col" style="width: 12%;">Adjustment</th>
+        <th class="num-col" style="width: 15%;">VAT Amount</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${purchaseRowsHtml}
+    </tbody>
+  </table>
 
-</body></html>`;
+  <div class="section-heading">Net VAT due</div>
+  <table class="vat-table">
+    <thead>
+      <tr>
+        <th class="box-col" style="width: 7%;">Box#</th>
+        <th style="width: 73%;">Description</th>
+        <th class="num-col" style="width: 20%;">VAT Amount</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${netRowsHtml}
+    </tbody>
+  </table>
 
-        const win = window.open('', '_blank', 'width=1000,height=750');
+  <footer class="doc-footer">
+    <div class="footer-content">
+      <div class="footer-left">Printed on: ${printDateTime}</div>
+      <div class="footer-center">${companyName} &bull; ZATCA VAT Return</div>
+      <div class="footer-right">Page 1 of 1</div>
+    </div>
+  </footer>
+</body>
+</html>`;
+
+        const win = window.open('', '_blank', 'width=1000,height=850');
+        if (!win) {
+            alert('Please allow popups to print the VAT Return report.');
+            return;
+        }
+        win.document.open();
         win.document.write(html);
         win.document.close();
-        if (win.document.fonts && win.document.fonts.load) {
-            win.document.fonts.load("12px sr_symbol", "\uE900").then(() => {
-                setTimeout(() => win.print(), 100);
-            }).catch(() => {
-                setTimeout(() => win.print(), 400);
-            });
-        } else {
-            setTimeout(() => win.print(), 400);
-        }
+        try {
+            win.document.title = pageTitle;
+        } catch (e) {}
+        win.focus();
+        setTimeout(() => {
+            win.print();
+        }, 250);
     }
 
     async exportVatExcel() {
@@ -2035,7 +2438,8 @@ export class AnalytixFinanceDashboard extends Component {
                         company_filter: this.state.vatCompanyFilter || 'all',
                         search_query: this.state.vatSearch || '',
                         sort_col: this.state.vatSortCol || '',
-                        sort_dir: this.state.vatSortDir || 'asc'
+                        sort_dir: this.state.vatSortDir || 'asc',
+                        include_prior: this.state.includePriorUnfiled || false
                     }
                 );
             } else {
@@ -2046,7 +2450,7 @@ export class AnalytixFinanceDashboard extends Component {
                 res = await this.orm.call(
                     'account.move',
                     'export_analytix_vat_xlsx',
-                    [filterName, fromDate, toDate]
+                    [filterName, fromDate, toDate, this.state.includePriorUnfiled]
                 );
             }
 
@@ -3400,8 +3804,8 @@ export class AnalytixFinanceDashboard extends Component {
     }
 
     printTbReport() {
-        if (!this.state.tbData) return;
-        const d = this.state.tbData;
+        if (!this.state.tbData && !this.state.tbModalData) return;
+        const d = this.state.tbData || this.state.tbModalData;
         const sym = d.currency_sym || '';
         const isSar = /^(SAR|SR|﷼|ر\.?س\.?|\uE900|)$/i.test(String(sym).trim()) || String(sym).includes('\uE900') || String(sym).includes('');
         const symSpan = isSar ? `<span class="anx-currency-sym" style="font-family:'sr_symbol', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;">&#xe900;</span>` : `<span>${sym}</span>`;
@@ -3413,59 +3817,116 @@ export class AnalytixFinanceDashboard extends Component {
             return neg ? `<span style="color:#e53935">-${symSpan} ${s}</span>` : `${symSpan} ${s}`;
         };
 
-        const recordsToPrint = (this.filteredTrialBalance && this.filteredTrialBalance.length) ? this.filteredTrialBalance : (d.records || []);
-        const rows = recordsToPrint.map(r => `
-            <tr>
-                <td style="padding:8px 14px;border-bottom:1px solid #f0f1f5;font-family:monospace;text-align:left;">${r.code}</td>
-                <td style="padding:8px 14px;border-bottom:1px solid #f0f1f5;text-align:left;font-weight:600;color:#1e88e5;">${r.name}</td>
-                <td style="padding:8px 14px;border-bottom:1px solid #f0f1f5;text-align:right;">${fmtN(r.initial_balance)}</td>
-                <td style="padding:8px 14px;border-bottom:1px solid #f0f1f5;text-align:right;color:#1565c0;">${fmtN(r.debit)}</td>
-                <td style="padding:8px 14px;border-bottom:1px solid #f0f1f5;text-align:right;color:#c62828;">${fmtN(r.credit)}</td>
-                <td style="padding:8px 14px;border-bottom:1px solid #f0f1f5;text-align:right;">${fmtN(r.period_balance)}</td>
-                <td style="padding:8px 14px;border-bottom:1px solid #f0f1f5;text-align:right;font-weight:600;color:#2e7d32;">${fmtN(r.ending_balance)}</td>
-            </tr>
-        `).join('');
+        const TYPE_ORDER = {
+            'asset':     1,
+            'liability': 2,
+            'equity':    3,
+            'income':    4,
+            'expense':   5,
+        };
 
-        const totInitial = this.tbFilteredInitial;
-        const totDebit   = this.tbFilteredDebit;
-        const totCredit  = this.tbFilteredCredit;
-        const totPeriod  = this.tbFilteredPeriod;
-        const totEnding  = this.tbFilteredEnding;
+        const sourceRecords = (this.filteredTrialBalance && this.filteredTrialBalance.length)
+            ? this.filteredTrialBalance
+            : (d.records || []);
+
+        // Ensure records are ordered by type sequence: Assets -> Liabilities -> Equity -> Income -> Expense, then code
+        const recordsToPrint = [...sourceRecords].sort((a, b) => {
+            const aSeq = a.type_seq || TYPE_ORDER[a.type_group] || 99;
+            const bSeq = b.type_seq || TYPE_ORDER[b.type_group] || 99;
+            if (aSeq !== bSeq) return aSeq - bSeq;
+            const aCode = (a.code || '').toLowerCase();
+            const bCode = (b.code || '').toLowerCase();
+            if (aCode < bCode) return -1;
+            if (aCode > bCode) return 1;
+            return 0;
+        });
+
+        let rows = '';
+        let lastType = null;
+        for (const r of recordsToPrint) {
+            const currentType = r.type_group || 'other';
+            if (currentType !== lastType) {
+                lastType = currentType;
+                const iconClass = r.type_icon || 'fa-tag';
+                rows += `
+                    <tr class="anx-tb-sec-hdr-row" style="background:#f1f5f9;border-top:1.5px solid #cbd5e1;border-bottom:1.5px solid #cbd5e1;page-break-after:avoid;">
+                        <td colspan="8" style="padding:8px 14px;text-align:left;background:#f1f5f9;">
+                            <span style="display:inline-flex;align-items:center;gap:6px;padding:3px 12px;border-radius:6px;font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:0.6px;background-color:${r.type_bg || '#e2e8f0'};color:${r.type_text || '#1e293b'};box-shadow:0 1px 2px rgba(0,0,0,0.06);">
+                                <i class="fa ${iconClass}" style="margin-right:5px;"></i> ${r.type_label || ''}
+                            </span>
+                        </td>
+                    </tr>
+                `;
+            }
+            rows += `
+                <tr style="background:#ffffff;page-break-inside:avoid;">
+                    <td style="padding:8px 14px;border-bottom:1px solid #f0f1f5;font-family:monospace;text-align:left;font-weight:600;">${r.code || ''}</td>
+                    <td style="padding:8px 14px;border-bottom:1px solid #f0f1f5;text-align:left;font-weight:600;color:#1e88e5;">${r.name || ''}</td>
+                    <td style="padding:8px 14px;border-bottom:1px solid #f0f1f5;text-align:center;">
+                        <span style="background:${r.type_bg || '#e2e8f0'};color:${r.type_text || '#1e293b'};font-weight:700;padding:3px 9px;border-radius:12px;font-size:11px;display:inline-block;">${r.type_label || ''}</span>
+                    </td>
+                    <td style="padding:8px 14px;border-bottom:1px solid #f0f1f5;text-align:right;">${fmtN(r.initial_balance)}</td>
+                    <td style="padding:8px 14px;border-bottom:1px solid #f0f1f5;text-align:right;color:#1565c0;">${fmtN(r.debit)}</td>
+                    <td style="padding:8px 14px;border-bottom:1px solid #f0f1f5;text-align:right;color:#c62828;">${fmtN(r.credit)}</td>
+                    <td style="padding:8px 14px;border-bottom:1px solid #f0f1f5;text-align:right;">${fmtN(r.period_balance)}</td>
+                    <td style="padding:8px 14px;border-bottom:1px solid #f0f1f5;text-align:right;font-weight:600;color:#2e7d32;">${fmtN(r.ending_balance)}</td>
+                </tr>
+            `;
+        }
+
+        if (!recordsToPrint.length) {
+            rows = `<tr><td colspan="8" style="padding:24px;text-align:center;color:#94a3b8;">No accounts found for this period.</td></tr>`;
+        }
+
+        const totInitial = recordsToPrint.reduce((s, r) => s + (Number(r.initial_balance) || 0), 0);
+        const totDebit   = recordsToPrint.reduce((s, r) => s + (Number(r.debit) || 0), 0);
+        const totCredit  = recordsToPrint.reduce((s, r) => s + (Number(r.credit) || 0), 0);
+        const totPeriod  = recordsToPrint.reduce((s, r) => s + (Number(r.period_balance) || 0), 0);
+        const totEnding  = recordsToPrint.reduce((s, r) => s + (Number(r.ending_balance) || 0), 0);
 
         const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Trial Balance</title>
+<link rel="stylesheet" href="/web/static/src/libs/fontawesome/css/font-awesome.css"/>
 <style>
   @font-face {
       font-family: "sr_symbol";
       src: url("/iwesabe_sar_currency_symbol/static/src/fonts/sr.ttf") format("truetype"),
-           url("data:font/truetype;base64,AAEAAAALAIAAAwAwT1MvMg8SBTgAAAC8AAAAYGNtYXAXVtKIAAABHAAAAFRnYXNwAAAAEAAAAXAAAAAIZ2x5ZjrqSMoAAAF4AAAYDGhlYWQqn96bAAAZhAAAADZoaGVhB1YDxwAAGbwAAAAkaG10eA0oAAAAABngAAAAGGxvY2EMLgwGAAAZ+AAAAA5tYXhwAAkLQQAAGggAAAAgbmFtZZlKCfsAABooAAABhnBvc3QAAwAAAAAbsAAAACAAAwMNAZAABQAAApkCzAAAAI8CmQLMAAAB6wAzAQkAAAAAAAAAAAAAAAAAAAABEAAAAAAAAAAAAAAAAAAAAABAAADpAQPA/8AAQAPAAEAAAAABAAAAAAAAAAAAAAAgAAAAAAADAAAAAwAAABwAAQADAAAAHAADAAEAAAAcAAQAOAAAAAoACAACAAIAAQAg6QH//f//AAAAAAAg6QD//f//AAH/4xcEAAMAAQAAAAAAAAAAAAAAAQAB//8ADwABAAD/wAAAA8AAAgAANzkBAAAAAAEAAP/AAAADwAACAAA3OQEAAAAAAQAA/8AAAAPAAAIAADc5AQAAAAACAAD/wAOUA8AItQs+AAABDgEjDgEVIgYHFAYHDgExOAExMCIxMAYxDgExMCIVIgYxDgEHMAYxIgYxOAExMAYxDgExIgYxDgEHIgYHFCIxMCIVMAYHDgEHDgEHMAYxMAYVIgYPARUcATEiMCMwBgcqASMwBiMGIiMUIjEwBiMiBiMOASMGIgcwIiMwBjEwIiMwIgciBiMiBgcqATEwBiMGIjEwBiMiBiMwIjEiBiMUIiMiBiMiBiMwBiMwIhUqATEqAQciBjEqAQcwIiMiBiMwIjEiBiMqASMGIiMwIjEwIgcwIgcqATEOASMiBgciBiMwBiMiBiMwBiMGIjEGIiMiBgcwIjEUMCMUMDEUBjEOARUwFAccATEwBhUOATEwFDEUBhUOATEwBhUUBjEOAQcUBgcGFBUwBhUUBhUwFDEUBjEcATEGFDEcASMwFBUwFCMcATEUBjEcARUUBhUUBhUcARUGMjMwNjMyNjMyNjEyNjMyNjcwMjM+ATM6ATEwNjMyNjc6ATMyNjMyNjMyNjM+ATMyNjMyNjMwMjM+ATM6ATc6ATU6ATU6ATMyNjE6ATEwMjUyNjMyNjM6ATcwMjMwNhUwNjMwMjcyNjcyNjE6ATcyNjM6ATEwNjMwNjM+ATMyNjMyNjMyNjMyNjMyNjc6ATcwMjcyNjMwMjcwMjM2MjE2MjM+ATE6ATEyNjMwMjM3FRwBIzAGBzAGIw4BIyoBByoBMQYiIzAiIzAGIyIGBzAiMTAiIxQGIzAGIwYiMSIGMSoBIxQiMTAiByoBMSIGIyoBIzAGIyIGIyIGIyoBBzAiByoBByIGIyIGIyIGIyIGMSIGIwYiMTAGIyIGBw4BIwYiByoBIzAGMSIGMSIGIwYiMQYiIzAGIzAiMTAiFSoBIw4BIyoBIzAGMSIGByIGIwYiByIGIyIGByoBBzAiBw4BIw4BFTAUMQYUMTAGFRQGMTAGBzAUBxQGMRQGMTAGMTAGBw4BFQ4BBwYUBzAGMRwBBxwBMRQGFQ4BFRQGFRQGFRQGFTAUFRQGFQYUFRQGFRQWNzYyMzA2MzYyMTYyNzI2MzoBNzI2MzoBNTAyMzA2Mz4BMzA2MTI2Mz4BMTAyNzoBMzA2MzAyNz4BMzAyNzoBMTI0MzAyMzAyMTA2MzYyNzYyMTI2MzYyMzI2MzoBNToBMTI2MToBMTI2MToBMTI2Mz4BMzI2MzI2MzYyMzI2MzoBMTgBNzAyMz4BMzI2MzoBMTYyMzA2MzAyMzA2MzYyMTI2MTAyNzI2MzI2MzAyMTAyNzoBNzI2MzoBNzoBNzA2MzI2MTI2NzI2MzoBNzAyMTYyMTAyMzYyNzI2MzAyMzA2MzoBMTI2MzoBMT4BMzoBNzI2MzoBNzQ2NTA2NTA0MTA0MzQ2NTQ2MTQ2NTQ2MTI0MTA0NTI4MTwBMT4BNTA0MzA0MTA2NTQ2NTA0MzQ2MTA2NzwBNTI0NTQ2NTQ2NTQ2MTQ2NTA2NTwBMTA2NTwBNTY0MTAGIwGsAQMBAQMBCwICAQECAQEBAQEBAQEFAQIBAQEBAQEBAQEBAQIBAQECAgMYAQECAQEBAQIBAgEBBgEBAQEDAgIDAQEDAgIEAQEFAgMDAQIBAgEBAgEBBAIBAwMBAgEBAgEBAQEBAQEDAgIEAQEFAgMDAQIBAgEBAgEBBAIBAwMBAgQBAgMCAQIFAQECAgQCAQECAQEDAQMBAgEBAQEBAgUBAQECAQEBAQEBAQEBAQEBAQEBAQECAQEDBAcBAQUCAwQBAgICCwMDAgEEAQEBAQgDAQEBAQIBAQEBAgEBAQEBAQEBAQEBAQEBAQECAQEBAQIDAQEDAQECAgQCAQQCAgECBAEBAQcBAQQCAQEBAQYCAQIBAQQCAgQBAQMBAQIBAgEBBAIBAQEBAwECAgEBAQECAQECAQQBAQMBAQEBAgEBAQECAQMEAwIDAQMBAgMBAQEGAgMCAgUBAQIBAQIBAgMCAQMBAQQCAQMBBAIBAwECAQMBAgIBAgEDBAEBAQEBAQEBAQYCBAMCBQEBAgEBAgEBAQEBAgEBBAMCAQEFAwMCAgMBAQECAQIBAQECAQUBAQEBAgEBBAEBAQEBAgEDAQEDAQEDAQEDAQEDAQICAQMBBAICAQMEBAYHAwIDAQEBAQICBQEDAgEEAQEBAQECAgECAQIEAQEBAQIBBQQBBAIBBAEBAwECBAQBAQEEAwIGAQMDAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBBQMDAQMBAgMBAwIBAwEDBgIDAQECAgEDAQQGAQICBAIBBgIBAQEBAQEEAwIEAgICAQEBAQEBAgEBAwEBAwEEAwEBAQIBAQMBAQMBAQEBAQEBAQIBBAIEAwIBAgIBAwEDBgEBAgECAwEDAgIDAQIBAgMCBAYBAwEFAwIFAQMDCAECAQMCAQMBAgIBAgEBAgEBAgEBAwECBAECAwEBAwECAgEBAgEBAQECAQIJAQECAQIBAQMBAQMCAgMBBQICAQIBAgECBAECBAECAQMDAQEBAgEFAwIEAQEEAQEBAQECAQMGAwIBAgECAQEBAQEBAgEDAQEBAQEBAQEBAQEBAgEFAQEBAgEBAQEBAQMBAgEBAQEBAwEBAQEBAQEDAQEBAQICAwEBAQEBAQEBAQECAQIBAQMCAgQFAwECBAEBAQIBAQEBAQIBAQECAQICAQEDAQEBAQECAQEBAQEBAQEDAwECAQMCAQMBDQEBAQEBAQEBCwECBQEDAQEDAQMCAgQBAgEBAgEBBQIBAgECAQECAQMCAgUBAgIBAgEDAgQEAQEBAQMCAgMDAgIDAwIBBAEBBAICBAECBgEBAQEBAQECAQEBAgEBAQEBAQIBAgEBAgECAQEBAQEBAgEBAQECAQIBAQMCCgIBAgEBAQkBAgICBgIBAQEDAgIFAQEBAQIBAgEBAQIBAwEBAwECAwEBAQIBAQEBAQECAgQBAQIBAgIBAQEBAwEBAQEBAQEBAQIBAQEBAQEBAQECAQEBAQECAQO/AQIBAQEHAQEBAQEBAQEBAQEBAwECAQEBAQEBAQECAQEBAgEDGAIBAgEBAQEDAQLXa2sBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQIBAQEBAwEBAQIBAQEBAQIEAQEBAQEBAQEDAQEDAQIDAgEBAgMFAgEEAgIDAQEBAQIBAQEBAQIBAgEBAgEDAQIBCAEBAQEDAQIEAQICAQEBAQEBAQEBAQIBAQIBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQFGMRQBAQEBAQEBAQEBAQEBAQEBAQIBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQECAgEBAQEBAQIDAQEBAQIBAQQEAgIEAQEEBQEDAQMBAgEBAQEDAgEEAQEDAgEDAQEBAQICAQQCAgMBAQMCAwEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQECAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQIBAQEBAQEBAQEBAgEBAQEBBwEBAQEEAQEBAQEBAQEFAQECAQIBAgEBBAEBAQEBAQEBAQEBAQQCAgEDAwQBAgEBAgEBAQECAQEBBAEBBQIEFDAaJQEBAQEBAQEBAQEBAQEBAQEBAQMBH09uAwEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQECAQECAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQIBAQIBAQEBAgEBAQEBCwMCAgEBAQEBAQECAQMCAgUCAwQBAgUFAQIBBAQBAQICAQQCBAUBAQIBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBARsbNwEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQECAgMBAQEBAQUCAgEBAgEBAQQCAwMBAgEBAgEBAwEDCwUBAwEBAQEBAgEBBgIBAwECAQgJAQEBAQEBAQEBAQEBAQECAgEBAQEBAQEBAQEBAQEBAQEBAQIBAQEBAQEBAgEBAQEBAgEBAQHGZGIBAQEBAQEEAQEBAQEBAQEBAQEFAQEBAQECAQECAQECBAEFBgYDBQIBAQIBAQIBAQIBAgKkpQEBAQIBAQEBAQEBAQEBAQEBAQIB95VjAfy/AQEBAQEBAQEBAQEBAQEBAQEBAQQBAQEBAQEBAQEBAQEBAQEBAQEBAQIBAQECAQEBAQEBAQEBAgEBAQEBAQEBAQEBAgEBAQICAQEJAQEBAQEBAQEBAQEBAQEBAQEBAgEDAgMDAgEDAgEKBAECAQMCAgMBAgEDDgMCAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQIBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBBgEBAQEBAQEBAQEBAQIBAgEBAQEBAQEFAgIBAgEBAgEBAgQEAgEBAQEBAQIBAgYCAQIBBgIDAQECAgEBAwECCAEAAAEAAP/AAjIDwAAIAAABBzc+ATEwBgcCMAICAQEBAQNIAgIBAQEBAAABAAAAAAAAsksaaV8PPPUACwQAAAAAAOP2zQ8AAAAA4/bNDwAA/8ADlAPAAAAACAACAAAAAAAAAAEAAAPA/8AAAAQAAAAAAAOUAAEAAAAAAAAAAAAAAAAAAAAGBAAAAAAAAAAAAAAAAgAAAAOUAAADlAAAAAAAAAAKABQAHgvyDAYAAAABAAAABgs/AAIAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAADgCuAAEAAAAAAAEABwAAAAEAAAAAAAIABwBgAAEAAAAAAAMABwA2AAEAAAAAAAQABwB1AAEAAAAAAAUACwAVAAEAAAAAAAYABwBLAAEAAAAAAAoAGgCKAAMAAQQJAAEADgAHAAMAAQQJAAIADgBnAAMAAQQJAAMADgA9AAMAAQQJAAQADgB8AAMAAQQJAAUAFgAgAAMAAQQJAAYADgBSAAMAAQQJAAoANACkaWNvbW9vbgBpAGMAbwBtAG8AbwBuVmVyc2lvbiAxLjAAVgBlAHIAcwBpAG8AbgAgADEALgAwaWNvbW9vbgBpAGMAbwBtAG8AbwBuUmVndWxhcgBSAGUAZwB1AGwAYQByaWNvbW9vbgBpAGMAbwBtAG8AbwBuRm9udCBnZW5lcmF0ZWQgYnkgSWNvTW9vbi4ARgBvAG4AdAAgAGcAZQBuAGUAcgBhAHQAZQBk ACAAYgB5 ACAASQBjAG8ATQBvAG8AbnAuAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==") format("truetype");
+           url("data:font/truetype;base64,AAEAAAALAIAAAwAwT1MvMg8SBTgAAAC8AAAAYGNtYXAXVtKIAAABHAAAAFRnYXNwAAAAEAAAAXAAAAAIZ2x5ZjrqSMoAAAF4AAAYDGhlYWQqn96bAAAZhAAAADZoaGVhB1YDxwAAGbwAAAAkaG10eA0oAAAAABngAAAAGGxvY2EMLgwGAAAZ+AAAAA5tYXhwAAkLQQAAGggAAAAgbmFtZZlKCfsAABooAAABhnBvc3QAAwAAAAAbsAAAACAAAwMNAZAABQAAApkCzAAAAI8CmQLMAAAB6wAzAQkAAAAAAAAAAAAAAAAAAAABEAAAAAAAAAAAAAAAAAAAAABAAADpAQPA/8AAQAPAAEAAAAABAAAAAAAAAAAAAAAgAAAAAAADAAAAAwAAABwAAQADAAAAHAADAAEAAAAcAAQAOAAAAAoACAACAAIAAQAg6QH//f//AAAAAAAg6QD//f//AAH/4xcEAAMAAQAAAAAAAAAAAAAAAQAB//8ADwABAAD/wAAAA8AAAgAANzkBAAAAAAEAAP/AAAADwAACAAA3OQEAAAAAAQAA/8AAAAPAAAIAADc5AQAAAAACAAD/wAOUA8AItQs+AAABDgEjDgEVIgYHFAYHDgExOAExMCIxMAYxDgExMCIVIgYxDgEHMAYxIgYxOAExMAYxDgExIgYxDgEHIgYHFCIxMCIVMAYHDgEHDgEHMAYxMAYVIgYPARUcATEiMCMwBgcqASMwBiMGIiMUIjEwBiMiBiMOASMGIgcwIiMwBjEwIiMwIgciBiMiBgcqATEwBiMGIjEwBiMiBiMwIjEiBiMUIiMiBiMiBiMwBiMwIhUqATEqAQciBjEqAQcwIiMiBiMwIjEiBiMqASMGIiMwIjEwIgcwIgcqATEOASMiBgciBiMwBiMiBiMwBiMGIjEGIiMiBgcwIjEUMCMUMDEUBjEOARUwFAccATEwBhUOATEwFDEUBjUOATEwBhUUBjEOAQcUBgcGFBUwBhUUBjUwFDEUBjEcATEGFDEcASMwFBUwFCMcATEUBjEcARUUBjUUBjUcARUGMjMwNjMyNjMyNjEyNjMyNjcwMjM+ATM6ATEwNjMyNjc6ATMyNjMyNjMyNjM+ATMyNjMyNjMwMjM+ATM6ATc6ATU6ATU6ATMyNjE6ATEwMjUyNjMyNjM6ATcwMjMwNhUwNjMwMjcyNjcyNjE6ATcyNjM6ATEwNjMwNjM+ATMyNjMyNjMyNjMyNjMyNjc6ATcwMjcyNjMwMjcwMjM2MjE2MjM+ATE6ATEyNjMwMjM3FRwBIzAGBzAGIw4BIyoBByoBMQYiIzAiIzAGIyIGBzAiMTAiIxQGIzAGIwYiMSIGMSoBIxQiMTAiByoBMSIGIyoBIzAGIyIGIyIGIyoBBzAiByoBByIGIyIGIyIGIyIGMSIGIwYiMTAGIyIGBw4BIwYiByoBIzAGMSIGMSIGIwYiMQYiIzAGIzAiMTAiFSoBIw4BIyoBIzAGMSIGByIGIwYiByIGIyIGByoBBzAiBw4BIw4BFTAUMQYUMTAGFRQGMTAGBzAUBxQGMRQGMTAGMTAGBw4BFQ4BBwYUBzAGMRwBBxwBMRQGFQ4BFRQGFRQGFRQGFTAUFRQGFQYUFRQGFRQWNzYyMzA2MzYyMTYyNzI2MzoBNzI2MzoBNTAyMzA2Mz4BMzA2MTI2Mz4BMTAyNzoBMzA2MzAyNz4BMzAyNzoBMTI0MzAyMzAyMTA2MzYyNzYyMTI2MzYyMzI2MzoBNToBMTI2MToBMTI2MToBMTI2Mz4BMzI2MzI2MzYyMzI2MzoBMTgBNzAyMz4BMzI2MzoBMTYyMzA2MzAyMzA2MzYyMTI2MTAyNzI2MzI2MzAyMTAyNzoBNzI2MzoBNzoBNzA2MzI2MTI2NzI2MzoBNzAyMTYyMTAyMzYyNzI2MzAyMzA2MzoBMTI2MzoBMT4BMzoBNzI2MzoBNzQ2NTA2NTA0MTA0MzQ2NTQ2MTQ2NTQ2MTI0MTA0NTI4MTwBMT4BNTA0MzA0MTA2NTQ2NTA0MzQ2MTA2NzwBNTI0NTQ2NTQ2NTQ2MTQ2NTA2NTwBMTA2NTwBNTY0MTAGIwGsAQMBAQMBCwICAQECAQEBAQEBAQEFAQIBAQEBAQEBAQEBAQIBAQECAgMYAQECAQEBAQIBAgEBBgEBAQEDAgIDAQEDAgIEAQEFAgMDAQIBAgEBAgEBBAIBAwMBAgEBAgEBAQEBAQEDAgIEAQEFAgMDAQIBAgEBAgEBBAIBAwMBAgQBAgMCAQIFAQECAgQCAQECAQEDAQMBAgEBAQEBAgUBAQECAQEBAQEBAQEBAQEBAQEBAQECAQEDBAcBAQUCAwQBAgICCwMDAgEEAQEBAQgDAQEBAQIBAQEBAgEBAQEBAQEBAQEBAQEBAQECAQEBAQIDAQEDAQECAgQCAQQCAgECBAEBAQcBAQQCAQEBAQYCAQIBAQQCAgQBAQMBAQIBAgEBBAIBAQEBAwECAgEBAQECAQECAQQBAQMBAQEBAgEBAQECAQMEAwIDAQMBAgMBAQEGAgMCAgUBAQIBAQIBAgMCAQMBAQQCAQMBBAIBAwECAQMBAgIBAgEDBAEBAQEBAQEBAQYCBAMCBQEBAgEBAgEBAQEBAgEBBAMCAQEFAwMCAgMBAQECAQIBAQECAQUBAQEBAgEBBAEBAQEBAgEDAQEDAQEDAQEDAQEDAQICAQMBBAICAQMEBAYHAwIDAQEBAQICBQEDAgEEAQEBAQECAgECAQIEAQEBAQIBBQQBBAIBBAEBAwECBAQBAQEEAwIGAQMDAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBBQMDAQMBAgMBAwIBAwEDBgIDAQECAgEDAQQGAQICBAIBBgIBAQEBAQEEAwIEAgICAQEBAQEBAgEBAwEBAwEEAwEBAQIBAQMBAQMBAQEBAQEBAQIBBAIEAwIBAgIBAwEDBgEBAgECAwEDAgIDAQIBAgMCBAYBAwEFAwIFAQMDCAECAQMCAQMBAgIBAgEBAgEBAgEBAwECBAECAwEBAwECAgEBAgEBAQECAQIJAQECAQIBAQMBAQMCAgMBBQICAQIBAgECBAECBAECAQMDAQEBAgEFAwIEAQEEAQEBAQECAQMGAwIBAgECAQEBAQEBAgEDAQEBAQEBAQEBAQEBAgEFAQEBAgEBAQEBAQMBAgEBAQEBAwEBAQEBAQEDAQEBAQICAwEBAQEBAQEBAQECAQIBAQMCAgQFAwECBAEBAQIBAQEBAQIBAQECAQICAQEDAQEBAQECAQEBAQEBAQEDAwECAQMCAQMBDQEBAQEBAQEBCwECBQEDAQEDAQMCAgQBAgEBAgEBBQIBAgECAQECAQMCAgUBAgIBAgEDAgQEAQEBAQMCAgMDAgIDAwIBBAEBBAICBAECBgEBAQEBAQECAQEBAgEBAQEBAQIBAgEBAgECAQEBAQEBAgEBAQECAQIBAQMCCgIBAgEBAQkBAgICBgIBAQEDAgIFAQEBAQIBAgEBAQIBAwEBAwECAwEBAQIBAQEBAQECAgQBAQIBAgIBAQEBAwEBAQEBAQEBAQIBAQEBAQEBAQECAQEBAQECAQO/AQIBAQEHAQEBAQEBAQEBAQEBAwECAQEBAQEBAQECAQEBAgEDGAIBAgEBAQEDAQLXa2sBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQIBAQEBAwEBAQIBAQEBAQIEAQEBAQEBAQEDAQEDAQIDAgEBAgMFAgEEAgIDAQEBAQIBAQEBAQIBAgEBAgEDAQIBCAEBAQEDAQIEAQICAQEBAQEBAQEBAQIBAQIBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQFGMRQBAQEBAQEBAQEBAQEBAQEBAQIBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQECAgEBAQEBAQIDAQEBAQIBAQQEAgIEAQEEBQEDAQMBAgEBAQEDAgEEAQEDAgEDAQEBAQICAQQCAgMBAQMCAwEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQECAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQIBAQEBAQEBAQEBAgEBAQEBBwEBAQEEAQEBAQEBAQEFAQECAQIBAgEBBAEBAQEBAQEBAQEBAQQCAgEDAwQBAgEBAgEBAQECAQEBBAEBBQIEFDAaJQEBAQEBAQEBAQEBAQEBAQEBAQMBH09uAwEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQECAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQIBAQIBAQEBAgEBAQEBCwMCAgEBAQEBAQECAQMCAgUCAwQBAgUFAQIBBAQBAQICAQQCBAUBAQIBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBARsbNwEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQEBAQEBAQECAgMBAQEBAQUCAgEBAgEBAQQCAwMBAgEBAgEBAwEDCwUBAwEBAQEBAgEBBgIBAwECAQgJAQEBAQEBAQEBAQEBAQECAgEBAQEBAQEBAQEBAQEBAQEBAQIBAQEBAQEBAgEBAQEBAgEBAQHGZGIBAQEBAQEEAQEBAQEBAQEBAQEFAQEBAQECAQECAQECBAEFBgYDBQIBAQIBAQIBAQIBAgKkpQEBAQIBAQEBAQEBAQEBAQEBAQIB95VjAfy/AQEBAQEBAQEBAQEBAQEBAQEBAQQBAQEBAQEBAQEBAQEBAQEBAQEBAQIBAQECAQEBAQEBAQEBAgEBAQEBAQEBAQEBAgEBAQICAQEJAQEBAQEBAQEBAQEBAQEBAQEBAgEDAgMDAgEDAgEKBAECAQMCAgMBAgEDDgMCAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQIBAQEBAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBBgEBAQEBAQEBAQEBAQIBAgEBAQEBAQEFAgIBAgEBAgEBAgQEAgEBAQEBAQIBAgYCAQIBBgIDAQECAgEBAwECCAEAAAEAAP/AAjIDwAAIAAABBzc+ATEwBgcCMAICAQEBAQNIAgIBAQEBAAABAAAAAAAAsksaaV8PPPUACwQAAAAAAOP2zQ8AAAAA4/bNDwAA/8ADlAPAAAAACAACAAAAAAAAAAEAAAPA/8AAAAQAAAAAAAOUAAEAAAAAAAAAAAAAAAAAAAAGBAAAAAAAAAAAAAAAAgAAAAOUAAADlAAAAAAAAAAKABQAHgvyDAYAAAABAAAABgs/AAIAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAADgCuAAEAAAAAAAEABwAAAAEAAAAAAAIABwBgAAEAAAAAAAMABwA2AAEAAAAAAAQABwB1AAEAAAAAAAUACwAVAAEAAAAAAAYABwBLAAEAAAAAAAoAGgCKAAMAAQQJAAEADgAHAAMAAQQJAAIADgBnAAMAAQQJAAMADgA9AAMAAQQJAAQADgB8AAMAAQQJAAUAFgAgAAMAAQQJAAYADgBSAAMAAQQJAAoANACkaWNvbW9vbgBpAGMAbwBtAG8AbwBuVmVyc2lvbiAxLjAAVgBlAHIAcwBpAG8AbgAgADEALgAwaWNvbW9vbgBpAGMAbwBtAG8AbwBuUmVndWxhcgBSAGUAZwB1AGwAYQByaWNvbW9vbgBpAGMAbwBtAG8AbwBuRm9udCBnZW5lcmF0ZWQgYnkgSWNvTW9vbi4ARgBvAG4AdAAgAGcAZQBuAGUAcgBhAHQAZQBk ACAAYgB5 ACAASQBjAG8ATQBvAG8AbnAuAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==") format("truetype");
       font-weight: normal; font-style: normal; unicode-range: U+E900;
   }
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; box-sizing: border-box; }
   .anx-currency-sym, .o_sar_symbol, .icon-sr, [class*="sr_symbol"] { font-family: 'sr_symbol', "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important; display: inline-block; }
-  body { font-family: 'sr_symbol', Inter, sans-serif; padding: 32px; color: #1f2937; }
-  h2 { margin: 0 0 4px; font-size: 22px; text-align: center; }
-  p.sub { color: #8a93a4; margin: 0 0 24px; font-size: 13px; text-align: center; }
-  table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 20px; }
-  th { text-align: left; padding: 10px 14px; background: #f0f1f5; border-bottom: 2px solid #d0d5df; color: #6b7280; font-weight: 700; text-transform: uppercase; font-size: 11px; }
-  @media print { button { display:none } }
+  body { font-family: 'sr_symbol', Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 24px 32px; color: #1f2937; margin: 0; }
+  h2 { margin: 0 0 6px; font-size: 22px; text-align: center; color: #0f172a; font-weight: 800; letter-spacing: -0.3px; }
+  p.sub { color: #64748b; margin: 0 0 20px; font-size: 13px; text-align: center; font-weight: 500; }
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; margin-top: 10px; border: 1px solid #e2e8f0; }
+  th { text-align: left; padding: 10px 14px; background: #f8fafc; border-bottom: 2px solid #cbd5e1; color: #475569; font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 0.4px; }
+  tr.anx-tb-sec-hdr-row { page-break-after: avoid; page-break-inside: avoid; }
+  tr { page-break-inside: avoid; }
+  thead { display: table-header-group; }
+  @media print {
+    button { display: none; }
+    body { padding: 12px 16px; }
+  }
 </style></head><body>
-<h2>Trial Balance &mdash; ${d.company}</h2>
-<p class="sub">Date Range: ${d.date_range.start} to ${d.date_range.end}</p>
+<h2>Trial Balance &mdash; ${d.company}${symSpan ? ` &mdash; ${symSpan}` : ''}</h2>
+<p class="sub">Date Range: ${d.date_range.start} &rarr; ${d.date_range.end}</p>
 <table>
   <thead>
     <tr>
       <th style="text-align:left;width:10%">Code</th>
-      <th style="text-align:left;width:30%">Account</th>
-      <th style="text-align:right;width:12%">Initial Balance</th>
-      <th style="text-align:right;width:12%">Debit</th>
-      <th style="text-align:right;width:12%">Credit</th>
-      <th style="text-align:right;width:12%">Period Balance</th>
-      <th style="text-align:right;width:12%">Ending Balance</th>
+      <th style="text-align:left;width:26%">Account</th>
+      <th style="text-align:center;width:12%">Main Type</th>
+      <th style="text-align:right;width:11%">Initial Balance</th>
+      <th style="text-align:right;width:10%">Debit</th>
+      <th style="text-align:right;width:10%">Credit</th>
+      <th style="text-align:right;width:10%">Period Balance</th>
+      <th style="text-align:right;width:11%">Ending Balance</th>
     </tr>
   </thead>
   <tbody>
     ${rows}
-    <tr style="background:#0f1729;color:#fff;font-weight:800;">
-      <td style="padding:12px 14px;" colspan="2">Totals</td>
+    <tr style="background:#0f1729;color:#fff;font-weight:800;page-break-inside:avoid;">
+      <td style="padding:12px 14px;" colspan="3">Total</td>
       <td style="padding:12px 14px;text-align:right;">${fmtN(totInitial)}</td>
       <td style="padding:12px 14px;text-align:right;">${fmtN(totDebit)}</td>
       <td style="padding:12px 14px;text-align:right;">${fmtN(totCredit)}</td>
@@ -3479,14 +3940,21 @@ export class AnalytixFinanceDashboard extends Component {
         const win = window.open('', '_blank', 'width=980,height=720');
         win.document.write(html);
         win.document.close();
+
+        const triggerPrint = () => {
+            setTimeout(() => {
+                win.focus();
+                win.print();
+            }, 250);
+        };
+
         if (win.document.fonts && win.document.fonts.load) {
-            win.document.fonts.load("12px sr_symbol", "\uE900").then(() => {
-                setTimeout(() => win.print(), 100);
-            }).catch(() => {
-                setTimeout(() => win.print(), 400);
-            });
+            Promise.all([
+                win.document.fonts.load("12px sr_symbol", "\uE900").catch(() => {}),
+                win.document.fonts.load("14px FontAwesome").catch(() => {})
+            ]).then(() => triggerPrint()).catch(() => triggerPrint());
         } else {
-            setTimeout(() => win.print(), 400);
+            triggerPrint();
         }
     }
 

@@ -990,27 +990,41 @@
 .anx-exp-row { border-left: 3px solid transparent; }
 .anx-exp-row:hover { border-left-color: #e53935; }
 
-/* ── VAT tab ───────────────────────────────────────── */
-.anx-vat-modal-filters {
+/* ── VAT tab (Standardized Styling) ─────────────────── */
+.anx-vat-toolbar {
     margin-bottom: 20px;
-    padding: 12px 20px;
+    padding: 12px 18px;
     background: #0f1729;
-    border-radius: 10px;
-    border: 1px solid rgba(0, 212, 200, 0.25);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
     display: flex;
     align-items: center;
-    gap: 16px;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+    justify-content: space-between;
+    gap: 14px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
     flex-wrap: wrap;
 
-    .anx-vat-filter-title {
-        font-weight: 700;
-        color: #ffffff !important;
-        font-size: 13.5px;
+    .anx-vat-toolbar-main {
         display: flex;
         align-items: center;
-        gap: 7px;
-        letter-spacing: 0.3px;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .anx-vat-toolbar-group {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .anx-vat-group-label {
+        font-weight: 700;
+        color: #ffffff;
+        font-size: 13px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        letter-spacing: 0.2px;
 
         i {
             color: #00d4c8;
@@ -1018,102 +1032,772 @@
         }
     }
 
-    .anx-vat-filter-group {
-        display: flex;
+    .anx-vat-date-fields {
+        display: inline-flex;
         align-items: center;
         gap: 8px;
-
-        label {
-            font-size: 12.5px;
-            font-weight: 600;
-            color: rgba(255, 255, 255, 0.85) !important;
-            margin: 0;
-            letter-spacing: 0.3px;
-        }
     }
 
-    .anx-vat-date-input {
-        max-width: 150px;
-        padding: 6px 12px !important;
-        font-size: 13px !important;
-        font-weight: 600 !important;
-        color: #ffffff !important;
-        background: rgba(255, 255, 255, 0.10) !important;
-        border: 1px solid rgba(0, 212, 200, 0.35) !important;
-        border-radius: 8px !important;
-        outline: none !important;
-        color-scheme: dark !important;
-        box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.25) !important;
-        transition: all 0.18s ease;
-
-        &::-webkit-calendar-picker-indicator {
-            filter: invert(1) brightness(1.2) !important;
-            opacity: 0.9 !important;
-            cursor: pointer !important;
-        }
-
-        &:hover {
-            background: rgba(255, 255, 255, 0.14) !important;
-            border-color: #00d4c8 !important;
-        }
-
-        &:focus {
-            background: rgba(255, 255, 255, 0.18) !important;
-            border-color: #00d4c8 !important;
-            box-shadow: 0 0 0 3px rgba(0, 212, 200, 0.30) !important;
-        }
-    }
-
-    .anx-vat-filter-btn {
-        padding: 7px 18px;
-        font-size: 13px;
-        font-weight: 600;
-        border-radius: 8px;
-        background: linear-gradient(135deg, #00b4d8 0%, #1e88e5 100%);
-        color: #ffffff !important;
-        border: none;
-        cursor: pointer;
+    .anx-vat-date-box {
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        box-shadow: 0 2px 10px rgba(30, 136, 229, 0.35);
-        transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(0, 212, 200, 0.3);
+        border-radius: 8px;
+        padding: 4px 8px;
+        transition: all 0.15s ease;
+
+        &:focus-within {
+            border-color: #00d4c8;
+            box-shadow: 0 0 0 2px rgba(0, 212, 200, 0.25);
+        }
+    }
+
+    .anx-vat-field-tag {
+        font-size: 11px;
+        font-weight: 700;
+        color: #94a3b8;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .anx-vat-date-input {
+        border: none !important;
+        background: transparent !important;
+        color: #ffffff !important;
+        font-size: 12.5px !important;
+        font-weight: 600 !important;
+        outline: none !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+        color-scheme: dark !important;
+
+        &::-webkit-calendar-picker-indicator {
+            filter: invert(1) brightness(1.2) !important;
+            opacity: 0.85 !important;
+            cursor: pointer !important;
+        }
+    }
+
+    .anx-vat-sep {
+        width: 1px;
+        height: 24px;
+        background: rgba(255, 255, 255, 0.12);
+        margin: 0 4px;
+    }
+
+    .anx-vat-prior-card {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 8px;
+        padding: 5px 10px;
+        min-height: 34px;
+
+        .anx-vat-locked-prior-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: #94a3b8;
+        }
+    }
+
+    .anx-vat-prior-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin: 0;
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 600;
+        color: #e2e8f0;
+        user-select: none;
+
+        input {
+            width: 15px;
+            height: 15px;
+            cursor: pointer;
+            accent-color: #059669;
+        }
+    }
+
+    .anx-vat-tag {
+        font-size: 11px;
+        font-weight: 700;
+        padding: 2px 8px;
+        border-radius: 20px;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .anx-vat-tag-active {
+        background: rgba(16, 185, 129, 0.2);
+        color: #34d399;
+        border: 1px solid rgba(16, 185, 129, 0.4);
+    }
+
+    .anx-vat-tag-warn {
+        background: rgba(245, 158, 11, 0.2);
+        color: #fbbf24;
+        border: 1px solid rgba(245, 158, 11, 0.4);
+    }
+
+    .anx-vat-tag-muted {
+        color: #94a3b8;
+        font-size: 11px;
+    }
+
+    .anx-vat-btn-pill {
+        background: rgba(59, 130, 246, 0.2);
+        border: 1px solid rgba(96, 165, 250, 0.4);
+        color: #93c5fd;
+        padding: 2px 8px;
+        border-radius: 6px;
+        font-size: 11px;
+        font-weight: 600;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        transition: all 0.15s ease;
+
+        &:hover {
+            background: rgba(59, 130, 246, 0.35);
+            color: #ffffff;
+        }
+    }
+
+    .anx-vat-status-badge {
+        font-size: 12px;
+        font-weight: 700;
+        color: #34d399;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 4px 10px;
+        background: rgba(16, 185, 129, 0.15);
+        border: 1px solid rgba(16, 185, 129, 0.35);
+        border-radius: 8px;
+    }
+
+    .anx-vat-toolbar-exports {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .anx-vat-action-btn {
+        height: 34px;
+        padding: 0 14px;
+        border-radius: 8px;
+        font-size: 12.5px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        cursor: pointer;
+        border: none;
+        transition: all 0.16s ease;
+        white-space: nowrap;
 
         &:hover {
             transform: translateY(-1px);
-            background: linear-gradient(135deg, #0096c7 0%, #1565c0 100%);
-            box-shadow: 0 4px 14px rgba(30, 136, 229, 0.5);
         }
-
         &:active {
             transform: translateY(0);
         }
     }
+
+    .anx-vat-btn-primary {
+        background: linear-gradient(135deg, #00b4d8 0%, #0284c7 100%);
+        color: #ffffff !important;
+        box-shadow: 0 2px 8px rgba(2, 132, 199, 0.35);
+        &:hover {
+            box-shadow: 0 4px 14px rgba(2, 132, 199, 0.5);
+        }
+    }
+
+    .anx-vat-btn-light {
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        color: #cbd5e1 !important;
+        &:hover {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: rgba(239, 68, 68, 0.4);
+            color: #fca5a5 !important;
+        }
+    }
+
+    .anx-vat-btn-lock {
+        background: linear-gradient(135deg, #059669 0%, #047857 100%);
+        color: #ffffff !important;
+        box-shadow: 0 2px 8px rgba(5, 150, 105, 0.3);
+        &:hover {
+            box-shadow: 0 4px 14px rgba(5, 150, 105, 0.5);
+        }
+    }
+
+    .anx-vat-btn-reopen {
+        background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+        color: #ffffff !important;
+        box-shadow: 0 2px 8px rgba(217, 119, 6, 0.3);
+        &:hover {
+            box-shadow: 0 4px 14px rgba(217, 119, 6, 0.5);
+        }
+    }
+
+    .anx-vat-btn-outline {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        color: #e2e8f0 !important;
+        &:hover {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+    }
+
+    .anx-vat-btn-pdf {
+        background: linear-gradient(135deg, #1e88e5 0%, #1565c0 100%);
+        color: #ffffff !important;
+        box-shadow: 0 2px 8px rgba(30, 136, 229, 0.35);
+        &:hover {
+            box-shadow: 0 4px 14px rgba(30, 136, 229, 0.5);
+        }
+    }
+
+    .anx-vat-btn-excel {
+        background: linear-gradient(135deg, #10b981 0%, #047857 100%);
+        color: #ffffff !important;
+        box-shadow: 0 2px 8px rgba(16, 185, 129, 0.35);
+        &:hover {
+            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.5);
+        }
+    }
+
+    .anx-vat-validation-alert {
+        width: 100%;
+        margin-top: 10px;
+        padding: 10px 16px;
+        background: rgba(239, 68, 68, 0.15);
+        border: 1px solid rgba(239, 68, 68, 0.4);
+        border-radius: 8px;
+        color: #fca5a5;
+        font-size: 13px;
+        line-height: 1.5;
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+
+        .anx-vat-alert-icon {
+            font-size: 16px;
+            margin-top: 2px;
+            color: #ef4444;
+            flex-shrink: 0;
+        }
+
+        .anx-vat-alert-text {
+            flex: 1;
+            white-space: pre-line;
+            font-weight: 500;
+        }
+
+        .anx-vat-alert-dismiss {
+            background: none;
+            border: none;
+            color: #fca5a5;
+            cursor: pointer;
+            padding: 0 4px;
+            font-size: 14px;
+            &:hover {
+                color: #ffffff;
+            }
+        }
+    }
 }
 
-.anx-vat-kpi-output .anx-inv-kpi-pill-val { color: #1565c0; }
-.anx-vat-kpi-input  .anx-inv-kpi-pill-val { color: #c62828; }
-.anx-vat-kpi-net    .anx-inv-kpi-pill-val { color: #2e7d32; }
+/* ── Standardized 4-Column VAT KPI Row ────────────────── */
+.anx-vat-kpi-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 20px;
 
-.anx-vat-row-output { border-left: 3px solid #1e88e5; }
-.anx-vat-row-input  { border-left: 3px solid #e53935; }
+    @media (max-width: 1200px) {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    @media (max-width: 640px) {
+        grid-template-columns: 1fr;
+    }
 
-.anx-vat-tax-badge {
-    display: inline-flex; align-items: center; gap: 5px;
-    background: #f3e5f5; color: #6a1b9a; border-radius: 20px;
-    padding: 3px 10px; font-size: 11px; font-weight: 600; white-space: nowrap;
+    .anx-vat-kpi-card {
+        cursor: default;
+        &:hover {
+            transform: translateY(-2px);
+        }
+    }
 }
-.anx-vat-type-badge {
-    display: inline-flex; align-items: center; gap: 4px;
-    padding: 3px 10px; border-radius: 20px;
-    font-size: 11px; font-weight: 700; white-space: nowrap;
-}
-.anx-vat-output { background: #e3f2fd; color: #1565c0; }
-.anx-vat-input  { background: #fce4ec; color: #c62828; }
 
-.anx-vat-tax-input { background: #fce4ec; color: #c62828; }
-.anx-vat-row-output { border-left: 3px solid #1e88e5; }
-.anx-vat-row-input  { border-left: 3px solid #e53935; }
+/* Company Multi-Filter for VAT */
+.anx-vat-company-legend {
+    margin-top: -8px;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+
+    .anx-vat-co-legend-title {
+        font-size: 12px;
+        font-weight: 700;
+        color: #94a3b8;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+    }
+}
+
+/* ── ZATCA Return Section Panels ──────────────────────── */
+.anx-vat-section-panel {
+    margin-bottom: 24px;
+    border-radius: 12px;
+    overflow: hidden;
+
+    .anx-vat-panel-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 20px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .anx-vat-header-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .anx-vat-header-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        flex-shrink: 0;
+    }
+
+    .anx-vat-icon-sales {
+        background: rgba(2, 132, 199, 0.15);
+        color: #38bdf8;
+    }
+    .anx-vat-icon-purchases {
+        background: rgba(225, 29, 72, 0.15);
+        color: #fb7185;
+    }
+    .anx-vat-icon-net {
+        background: rgba(16, 185, 129, 0.15);
+        color: #34d399;
+    }
+
+    .anx-vat-header-title {
+        font-size: 15px;
+        font-weight: 700;
+        color: #ffffff;
+        letter-spacing: -0.2px;
+        line-height: 1.2;
+    }
+
+    .anx-vat-header-sub {
+        font-size: 11.5px;
+        color: #94a3b8;
+        font-weight: 500;
+        margin-top: 2px;
+    }
+
+    .anx-vat-header-pill {
+        padding: 5px 14px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .anx-pill-sales {
+        background: rgba(2, 132, 199, 0.15);
+        color: #38bdf8;
+        border: 1px solid rgba(2, 132, 199, 0.35);
+    }
+    .anx-pill-purchases {
+        background: rgba(225, 29, 72, 0.15);
+        color: #fb7185;
+        border: 1px solid rgba(225, 29, 72, 0.35);
+    }
+    .anx-pill-net-pay {
+        background: rgba(16, 185, 129, 0.15);
+        color: #34d399;
+        border: 1px solid rgba(16, 185, 129, 0.35);
+    }
+    .anx-pill-net-refund {
+        background: rgba(2, 132, 199, 0.15);
+        color: #38bdf8;
+        border: 1px solid rgba(2, 132, 199, 0.35);
+    }
+
+    /* Table specifics */
+    .anx-inv-table-wrap {
+        border-radius: 0;
+        border: none;
+        box-shadow: none;
+        background: transparent;
+    }
+
+    .anx-vat-box-badge {
+        display: inline-block;
+        min-width: 26px;
+        padding: 2px 7px;
+        border-radius: 6px;
+        background: rgba(255, 255, 255, 0.08);
+        font-size: 11.5px;
+        font-weight: 700;
+        color: #cbd5e1;
+        text-align: center;
+    }
+
+    .anx-vat-adj-badge {
+        background: rgba(16, 185, 129, 0.2);
+        color: #34d399;
+        border: 1px solid rgba(16, 185, 129, 0.35);
+    }
+    .anx-vat-adj-purchases {
+        background: rgba(245, 158, 11, 0.2);
+        color: #fbbf24;
+        border: 1px solid rgba(245, 158, 11, 0.35);
+    }
+
+    .anx-vat-row-total {
+        font-weight: 700;
+        border-top: 2px solid rgba(255, 255, 255, 0.12);
+        border-bottom: 2px solid rgba(255, 255, 255, 0.12);
+        font-size: 13.5px;
+    }
+
+    .anx-vat-row-total-sales {
+        background-color: rgba(2, 132, 199, 0.08);
+    }
+    .anx-vat-row-total-purchases {
+        background-color: rgba(225, 29, 72, 0.08);
+    }
+    .anx-vat-row-total-net {
+        background-color: rgba(16, 185, 129, 0.10);
+        font-weight: 800;
+    }
+
+    .anx-vat-row-adj {
+        background-color: rgba(16, 185, 129, 0.06);
+        color: #34d399;
+    }
+    .anx-vat-row-adj-purchases {
+        background-color: rgba(245, 158, 11, 0.06);
+        color: #fbbf24;
+    }
+    .anx-vat-row-correction {
+        background-color: rgba(14, 165, 233, 0.05);
+    }
+
+    /* Clickable VAT rows & Inline Invoice counter */
+    .anx-vat-clickable-row {
+        cursor: pointer;
+        transition: all 0.15s ease-in-out;
+
+        &:hover {
+            background-color: rgba(2, 132, 199, 0.08) !important;
+            td {
+                color: #ffffff;
+            }
+
+            .anx-vat-inline-count {
+                background: #0284c7;
+                color: #ffffff;
+                border-color: #0284c7;
+                box-shadow: 0 2px 6px rgba(2, 132, 199, 0.4);
+                transform: translateY(-1px);
+            }
+
+            .anx-vat-inline-count-purchases {
+                background: #e11d48;
+                color: #ffffff;
+                border-color: #e11d48;
+                box-shadow: 0 2px 6px rgba(225, 29, 72, 0.4);
+            }
+
+            .anx-vat-inline-count-net {
+                background: #059669;
+                color: #ffffff;
+                border-color: #059669;
+                box-shadow: 0 2px 6px rgba(16, 185, 129, 0.4);
+            }
+        }
+    }
+
+    .anx-vat-inline-count {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 1px 7px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 600;
+        background: rgba(2, 132, 199, 0.15);
+        border: 1px solid rgba(2, 132, 199, 0.35);
+        color: #38bdf8;
+        vertical-align: middle;
+        transition: all 0.15s ease;
+
+        i {
+            font-size: 9px;
+            opacity: 0.85;
+        }
+
+        &.anx-vat-inline-count-purchases {
+            background: rgba(225, 29, 72, 0.15);
+            border-color: rgba(225, 29, 72, 0.35);
+            color: #fb7185;
+        }
+
+        &.anx-vat-inline-count-net {
+            background: rgba(16, 185, 129, 0.15);
+            border-color: rgba(16, 185, 129, 0.35);
+            color: #34d399;
+        }
+    }
+}
+
+
+/* Confirmation Modals */
+.anx-vat-confirm-modal {
+    background: #0f172a;
+    border-radius: 14px;
+    border: 1px solid rgba(0, 212, 200, 0.3);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+    max-width: 580px;
+    width: 90%;
+    overflow: hidden;
+    color: #ffffff;
+    animation: anxModalSlideIn 0.2s ease-out;
+
+    .anx-vat-confirm-header {
+        padding: 18px 24px;
+        background: #1e293b;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+        .anx-vat-confirm-header-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .anx-vat-confirm-icon-lock {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            border: 1px solid rgba(16, 185, 129, 0.35);
+        }
+
+        .anx-vat-confirm-icon-unlock {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: rgba(245, 158, 11, 0.2);
+            color: #fbbf24;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            border: 1px solid rgba(245, 158, 11, 0.35);
+        }
+
+        .anx-vat-confirm-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .anx-vat-confirm-sub {
+            font-size: 12px;
+            color: #94a3b8;
+        }
+    }
+
+    .anx-vat-confirm-body {
+        padding: 24px;
+
+        .anx-vat-confirm-alert {
+            display: flex;
+            gap: 14px;
+            padding: 14px 16px;
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.25);
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            color: #e2e8f0;
+
+            i {
+                font-size: 20px;
+                color: #34d399;
+                margin-top: 2px;
+            }
+
+            p {
+                margin: 4px 0 0 0;
+                color: #94a3b8;
+                font-size: 12.5px;
+            }
+
+            &.warning {
+                background: rgba(245, 158, 11, 0.1);
+                border-color: rgba(245, 158, 11, 0.3);
+                i {
+                    color: #fbbf24;
+                }
+            }
+        }
+
+        .anx-vat-confirm-metrics {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+
+            .anx-vat-metric-card {
+                background: #1e293b;
+                border: 1px solid rgba(255, 255, 255, 0.08);
+                border-radius: 10px;
+                padding: 12px 14px;
+                display: flex;
+                flex-direction: column;
+                gap: 4px;
+
+                .anx-vat-metric-lbl {
+                    font-size: 11px;
+                    color: #94a3b8;
+                    text-transform: uppercase;
+                    font-weight: 600;
+                }
+
+                .anx-vat-metric-val {
+                    font-size: 16px;
+                    font-weight: 700;
+
+                    &.sales { color: #38bdf8; }
+                    &.purchases { color: #f87171; }
+                    &.net { color: #34d399; }
+                }
+
+                .anx-vat-metric-count {
+                    font-size: 11px;
+                    color: #64748b;
+                }
+            }
+        }
+    }
+
+    .anx-vat-confirm-footer {
+        padding: 16px 24px;
+        background: #1e293b;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 12px;
+
+        .anx-vat-btn-cancel {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #cbd5e1;
+            padding: 8px 18px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s ease;
+
+            &:hover {
+                background: rgba(255, 255, 255, 0.08);
+                color: #ffffff;
+            }
+        }
+
+        .anx-vat-btn-confirm-lock {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            border: none;
+            color: #ffffff;
+            padding: 8px 22px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 2px 10px rgba(5, 150, 105, 0.4);
+            transition: all 0.15s ease;
+
+            &:hover:not(:disabled) {
+                background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+                box-shadow: 0 4px 16px rgba(16, 185, 129, 0.5);
+            }
+
+            &:disabled {
+                opacity: 0.6;
+                cursor: not-allowed;
+            }
+        }
+
+        .anx-vat-btn-confirm-unlock {
+            background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+            border: none;
+            color: #ffffff;
+            padding: 8px 22px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 2px 10px rgba(217, 119, 6, 0.4);
+            transition: all 0.15s ease;
+
+            &:hover:not(:disabled) {
+                background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+                box-shadow: 0 4px 16px rgba(245, 158, 11, 0.5);
+            }
+
+            &:disabled {
+                opacity: 0.6;
+                cursor: not-allowed;
+            }
+        }
+    }
+}
+
 
 /* ── Journals tab ──────────────────────────────────── */
 .anx-chip-green  { }
@@ -1803,9 +2487,49 @@
     color: #ffffff !important;
     white-space: nowrap !important;
 }
-.anx-tb-rth-code  { text-align: left; width: 9%; }
-.anx-tb-rth-name  { text-align: left; width: 29%; }
-.anx-tb-rth-num   { text-align: right; width: 12%; }
+.anx-tb-rth-code  { text-align: left; width: 8%; }
+.anx-tb-rth-name  { text-align: left; width: 22%; }
+.anx-tb-rth-type  { text-align: center; width: 12%; }
+.anx-tb-rth-num   { text-align: right; width: 11%; }
+
+.anx-tb-rtd-type {
+    text-align: center !important;
+    vertical-align: middle !important;
+    white-space: nowrap !important;
+}
+.anx-tb-type-pill {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: capitalize;
+    letter-spacing: 0.3px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+}
+
+.anx-tb-section-header-row {
+    background: #1e293b !important;
+    border-bottom: 2px solid rgba(255,255,255,0.12) !important;
+    border-top: 1px solid rgba(255,255,255,0.15) !important;
+    td.anx-tb-section-header-cell {
+        padding: 8px 14px !important;
+        text-align: left !important;
+        background: #1e293b !important;
+        border-right: none !important;
+    }
+}
+.anx-tb-section-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 12px;
+    border-radius: 6px;
+    font-size: 11.5px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+}
 
 .anx-tb-rtd-row {
     border-bottom: 1px solid rgba(255,255,255,0.15) !important;
