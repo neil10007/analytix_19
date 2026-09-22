@@ -2,15 +2,22 @@
 <odoo>
     <menuitem id="menu_analytix_finance_dashboard"
               name="Dashboard"
-              action="action_analytix_finance_dashboard"
               web_icon="analytix_finance_dashboard,static/description/icon.svg"
               sequence="0"/>
 
+    <menuitem id="menu_analytix_finance_dashboard_section"
+              name="Dashboard"
+              parent="menu_analytix_finance_dashboard"
+              action="action_analytix_finance_dashboard"
+              sequence="1"/>
+
+    <!-- Analytix Dashboard under Accounting -->
     <menuitem id="menu_analytix_finance_dashboard_accounting"
               name="Dashboard"
-              action="action_analytix_finance_dashboard"
+              action="action_analytix_finance_dashboard_accounting"
               parent="account.menu_finance"
               sequence="0"/>
+
 
     <menuitem id="menu_alert_management"
               name="Alert Management"

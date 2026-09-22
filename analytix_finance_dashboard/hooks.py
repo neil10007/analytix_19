@@ -45,6 +45,27 @@ def _disable_spreadsheet_dashboard_menus(env):
             _logger.info("✅ Disabled menu: %s", xml_id)
 
 
+def _ensure_accounting_dashboard_menu(env):
+    """
+    Ensure the Analytix Dashboard menu under Accounting is active and linked
+    to action_analytix_finance_dashboard_accounting.
+    """
+    menu = env.ref(
+        'analytix_finance_dashboard.menu_analytix_finance_dashboard_accounting',
+        raise_if_not_found=False,
+    )
+    action = env.ref(
+        'analytix_finance_dashboard.action_analytix_finance_dashboard_accounting',
+        raise_if_not_found=False,
+    )
+    if menu:
+        vals = {'active': True}
+        if action:
+            vals['action'] = f'ir.actions.client,{action.id}'
+        menu.write(vals)
+        _logger.info("✅ Analytix: Enabled Accounting Dashboard menu (%s)", menu.id)
+
+
 def _ensure_ai_gl_configs_all_companies(env):
     """
     Ensure AI GL Configuration records exist for every company in the system.
@@ -60,6 +81,7 @@ def post_init_hook(env):
     """Runs on first install."""
     _set_dashboard_home_action(env)
     _disable_spreadsheet_dashboard_menus(env)
+    _ensure_accounting_dashboard_menu(env)
     _ensure_ai_gl_configs_all_companies(env)
 
 
@@ -67,4 +89,6 @@ def post_migrate_hook(env):
     """Runs on every upgrade."""
     _set_dashboard_home_action(env)
     _disable_spreadsheet_dashboard_menus(env)
+    _ensure_accounting_dashboard_menu(env)
     _ensure_ai_gl_configs_all_companies(env)
+

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates id="template" xml:space="preserve">
+    <!-- Receipt Header: Hide QR Code under Logo if configured -->
+    <t t-inherit="point_of_sale.ReceiptHeader" t-inherit-mode="extension">
+        <xpath expr="//img[@id='qrcode']" position="attributes">
+            <attribute name="t-if">asQrCode and !order.config_id?.hide_receipt_header_qr and !order.config?.hide_receipt_header_qr</attribute>
+        </xpath>
+        <xpath expr="//img[@id='qrcode']/following-sibling::br[1]" position="attributes">
+            <attribute name="t-if">asQrCode and !order.config_id?.hide_receipt_header_qr and !order.config?.hide_receipt_header_qr</attribute>
+        </xpath>
+    </t>
+
+    <!-- Order Receipt: Add Table Header & Remove "Powered by Odoo" -->
+    <t t-inherit="point_of_sale.OrderReceipt" t-inherit-mode="extension">
+        <xpath expr="//OrderDisplay" position="before">
+            <div class="pos-receipt-table-header d-flex align-items-center text-start fw-bolder border-top border-bottom py-1 my-1" style="font-size: 78%; border-top: 1px dashed black !important; border-bottom: 1px dashed black !important;">
+                <div class="col-item text-start pe-1" t-att-style="props.basic_receipt ? 'width: 70%;' : 'width: 44%;'">
+                    <t t-if="order.config_id?.l10n_gcc_dual_language_receipt">Item / الصنف</t>
+                    <t t-else="">Item Name</t>
+                </div>
+                <div t-if="!props.basic_receipt" class="col-unit text-end pe-1 font-monospace" style="width: 20%;">
+                    <t t-if="order.config_id?.l10n_gcc_dual_language_receipt">Price / السعر</t>
+                    <t t-else="">Unit Price</t>
+                </div>
+                <div class="col-qty text-center font-monospace" t-att-style="props.basic_receipt ? 'width: 30%;' : 'width: 14%;'">
+                    <t t-if="order.config_id?.l10n_gcc_dual_language_receipt">Qty / الكمية</t>
+                    <t t-else="">Qty</t>
+                </div>
+                <div t-if="!props.basic_receipt" class="col-amount text-end font-monospace ps-1" style="width: 22%;">
+                    <t t-if="order.config_id?.l10n_gcc_dual_language_receipt">Total / المبلغ</t>
+                    <t t-else="">Amount</t>
+                </div>
+            </div>
+        </xpath>
+        <!-- Remove "Powered by Odoo" from POS receipt footer -->
+        <xpath expr="//div[hasclass('pos-receipt-order-data') and hasclass('text-center')]" position="replace"/>
+    </t>
+
+    <!-- Orderline: Re-format item rows into 4 table columns for receipt mode -->
+    <t t-inherit="point_of_sale.Orderline" t-inherit-mode="extension">
+        <xpath expr="//div[hasclass('line-details')]" position="attributes">
+            <attribute name="t-if">!vals.isReceipt</attribute>
+        </xpath>
+        <xpath expr="//div[hasclass('line-details')]" position="after">
+            <div t-if="vals.isReceipt" class="line-details-receipt d-flex align-items-center w-100 py-1" style="font-size: 80%;">
+                <div class="col-item text-start text-break pe-1" t-att-style="props.basic_receipt ? 'width: 70%;' : 'width: 44%;'">
+                    <span class="fw-bold" t-esc="vals.name"/>
+                    <small t-if="vals.attributeString" t-out="vals.attributeString" class="d-block fst-italic text-muted"/>
+                </div>
+                <div t-if="!props.basic_receipt" class="col-unit text-end font-monospace pe-1" style="width: 20%;">
+                    <span t-out="line.currencyDisplayPriceUnit"/>
+                </div>
+                <div class="col-qty text-center font-monospace" t-att-style="props.basic_receipt ? 'width: 30%;' : 'width: 14%;'">
+                    <span t-esc="vals.unitPart"/><small t-if="vals.decimalPart" t-out="vals.decimalPart"/>
+                </div>
+                <div t-if="!props.basic_receipt" class="col-amount text-end font-monospace ps-1" style="width: 22%;">
+                    <span t-out="vals.price"/>
+                </div>
+            </div>
+        </xpath>
+        <xpath expr="//li[hasclass('price-per-unit')][@t-if='vals.displayPriceUnit']" position="attributes">
+            <attribute name="t-if">!vals.isReceipt and vals.displayPriceUnit</attribute>
+        </xpath>
+    </t>
+</templates>

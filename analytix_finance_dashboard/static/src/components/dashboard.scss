@@ -56,6 +56,32 @@
 }
 
 
+/* ── Main Navbar Menu Section: Active item styling (light and dark mode) ── */
+.o_main_navbar .o_menu_sections .o_nav_entry.active,
+.o_main_navbar .o_menu_sections .dropdown-toggle.active,
+body.kr_sp_theme_dark .o_main_navbar .o_menu_sections .o_nav_entry.active,
+body.kr_sp_theme_dark .o_main_navbar .o_menu_sections .dropdown-toggle.active {
+    background: #00d4c8 !important;
+    color: #000000 !important;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+    box-shadow: 0 4px 14px rgba(0, 212, 200, 0.35) !important;
+}
+
+/* ── Sidebar Rail: Ensure All Apps / Workspace button is not active unless modal is open ── */
+body:not(:has(#kr_sp_workspace_modal.is-open)) .kr_sp_rail_group_main > button[data-kr-action="workspace-modal"],
+body.kr_sp_theme_dark:not(:has(#kr_sp_workspace_modal.is-open)) .kr_sp_rail_group_main > button[data-kr-action="workspace-modal"] {
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+body:not(:has(#kr_sp_workspace_modal.is-open)) .kr_sp_rail_group_main > button[data-kr-action="workspace-modal"] .fa {
+    color: #475569 !important;
+}
+body.kr_sp_theme_dark:not(:has(#kr_sp_workspace_modal.is-open)) .kr_sp_rail_group_main > button[data-kr-action="workspace-modal"] .fa {
+    color: #cbd5e1 !important;
+}
+
 /* ── Top nav bar ──────────────────────────────────── */
 .anx-topbar {
     background: #0f1729;

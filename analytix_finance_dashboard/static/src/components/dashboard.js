@@ -311,7 +311,6 @@ export class AnalytixFinanceDashboard extends Component {
     saveFilterState() {
         try {
             const filterState = {
-                activeTab:              this.state.activeTab,
                 filter:                 this.state.filter,
                 customFrom:             this.state.customFrom,
                 customTo:               this.state.customTo,
@@ -362,13 +361,19 @@ export class AnalytixFinanceDashboard extends Component {
                 if (p.jrnCompanyFilter) this.state.jrnCompanyFilter = p.jrnCompanyFilter;
                 if (p.tbTypeFilter)     this.state.tbTypeFilter     = p.tbTypeFilter;
                 if (p.tbCompanyFilter)  this.state.tbCompanyFilter  = p.tbCompanyFilter;
-                if (p.activeTab)        this.state.activeTab        = p.activeTab;
+                if (p.activeTab) {
+                    delete p.activeTab;
+                    sessionStorage.setItem('anx_dashboard_filters', JSON.stringify(p));
+                }
             }
-            // If user came back from a record opened INSIDE the dashboard, prefer returnTab
+            // Standard Odoo behavior: activeTab always defaults to 'overview' on refresh or module navigation.
+            // If user came back from a record opened INSIDE the dashboard (via breadcrumbs), restore returnTab.
             const returnTab = sessionStorage.getItem('anx_return_tab');
             if (returnTab) {
                 this.state.activeTab = returnTab;
                 sessionStorage.removeItem('anx_return_tab');
+            } else {
+                this.state.activeTab = 'overview';
             }
             sessionStorage.removeItem('anx_active_tab');
         } catch (e) {
@@ -485,7 +490,6 @@ export class AnalytixFinanceDashboard extends Component {
             ev.currentTarget.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
         }
         this.state.activeTab = tab;
-        this.saveFilterState();
         if (tab === 'overview') {
             this.renderCharts();
         }

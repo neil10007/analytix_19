@@ -5,4 +5,10 @@
         <field name="tag">analytix_finance_dashboard</field>
         <field name="target">main</field>
     </record>
+
+    <record id="action_analytix_finance_dashboard_accounting" model="ir.actions.client">
+        <field name="name">Dashboard</field>
+        <field name="tag">analytix_finance_dashboard</field>
+        <field name="target">main</field>
+    </record>
 </odoo>

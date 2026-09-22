@@ -1,0 +1,23 @@
+/* POS Customisation: Table format for receipt lines */
+.pos-receipt .pos-receipt-table-header {
+    border-top: 1px dashed #333 !important;
+    border-bottom: 1px dashed #333 !important;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    font-weight: 700;
+}
+
+.pos-receipt .line-details-receipt {
+    border-bottom: 1px dotted #e0e0e0;
+    padding-top: 3px;
+    padding-bottom: 3px;
+}
+
+.pos-receipt .line-details-receipt:last-child {
+    border-bottom: none;
+}
+
+/* Hide Powered by Odoo */
+.pos-receipt .pos-receipt-order-data.text-center {
+    display: none !important;
+}
