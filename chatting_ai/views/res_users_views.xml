@@ -22,8 +22,12 @@
             <field name="arch" type="xml">
                 <xpath expr="//notebook" position="inside">
                     <page string="AI Settings">
+                        <div class="alert alert-info" role="status" style="margin-bottom: 15px;">
+                            <i class="fa fa-info-circle me-2"/>
+                            <strong>Global AI Configuration:</strong> When configured on the Super Admin / Administrator account, these AI settings (OpenRouter API Key, Model, and System Prompt) automatically serve as the default for all other users. Other users do not need to configure anything.
+                        </div>
                         <group>
-                            <field name="open_router_key" password="True" string="OpenRouter API Key"/>
+                            <field name="open_router_key" password="True" string="OpenRouter API Key" placeholder="sk-or-v1-..."/>
                             <field name="chatting_model" string="Chatting Model" placeholder="e.g. meta-llama/llama-3.3-70b-instruct:free"/>
                             <field name="llama_api_key" password="True"/>
                         </group>

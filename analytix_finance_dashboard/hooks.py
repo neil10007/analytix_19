@@ -77,12 +77,49 @@ def _ensure_ai_gl_configs_all_companies(env):
     _logger.info("✅ Analytix: Verified AI GL Configurations for %d companies.", len(companies))
 
 
+def _sync_super_admin_ai_config(env):
+    """
+    Sync OpenRouter API key and model from the Super Admin user to system parameters
+    so all users can immediately use them.
+    """
+    User = env['res.users'].sudo()
+    super_group = env.ref('analytix_finance_dashboard.group_groq_super_admin', raise_if_not_found=False)
+
+    super_admin = False
+    if super_group:
+        super_admin = User.search([
+            ('group_ids', 'in', super_group.id),
+            ('open_router_key', '!=', False),
+        ], limit=1)
+    if not super_admin:
+        user_admin = env.ref('base.user_admin', raise_if_not_found=False)
+        if user_admin and user_admin.sudo().open_router_key:
+            super_admin = user_admin.sudo()
+    if not super_admin:
+        user_2 = User.browse(2)
+        if user_2.exists() and user_2.open_router_key:
+            super_admin = user_2
+
+    if super_admin and super_admin.open_router_key:
+        param = env['ir.config_parameter'].sudo()
+        param.set_param('analytix.open_router_key', super_admin.open_router_key.strip())
+        eff_model = False
+        if hasattr(super_admin, 'get_effective_openrouter_model'):
+            eff_model = super_admin.get_effective_openrouter_model()
+        else:
+            eff_model = getattr(super_admin, 'openrouter_model', False)
+        eff_model = eff_model or 'google/gemini-2.5-flash'
+        param.set_param('analytix.openrouter_model', eff_model)
+        _logger.info("✅ Analytix: Synced OpenRouter AI configuration from Super Admin (%s) to system parameters.", super_admin.login)
+
+
 def post_init_hook(env):
     """Runs on first install."""
     _set_dashboard_home_action(env)
     _disable_spreadsheet_dashboard_menus(env)
     _ensure_accounting_dashboard_menu(env)
     _ensure_ai_gl_configs_all_companies(env)
+    _sync_super_admin_ai_config(env)
 
 
 def post_migrate_hook(env):
@@ -91,4 +128,5 @@ def post_migrate_hook(env):
     _disable_spreadsheet_dashboard_menus(env)
     _ensure_accounting_dashboard_menu(env)
     _ensure_ai_gl_configs_all_companies(env)
+    _sync_super_admin_ai_config(env)
 

@@ -478,7 +478,7 @@ class AnalytixDocument(models.Model):
             "items": []
         }
 
-    def _call_openrouter(self, client, image_b64):
+    def _call_openrouter(self, client, image_b64, model_name=None):
         """
         Send a single page/image to OpenRouter (Gemini model) and return the
         parsed JSON dict describing the document.
@@ -563,27 +563,13 @@ class AnalytixDocument(models.Model):
             "- numbers should be numeric without currency symbols.\n"
         )
 
-        # ── OpenRouter Model Selection: Use Frontend Field if configured, else Fallback to Backend Default ──
-        user_model = False
-        try:
-            user_model = (getattr(self.env.user, 'openrouter_model', '') or '').strip()
-        except Exception:
-            user_model = False
-
-        company_model = False
-        try:
-            company_model = (getattr(self.env.company, 'openrouter_model', '') or '').strip()
-        except Exception:
-            company_model = False
-
-        if user_model:
-            model_name = user_model
-        elif company_model:
-            model_name = company_model
-        else:
+        # ── OpenRouter Model Selection: Use passed model, configured model, or backend default ──
+        if not model_name:
+            _, model_name = self._get_openrouter_config()
+        if not model_name:
             model_name = "google/gemini-2.5-flash"
 
-        _logger.info("Calling OpenRouter with model: %s (User configured: %s, Company configured: %s)", model_name, user_model, company_model)
+        _logger.info("Calling OpenRouter with model: %s", model_name)
 
         user_content = [{"type": "text", "text": "Extract all document data across all pages as a single combined JSON object."}]
         if isinstance(image_b64, list):
@@ -621,7 +607,7 @@ class AnalytixDocument(models.Model):
             err_str = str(conn_err)
             if "401" in err_str or "unauthorized" in err_str.lower() or "user not found" in err_str.lower():
                 raise UserError(
-                    "Authentication failed with OpenRouter API. Please verify that the OpenRouter API Key is correctly set in your user or company settings."
+                    "Authentication failed with OpenRouter API. Please verify that the OpenRouter API Key is correctly configured on the Super Admin account."
                 )
             if "Connection error" in err_str or "connect" in err_str.lower() or "timeout" in err_str.lower():
                 raise UserError(
@@ -969,21 +955,113 @@ class AnalytixDocument(models.Model):
 
         return f'<ul class="mb-0 ps-3" style="margin-top: 4px; padding-left: 1.25rem;">{"".join(html_items)}</ul>'
 
+    @api.model
+    def _get_super_admin_user(self):
+        """
+        Locate the Super Admin user record holding the master OpenRouter AI configuration.
+        """
+        User = self.env['res.users'].sudo()
+        super_group = self.env.ref('analytix_finance_dashboard.group_groq_super_admin', raise_if_not_found=False)
+
+        # 1. Search for user in group_groq_super_admin who has open_router_key configured
+        if super_group:
+            super_user = User.search([
+                ('group_ids', 'in', super_group.id),
+                ('open_router_key', '!=', False),
+            ], limit=1)
+            if super_user and super_user.open_router_key:
+                return super_user
+
+        # 2. Check base.user_admin (Administrator, id=2)
+        user_admin = self.env.ref('base.user_admin', raise_if_not_found=False)
+        if user_admin and user_admin.sudo().open_router_key:
+            return user_admin.sudo()
+
+        # 3. Check user with ID 2 directly
+        user_2 = User.browse(2)
+        if user_2.exists() and user_2.open_router_key:
+            return user_2
+
+        # 4. Fallback: Any user with group_groq_super_admin
+        if super_group:
+            super_user = User.search([('group_ids', 'in', super_group.id)], limit=1)
+            if super_user:
+                return super_user
+
+        if user_admin:
+            return user_admin.sudo()
+        if user_2.exists():
+            return user_2
+
+        return False
+
+    @api.model
+    def _get_openrouter_config(self):
+        """
+        Retrieve OpenRouter API key and model logically for all users:
+        1. If the current user has open_router_key configured, use it.
+        2. Otherwise, use the Super Admin's open_router_key.
+        3. Fallback to current company's open_router_key.
+        4. Fallback to ir.config_parameter 'analytix.open_router_key'.
+
+        Model resolution follows the same priority, defaulting to 'google/gemini-2.5-flash'.
+        """
+        super_admin = self._get_super_admin_user()
+
+        # 1. API Key Resolution
+        api_key = False
+        if self.env.user.open_router_key and self.env.user.open_router_key.strip():
+            api_key = self.env.user.open_router_key.strip()
+        elif super_admin and super_admin.open_router_key and super_admin.open_router_key.strip():
+            api_key = super_admin.open_router_key.strip()
+        elif self.env.company.open_router_key and self.env.company.open_router_key.strip():
+            api_key = self.env.company.open_router_key.strip()
+        else:
+            param_key = self.env['ir.config_parameter'].sudo().get_param('analytix.open_router_key', default='')
+            if param_key and param_key.strip():
+                api_key = param_key.strip()
+
+        # 2. Model Resolution
+        def _get_model_from_record(rec):
+            if not rec:
+                return False
+            if hasattr(rec, 'get_effective_openrouter_model'):
+                m = rec.get_effective_openrouter_model()
+                if m:
+                    return m
+            m = getattr(rec, 'openrouter_model', False)
+            if m and str(m).strip():
+                return str(m).strip()
+            return False
+
+        model_name = _get_model_from_record(self.env.user)
+        if not model_name and super_admin:
+            model_name = _get_model_from_record(super_admin)
+        if not model_name:
+            model_name = _get_model_from_record(self.env.company)
+        if not model_name:
+            param_model = self.env['ir.config_parameter'].sudo().get_param('analytix.openrouter_model', default='')
+            if param_model and param_model.strip():
+                model_name = param_model.strip()
+        if not model_name:
+            model_name = "google/gemini-2.5-flash"
+
+        return api_key, model_name
+
     def action_analyze_and_create_entry(self, override_account_id=None, override_line_accounts=None, override_tax_account_id=None):
         """Process the document file with OpenRouter (Gemini) and create corresponding accounting entry with product search & account validation."""
         self.ensure_one()
         if not self.file_data:
             raise UserError("No file uploaded for this document record.")
 
-        api_key = (self.env.user.open_router_key or self.env.company.open_router_key)
-        if api_key:
-            api_key = api_key.strip()
-        else:
-            api_key = False
+        api_key, model_name = self._get_openrouter_config()
         if not api_key:
-            raise UserError("Please configure an OpenRouter API Key on your User profile or Company settings.")
+            if self.env.user.has_group('analytix_finance_dashboard.group_groq_super_admin') or self.env.user.id == 2:
+                raise UserError("Please configure the OpenRouter API Key on your Super Admin profile (Settings → Users → Administrator) or under Settings → AI API Configuration.")
+            else:
+                raise UserError("OpenRouter API Key is not configured. Please contact your Super Administrator to configure the OpenRouter API Key on the Super Admin account.")
 
-        _logger.info("OpenRouter API key found for entry creation.")
+        _logger.info("OpenRouter API key found for entry creation. Using model: %s", model_name)
 
         try:
             import fitz          # PyMuPDF
@@ -1037,7 +1115,7 @@ class AnalytixDocument(models.Model):
                     image = Image.open(BytesIO(pix.tobytes("png"))).convert("RGB")
                     page_b64_list.append(self._image_to_base64(image))
 
-                output = self._call_openrouter(client, page_b64_list)
+                output = self._call_openrouter(client, page_b64_list, model_name=model_name)
             finally:
                 doc.close()
 
@@ -1069,7 +1147,7 @@ class AnalytixDocument(models.Model):
                 )
 
             image_b64 = self._image_to_base64(image)
-            output = self._call_openrouter(client, image_b64)
+            output = self._call_openrouter(client, image_b64, model_name=model_name)
             _logger.info("Processed document image via vision pipeline for doc ID %s", self.id)
 
         self.response_json = json.dumps(output, indent=4)

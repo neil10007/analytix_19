@@ -57,32 +57,139 @@ class ChattingAIController(http.Controller):
             context_str += f"Bills/Expenses: ${expenses:,.2f} ({bills_count} bills added)\n\n"
             
         return context_str
+    def _find_super_admin_user(self):
+        """Find the super administrator or configured admin user."""
+        env = request.env
+        
+        # 1. Base Administrator user (base.user_admin, usually id=2)
+        user_admin = env.ref('base.user_admin', raise_if_not_found=False)
+        if user_admin:
+            u_sudo = user_admin.sudo()
+            if (getattr(u_sudo, 'open_router_key', '') or getattr(u_sudo, 'llama_api_key', '') or getattr(u_sudo, 'groq_api_key', '') or '').strip():
+                return u_sudo
 
-    @http.route('/chatting_ai/ask', type='jsonrpc', auth='user')
-    def ask_llama(self, message, history=None):
+        # 2. Check users with base.group_system (Administration / Settings)
+        group_system = env.ref('base.group_system', raise_if_not_found=False)
+        if group_system:
+            for u in group_system.sudo().users.sorted(key=lambda r: r.id):
+                if (getattr(u, 'open_router_key', '') or getattr(u, 'llama_api_key', '') or getattr(u, 'groq_api_key', '') or '').strip():
+                    return u
+
+        # 3. Check user with login 'admin'
+        admin_by_login = env['res.users'].sudo().search([('login', '=', 'admin')], limit=1)
+        if admin_by_login and (getattr(admin_by_login, 'open_router_key', '') or getattr(admin_by_login, 'llama_api_key', '') or getattr(admin_by_login, 'groq_api_key', '') or '').strip():
+            return admin_by_login
+
+        # 4. Check user ID 2 or ID 1
+        for uid in (2, 1):
+            u = env['res.users'].sudo().browse(uid)
+            if u.exists() and (getattr(u, 'open_router_key', '') or getattr(u, 'llama_api_key', '') or getattr(u, 'groq_api_key', '') or '').strip():
+                return u
+
+        # 5. Search any user with open_router_key or llama_api_key set in the system
+        user_with_key = env['res.users'].sudo().search([
+            '|',
+            ('open_router_key', '!=', False),
+            ('llama_api_key', '!=', False)
+        ], order='id asc', limit=1)
+        if user_with_key:
+            return user_with_key
+
+        # Fallback to user_admin even if empty
+        if user_admin:
+            return user_admin.sudo()
+
+        return None
+
+    def _get_ai_settings(self):
+        """Retrieve AI API key, model name, and system prompt.
+        If the current user has not configured their own API key, automatically fall back to
+        the super admin's configuration so all users can use the AI assistant seamlessly.
+        """
         user = request.env.user
         company = request.env.company or getattr(user, 'company_id', None)
-        
-        api_key = (
+        admin_user = self._find_super_admin_user()
+
+        # 1. API KEY
+        user_key = (
             getattr(user, 'open_router_key', '') or 
             getattr(user, 'llama_api_key', '') or 
             getattr(user, 'groq_api_key', '') or 
-            (company and getattr(company, 'open_router_key', '')) or 
-            (company and getattr(company, 'groq_api_key', '')) or 
-            request.env['ir.config_parameter'].sudo().get_param('open_router_key', '') or
-            request.env['ir.config_parameter'].sudo().get_param('groq_api_key', '') or
             ''
         ).strip()
+
+        admin_key = ''
+        if admin_user:
+            admin_key = (
+                getattr(admin_user, 'open_router_key', '') or 
+                getattr(admin_user, 'llama_api_key', '') or 
+                getattr(admin_user, 'groq_api_key', '') or 
+                ''
+            ).strip()
+
+        company_key = (
+            (company and getattr(company, 'open_router_key', '')) or 
+            (company and getattr(company, 'groq_api_key', '')) or 
+            ''
+        ).strip()
+
+        config_param_key = (
+            request.env['ir.config_parameter'].sudo().get_param('open_router_key', '') or
+            request.env['ir.config_parameter'].sudo().get_param('groq_api_key', '') or
+            request.env['ir.config_parameter'].sudo().get_param('llama_api_key', '') or
+            ''
+        ).strip()
+
+        api_key = user_key or admin_key or company_key or config_param_key
+
+        # 2. MODEL NAME
+        user_model = (getattr(user, 'chatting_model', '') or getattr(user, 'openrouter_model', '') or '').strip()
+        admin_model = ''
+        if admin_user:
+            admin_model = (getattr(admin_user, 'chatting_model', '') or getattr(admin_user, 'openrouter_model', '') or '').strip()
+
+        company_model = (company and getattr(company, 'openrouter_model', '') or '').strip()
+        config_param_model = (request.env['ir.config_parameter'].sudo().get_param('chatting_model', '') or '').strip()
+
+        # If user has their own key and customized model, use user's model
+        # Otherwise, prefer admin's model, then user model, company, config param, or default
+        if user_key and user_model:
+            model_name = user_model
+        elif admin_model:
+            model_name = admin_model
+        elif user_model:
+            model_name = user_model
+        elif company_model:
+            model_name = company_model
+        elif config_param_model:
+            model_name = config_param_model
+        else:
+            model_name = "meta-llama/llama-3.3-70b-instruct:free"
+
+        # 3. SYSTEM PROMPT
+        user_prompt = (getattr(user, 'chatting_system_prompt', '') or '').strip()
+        admin_prompt = ''
+        if admin_user:
+            admin_prompt = (getattr(admin_user, 'chatting_system_prompt', '') or '').strip()
+        config_param_prompt = (request.env['ir.config_parameter'].sudo().get_param('chatting_system_prompt', '') or '').strip()
+
+        system_prompt = user_prompt or admin_prompt or config_param_prompt
+
+        return {
+            'api_key': api_key,
+            'model_name': model_name,
+            'system_prompt': system_prompt,
+        }
+
+    @http.route('/chatting_ai/ask', type='jsonrpc', auth='user')
+    def ask_llama(self, message, history=None):
+        ai_config = self._get_ai_settings()
+        api_key = ai_config['api_key']
+        model_name = ai_config['model_name']
         
         if not api_key:
-            return {'error': 'OpenRouter API Key is not set in your user preferences. Please add it in your User profile under AI Settings.'}
-            
-        model_name = (
-            getattr(user, 'chatting_model', '') or 
-            getattr(user, 'openrouter_model', '') or 
-            (company and getattr(company, 'openrouter_model', '')) or 
-            ''
-        ).strip() or "meta-llama/llama-3.3-70b-instruct:free"
+            return {'error': 'OpenRouter API Key is not set in the system. Please add it in the Super Admin User profile under AI Settings.'}
+
 
         try:
             from langchain_openai import ChatOpenAI
@@ -2174,7 +2281,7 @@ class ChattingAIController(http.Controller):
             )
 
             today_str = datetime.now().strftime('%Y-%m-%d')
-            user_custom_prompt = (getattr(user, 'chatting_system_prompt', '') or '').strip()
+            user_custom_prompt = ai_config.get('system_prompt', '')
             custom_prompt_instruction = ""
             if user_custom_prompt:
                 custom_prompt_instruction = f"\nUser System Instructions: {user_custom_prompt}"
