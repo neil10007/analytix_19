@@ -1,6 +1,8 @@
 body.kr_sp_theme_dark,
 .o_web_client.kr_sp_theme_dark {
     background: #111827;
+    --kr-color-tab-active: var(--kr-color-accent-soft, rgba(0, 212, 200, 0.16));
+    --kr-color-tab-active-text: var(--kr-color-accent, #00d4c8);
 }
 
 .kr_sp_global_shell,
@@ -231,11 +233,27 @@ body.kr_sp_theme_dark .kr_sp_back_btn,
 }
 
 .kr_sp_tabs .is-active,
-.kr_sp_tabs .is-active:hover {
-    background: #0f1729 !important;
-    color: #00d4c8 !important;
+.kr_sp_tabs .is-active:hover,
+.kr_sp_tabs .kr_sp_submenu_btn.is-active,
+.kr_sp_tabs .kr_sp_submenu_btn.is-active:hover,
+.o_main_navbar .o_menu_sections .o_nav_entry.active,
+.o_main_navbar .o_menu_sections .dropdown-toggle.active {
+    background: var(--kr-color-accent-soft, rgba(0, 212, 200, 0.16)) !important;
+    color: var(--kr-color-accent, #00d4c8) !important;
     border: 1px solid rgba(0, 212, 200, 0.35) !important;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25) !important;
+    font-weight: 600 !important;
+}
+
+.kr_sp_tabs .is-active:hover,
+.kr_sp_tabs .kr_sp_submenu_btn.is-active:hover {
+    background: rgba(0, 212, 200, 0.24) !important;
+    color: #ffffff !important;
+}
+
+.kr_sp_tabs .is-active .fa,
+.kr_sp_tabs .kr_sp_submenu_btn.is-active .fa {
+    color: var(--kr-color-accent, #00d4c8) !important;
 }
 
 .kr_sp_tabs_scroll {
@@ -273,6 +291,13 @@ body.kr_sp_theme_dark .kr_sp_back_btn,
     background: rgba(0, 212, 200, 0.14);
 }
 
+.kr_sp_submenu_popover .dropdown-item.active,
+.kr_sp_submenu_popover .dropdown-item.is-active {
+    background: var(--kr-color-accent-soft, rgba(0, 212, 200, 0.16)) !important;
+    color: var(--kr-color-accent, #00d4c8) !important;
+    font-weight: 600;
+}
+
 .kr_sp_rail_group button,
 .kr_sp_rail_btn {
     background: transparent;
@@ -287,9 +312,21 @@ body.kr_sp_theme_dark .kr_sp_back_btn,
 
 .kr_sp_rail_group button.is-active,
 .kr_sp_rail_btn.is-active {
-    background: #00d4c8 !important;
-    color: #000000 !important;
-    box-shadow: 0 6px 16px rgba(0, 212, 200, 0.35) !important;
+    background: var(--kr-color-accent-soft, rgba(0, 212, 200, 0.16)) !important;
+    color: var(--kr-color-accent, #00d4c8) !important;
+    border: 1px solid rgba(0, 212, 200, 0.35) !important;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3) !important;
+}
+
+.kr_sp_rail_group button.is-active:hover,
+.kr_sp_rail_btn.is-active:hover {
+    background: rgba(0, 212, 200, 0.24) !important;
+}
+
+.kr_sp_rail_group button.is-active:hover :is(.fa, .kr_sp_rail_label),
+.kr_sp_rail_btn.is-active:hover :is(.fa, .kr_sp_rail_label) {
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
 }
 
 /* Dark mode icon wrap */
@@ -306,9 +343,9 @@ body.kr_sp_theme_dark .kr_sp_back_btn,
 }
 
 .kr_sp_rail_btn.is-active .kr_sp_rail_icon_wrap {
-    background: #00d4c8 !important;
-    border-color: #00b5ab !important;
-    box-shadow: 0 0 0 2px rgba(0, 212, 200, 0.25), 0 6px 18px rgba(0, 212, 200, 0.35) !important;
+    background: rgba(0, 212, 200, 0.22) !important;
+    border-color: rgba(0, 212, 200, 0.45) !important;
+    box-shadow: 0 0 0 2px rgba(0, 212, 200, 0.20), 0 4px 12px rgba(0, 0, 0, 0.3) !important;
 }
 
 .kr_sp_rail_icon_wrap .fa {
@@ -316,8 +353,10 @@ body.kr_sp_theme_dark .kr_sp_back_btn,
 }
 
 .kr_sp_rail_btn.is-active .kr_sp_rail_icon_wrap .fa,
-.kr_sp_rail_btn.is-active .fa {
-    color: #000000 !important;
+.kr_sp_rail_btn.is-active .fa,
+.kr_sp_rail_group button.is-active .fa {
+    color: var(--kr-color-accent, #00d4c8) !important;
+    -webkit-text-fill-color: var(--kr-color-accent, #00d4c8) !important;
 }
 
 /* Dark mode label */
@@ -330,8 +369,9 @@ body.kr_sp_theme_dark .kr_sp_back_btn,
 }
 
 .kr_sp_rail_btn.is-active .kr_sp_rail_label {
-    color: #0EBEDC;
-    font-weight: 700;
+    color: var(--kr-color-accent, #00d4c8) !important;
+    -webkit-text-fill-color: var(--kr-color-accent, #00d4c8) !important;
+    font-weight: 700 !important;
 }
 
 /* Dark mode – apps scroll container */

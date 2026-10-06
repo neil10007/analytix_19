@@ -1,0 +1,366 @@
+// ============================================================================
+// ACCOUNT RECONCILIATION TREE VIEW - LIGHT & DARK THEME SUPPORT
+// ============================================================================
+
+.o_account_reconcile_oca {
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: flex;
+    -webkit-flex-flow: row wrap;
+    flex-flow: row wrap;
+    height: 100%;
+
+    .o_kanban_renderer.o_kanban_ungrouped .o_kanban_record {
+        &:hover {
+            .o_reconcile_create_statement {
+                opacity: 100;
+            }
+        }
+        .row {
+            margin: 0;
+        }
+        margin: 0 0 0;
+        min-width: fit-content;
+        width: 100%;
+        .o_reconcile_create_statement {
+            position: absolute;
+            height: 0px;
+            margin: 0;
+            padding: 0 0 0 0;
+            border: 0;
+            top: -14px;
+            opacity: 0;
+        }
+        > div {
+            border-right: thick solid rgba(0, 0, 0, 0);
+        }
+        &.o_kanban_record_reconcile_oca_selected {
+            border-right: thick solid #714b67;
+        }
+    }
+
+    // Default / Light Mode Tokens
+    --rec-selector-bg: #ffffff;
+    --rec-selector-border: #dee2e6;
+    --rec-tree-bg: #ffffff;
+    --rec-tree-border: #e9ecef;
+    --rec-header-bg: #ffffff;
+    --rec-header-hover: #f8f9fa;
+    --rec-header-text: #1e293b;
+    --rec-chevron-color: #64748b;
+    --rec-folder-color: #714b67;
+    --rec-badge-bg: rgba(113, 75, 103, 0.1);
+    --rec-badge-text: #714b67;
+    --rec-badge-border: rgba(113, 75, 103, 0.25);
+    --rec-general-badge-bg: #f1f5f9;
+    --rec-general-badge-text: #475569;
+    --rec-general-badge-border: #cbd5e1;
+    --rec-partners-list-bg: #fafbfc;
+    --rec-partner-item-hover: #edf0f5;
+    --rec-partner-text: #334155;
+    --rec-user-icon: #64748b;
+    --rec-selected-bg: #f6edf4;
+    --rec-selected-text: #714b67;
+    --rec-selected-border: #714b67;
+    --rec-empty-text: #64748b;
+
+    .o_account_reconcile_oca_selector {
+        width: 30%;
+        height: 100%;
+        padding: 0;
+        position: relative;
+        border-right: 1px solid var(--rec-selector-border) !important;
+        background-color: var(--rec-selector-bg) !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+    }
+
+    .o_account_reconcile_oca_info {
+        width: 70%;
+        height: 100%;
+        overflow: auto;
+    }
+
+    // Account Grouping Tree View
+    .o_reconcile_accounts_tree {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        background-color: var(--rec-tree-bg) !important;
+
+        .o_reconcile_account_group {
+            border-bottom: 1px solid var(--rec-tree-border) !important;
+            background-color: var(--rec-header-bg) !important;
+            transition: background-color 0.15s ease-in-out;
+
+            .o_reconcile_account_header {
+                padding: 12px 14px;
+                cursor: pointer;
+                user-select: none;
+                transition: background-color 0.15s ease;
+                background-color: var(--rec-header-bg) !important;
+                border: none !important;
+
+                &:hover {
+                    background-color: var(--rec-header-hover) !important;
+                }
+
+                .o_reconcile_chevron {
+                    font-size: 13px;
+                    color: var(--rec-chevron-color) !important;
+                    transition: transform 0.15s ease;
+                }
+
+                .o_reconcile_folder {
+                    font-size: 14px;
+                    color: var(--rec-folder-color) !important;
+                }
+
+                .o_reconcile_account_name {
+                    font-size: 13.5px;
+                    font-weight: 600;
+                    color: var(--rec-header-text) !important;
+                }
+
+                .o_reconcile_badge {
+                    font-size: 11px;
+                    font-weight: 600;
+                    padding: 3px 8px;
+                    background-color: var(--rec-badge-bg) !important;
+                    color: var(--rec-badge-text) !important;
+                    border: 1px solid var(--rec-badge-border) !important;
+                }
+
+                .o_reconcile_general_badge {
+                    font-size: 11px;
+                    font-weight: 500;
+                    padding: 3px 8px;
+                    background-color: var(--rec-general-badge-bg) !important;
+                    color: var(--rec-general-badge-text) !important;
+                    border: 1px solid var(--rec-general-badge-border) !important;
+                }
+            }
+
+            &.o_reconcile_item_selected {
+                .o_reconcile_account_header {
+                    background-color: var(--rec-selected-bg) !important;
+                    border-right: thick solid var(--rec-selected-border) !important;
+
+                    .o_reconcile_account_name {
+                        color: var(--rec-selected-text) !important;
+                    }
+
+                    .o_reconcile_folder {
+                        color: var(--rec-selected-text) !important;
+                    }
+                }
+            }
+
+            .o_reconcile_partners_list {
+                background-color: var(--rec-partners-list-bg) !important;
+                border-top: 1px solid var(--rec-tree-border) !important;
+                padding-top: 4px;
+                padding-bottom: 6px;
+
+                .o_reconcile_partner_item {
+                    margin: 2px 8px 2px 22px;
+                    padding: 9px 12px;
+                    border-radius: 6px;
+                    cursor: pointer;
+                    user-select: none;
+                    transition: all 0.15s ease-in-out;
+                    border-right: thick solid transparent;
+
+                    &:hover {
+                        background-color: var(--rec-partner-item-hover) !important;
+                    }
+
+                    .o_reconcile_user_icon {
+                        color: var(--rec-user-icon) !important;
+                        font-size: 14px;
+                    }
+
+                    .o_reconcile_partner_name {
+                        font-size: 13px;
+                        color: var(--rec-partner-text) !important;
+                    }
+
+                    &.o_reconcile_partner_selected {
+                        background-color: var(--rec-selected-bg) !important;
+                        border-right: thick solid var(--rec-selected-border) !important;
+
+                        .o_reconcile_user_icon {
+                            color: var(--rec-selected-text) !important;
+                        }
+
+                        .o_reconcile_partner_name {
+                            font-weight: 600;
+                            color: var(--rec-selected-text) !important;
+                        }
+
+                        .o_reconcile_chevron {
+                            color: var(--rec-selected-text) !important;
+                        }
+                    }
+                }
+            }
+        }
+
+        .o_reconcile_empty_state {
+            color: var(--rec-empty-text) !important;
+        }
+    }
+}
+
+// ============================================================================
+// DARK THEME OVERRIDES (Kraken Theme Dark Mode & Odoo Bootstrap Dark Mode)
+// ============================================================================
+
+body.kr_sp_theme_dark,
+body.kr_sp_theme_dark .o_web_client,
+.o_web_client.kr_sp_theme_dark,
+[data-bs-theme="dark"],
+.o_theme_dark,
+body.kr_sp_global_mode.kr_sp_theme_dark {
+    .o_account_reconcile_oca {
+        --rec-selector-bg: #111827;
+        --rec-selector-border: #2b3647;
+        --rec-tree-bg: #111827;
+        --rec-tree-border: #202b3a;
+        --rec-header-bg: #18212f;
+        --rec-header-hover: #202b3a;
+        --rec-header-text: #f3f4f6;
+        --rec-chevron-color: #9ca3af;
+        --rec-folder-color: #00d4c8;
+        --rec-badge-bg: rgba(0, 212, 200, 0.15);
+        --rec-badge-text: #00d4c8;
+        --rec-badge-border: rgba(0, 212, 200, 0.35);
+        --rec-general-badge-bg: #202b3a;
+        --rec-general-badge-text: #9ca3af;
+        --rec-general-badge-border: #374151;
+        --rec-partners-list-bg: #0f172a;
+        --rec-partner-item-hover: #1e293b;
+        --rec-partner-text: #e2e8f0;
+        --rec-user-icon: #9ca3af;
+        --rec-selected-bg: #162a39;
+        --rec-selected-text: #00d4c8;
+        --rec-selected-border: #00d4c8;
+        --rec-empty-text: #9ca3af;
+
+        .o_kanban_renderer.o_kanban_ungrouped .o_kanban_record {
+            &.o_kanban_record_reconcile_oca_selected {
+                border-right: thick solid #00d4c8 !important;
+            }
+        }
+
+        .o_account_reconcile_oca_selector {
+            background-color: #111827 !important;
+            border-right: 1px solid #202b3a !important;
+        }
+
+        .o_account_reconcile_oca_info {
+            background-color: #111827 !important;
+        }
+
+        .o_reconcile_accounts_tree {
+            background-color: #111827 !important;
+
+            .o_reconcile_account_group {
+                background-color: #18212f !important;
+                border-bottom: 1px solid #202b3a !important;
+
+                .o_reconcile_account_header {
+                    background-color: #18212f !important;
+
+                    &:hover {
+                        background-color: #202b3a !important;
+                    }
+
+                    .o_reconcile_chevron {
+                        color: #9ca3af !important;
+                    }
+
+                    .o_reconcile_folder {
+                        color: #00d4c8 !important;
+                    }
+
+                    .o_reconcile_account_name {
+                        color: #f3f4f6 !important;
+                    }
+
+                    .o_reconcile_badge {
+                        background-color: rgba(0, 212, 200, 0.15) !important;
+                        color: #00d4c8 !important;
+                        border: 1px solid rgba(0, 212, 200, 0.35) !important;
+                    }
+
+                    .o_reconcile_general_badge {
+                        background-color: #202b3a !important;
+                        color: #9ca3af !important;
+                        border: 1px solid #374151 !important;
+                    }
+                }
+
+                &.o_reconcile_item_selected {
+                    .o_reconcile_account_header {
+                        background-color: #162a39 !important;
+                        border-right: thick solid #00d4c8 !important;
+
+                        .o_reconcile_account_name {
+                            color: #00d4c8 !important;
+                        }
+
+                        .o_reconcile_folder {
+                            color: #00d4c8 !important;
+                        }
+                    }
+                }
+
+                .o_reconcile_partners_list {
+                    background-color: #0f172a !important;
+                    border-top: 1px solid #202b3a !important;
+
+                    .o_reconcile_partner_item {
+                        &:hover {
+                            background-color: #1e293b !important;
+
+                            .o_reconcile_partner_name {
+                                color: #ffffff !important;
+                            }
+                        }
+
+                        .o_reconcile_user_icon {
+                            color: #9ca3af !important;
+                        }
+
+                        .o_reconcile_partner_name {
+                            color: #e2e8f0 !important;
+                        }
+
+                        &.o_reconcile_partner_selected {
+                            background-color: #162a39 !important;
+                            border-right: thick solid #00d4c8 !important;
+
+                            .o_reconcile_user_icon {
+                                color: #00d4c8 !important;
+                            }
+
+                            .o_reconcile_partner_name {
+                                color: #00d4c8 !important;
+                                font-weight: 600;
+                            }
+
+                            .o_reconcile_chevron {
+                                color: #00d4c8 !important;
+                            }
+                        }
+                    }
+                }
+            }
+
+            .o_reconcile_empty_state {
+                color: #9ca3af !important;
+            }
+        }
+    }
+}

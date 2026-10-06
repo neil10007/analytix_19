@@ -993,8 +993,11 @@ body.kr_sp_theme_dark:not(:has(#kr_sp_workspace_modal.is-open)) .kr_sp_rail_grou
 .anx-inv-table-footer {
     display: flex; justify-content: space-between; align-items: center;
     padding: 10px 16px; background: rgba(255,255,255,0.04);
-    border-top: 1px solid rgba(255,255,255,0.07);
-    font-size: 12px; color: rgba(255,255,255,0.40);
+    border-top: 1px solid rgba(255,255,255,0.08);
+    font-size: 12px; color: rgba(255,255,255,0.65);
+    span, strong {
+        color: rgba(255,255,255,0.75);
+    }
 }
 .anx-inv-footer-range { font-size: 11.5px; }
 
@@ -3876,45 +3879,51 @@ a.anx-tb-acc-link {
     align-items: center;
     justify-content: center;
     gap: 2px;
-    background: #fff;
-    border: 1.5px solid #e4e8f0;
+    background: #0f1729;
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 12px;
     padding: 14px 28px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
     min-width: 130px;
+    transition: transform 0.18s, box-shadow 0.18s, border-color 0.18s;
+}
+.anx-doc-kpi-pill:hover {
+    border-color: rgba(0, 212, 200, 0.25);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
 }
 .anx-doc-kpi-label {
     font-size: 10.5px;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.6px;
-    color: #8a93a4;
+    color: rgba(255, 255, 255, 0.55);
 }
 .anx-doc-kpi-val {
     font-size: 26px;
     font-weight: 800;
-    color: #0f1729;
+    color: #ffffff;
     line-height: 1.15;
 }
 .anx-doc-upload-zone {
     flex: 1;
     min-width: 280px;
-    background: #f8fbff;
-    border: 2.5px dashed #c8d3e0;
+    background: #0f1729;
+    border: 2px dashed rgba(255, 255, 255, 0.18);
     border-radius: 14px;
     cursor: pointer;
     transition: all 0.22s ease;
     position: relative;
     overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
 }
 .anx-doc-upload-zone.drag-over {
-    border-color: #1e88e5;
-    background: #e3f2fd;
-    box-shadow: 0 0 0 4px rgba(30,136,229,0.10);
+    border-color: #00d4c8;
+    background: rgba(0, 212, 200, 0.08);
+    box-shadow: 0 0 0 4px rgba(0, 212, 200, 0.15);
 }
 .anx-doc-upload-zone:hover:not(.drag-over) {
-    border-color: #2b7b9b;
-    background: #eef6fb;
+    border-color: #00b4a8;
+    background: rgba(0, 180, 168, 0.05);
 }
 .anx-doc-dz-inner {
     display: flex;
@@ -3927,17 +3936,17 @@ a.anx-tb-acc-link {
 }
 .anx-doc-dz-icon {
     width: 52px; height: 52px; flex-shrink: 0;
-    background: linear-gradient(135deg, rgba(0,180,170,0.15), rgba(30,136,229,0.12));
+    background: linear-gradient(135deg, rgba(0, 212, 200, 0.18), rgba(30, 136, 229, 0.15));
     border-radius: 13px;
     display: flex; align-items: center; justify-content: center;
     font-size: 24px;
-    color: #2b7b9b;
+    color: #00d4c8;
     transition: transform 0.2s;
 }
 .anx-doc-upload-zone:hover .anx-doc-dz-icon { transform: scale(1.07); }
 .anx-doc-dz-text { display: flex; flex-direction: column; gap: 3px; }
-.anx-doc-dz-title { font-size: 14px; font-weight: 700; color: #0f1729; }
-.anx-doc-dz-sub { font-size: 12px; color: #8a93a4; }
+.anx-doc-dz-title { font-size: 14px; font-weight: 700; color: #ffffff; }
+.anx-doc-dz-sub { font-size: 12px; color: rgba(255, 255, 255, 0.55); }
 
 .anx-doc-dz-preview {
     display: flex;
@@ -3947,63 +3956,63 @@ a.anx-tb-acc-link {
     width: 100%;
     box-sizing: border-box;
 }
-.anx-doc-dz-preview-icon { font-size: 26px; color: #2b7b9b; flex-shrink: 0; }
+.anx-doc-dz-preview-icon { font-size: 26px; color: #00d4c8; flex-shrink: 0; }
 .anx-doc-dz-preview-info { flex: 1; display: flex; flex-direction: column; gap: 3px; overflow: hidden; }
 .anx-doc-dz-preview-name {
-    font-size: 13.5px; font-weight: 600; color: #0f1729;
+    font-size: 13.5px; font-weight: 600; color: #ffffff;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.anx-doc-dz-preview-size { font-size: 12px; color: #8a93a4; }
+.anx-doc-dz-preview-size { font-size: 12px; color: rgba(255, 255, 255, 0.55); }
 .anx-doc-dz-actions { display: flex; gap: 8px; flex-shrink: 0; }
 
 .anx-doc-btn-upload {
-    background: linear-gradient(135deg, #1e88e5, #1565c0);
+    background: linear-gradient(135deg, #00b4a8, #008f85);
     border: none; border-radius: 8px; color: #fff;
     font-size: 12.5px; font-weight: 700; padding: 8px 18px;
     cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
-    transition: all 0.15s; box-shadow: 0 3px 10px rgba(30,136,229,0.30);
+    transition: all 0.15s; box-shadow: 0 3px 10px rgba(0, 180, 168, 0.30);
 }
-.anx-doc-btn-upload:hover { background: linear-gradient(135deg, #1976d2, #0d47a1); transform: translateY(-1px); }
+.anx-doc-btn-upload:hover { background: linear-gradient(135deg, #00968b, #00796b); transform: translateY(-1px); }
 
 .anx-doc-btn-cancel {
-    background: none; border: 1.5px solid #d1d5db; border-radius: 8px;
-    color: #6b7280; font-size: 12.5px; font-weight: 600; padding: 8px 14px;
+    background: none; border: 1.5px solid rgba(255, 255, 255, 0.18); border-radius: 8px;
+    color: #cbd5e1; font-size: 12.5px; font-weight: 600; padding: 8px 14px;
     cursor: pointer; display: inline-flex; align-items: center; gap: 5px; transition: all 0.15s;
 }
-.anx-doc-btn-cancel:hover { border-color: #e53935; color: #e53935; background: #fce4ec; }
+.anx-doc-btn-cancel:hover { border-color: #ef4444; color: #f87171; background: rgba(239, 68, 68, 0.12); }
 
 .anx-doc-dz-uploading {
     display: flex; align-items: center; justify-content: center;
-    gap: 12px; padding: 24px; font-size: 13.5px; font-weight: 600; color: #2b7b9b;
+    gap: 12px; padding: 24px; font-size: 13.5px; font-weight: 600; color: #00d4c8;
 }
 .anx-doc-dz-uploading i { font-size: 20px; }
 
 .anx-doc-type-icon {
     display: inline-flex; align-items: center; justify-content: center;
-    width: 30px; height: 30px; border-radius: 7px; background: #f0f4ff;
+    width: 30px; height: 30px; border-radius: 7px; background: rgba(0, 180, 168, 0.12);
 }
-.anx-doc-type-icon i { font-size: 14px; color: #2b7b9b; }
+.anx-doc-type-icon i { font-size: 14px; color: #00d4c8; }
 
 .anx-doc-mime-badge {
     display: inline-flex; align-items: center; padding: 2px 9px;
-    border-radius: 20px; background: #e8f0fe; color: #1565c0;
+    border-radius: 20px; background: rgba(30, 136, 229, 0.15); color: #60a5fa;
     font-size: 10px; font-weight: 700; text-transform: uppercase;
     letter-spacing: 0.5px; white-space: nowrap;
 }
 
 .anx-doc-action-btns { display: inline-flex; align-items: center; gap: 6px; }
 .anx-doc-btn-dl {
-    background: #e8f5e9; border: none; border-radius: 7px; color: #2e7d32;
+    background: rgba(46, 125, 50, 0.2); border: none; border-radius: 7px; color: #4ade80;
     width: 30px; height: 30px; display: inline-flex; align-items: center;
     justify-content: center; cursor: pointer; font-size: 13px; transition: all 0.15s;
 }
-.anx-doc-btn-dl:hover { background: #43a047; color: #fff; transform: translateY(-1px); }
+.anx-doc-btn-dl:hover { background: #16a34a; color: #fff; transform: translateY(-1px); }
 .anx-doc-btn-del {
-    background: #fce4ec; border: none; border-radius: 7px; color: #c62828;
+    background: rgba(239, 68, 68, 0.18); border: none; border-radius: 7px; color: #f87171;
     width: 30px; height: 30px; display: inline-flex; align-items: center;
     justify-content: center; cursor: pointer; font-size: 13px; transition: all 0.15s;
 }
-.anx-doc-btn-del:hover { background: #e53935; color: #fff; transform: translateY(-1px); }
+.anx-doc-btn-del:hover { background: #ef4444; color: #fff; transform: translateY(-1px); }
 .anx-doc-row { cursor: default !important; }
 .anx-doc-row td { vertical-align: middle; }
 
@@ -4044,11 +4053,11 @@ a.anx-tb-acc-link {
     display: flex;
     flex-direction: column;
     gap: 14px;
-    background: #fff;
+    background: #0f1729;
     border-radius: 12px;
     margin: 10px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
-    border: 1.5px solid #e4e8f0;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 /* File bar inside the form */
@@ -4057,13 +4066,13 @@ a.anx-tb-acc-link {
     align-items: center;
     gap: 10px;
     padding: 10px 12px;
-    background: #f0f4ff;
+    background: #141e33;
     border-radius: 8px;
-    border: 1px solid #dbe4ff;
+    border: 1px solid rgba(255, 255, 255, 0.08);
 }
 .anx-doc-form-file-icon {
     font-size: 22px;
-    color: #2b7b9b;
+    color: #00d4c8;
     flex-shrink: 0;
 }
 .anx-doc-form-file-info {
@@ -4076,19 +4085,19 @@ a.anx-tb-acc-link {
 .anx-doc-form-file-name {
     font-size: 13px;
     font-weight: 600;
-    color: #0f1729;
+    color: #ffffff;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 .anx-doc-form-file-size {
     font-size: 11px;
-    color: #8a93a4;
+    color: rgba(255, 255, 255, 0.55);
 }
 .anx-doc-form-remove {
     background: none;
     border: none;
-    color: #9ca3af;
+    color: rgba(255, 255, 255, 0.6);
     cursor: pointer;
     font-size: 13px;
     padding: 4px 7px;
@@ -4096,7 +4105,7 @@ a.anx-tb-acc-link {
     transition: color 0.15s, background 0.15s;
     flex-shrink: 0;
 }
-.anx-doc-form-remove:hover { color: #e53935; background: #fce4ec; }
+.anx-doc-form-remove:hover { color: #f87171; background: rgba(239, 68, 68, 0.15); }
 
 /* Input fields grid */
 .anx-doc-form-fields {
@@ -4114,36 +4123,36 @@ a.anx-tb-acc-link {
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    color: #6b7280;
+    color: rgba(255, 255, 255, 0.7);
 }
 .anx-doc-req-star {
-    color: #e53935;
+    color: #f87171;
     font-size: 12px;
 }
 .anx-doc-form-input {
-    border: 1.5px solid #d1d5db;
+    border: 1px solid rgba(255, 255, 255, 0.15);
     border-radius: 8px;
     padding: 8px 12px;
     font-size: 13px;
-    color: #0f1729;
-    background: #fff;
+    color: #ffffff;
+    background: #141e33;
     outline: none;
     transition: border-color 0.15s, box-shadow 0.15s;
     width: 100%;
     box-sizing: border-box;
 }
 .anx-doc-form-input:focus {
-    border-color: #2b7b9b;
-    box-shadow: 0 0 0 3px rgba(0,180,170,0.15);
+    border-color: #00b4a8;
+    box-shadow: 0 0 0 3px rgba(0, 180, 168, 0.2);
 }
-.anx-doc-form-input::placeholder { color: #b0b8c8; }
+.anx-doc-form-input::placeholder { color: rgba(255, 255, 255, 0.35); }
 .anx-doc-form-input.anx-doc-input-error {
-    border-color: #e53935;
-    box-shadow: 0 0 0 3px rgba(229,57,53,0.12);
+    border-color: #f87171;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
 }
 .anx-doc-field-error {
     font-size: 11px;
-    color: #e53935;
+    color: #f87171;
     font-weight: 600;
     display: flex;
     align-items: center;
@@ -4167,7 +4176,7 @@ a.anx-tb-acc-link {
 .anx-doc-desc-text,
 .anx-doc-review-text {
     font-size: 12px;
-    color: #6b7280;
+    color: #cbd5e1;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -4178,7 +4187,7 @@ a.anx-tb-acc-link {
     visibility: hidden;
     background: none;
     border: none;
-    color: #b0b8c8;
+    color: rgba(255, 255, 255, 0.5);
     font-size: 11px;
     cursor: pointer;
     padding: 2px 6px;
@@ -4186,7 +4195,7 @@ a.anx-tb-acc-link {
     flex-shrink: 0;
     transition: opacity 0.15s, visibility 0.15s, color 0.15s, background 0.15s;
 }
-.anx-doc-desc-edit-btn:hover { color: #2b7b9b; background: #e8f4fd; }
+.anx-doc-desc-edit-btn:hover { color: #00d4c8; background: rgba(0, 212, 200, 0.12); }
 .anx-doc-desc-cell:hover .anx-doc-desc-edit-btn,
 .anx-doc-review-cell:hover .anx-doc-desc-edit-btn { opacity: 1; visibility: visible; }
 
@@ -4198,18 +4207,18 @@ a.anx-tb-acc-link {
 }
 .anx-doc-desc-edit-input {
     flex: 1;
-    border: 1.5px solid #2b7b9b;
+    border: 1.5px solid #00b4a8;
     border-radius: 6px;
     padding: 5px 9px;
     font-size: 12px;
-    color: #0f1729;
-    background: #fff;
+    color: #ffffff;
+    background: #141e33;
     outline: none;
-    box-shadow: 0 0 0 3px rgba(43,123,155,0.12);
+    box-shadow: 0 0 0 3px rgba(0, 180, 168, 0.18);
     min-width: 120px;
 }
 .anx-doc-desc-save-btn {
-    background: #2b7b9b;
+    background: #00b4a8;
     border: none;
     border-radius: 6px;
     color: #fff;
@@ -4220,12 +4229,12 @@ a.anx-tb-acc-link {
     flex-shrink: 0;
     transition: background 0.15s;
 }
-.anx-doc-desc-save-btn:hover { background: #1a5f7a; }
+.anx-doc-desc-save-btn:hover { background: #00968b; }
 .anx-doc-desc-cancel-btn {
-    background: #f3f4f6;
-    border: none;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 6px;
-    color: #6b7280;
+    color: #cbd5e1;
     width: 26px; height: 26px;
     display: inline-flex; align-items: center; justify-content: center;
     cursor: pointer;
@@ -4233,14 +4242,14 @@ a.anx-tb-acc-link {
     flex-shrink: 0;
     transition: background 0.15s, color 0.15s;
 }
-.anx-doc-desc-cancel-btn:hover { background: #fce4ec; color: #e53935; }
+.anx-doc-desc-cancel-btn:hover { background: rgba(239, 68, 68, 0.15); color: #f87171; border-color: rgba(239, 68, 68, 0.3); }
 
 /* Upload zone expanded state when file is selected */
 .anx-doc-upload-zone.has-file {
     cursor: default;
     border-style: solid;
-    border-color: #2b7b9b;
-    background: #fff;
+    border-color: rgba(0, 180, 168, 0.4);
+    background: #0f1729;
     min-height: unset;
 }
 
@@ -4256,13 +4265,13 @@ a.anx-tb-acc-link {
     flex-wrap: wrap;
     padding: 10px 12px;
     border-radius: 10px;
-    border: 1.5px solid #e4e8f0;
-    background: #f9fafb;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: #141e33;
     transition: border-color 0.15s;
 }
 .anx-doc-type-pills.anx-doc-type-pills-error {
-    border-color: #e53935;
-    background: #fff8f8;
+    border-color: #f87171;
+    background: rgba(239, 68, 68, 0.06);
 }
 .anx-doc-type-pill {
     display: inline-flex;
@@ -4270,18 +4279,18 @@ a.anx-tb-acc-link {
     gap: 7px;
     padding: 8px 18px;
     border-radius: 8px;
-    border: 2px solid #e0e5f0;
-    background: #fff;
-    color: #374151;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: #0f1729;
+    color: #cbd5e1;
     font-size: 13px;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.18s;
 }
 .anx-doc-type-pill:hover {
-    border-color: #2b7b9b;
-    color: #2b7b9b;
-    background: #eef6fb;
+    border-color: #00b4a8;
+    color: #00d4c8;
+    background: rgba(0, 180, 168, 0.12);
 }
 .anx-doc-type-pill.active.invoice {
     background: linear-gradient(135deg, #1e88e5, #1565c0);
@@ -4361,7 +4370,7 @@ a.anx-tb-acc-link {
 }
 .anx-doc-review-text {
     font-size: 12px;
-    color: #374151;
+    color: #cbd5e1;
     max-width: 200px;
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -4381,20 +4390,20 @@ a.anx-tb-acc-link {
 .anx-doc-review-edit-input {
     width: 100%;
     box-sizing: border-box;
-    border: 1.5px solid #2b7b9b;
+    border: 1.5px solid #00b4a8;
     border-radius: 6px;
     padding: 5px 8px;
     font-size: 12px;
-    color: #0f1729;
-    background: #ffffff;
+    color: #ffffff;
+    background: #141e33;
     outline: none;
     resize: vertical;
     min-height: 44px;
     max-height: 100px;
-    box-shadow: 0 0 0 3px rgba(43,123,155,0.15);
+    box-shadow: 0 0 0 3px rgba(0, 180, 168, 0.18);
     font-family: inherit;
 }
-.anx-doc-review-edit-input:focus { border-color: #1a5f7a; }
+.anx-doc-review-edit-input:focus { border-color: #00d4c8; }
 .anx-doc-review-edit-btns {
     display: flex;
     align-items: center;
@@ -4402,7 +4411,7 @@ a.anx-tb-acc-link {
     justify-content: flex-end;
 }
 .anx-doc-review-save-btn {
-    background: #2b7b9b;
+    background: #00b4a8;
     border: none;
     border-radius: 5px;
     color: #ffffff;
@@ -4416,13 +4425,13 @@ a.anx-tb-acc-link {
     transition: background 0.15s ease-in-out;
 }
 .anx-doc-review-save-btn:hover {
-    background: #1a5f7a;
+    background: #00968b;
 }
 .anx-doc-review-cancel-btn {
-    background: #f3f4f6;
-    border: 1px solid #d1d5db;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 5px;
-    color: #4b5563;
+    color: #cbd5e1;
     padding: 4px 10px;
     font-size: 11px;
     font-weight: 500;
@@ -4433,9 +4442,9 @@ a.anx-tb-acc-link {
     transition: all 0.15s ease-in-out;
 }
 .anx-doc-review-cancel-btn:hover {
-    background: #fef2f2;
-    color: #ef4444;
-    border-color: #fca5a5;
+    background: rgba(239, 68, 68, 0.15);
+    color: #f87171;
+    border-color: rgba(239, 68, 68, 0.3);
 }
 
 /* ── Document Preview Button (list view) ── */
@@ -4445,9 +4454,9 @@ a.anx-tb-acc-link {
     gap: 6px;
     padding: 4px 12px;
     border-radius: 6px;
-    border: 1px dashed #2b7b9b;
-    background: #f0f7fa;
-    color: #2b7b9b;
+    border: 1px dashed rgba(0, 212, 200, 0.4);
+    background: rgba(0, 212, 200, 0.08);
+    color: #00d4c8;
     font-size: 11px;
     font-weight: 700;
     cursor: pointer;
@@ -4457,15 +4466,83 @@ a.anx-tb-acc-link {
     font-size: 12px;
 }
 .anx-doc-preview-badge-btn:hover {
-    background: #2b7b9b;
+    background: #00b4a8;
     color: #ffffff;
-    border-color: #2b7b9b;
-    box-shadow: 0 2px 8px rgba(43, 123, 155, 0.25);
+    border-color: #00b4a8;
+    box-shadow: 0 2px 8px rgba(0, 180, 168, 0.3);
     transform: translateY(-0.5px);
 }
 .anx-doc-preview-badge-btn:active {
     transform: translateY(0);
 }
+
+/* ── Explicit Dark Mode Overrides for Documents Tab ── */
+body.kr_sp_theme_dark,
+[data-bs-theme="dark"],
+body.o_dark,
+.o_theme_dark {
+    .anx-doc-kpi-pill {
+        background: #0f1729 !important;
+        border-color: rgba(255, 255, 255, 0.08) !important;
+    }
+    .anx-doc-upload-zone {
+        background: #0f1729 !important;
+        border-color: rgba(255, 255, 255, 0.18) !important;
+        &.drag-over {
+            background: rgba(0, 212, 200, 0.1) !important;
+            border-color: #00d4c8 !important;
+        }
+        &:hover:not(.drag-over) {
+            background: rgba(0, 180, 168, 0.06) !important;
+            border-color: #00b4a8 !important;
+        }
+        &.has-file {
+            background: #0f1729 !important;
+            border-color: rgba(0, 180, 168, 0.4) !important;
+        }
+    }
+    .anx-doc-dz-title {
+        color: #ffffff !important;
+    }
+    .anx-doc-dz-sub {
+        color: rgba(255, 255, 255, 0.55) !important;
+    }
+    .anx-doc-kpi-val {
+        color: #ffffff !important;
+    }
+    .anx-doc-kpi-label {
+        color: rgba(255, 255, 255, 0.55) !important;
+    }
+    .anx-doc-upload-form {
+        background: #0f1729 !important;
+        border-color: rgba(255, 255, 255, 0.08) !important;
+    }
+    .anx-doc-form-filebar {
+        background: #141e33 !important;
+        border-color: rgba(255, 255, 255, 0.08) !important;
+    }
+    .anx-doc-form-input {
+        background: #141e33 !important;
+        border-color: rgba(255, 255, 255, 0.15) !important;
+        color: #ffffff !important;
+    }
+    .anx-doc-type-pills {
+        background: #141e33 !important;
+        border-color: rgba(255, 255, 255, 0.08) !important;
+    }
+    .anx-doc-type-pill {
+        background: #0f1729 !important;
+        border-color: rgba(255, 255, 255, 0.12) !important;
+        color: #cbd5e1 !important;
+    }
+    .anx-doc-desc-edit-input,
+    .anx-doc-review-edit-input {
+        background: #141e33 !important;
+        border-color: #00b4a8 !important;
+        color: #ffffff !important;
+    }
+}
+
 
 /* =====================================================
    Chat Tab Styles (Native Discuss Component integration)
@@ -5571,13 +5648,12 @@ a.anx-tb-acc-link {
     }
 }
 
-/* ── Top Horizontal Scrollbar for Documents Table ────────────────────────── */
+/* ── Horizontal Scrollbar for Documents Table ────────────────────────── */
 .anx-doc-table-wrap {
     overflow-x: auto !important;
-    transform: rotateX(180deg);
     border-radius: 12px;
 
-    /* Custom high-contrast scrollbar positioned right below search section */
+    /* Custom high-contrast scrollbar */
     &::-webkit-scrollbar {
         height: 10px;
     }
@@ -5592,11 +5668,6 @@ a.anx-tb-acc-link {
     }
     &::-webkit-scrollbar-thumb:hover {
         background: #00a09d;
-    }
-
-    /* Rotate table back so content renders right-side up */
-    table.anx-doc-table {
-        transform: rotateX(180deg);
     }
 }
 

@@ -816,19 +816,174 @@ html:not([data-color-scheme="dark"]):not(.o_dark) body:not(.kr_sp_theme_dark) {
         td { color: #0f172a !important; font-weight: 700 !important; }
     }
 
-    /* ── Upload Document Section ── */
-    .anx-upload-dropzone {
-        background: #f8fafc !important;
+    /* ── Upload Document Section & Documents Tab ── */
+    .anx-doc-kpi-pill {
+        background: #ffffff !important;
+        border: 1.5px solid #e2e8f0 !important;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05) !important;
+    }
+    .anx-doc-kpi-label {
+        color: #64748b !important;
+    }
+    .anx-doc-kpi-val {
+        color: #0f172a !important;
+    }
+    .anx-doc-upload-zone {
+        background: #f8fbff !important;
         border: 2px dashed #cbd5e1 !important;
-        &:hover,
-        &.anx-upload-drag-over {
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05) !important;
+        &:hover:not(.drag-over) {
             border-color: #00b4a8 !important;
             background: #f0fdfa !important;
         }
+        &.drag-over {
+            border-color: #1e88e5 !important;
+            background: #e3f2fd !important;
+        }
+        &.has-file {
+            background: #ffffff !important;
+            border-color: #00b4a8 !important;
+        }
     }
-    .anx-upload-file-bar {
+    .anx-doc-dz-icon {
+        background: linear-gradient(135deg, rgba(0, 180, 168, 0.15), rgba(30, 136, 229, 0.12)) !important;
+        color: #00b4a8 !important;
+    }
+    .anx-doc-dz-title {
+        color: #0f172a !important;
+    }
+    .anx-doc-dz-sub {
+        color: #64748b !important;
+    }
+    .anx-doc-dz-preview-name {
+        color: #0f172a !important;
+    }
+    .anx-doc-dz-preview-size {
+        color: #64748b !important;
+    }
+    .anx-doc-upload-form {
+        background: #ffffff !important;
+        border: 1.5px solid #e2e8f0 !important;
+        box-shadow: 0 2px 10px rgba(15, 23, 42, 0.05) !important;
+    }
+    .anx-doc-form-filebar {
         background: #f0fdfa !important;
         border: 1px solid #99f6e4 !important;
+    }
+    .anx-doc-form-file-icon {
+        color: #00b4a8 !important;
+    }
+    .anx-doc-form-file-name {
+        color: #0f172a !important;
+    }
+    .anx-doc-form-file-size {
+        color: #64748b !important;
+    }
+    .anx-doc-form-remove {
+        color: #94a3b8 !important;
+        &:hover {
+            color: #ef4444 !important;
+            background: #fef2f2 !important;
+        }
+    }
+    .anx-doc-form-label {
+        color: #475569 !important;
+    }
+    .anx-doc-form-input {
+        background: #ffffff !important;
+        border: 1.5px solid #cbd5e1 !important;
+        color: #0f172a !important;
+        &::placeholder { color: #94a3b8 !important; }
+        &:focus {
+            border-color: #00b4a8 !important;
+            background: #ffffff !important;
+        }
+    }
+    .anx-doc-type-pills {
+        background: #f8fafc !important;
+        border: 1.5px solid #e2e8f0 !important;
+    }
+    .anx-doc-type-pill {
+        background: #ffffff !important;
+        border: 1.5px solid #cbd5e1 !important;
+        color: #334155 !important;
+        &:hover {
+            border-color: #00b4a8 !important;
+            color: #00b4a8 !important;
+            background: #f0fdfa !important;
+        }
+    }
+    .anx-doc-btn-cancel {
+        background: transparent !important;
+        border: 1.5px solid #cbd5e1 !important;
+        color: #64748b !important;
+        &:hover {
+            border-color: #ef4444 !important;
+            color: #ef4444 !important;
+            background: #fef2f2 !important;
+        }
+    }
+    .anx-doc-type-icon {
+        background: #f0fdfa !important;
+        i { color: #00b4a8 !important; }
+    }
+    .anx-doc-mime-badge {
+        background: #e8f0fe !important;
+        color: #1565c0 !important;
+    }
+    .anx-doc-preview-badge-btn {
+        background: #f0fdfa !important;
+        color: #00b4a8 !important;
+        border: 1px dashed #00b4a8 !important;
+        &:hover {
+            background: #00b4a8 !important;
+            color: #ffffff !important;
+        }
+    }
+    .anx-doc-desc-text,
+    .anx-doc-review-text {
+        color: #334155 !important;
+    }
+    .anx-doc-desc-edit-input,
+    .anx-doc-review-edit-input {
+        background: #ffffff !important;
+        color: #0f172a !important;
+        border: 1.5px solid #00b4a8 !important;
+    }
+    .anx-doc-desc-cancel-btn,
+    .anx-doc-review-cancel-btn {
+        background: #f1f5f9 !important;
+        border: 1px solid #cbd5e1 !important;
+        color: #64748b !important;
+        &:hover {
+            background: #fef2f2 !important;
+            color: #ef4444 !important;
+        }
+    }
+
+    /* ── Table Footer & Scrollbars (Light Mode) ── */
+    .anx-inv-table-footer {
+        background: #f8fafc !important;
+        border-top: 1px solid #e2e8f0 !important;
+        color: #475569 !important;
+        span, strong {
+            color: #1e293b !important;
+        }
+        .anx-inv-footer-range {
+            color: #64748b !important;
+        }
+    }
+    .anx-doc-table-wrap {
+        &::-webkit-scrollbar-track {
+            background: #f1f5f9 !important;
+        }
+        &::-webkit-scrollbar-thumb {
+            background: #cbd5e1 !important;
+            border: 2px solid #f1f5f9 !important;
+        }
+        &::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8 !important;
+        }
     }
 
     /* ── Modals (P&L, Balance Sheet, AI Chat, etc.) ── */

@@ -54,51 +54,95 @@
 
     .o_searchview .o_searchview_facet,
     .o_searchview_facet,
+    .o_searchview_facet.bg-200,
     .o_spreadsheet_dashboard_action .o_searchview_facet {
-        border: 1px solid var(--kr-dark-border);
+        border: 1px solid var(--kr-dark-border) !important;
         background: #202b3a !important;
-        color: var(--kr-dark-text);
-        box-shadow: none;
+        background-color: #202b3a !important;
+        color: var(--kr-dark-text) !important;
+        box-shadow: none !important;
+    }
+
+    .o_searchview .o_searchview_facet:hover,
+    .o_searchview .o_searchview_facet:focus,
+    .o_searchview .o_searchview_facet:focus-within,
+    .o_searchview .o_searchview_facet.focus,
+    .o_searchview_facet:hover,
+    .o_searchview_facet:focus,
+    .o_searchview_facet:focus-within,
+    .o_searchview_facet.focus {
+        border-color: rgba(0, 212, 200, 0.45) !important;
+        background: #202b3a !important;
+        background-color: #202b3a !important;
+        box-shadow: 0 0 0 1px rgba(0, 212, 200, 0.25) !important;
+    }
+
+    /* Fix the absolute background overlay that turns white when tapped/hovered */
+    .o_searchview_facet :is(.bg_view, .bg-view, > .position-absolute, .position-absolute.bg_view, .position-absolute.bg-view) {
+        background: transparent !important;
+        background-color: transparent !important;
+        border-color: transparent !important;
+        box-shadow: none !important;
+    }
+
+    .o_searchview_facet.focus :is(.bg_view, .bg-view, > .position-absolute),
+    .o_searchview_facet:focus :is(.bg_view, .bg-view, > .position-absolute),
+    .o_searchview_facet:focus-within :is(.bg_view, .bg-view, > .position-absolute),
+    .o_searchview_facet:hover :is(.bg_view, .bg-view, > .position-absolute) {
+        background: rgba(0, 212, 200, 0.08) !important;
+        background-color: rgba(0, 212, 200, 0.08) !important;
+        border-color: rgba(0, 212, 200, 0.35) !important;
+        box-shadow: none !important;
     }
 
     .o_searchview .o_searchview_facet .o_searchview_facet_label,
     .o_searchview_facet .o_searchview_facet_label,
     .o_spreadsheet_dashboard_action .o_searchview_facet .o_searchview_facet_label {
-        border-color: transparent;
-        background: var(--kr-dark-accent) !important;
+        border-color: transparent !important;
+        background: var(--kr-dark-accent, #00d4c8) !important;
+        background-color: var(--kr-dark-accent, #00d4c8) !important;
         color: #111827 !important;
     }
 
-    .o_searchview .o_searchview_facet .o_searchview_facet_label small,
-    .o_searchview .o_searchview_facet .o_searchview_facet_label i,
-    .o_searchview .o_searchview_facet .o_searchview_facet_label .fa,
-    .o_searchview_facet .o_searchview_facet_label small,
-    .o_searchview_facet .o_searchview_facet_label i,
-    .o_searchview_facet .o_searchview_facet_label .fa {
+    .o_searchview_facet .o_searchview_facet_label:hover,
+    .o_searchview_facet .o_searchview_facet_label:focus,
+    .o_searchview_facet .o_searchview_facet_label:active {
+        background: var(--kr-dark-accent, #00d4c8) !important;
+        background-color: var(--kr-dark-accent, #00d4c8) !important;
         color: #111827 !important;
     }
 
-    .o_searchview_facet .o_searchview_facet_label > span.position-absolute,
-    .o_searchview_facet .o_searchview_facet_label .position-absolute.bg-view {
-        background: var(--kr-dark-accent) !important;
+    .o_searchview .o_searchview_facet .o_searchview_facet_label :is(small, i, .fa, .oi),
+    .o_searchview_facet .o_searchview_facet_label :is(small, i, .fa, .oi) {
+        color: #111827 !important;
     }
 
     .o_searchview .o_facet_values,
     .o_searchview .o_facet_value,
     .o_searchview_facet .o_facet_values,
     .o_searchview_facet .o_facet_value {
-        background: transparent;
-        color: var(--kr-dark-text) !important;
+        background: transparent !important;
+        background-color: transparent !important;
+        color: var(--kr-dark-text, #e5e7eb) !important;
+        font-weight: 500;
+    }
+
+    .o_searchview_facet .o_facet_values_sep {
+        color: #94a3b8 !important;
+        background: transparent !important;
     }
 
     .o_searchview .o_facet_remove,
     .o_searchview_facet .o_facet_remove {
-        color: var(--kr-dark-muted) !important;
+        color: var(--kr-dark-muted, #9ca3af) !important;
+        background: transparent !important;
     }
 
     .o_searchview .o_facet_remove:hover,
-    .o_searchview_facet .o_facet_remove:hover {
-        color: #ffffff !important;
+    .o_searchview_facet .o_facet_remove:hover,
+    .o_searchview_facet .o_facet_remove:focus {
+        color: #ef4444 !important;
+        background: rgba(239, 68, 68, 0.15) !important;
     }
 
     .o_searchview_autocomplete,

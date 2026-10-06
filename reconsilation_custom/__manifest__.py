@@ -11,7 +11,13 @@
     ],
     'data': [
         'views/account_reconcile_menu.xml',
+        'views/account_account_reconcile_views.xml',
     ],
+    'assets': {
+        'web.assets_backend': [
+            'reconsilation_custom/static/src/**/*',
+        ],
+    },
     'license': 'AGPL-3',
     'installable': True,
     'auto_install': False,

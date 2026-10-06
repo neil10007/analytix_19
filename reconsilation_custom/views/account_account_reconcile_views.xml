@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Increase limit so all accounts and partners are listed in the grouped tree without truncation -->
+    <record id="account_account_reconcile_kanban_view_inherit" model="ir.ui.view">
+        <field name="name">account.account.reconcile.kanban.inherit</field>
+        <field name="model">account.account.reconcile</field>
+        <field name="inherit_id" ref="account_reconcile_oca.account_account_reconcile_kanban_view" />
+        <field name="arch" type="xml">
+            <xpath expr="//kanban" position="attributes">
+                <attribute name="limit">500</attribute>
+            </xpath>
+        </field>
+    </record>
+</odoo>

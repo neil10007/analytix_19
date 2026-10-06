@@ -972,10 +972,41 @@ body.kr_sp_global_mode.modal-open {
     transform: translateY(-1px);
 }
 
-.kr_sp_rail_group button.is-active {
-    background: #00d4c8 !important;
-    color: #000000 !important;
+body:not(.kr_sp_theme_dark) .kr_sp_rail_group button.is-active,
+body:not(.kr_sp_theme_dark) .kr_sp_rail_btn.is-active {
+    background: var(--kr-color-tab-active, #00d4c8) !important;
+    color: var(--kr-color-tab-active-text, #000000) !important;
     box-shadow: 0 6px 16px rgba(0, 212, 200, 0.35) !important;
+}
+
+:is(body.kr_sp_theme_dark, [data-bs-theme="dark"], .kr_sp_theme_dark) .kr_sp_rail_group button.is-active,
+:is(body.kr_sp_theme_dark, [data-bs-theme="dark"], .kr_sp_theme_dark) .kr_sp_rail_btn.is-active {
+    background: var(--kr-color-accent-soft, rgba(0, 212, 200, 0.16)) !important;
+    color: var(--kr-color-accent, #00d4c8) !important;
+    border: 1px solid rgba(0, 212, 200, 0.35) !important;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3) !important;
+}
+
+:is(body.kr_sp_theme_dark, [data-bs-theme="dark"], .kr_sp_theme_dark) .kr_sp_rail_btn.is-active .kr_sp_rail_icon_wrap {
+    background: rgba(0, 212, 200, 0.22) !important;
+    border-color: rgba(0, 212, 200, 0.45) !important;
+    box-shadow: 0 0 0 2px rgba(0, 212, 200, 0.20), 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+}
+
+:is(body.kr_sp_theme_dark, [data-bs-theme="dark"], .kr_sp_theme_dark) .kr_sp_rail_btn.is-active :is(.kr_sp_rail_label, .kr_sp_rail_icon_wrap .fa, .fa),
+:is(body.kr_sp_theme_dark, [data-bs-theme="dark"], .kr_sp_theme_dark) .kr_sp_rail_group button.is-active .fa {
+    color: var(--kr-color-accent, #00d4c8) !important;
+    -webkit-text-fill-color: var(--kr-color-accent, #00d4c8) !important;
+}
+
+:is(body.kr_sp_theme_dark, [data-bs-theme="dark"], .kr_sp_theme_dark) .kr_sp_rail_group button.is-active:hover,
+:is(body.kr_sp_theme_dark, [data-bs-theme="dark"], .kr_sp_theme_dark) .kr_sp_rail_btn.is-active:hover {
+    background: rgba(0, 212, 200, 0.24) !important;
+}
+
+:is(body.kr_sp_theme_dark, [data-bs-theme="dark"], .kr_sp_theme_dark) .kr_sp_rail_btn.is-active:hover :is(.kr_sp_rail_label, .fa) {
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
 }
 
 /* ── Color theme: CSS variable wiring ─────────────────────── */
@@ -990,6 +1021,11 @@ body.kr_sp_global_mode.modal-open {
     --kr-color-tab-active-text: #000000;
 }
 
+:is(body.kr_sp_theme_dark, [data-bs-theme="dark"], .kr_sp_theme_dark) {
+    --kr-color-tab-active: var(--kr-color-accent-soft, rgba(0, 212, 200, 0.16));
+    --kr-color-tab-active-text: var(--kr-color-accent, #00d4c8);
+}
+
 /* Wire theme to Odoo brand variables */
 .o_web_client,
 body {
@@ -998,9 +1034,29 @@ body {
 }
 
 /* Wire to tabs active state */
-.kr_sp_tabs .is-active {
+body:not(.kr_sp_theme_dark) .kr_sp_tabs .is-active {
     background: var(--kr-color-tab-active) !important;
     color: var(--kr-color-tab-active-text) !important;
+}
+
+:is(body.kr_sp_theme_dark, [data-bs-theme="dark"], .kr_sp_theme_dark) .kr_sp_tabs .is-active,
+:is(body.kr_sp_theme_dark, [data-bs-theme="dark"], .kr_sp_theme_dark) .kr_sp_tabs .kr_sp_submenu_btn.is-active {
+    background: var(--kr-color-accent-soft, rgba(0, 212, 200, 0.16)) !important;
+    color: var(--kr-color-accent, #00d4c8) !important;
+    border: 1px solid rgba(0, 212, 200, 0.35) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25) !important;
+    font-weight: 600;
+}
+
+:is(body.kr_sp_theme_dark, [data-bs-theme="dark"], .kr_sp_theme_dark) .kr_sp_tabs .is-active:hover,
+:is(body.kr_sp_theme_dark, [data-bs-theme="dark"], .kr_sp_theme_dark) .kr_sp_tabs .kr_sp_submenu_btn.is-active:hover {
+    background: rgba(0, 212, 200, 0.24) !important;
+    color: #ffffff !important;
+}
+
+:is(body.kr_sp_theme_dark, [data-bs-theme="dark"], .kr_sp_theme_dark) .kr_sp_tabs .is-active .fa,
+:is(body.kr_sp_theme_dark, [data-bs-theme="dark"], .kr_sp_theme_dark) .kr_sp_tabs .kr_sp_submenu_btn.is-active .fa {
+    color: var(--kr-color-accent, #00d4c8) !important;
 }
 
 /* Wire active rail button to accent color */

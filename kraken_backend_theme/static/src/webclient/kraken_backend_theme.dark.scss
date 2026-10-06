@@ -120,8 +120,8 @@ body.kr_sp_theme_dark :is(.kr_sp_rail_label, .kr_sp_rail_btn, .kr_sp_rail_btn sp
 }
 
 body.kr_sp_theme_dark .kr_sp_rail_btn.is-active :is(.kr_sp_rail_label, .kr_sp_rail_icon_wrap .fa, .fa) {
-    color: #000000 !important;
-    -webkit-text-fill-color: #000000 !important;
+    color: var(--kr-color-accent, #00d4c8) !important;
+    -webkit-text-fill-color: var(--kr-color-accent, #00d4c8) !important;
 }
 
 /* ── Stat Buttons text and values -------------------------------- */
@@ -910,7 +910,7 @@ body.kr_sp_theme_dark .o_web_client :is(.text-muted, .text-body-tertiary, .text-
     color: var(--kr-dark-muted) !important;
 }
 
-body.kr_sp_theme_dark .o_web_client :is(.bg-white, .bg-light, .bg-body, .bg-view, .bg-100, .text-bg-light, .text-bg-100) {
+body.kr_sp_theme_dark .o_web_client :is(.bg-white, .bg-light, .bg-body, .bg-view, .bg_view, .bg-100, .bg-200, .text-bg-light, .text-bg-100) {
     background-color: var(--kr-dark-surface) !important;
     color: var(--kr-dark-text) !important;
 }
@@ -950,6 +950,15 @@ body.kr_sp_theme_dark .o_web_client .o_main_navbar .o_menu_sections .o_nav_entry
 body.kr_sp_theme_dark .o_web_client .o_main_navbar .o_menu_systray .dropdown-toggle:hover {
     background: #202b3a;
     color: var(--kr-dark-text);
+}
+
+body.kr_sp_theme_dark .o_web_client .o_main_navbar .o_menu_sections .dropdown-toggle.active,
+body.kr_sp_theme_dark .o_web_client .o_main_navbar .o_menu_sections .o_nav_entry.active {
+    background: var(--kr-color-accent-soft, rgba(0, 212, 200, 0.16)) !important;
+    color: var(--kr-color-accent, #00d4c8) !important;
+    border: 1px solid rgba(0, 212, 200, 0.35) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25) !important;
+    font-weight: 600;
 }
 
 :is(body.kr_sp_theme_dark, body.kr_sp_theme_dark.o_web_client, .kr_sp_theme_dark) .o_control_panel {
@@ -1110,30 +1119,61 @@ body.kr_sp_theme_dark .o_web_client .o_main_navbar .o_menu_systray .dropdown-tog
 .o_web_client .o_searchview:hover,
 .o_web_client .o_searchview:focus-within {
     border-color: #475569;
-    background: #18212f;
-    box-shadow: none;
+    background: #18212f !important;
+    box-shadow: none !important;
 }
 
 .o_web_client .o_searchview .o_searchview_icon,
-.o_web_client .o_searchview .o_searchview_input::placeholder,
-.o_web_client .o_searchview .o_facet_values,
-.o_web_client .o_searchview .o_facet_remove {
+.o_web_client .o_searchview .o_searchview_input::placeholder {
     color: var(--kr-dark-muted);
 }
 
-.o_web_client .o_searchview .o_searchview_input,
-.o_web_client .o_searchview .o_facet_value {
-    color: var(--kr-dark-text);
+.o_web_client .o_searchview .o_searchview_input {
+    background: transparent !important;
+    color: var(--kr-dark-text) !important;
 }
 
-.o_web_client .o_searchview .o_searchview_facet {
-    background: #202b3a;
-    color: var(--kr-dark-text);
+.o_web_client .o_searchview .o_facet_values,
+.o_web_client .o_searchview .o_facet_value {
+    background: transparent !important;
+    color: var(--kr-dark-text) !important;
+}
+
+.o_web_client .o_searchview .o_facet_remove {
+    color: var(--kr-dark-muted) !important;
+    background: transparent !important;
+}
+
+.o_web_client .o_searchview .o_facet_remove:hover {
+    color: #ef4444 !important;
+}
+
+.o_web_client .o_searchview .o_searchview_facet,
+.o_web_client .o_searchview_facet {
+    background: #202b3a !important;
+    background-color: #202b3a !important;
+    color: var(--kr-dark-text) !important;
+}
+
+.o_web_client .o_searchview_facet :is(.bg_view, .bg-view, > .position-absolute) {
+    background: transparent !important;
+    background-color: transparent !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+}
+
+.o_web_client .o_searchview_facet.focus :is(.bg_view, .bg-view, > .position-absolute),
+.o_web_client .o_searchview_facet:focus :is(.bg_view, .bg-view, > .position-absolute),
+.o_web_client .o_searchview_facet:focus-within :is(.bg_view, .bg-view, > .position-absolute),
+.o_web_client .o_searchview_facet:hover :is(.bg_view, .bg-view, > .position-absolute) {
+    background: rgba(0, 212, 200, 0.08) !important;
+    border-color: rgba(0, 212, 200, 0.35) !important;
+    box-shadow: none !important;
 }
 
 .o_web_client .o_searchview .o_searchview_facet .o_searchview_facet_label {
-    background: var(--kr-dark-accent);
-    color: #111827;
+    background: var(--kr-dark-accent, #00d4c8) !important;
+    color: #111827 !important;
 }
 
 .o_web_client .o_searchview + .o_searchview_dropdown_toggler,

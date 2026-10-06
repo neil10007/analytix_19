@@ -126,6 +126,7 @@ function buildColorOverrideCSS(palette) {
     const soft = palette.accentSoft;
     const tabBg = palette.tabActive;
     const tabTxt = palette.tabActiveText;
+    const accent = palette.accent || "#00d4c8";
 
     // Generate a semi-transparent shadow color from the primary
     const shadowAlpha = `color-mix(in srgb, ${p} 25%, transparent)`;
@@ -141,6 +142,8 @@ function buildColorOverrideCSS(palette) {
     --o-brand-secondary: ${ph} !important;
     --kr-color-primary: ${p} !important;
     --kr-color-primary-hover: ${ph} !important;
+    --kr-color-accent: ${accent} !important;
+    --kr-color-accent-soft: ${soft} !important;
     --kr-color-tab-active: ${tabBg} !important;
     --kr-color-tab-active-text: ${tabTxt} !important;
     --link-color: ${p} !important;
@@ -148,6 +151,11 @@ function buildColorOverrideCSS(palette) {
     --bs-primary-rgb: ${p} !important;
     --bs-link-color: ${p} !important;
     --bs-link-hover-color: ${ph} !important;
+}
+
+:is(body.kr_sp_theme_dark, [data-bs-theme="dark"], .kr_sp_theme_dark) {
+    --kr-color-tab-active: ${soft} !important;
+    --kr-color-tab-active-text: ${accent} !important;
 }
 
 /* -- Primary buttons --------------------------------------- */
@@ -207,27 +215,87 @@ a:not(.btn):not(.nav-link):not(.dropdown-item):not(.kr_sp_rail_btn):hover {
     border-bottom-color: ${ph} !important;
 }
 
-/* -- Odoo horizontal menu active tab (kraken topbar) ------- */
-.kr_sp_tabs .is-active,
-.kr_sp_tabs .is-active:hover,
-.o_main_navbar .o_menu_sections .o_nav_entry.active,
-.o_main_navbar .o_menu_sections .dropdown-toggle.active {
+/* -- Odoo horizontal menu active tab (kraken topbar) - Light Mode ------- */
+body:not(.kr_sp_theme_dark) .kr_sp_tabs .is-active,
+body:not(.kr_sp_theme_dark) .kr_sp_tabs .is-active:hover,
+body:not(.kr_sp_theme_dark) .kr_sp_tabs .kr_sp_submenu_btn.is-active,
+body:not(.kr_sp_theme_dark) .kr_sp_tabs .kr_sp_submenu_btn.is-active:hover,
+body:not(.kr_sp_theme_dark) .o_main_navbar .o_menu_sections .o_nav_entry.active,
+body:not(.kr_sp_theme_dark) .o_main_navbar .o_menu_sections .dropdown-toggle.active {
     background: ${tabBg} !important;
     color: ${tabTxt} !important;
     box-shadow: 0 4px 14px rgba(0, 212, 200, 0.35) !important;
+}
+body:not(.kr_sp_theme_dark) .kr_sp_tabs .is-active .fa,
+body:not(.kr_sp_theme_dark) .kr_sp_tabs .kr_sp_submenu_btn.is-active .fa {
+    color: ${tabTxt} !important;
 }
 
-/* -- Active rail buttons ----------------------------------- */
-.kr_sp_rail_group_top .kr_sp_rail_btn.is-active:not(.kr_sp_color_swatch),
-.kr_sp_rail_group button.is-active:not(.kr_sp_color_swatch) {
+/* -- Odoo horizontal menu active tab - Dark Mode (Reduced Density for readability) ------- */
+:is(body.kr_sp_theme_dark, [data-bs-theme="dark"], .kr_sp_theme_dark) .kr_sp_tabs .is-active,
+:is(body.kr_sp_theme_dark, [data-bs-theme="dark"], .kr_sp_theme_dark) .kr_sp_tabs .is-active:hover,
+:is(body.kr_sp_theme_dark, [data-bs-theme="dark"], .kr_sp_theme_dark) .kr_sp_tabs .kr_sp_submenu_btn.is-active,
+:is(body.kr_sp_theme_dark, [data-bs-theme="dark"], .kr_sp_theme_dark) .kr_sp_tabs .kr_sp_submenu_btn.is-active:hover,
+:is(body.kr_sp_theme_dark, [data-bs-theme="dark"], .kr_sp_theme_dark) .o_main_navbar .o_menu_sections .o_nav_entry.active,
+:is(body.kr_sp_theme_dark, [data-bs-theme="dark"], .kr_sp_theme_dark) .o_main_navbar .o_menu_sections .dropdown-toggle.active {
+    background: ${soft} !important;
+    color: ${accent} !important;
+    border: 1px solid color-mix(in srgb, ${accent} 38%, transparent) !important;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3) !important;
+    font-weight: 600 !important;
+}
+:is(body.kr_sp_theme_dark, [data-bs-theme="dark"], .kr_sp_theme_dark) .kr_sp_tabs .is-active:hover,
+:is(body.kr_sp_theme_dark, [data-bs-theme="dark"], .kr_sp_theme_dark) .kr_sp_tabs .kr_sp_submenu_btn.is-active:hover {
+    background: color-mix(in srgb, ${accent} 26%, transparent) !important;
+    color: #ffffff !important;
+}
+:is(body.kr_sp_theme_dark, [data-bs-theme="dark"], .kr_sp_theme_dark) .kr_sp_tabs .is-active .fa,
+:is(body.kr_sp_theme_dark, [data-bs-theme="dark"], .kr_sp_theme_dark) .kr_sp_tabs .kr_sp_submenu_btn.is-active .fa {
+    color: ${accent} !important;
+}
+
+/* -- Active rail buttons - Light Mode ---------------------- */
+body:not(.kr_sp_theme_dark) .kr_sp_rail_group_top .kr_sp_rail_btn.is-active:not(.kr_sp_color_swatch),
+body:not(.kr_sp_theme_dark) .kr_sp_rail_group button.is-active:not(.kr_sp_color_swatch),
+body:not(.kr_sp_theme_dark) .kr_sp_rail_btn.is-active:not(.kr_sp_color_swatch) {
     background: ${tabBg} !important;
     color: ${tabTxt} !important;
     box-shadow: 0 4px 14px rgba(0, 212, 200, 0.35) !important;
 }
-.kr_sp_tabs .is-active .fa,
-.kr_sp_rail_group_top .kr_sp_rail_btn.is-active .fa,
-.kr_sp_rail_group button.is-active .fa {
+body:not(.kr_sp_theme_dark) .kr_sp_rail_group_top .kr_sp_rail_btn.is-active .fa,
+body:not(.kr_sp_theme_dark) .kr_sp_rail_group button.is-active .fa,
+body:not(.kr_sp_theme_dark) .kr_sp_rail_btn.is-active .fa {
     color: ${tabTxt} !important;
+}
+
+/* -- Active rail buttons - Dark Mode (Reduced Density) ----- */
+:is(body.kr_sp_theme_dark, [data-bs-theme="dark"], .kr_sp_theme_dark) .kr_sp_rail_group_top .kr_sp_rail_btn.is-active:not(.kr_sp_color_swatch),
+:is(body.kr_sp_theme_dark, [data-bs-theme="dark"], .kr_sp_theme_dark) .kr_sp_rail_group button.is-active:not(.kr_sp_color_swatch),
+:is(body.kr_sp_theme_dark, [data-bs-theme="dark"], .kr_sp_theme_dark) .kr_sp_rail_btn.is-active:not(.kr_sp_color_swatch) {
+    background: ${soft} !important;
+    color: ${accent} !important;
+    border: 1px solid color-mix(in srgb, ${accent} 38%, transparent) !important;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3) !important;
+}
+:is(body.kr_sp_theme_dark, [data-bs-theme="dark"], .kr_sp_theme_dark) .kr_sp_rail_group_top .kr_sp_rail_btn.is-active .fa,
+:is(body.kr_sp_theme_dark, [data-bs-theme="dark"], .kr_sp_theme_dark) .kr_sp_rail_group button.is-active .fa,
+:is(body.kr_sp_theme_dark, [data-bs-theme="dark"], .kr_sp_theme_dark) .kr_sp_rail_btn.is-active .fa,
+:is(body.kr_sp_theme_dark, [data-bs-theme="dark"], .kr_sp_theme_dark) .kr_sp_rail_btn.is-active .kr_sp_rail_label {
+    color: ${accent} !important;
+    -webkit-text-fill-color: ${accent} !important;
+}
+:is(body.kr_sp_theme_dark, [data-bs-theme="dark"], .kr_sp_theme_dark) .kr_sp_rail_btn.is-active .kr_sp_rail_icon_wrap {
+    background: color-mix(in srgb, ${accent} 22%, transparent) !important;
+    border-color: color-mix(in srgb, ${accent} 45%, transparent) !important;
+    box-shadow: 0 0 0 2px color-mix(in srgb, ${accent} 20%, transparent), 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+}
+:is(body.kr_sp_theme_dark, [data-bs-theme="dark"], .kr_sp_theme_dark) .kr_sp_rail_btn.is-active:hover {
+    background: color-mix(in srgb, ${accent} 26%, transparent) !important;
+}
+:is(body.kr_sp_theme_dark, [data-bs-theme="dark"], .kr_sp_theme_dark) .kr_sp_rail_btn.is-active:hover .fa,
+:is(body.kr_sp_theme_dark, [data-bs-theme="dark"], .kr_sp_theme_dark) .kr_sp_rail_btn.is-active:hover .kr_sp_rail_label {
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
 }
 
 /* -- Badges ------------------------------------------------ */
@@ -368,7 +436,7 @@ select:focus {
 }
 
 /* -- Kraken Dashboard specific ---------------------------- */
-.kr_sp_tabs .is-active {
+body:not(.kr_sp_theme_dark) .kr_sp_tabs .is-active {
     background: ${tabBg} !important;
     color: ${tabTxt} !important;
 }
@@ -2286,9 +2354,12 @@ async function loadRootMenus() {
                 actionID: menu.actionID,
                 webIcon: menu.webIcon,
                 webIconData: menu.webIconData,
+                xmlid: menu.xmlid,
+                actionModel: menu.actionModel,
+                actionPath: menu.actionPath,
             }));
         if (apps.length) {
-            cachedRootMenus = apps;
+            cachedRootMenus = sortMenusByPriority(apps);
             return cachedRootMenus;
         }
     }
@@ -2307,7 +2378,7 @@ async function loadRootMenus() {
     const root = payload?.root || {};
     const rootChildren = Array.isArray(root.children) ? root.children : [];
     let seenDashboardMenu = false;
-    cachedRootMenus = rootChildren
+    const loadedMenus = rootChildren
         .map((menuId) => payload?.[menuId])
         .filter((menu) => menu && menu.id && menu.name)
         .map((menu) => ({
@@ -2316,6 +2387,9 @@ async function loadRootMenus() {
             actionID: menu.actionID,
             webIcon: menu.webIcon,
             webIconData: menu.webIconData,
+            xmlid: menu.xmlid,
+            actionModel: menu.actionModel,
+            actionPath: menu.actionPath,
         }))
         .filter((menu) => {
             const label = normalizeMenuLabel(menu.name).toLowerCase();
@@ -2327,6 +2401,7 @@ async function loadRootMenus() {
             }
             return true;
         });
+    cachedRootMenus = sortMenusByPriority(loadedMenus);
     return cachedRootMenus;
 }
 
@@ -2342,6 +2417,144 @@ function menuInitial(name) {
 function isDashboardMenuLabel(name) {
     const canonical = normalizeMenuLabel(name).toLowerCase().replace(/[^a-z0-9]/g, "");
     return canonical === "dashboard" || canonical === "dashboards";
+}
+
+function getAppPriorityRank(menu) {
+    if (!menu) {
+        return 999;
+    }
+    const rawName = menu.name || "";
+    const cleanName = normalizeMenuLabel(rawName).toLowerCase().trim();
+    const alphaName = cleanName.replace(/[^a-z0-9]/g, "");
+    const xmlid = String(menu.xmlid || "").toLowerCase();
+    const webIcon = String(menu.webIcon || "").toLowerCase();
+
+    // 1. Accounting / Invoicing (User Priority #1 - AT THE TOP)
+    if (
+        xmlid.startsWith("account.") ||
+        xmlid.startsWith("account_accountant.") ||
+        xmlid.startsWith("om_account_accountant.") ||
+        xmlid.startsWith("base_accounting_kit.") ||
+        webIcon.startsWith("account,") ||
+        webIcon.startsWith("account_accountant,") ||
+        webIcon.startsWith("om_account_accountant,") ||
+        webIcon.startsWith("base_accounting_kit,") ||
+        alphaName === "accounting" ||
+        alphaName === "invoicing" ||
+        alphaName === "invoices" ||
+        alphaName === "accounts" ||
+        alphaName === "facturation" ||
+        alphaName === "comptabilite" ||
+        alphaName === "finance" ||
+        alphaName === "finances"
+    ) {
+        return 1;
+    }
+
+    // Check Point of Sale explicitly before Sales to prevent POS from matching Sales
+    const isPos =
+        xmlid.startsWith("point_of_sale.") ||
+        xmlid.startsWith("pos_") ||
+        webIcon.startsWith("point_of_sale,") ||
+        webIcon.includes("pos_") ||
+        alphaName === "pointofsale" ||
+        alphaName === "pointofsales" ||
+        alphaName === "pointdevente" ||
+        alphaName === "pos";
+
+    // 2. Sales (User Priority #2)
+    if (
+        !isPos &&
+        (xmlid.startsWith("sale.") ||
+            xmlid.startsWith("sale_management.") ||
+            webIcon.startsWith("sale,") ||
+            webIcon.startsWith("sale_management,") ||
+            alphaName === "sales" ||
+            alphaName === "sale" ||
+            alphaName === "ventes")
+    ) {
+        return 2;
+    }
+
+    // 3. Point of Sale (User Priority #3)
+    if (isPos) {
+        return 3;
+    }
+
+    // 4. Purchase (User Priority #4)
+    if (
+        xmlid.startsWith("purchase.") ||
+        webIcon.startsWith("purchase,") ||
+        alphaName === "purchase" ||
+        alphaName === "purchases" ||
+        alphaName === "achats"
+    ) {
+        return 4;
+    }
+
+    // 5. Inventory (User Priority #5)
+    if (
+        xmlid.startsWith("stock.") ||
+        webIcon.startsWith("stock,") ||
+        alphaName === "inventory" ||
+        alphaName === "stock" ||
+        alphaName === "inventaire"
+    ) {
+        return 5;
+    }
+
+    // 6. Dashboard (placed below priority modules)
+    if (isDashboardMenuLabel(menu.name)) {
+        return 6;
+    }
+
+    // 7. Discuss (placed below priority modules)
+    if (
+        xmlid.startsWith("mail.menu_root_discuss") ||
+        xmlid === "mail.menu_root_discuss" ||
+        webIcon.startsWith("mail,") ||
+        webIcon.includes("/mail/") ||
+        alphaName === "discuss" ||
+        alphaName === "conversations" ||
+        alphaName === "messages" ||
+        alphaName === "messagerie"
+    ) {
+        return 7;
+    }
+
+    // Any other installed apps (CRM, Project, HR, Settings, etc.) maintain their relative order
+    return 100;
+}
+
+function sortMenusByPriority(menus) {
+    if (!Array.isArray(menus) || menus.length <= 1) {
+        return menus || [];
+    }
+    let seenDashboard = false;
+    const deduplicated = menus.filter((m) => {
+        if (isDashboardMenuLabel(m?.name)) {
+            if (seenDashboard) {
+                return false;
+            }
+            seenDashboard = true;
+        }
+        return true;
+    });
+
+    const decorated = deduplicated.map((menu, index) => ({
+        menu,
+        index,
+        rank: getAppPriorityRank(menu),
+    }));
+
+    decorated.sort((a, b) => {
+        if (a.rank !== b.rank) {
+            return a.rank - b.rank;
+        }
+        return a.index - b.index;
+    });
+
+    return decorated.map((item) => item.menu);
 }
 
 function isReservedRailMenuLabel(name) {
@@ -2656,10 +2869,9 @@ function closeWorkspaceModal() {
 }
 
 function getSidebarMenus(menus) {
-    // Show ALL installed apps in the scrollable sidebar — no limit, no favorites-only filter
-    const dashboardMenu = menus.find((menu) => isDashboardMenuLabel(menu.name)) || null;
-    const otherMenus = menus.filter((menu) => !isDashboardMenuLabel(menu.name));
-    return dashboardMenu ? [dashboardMenu, ...otherMenus] : otherMenus;
+    // Show ALL installed apps in the scrollable sidebar ordered by priority:
+    // Dashboard -> Discuss -> Accounting -> Sales -> Point of Sale -> Purchase -> Inventory -> others
+    return sortMenusByPriority(menus);
 }
 
 async function buildSidebarApps({ force = false } = {}) {

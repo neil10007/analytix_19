@@ -50,38 +50,64 @@ class AccountMove(models.Model):
 
         company_ids = self.env.companies.ids
 
-        domain_revenue = [('move_type', '=', 'out_invoice'), ('state', '=', 'posted'), ('company_id', 'in', company_ids)]
-        domain_expense = [('move_type', '=', 'in_invoice'), ('state', '=', 'posted'), ('company_id', 'in', company_ids)]
-        
-        # Current Period
-        domain_rev_curr = domain_revenue + [('invoice_date', '>=', start_date), ('invoice_date', '<=', end_date)]
-        domain_exp_curr = domain_expense + [('invoice_date', '>=', start_date), ('invoice_date', '<=', end_date)]
-        
-        # Previous Period
-        domain_rev_prev = domain_revenue + [('invoice_date', '>=', prev_start_date), ('invoice_date', '<=', prev_end_date)]
-        domain_exp_prev = domain_expense + [('invoice_date', '>=', prev_start_date), ('invoice_date', '<=', prev_end_date)]
-
         company_currency = self.env.company.currency_id
-        
-        def get_total(domain):
-            moves = self.search(domain)
+
+        def get_revenue_for_period(s_date, e_date):
+            if not company_ids:
+                return 0.0
+            self.env.cr.execute("""
+                SELECT l.company_id, l.date, sum(l.balance)
+                FROM account_move_line l
+                JOIN account_move m ON l.move_id = m.id
+                JOIN account_account a ON l.account_id = a.id
+                WHERE m.state = 'posted'
+                  AND l.date >= %s AND l.date <= %s
+                  AND a.account_type IN ('income', 'income_other')
+                  AND l.company_id IN %s
+                GROUP BY l.company_id, l.date
+            """, (s_date, e_date, tuple(company_ids)))
             total = 0.0
-            for move in moves:
-                amount = move.amount_untaxed_signed
-                if move.company_id.currency_id != company_currency:
-                    amount = move.company_id.currency_id._convert(
-                        amount,
-                        company_currency,
-                        move.company_id,
-                        move.invoice_date or today
+            for row in self.env.cr.fetchall():
+                comp_id, l_date, bal = row[0], row[1], row[2]
+                amount = -bal
+                comp = self.env['res.company'].browse(comp_id)
+                if comp.currency_id != company_currency:
+                    amount = comp.currency_id._convert(
+                        amount, company_currency, comp, l_date or today
                     )
                 total += amount
-            return total
+            return round(max(0.0, total), 2)
 
-        rev_curr = abs(get_total(domain_rev_curr))
-        exp_curr = abs(get_total(domain_exp_curr))
-        rev_prev = abs(get_total(domain_rev_prev))
-        exp_prev = abs(get_total(domain_exp_prev))
+        def get_expense_for_period(s_date, e_date):
+            if not company_ids:
+                return 0.0
+            self.env.cr.execute("""
+                SELECT l.company_id, l.date, sum(l.balance)
+                FROM account_move_line l
+                JOIN account_move m ON l.move_id = m.id
+                JOIN account_account a ON l.account_id = a.id
+                WHERE m.state = 'posted'
+                  AND l.date >= %s AND l.date <= %s
+                  AND a.account_type IN ('expense', 'expense_depreciation', 'expense_direct_cost')
+                  AND l.company_id IN %s
+                GROUP BY l.company_id, l.date
+            """, (s_date, e_date, tuple(company_ids)))
+            total = 0.0
+            for row in self.env.cr.fetchall():
+                comp_id, l_date, bal = row[0], row[1], row[2]
+                amount = bal
+                comp = self.env['res.company'].browse(comp_id)
+                if comp.currency_id != company_currency:
+                    amount = comp.currency_id._convert(
+                        amount, company_currency, comp, l_date or today
+                    )
+                total += amount
+            return round(max(0.0, total), 2)
+
+        rev_curr = get_revenue_for_period(start_date, end_date)
+        exp_curr = get_expense_for_period(start_date, end_date)
+        rev_prev = get_revenue_for_period(prev_start_date, prev_end_date)
+        exp_prev = get_expense_for_period(prev_start_date, prev_end_date)
 
         def calc_perc(curr, prev):
             if prev == 0:
@@ -91,18 +117,46 @@ class AccountMove(models.Model):
         rev_perc = calc_perc(rev_curr, rev_prev)
         exp_perc = calc_perc(exp_curr, exp_prev)
         
-        net_curr = rev_curr - exp_curr
-        net_prev = rev_prev - exp_prev
+        net_curr = round(rev_curr - exp_curr, 2)
+        net_prev = round(rev_prev - exp_prev, 2)
         net_perc = calc_perc(net_curr, net_prev)
         
         margin_curr = round((net_curr / rev_curr) * 100, 1) if rev_curr > 0 else 0
 
-        # Invoices this period
-        domain_inv_period = domain_revenue + [('invoice_date', '>=', start_date), ('invoice_date', '<=', end_date)]
+        # Invoices & POS Sales this period (supports both B2B customer invoices and B2C POS orders)
+        domain_inv_period = [
+            ('move_type', '=', 'out_invoice'),
+            ('state', '=', 'posted'),
+            ('company_id', 'in', company_ids),
+            '|',
+            '&', ('invoice_date', '!=', False), '&', ('invoice_date', '>=', start_date), ('invoice_date', '<=', end_date),
+            '&', ('invoice_date', '=', False), '&', ('date', '>=', start_date), ('date', '<=', end_date),
+        ]
         invoices_period = self.search(domain_inv_period)
-        sales_today = len(invoices_period)
-        paid_today = len(invoices_period.filtered(lambda m: m.payment_state in ('paid', 'in_payment', 'reversed')))
-        pending_today = sales_today - paid_today
+        inv_sales_count = len(invoices_period)
+        inv_paid_count = len(invoices_period.filtered(lambda m: m.payment_state in ('paid', 'in_payment', 'reversed')))
+
+        pos_sales_count = 0
+        pos_paid_count = 0
+        if 'pos.order' in self.env:
+            try:
+                start_dt = datetime.combine(start_date, datetime.min.time())
+                end_dt = datetime.combine(end_date, datetime.max.time())
+                pos_orders = self.env['pos.order'].search([
+                    ('company_id', 'in', company_ids),
+                    ('date_order', '>=', start_dt),
+                    ('date_order', '<=', end_dt),
+                    ('state', 'in', ['paid', 'done', 'invoiced']),
+                ])
+                unlinked_pos = pos_orders.filtered(lambda o: not o.account_move or o.account_move.id not in invoices_period.ids)
+                pos_sales_count = len(unlinked_pos)
+                pos_paid_count = len(unlinked_pos.filtered(lambda o: o.state in ['paid', 'done', 'invoiced']))
+            except Exception:
+                pass
+
+        sales_today = inv_sales_count + pos_sales_count
+        paid_today = inv_paid_count + pos_paid_count
+        pending_today = max(0, sales_today - paid_today)
 
         # Unpaid Receivables
         receivables_domain = [('move_type', '=', 'out_invoice'), ('state', '=', 'posted'), ('payment_state', 'in', ('not_paid', 'partial')), ('company_id', 'in', company_ids)]
@@ -134,10 +188,8 @@ class AccountMove(models.Model):
                 w_start = today - relativedelta(weeks=i, days=today.weekday())
                 w_end = w_start + relativedelta(days=6)
                 chart_labels.append(w_start.strftime("%d %b"))
-                r_domain = domain_revenue + [('invoice_date', '>=', w_start), ('invoice_date', '<=', w_end)]
-                e_domain = domain_expense + [('invoice_date', '>=', w_start), ('invoice_date', '<=', w_end)]
-                chart_rev.append(abs(get_total(r_domain)))
-                chart_exp.append(abs(get_total(e_domain)))
+                chart_rev.append(get_revenue_for_period(w_start, w_end))
+                chart_exp.append(get_expense_for_period(w_start, w_end))
 
         elif filter_name == 'last_3_months':
             chart_title = "Last 3 months"
@@ -145,10 +197,8 @@ class AccountMove(models.Model):
                 m_date = today.replace(day=1) - relativedelta(months=i)
                 e_date = m_date + relativedelta(months=1, days=-1)
                 chart_labels.append(m_date.strftime("%b"))
-                r_domain = domain_revenue + [('invoice_date', '>=', m_date), ('invoice_date', '<=', e_date)]
-                e_domain = domain_expense + [('invoice_date', '>=', m_date), ('invoice_date', '<=', e_date)]
-                chart_rev.append(abs(get_total(r_domain)))
-                chart_exp.append(abs(get_total(e_domain)))
+                chart_rev.append(get_revenue_for_period(m_date, e_date))
+                chart_exp.append(get_expense_for_period(m_date, e_date))
 
         elif filter_name == 'this_year':
             chart_title = "This year"
@@ -156,10 +206,8 @@ class AccountMove(models.Model):
                 m_date = today.replace(day=1) - relativedelta(months=i)
                 e_date = m_date + relativedelta(months=1, days=-1)
                 chart_labels.append(m_date.strftime("%b"))
-                r_domain = domain_revenue + [('invoice_date', '>=', m_date), ('invoice_date', '<=', e_date)]
-                e_domain = domain_expense + [('invoice_date', '>=', m_date), ('invoice_date', '<=', e_date)]
-                chart_rev.append(abs(get_total(r_domain)))
-                chart_exp.append(abs(get_total(e_domain)))
+                chart_rev.append(get_revenue_for_period(m_date, e_date))
+                chart_exp.append(get_expense_for_period(m_date, e_date))
 
         elif filter_name == 'custom':
             # Show month-by-month breakdown for the custom range
@@ -168,10 +216,8 @@ class AccountMove(models.Model):
             while cur <= end_date:
                 m_end = min(cur + relativedelta(months=1, days=-1), end_date)
                 chart_labels.append(cur.strftime("%b %Y"))
-                r_domain = domain_revenue + [('invoice_date', '>=', cur), ('invoice_date', '<=', m_end)]
-                e_domain = domain_expense + [('invoice_date', '>=', cur), ('invoice_date', '<=', m_end)]
-                chart_rev.append(abs(get_total(r_domain)))
-                chart_exp.append(abs(get_total(e_domain)))
+                chart_rev.append(get_revenue_for_period(cur, m_end))
+                chart_exp.append(get_expense_for_period(cur, m_end))
                 cur = cur + relativedelta(months=1)
 
         else:
@@ -180,48 +226,56 @@ class AccountMove(models.Model):
                 m_date = today.replace(day=1) - relativedelta(months=i)
                 e_date = m_date + relativedelta(months=1, days=-1)
                 chart_labels.append(m_date.strftime("%b"))
-                r_domain = domain_revenue + [('invoice_date', '>=', m_date), ('invoice_date', '<=', e_date)]
-                e_domain = domain_expense + [('invoice_date', '>=', m_date), ('invoice_date', '<=', e_date)]
-                chart_rev.append(abs(get_total(r_domain)))
-                chart_exp.append(abs(get_total(e_domain)))
+                chart_rev.append(get_revenue_for_period(m_date, e_date))
+                chart_exp.append(get_expense_for_period(m_date, e_date))
 
-        # Top Customers
+        # Top Customers (supports B2B customer invoices and B2C Point of Sale retail clients)
         top_customers_data = []
         if company_ids:
-            self.env.cr.execute("""
-                SELECT p.name, m.company_id, sum(m.amount_untaxed_signed) as total
-                FROM account_move m
-                JOIN res_partner p ON m.partner_id = p.id
-                WHERE m.move_type = 'out_invoice' AND m.state = 'posted' AND m.company_id IN %s
-                GROUP BY p.name, m.company_id
-            """, (tuple(company_ids),))
-            
             partner_totals = {}
-            for row in self.env.cr.fetchall():
-                p_name = row[0]
-                m_comp_id = row[1]
-                total = row[2]
-                
-                comp = self.env['res.company'].browse(m_comp_id)
-                if comp.currency_id != company_currency:
-                    total = comp.currency_id._convert(
-                        total,
-                        company_currency,
-                        comp,
-                        today
-                    )
-                
-                if p_name not in partner_totals:
-                    partner_totals[p_name] = 0.0
-                partner_totals[p_name] += total
+            # 1. B2B Invoices
+            try:
+                self.env.cr.execute("""
+                    SELECT p.name, m.company_id, sum(m.amount_untaxed_signed) as total
+                    FROM account_move m
+                    JOIN res_partner p ON m.partner_id = p.id
+                    WHERE m.move_type = 'out_invoice' AND m.state = 'posted' AND m.company_id IN %s
+                    GROUP BY p.name, m.company_id
+                """, (tuple(company_ids),))
+                for row in self.env.cr.fetchall():
+                    p_name, m_comp_id, total = row[0], row[1], row[2]
+                    comp = self.env['res.company'].browse(m_comp_id)
+                    if comp.currency_id != company_currency:
+                        total = comp.currency_id._convert(total, company_currency, comp, today)
+                    partner_totals[p_name] = partner_totals.get(p_name, 0.0) + abs(total)
+            except Exception:
+                pass
+
+            # 2. B2C POS Orders
+            if 'pos.order' in self.env:
+                try:
+                    self.env.cr.execute("""
+                        SELECT coalesce(p.name, 'Walk-in Retail') as customer_name, o.company_id, sum(o.amount_total) as total
+                        FROM pos_order o
+                        LEFT JOIN res_partner p ON o.partner_id = p.id
+                        WHERE o.state IN ('paid', 'done', 'invoiced') AND o.company_id IN %s
+                        GROUP BY customer_name, o.company_id
+                    """, (tuple(company_ids),))
+                    for row in self.env.cr.fetchall():
+                        p_name, m_comp_id, total = row[0], row[1], row[2]
+                        comp = self.env['res.company'].browse(m_comp_id)
+                        if comp.currency_id != company_currency:
+                            total = comp.currency_id._convert(total, company_currency, comp, today)
+                        partner_totals[p_name] = partner_totals.get(p_name, 0.0) + abs(total)
+                except Exception:
+                    pass
 
             sorted_partners = sorted(partner_totals.items(), key=lambda item: abs(item[1]), reverse=True)[:5]
-            
             for i, (p_name, total) in enumerate(sorted_partners):
                 top_customers_data.append({
                     'rank': i + 1,
                     'name': p_name,
-                    'revenue': abs(total)
+                    'revenue': round(abs(total), 2)
                 })
 
         # Top Vendors
@@ -450,12 +504,12 @@ class AccountMove(models.Model):
             'revenue': {
                 'value': rev_curr,
                 'percentage': rev_perc,
-                'today': abs(get_total(domain_revenue + [('invoice_date', '=', today)]))
+                'today': get_revenue_for_period(today, today)
             },
             'expenses': {
                 'value': exp_curr,
                 'percentage': exp_perc,
-                'today': abs(get_total(domain_expense + [('invoice_date', '=', today)]))
+                'today': get_expense_for_period(today, today)
             },
             'net_profit': {
                 'value': net_curr,
@@ -772,24 +826,32 @@ class AccountMove(models.Model):
         if is_period_filed and existing_filing:
             include_prior = bool(existing_filing.prior_move_ids)
 
-        def fetch_lines(move_types):
+        def fetch_lines(move_types, type_tax_use=None):
             if existing_filing:
-                curr_lines = self.env['account.move.line'].search([
+                curr_domain = [
                     ('move_id', 'in', existing_filing.move_ids.ids),
-                    ('move_id.move_type', 'in', move_types),
                     ('tax_line_id', '!=', False),
-                ], order='move_id desc')
-                prior_lines = self.env['account.move.line'].search([
+                ]
+                if type_tax_use:
+                    curr_domain.append(('tax_line_id.type_tax_use', '=', type_tax_use))
+                else:
+                    curr_domain.append(('move_id.move_type', 'in', move_types))
+                curr_lines = self.env['account.move.line'].search(curr_domain, order='move_id desc')
+
+                prior_domain = [
                     ('move_id', 'in', existing_filing.prior_move_ids.ids),
-                    ('move_id.move_type', 'in', move_types),
                     ('tax_line_id', '!=', False),
-                ], order='move_id desc')
+                ]
+                if type_tax_use:
+                    prior_domain.append(('tax_line_id.type_tax_use', '=', type_tax_use))
+                else:
+                    prior_domain.append(('move_id.move_type', 'in', move_types))
+                prior_lines = self.env['account.move.line'].search(prior_domain, order='move_id desc')
                 return curr_lines, prior_lines
 
             # 1. Regular current period posted lines (with invoice_date or date fallback)
-            curr_lines = self.env['account.move.line'].search([
+            curr_domain = [
                 ('move_id.state', '=', 'posted'),
-                ('move_id.move_type', 'in', move_types),
                 '|',
                 '&', ('move_id.invoice_date', '!=', False),
                      '&', ('move_id.invoice_date', '>=', start_date),
@@ -799,12 +861,16 @@ class AccountMove(models.Model):
                           ('move_id.date', '<=', end_date),
                 ('move_id.company_id', 'in', company_ids),
                 ('tax_line_id', '!=', False),
-            ], order='move_id desc')
+            ]
+            if type_tax_use:
+                curr_domain.append(('tax_line_id.type_tax_use', '=', type_tax_use))
+            else:
+                curr_domain.append(('move_id.move_type', 'in', move_types))
+            curr_lines = self.env['account.move.line'].search(curr_domain, order='move_id desc')
 
             # 2. Prior unfiled posted lines (e.g. February invoice entered late)
             prior_domain = [
                 ('move_id.state', '=', 'posted'),
-                ('move_id.move_type', 'in', move_types),
                 '|',
                 '&', ('move_id.invoice_date', '!=', False), ('move_id.invoice_date', '<', start_date),
                 '&', ('move_id.invoice_date', '=', False), ('move_id.date', '<', start_date),
@@ -812,6 +878,10 @@ class AccountMove(models.Model):
                 ('tax_line_id', '!=', False),
                 '|', ('move_id.tax_filing_status', '=', 'unfiled'), ('move_id.tax_filing_status', '=', False)
             ]
+            if type_tax_use:
+                prior_domain.append(('tax_line_id.type_tax_use', '=', type_tax_use))
+            else:
+                prior_domain.append(('move_id.move_type', 'in', move_types))
             prior_lines = self.env['account.move.line'].search(prior_domain, order='move_id desc')
             return curr_lines, prior_lines
 
@@ -848,7 +918,7 @@ class AccountMove(models.Model):
                     except Exception:
                         pass
 
-                is_refund = move.move_type in ['out_refund', 'in_refund']
+                is_refund = move.move_type in ['out_refund', 'in_refund'] or (move.move_type == 'entry' and (line.balance > 0 if type_use == 'sale' else line.balance < 0))
                 if is_refund:
                     curr_vat_total -= amt
                 else:
@@ -1031,7 +1101,7 @@ class AccountMove(models.Model):
                     except Exception:
                         pass
 
-                is_refund = move.move_type in ['out_refund', 'in_refund']
+                is_refund = move.move_type in ['out_refund', 'in_refund'] or (move.move_type == 'entry' and (line.balance > 0 if type_use == 'sale' else line.balance < 0))
                 if is_refund:
                     prior_vat_total -= amt
                     prior_base_total -= base_amt
@@ -1102,8 +1172,8 @@ class AccountMove(models.Model):
 
             return rows, curr_vat_total, prior_vat_total, prior_base_total
 
-        out_curr_lines, out_prior_lines = fetch_lines(['out_invoice', 'out_refund'])
-        in_curr_lines, in_prior_lines   = fetch_lines(['in_invoice',  'in_refund'])
+        out_curr_lines, out_prior_lines = fetch_lines(['out_invoice', 'out_refund', 'entry'], type_tax_use='sale')
+        in_curr_lines, in_prior_lines   = fetch_lines(['in_invoice',  'in_refund',  'entry'], type_tax_use='purchase')
 
         out_records, curr_sales_vat, prior_sales_adj, prior_sales_base = build_records(out_curr_lines, out_prior_lines, 'sale')
         in_records,  curr_purch_vat, prior_purch_adj, prior_purch_base = build_records(in_curr_lines,  in_prior_lines,  'purchase')

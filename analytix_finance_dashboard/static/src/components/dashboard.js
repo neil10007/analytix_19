@@ -1666,7 +1666,7 @@ export class AnalytixFinanceDashboard extends Component {
             revenue:     { name: 'Revenue — Customer Invoices',       xmlId: 'account.action_move_out_invoice_type', domain: [...base, ['move_type', '=', 'out_invoice'], ...dateRange] },
             invoices:    { name: 'Invoices This Period',              xmlId: 'account.action_move_out_invoice_type', domain: [...base, ['move_type', '=', 'out_invoice'], ...dateRange] },
             expenses:    { name: 'Expenses — Vendor Bills',           xmlId: 'account.action_move_in_invoice_type',  domain: [...base, ['move_type', '=', 'in_invoice'],  ...dateRange] },
-            net_profit:  { name: 'All Posted Entries This Period',    xmlId: 'account.action_move_journal_line',     domain: [...base, ['move_type', 'in', ['out_invoice','in_invoice']], ...dateRange] },
+            net_profit:  { name: 'All Posted Entries This Period',    xmlId: 'account.action_move_journal_line',     domain: [...base, ['date', '>=', start], ['date', '<=', end]] },
             receivables: { name: 'Unpaid Receivables',                xmlId: 'account.action_move_out_invoice_type', domain: [...base, ['move_type', '=', 'out_invoice'], ['payment_state', 'in', ['not_paid','partial']]] },
         };
 
