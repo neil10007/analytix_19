@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- New Section Category: Invoice Reset (renders as a distinct section header in User Access Rights) -->
+    <record id="module_category_invoice_reset" model="ir.module.category">
+        <field name="name">Invoice Reset</field>
+        <field name="sequence">25</field>
+    </record>
+
+    <!-- Privilege under Invoice Reset section -->
+    <record id="res_groups_privilege_invoice_reset" model="res.groups.privilege">
+        <field name="name">Reset to Draft</field>
+        <field name="category_id" ref="invoice_reset_360.module_category_invoice_reset"/>
+        <field name="sequence">10</field>
+    </record>
+
+    <!-- Security Group linked to Privilege -->
+    <record id="group_allow_invoice_reset_draft" model="res.groups">
+        <field name="name">Allowed</field>
+        <field name="privilege_id" ref="invoice_reset_360.res_groups_privilege_invoice_reset"/>
+        <field name="comment">Allows this user to reset posted invoices with generated QR codes back to draft.</field>
+    </record>
+</odoo>

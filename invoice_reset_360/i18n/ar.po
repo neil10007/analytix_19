@@ -1,0 +1,103 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* invoice_reset_360
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 19.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-23 12:10+0000\n"
+"PO-Revision-Date: 2026-10-23 12:10+0000\n"
+"Last-Translator: \n"
+"Language-Team: Arabic\n"
+"Language: ar\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 && n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5;\n"
+
+#. module: invoice_reset_360
+#: model:ir.module.category,name:invoice_reset_360.module_category_invoice_reset
+msgid "Invoice Reset"
+msgstr "إعادة تعيين الفواتير"
+
+#. module: invoice_reset_360
+#: model:res.groups.privilege,name:invoice_reset_360.res_groups_privilege_invoice_reset
+msgid "Reset to Draft"
+msgstr "الإعادة إلى مسودة"
+
+#. module: invoice_reset_360
+#: model:res.groups,name:invoice_reset_360.group_allow_invoice_reset_draft
+msgid "Allowed"
+msgstr "مسموح"
+
+#. module: invoice_reset_360
+#: model:ir.model,name:invoice_reset_360.model_account_move
+msgid "Journal Entry"
+msgstr "قيد اليومية"
+
+#. module: invoice_reset_360
+#: model:ir.model,name:invoice_reset_360.model_res_users
+msgid "User"
+msgstr "المستخدم"
+
+#. module: invoice_reset_360
+#: model:ir.model.fields,field_description:invoice_reset_360.field_res_users__allow_invoice_reset_draft
+msgid "Allow Reset to Draft (QR Invoices)"
+msgstr "السماح بالإعادة إلى مسودة (فواتير رمز الاستجابة السريعة)"
+
+#. module: invoice_reset_360
+#: model:ir.model.fields,field_description:invoice_reset_360.field_res_users__reset_draft_valid_from
+msgid "Reset Permission Valid From"
+msgstr "إذن الإعادة سارٍ من"
+
+#. module: invoice_reset_360
+#: model:ir.model.fields,field_description:invoice_reset_360.field_res_users__reset_draft_valid_until
+msgid "Reset Permission Valid Until"
+msgstr "إذن الإعادة سارٍ حتى"
+
+#. module: invoice_reset_360
+#: model_terms:ir.ui.view,arch_db:invoice_reset_360.view_users_form_inherit_invoice_reset
+msgid "Invoice Reset Validity Period"
+msgstr "فترة صلاحية إذن إعادة التعيين"
+
+#. module: invoice_reset_360
+#. odoo-python
+#: code:addons/invoice_reset_360/models/account_move.py:0
+#, python-format
+msgid "this document"
+msgstr "هذا المستند"
+
+#. module: invoice_reset_360
+#. odoo-python
+#: code:addons/invoice_reset_360/models/account_move.py:0
+#, python-format
+msgid ""
+"You cannot reset invoice '%(invoice_name)s' to draft because it has already been posted and an official QR code has been generated.\n\n"
+"According to e-invoicing and tax compliance regulations, modifying or resetting a finalized invoice to draft is not permitted once the QR code is issued.\n\n"
+"If you need to make corrections or cancel this invoice, please issue a Credit Note or Debit Note instead."
+msgstr ""
+"لا يمكنك إعادة الفاتورة '%(invoice_name)s' إلى حالة المسودة لأنها مسجلة ومرحلة بالفعل وتم إنشاء رمز الاستجابة السريعة (QR Code) الرسمي لها.\n\n"
+"وفقاً للوائح الفوترة الإلكترونية والامتثال الضريبي، لا يُسمح بتعديل الفاتورة المعتمدة أو إعادتها إلى مسودة بعد إصدار رمز الاستجابة السريعة.\n\n"
+"إذا كنت بحاجة إلى إجراء تصحيحات أو إلغاء هذه الفاتورة، يرجى إصدار إشعار دائن أو إشعار مدين بدلاً من ذلك."
+
+#. module: invoice_reset_360
+#. odoo-python
+#: code:addons/invoice_reset_360/models/account_move.py:0
+#, python-format
+msgid "\n\n(Note: Your permission to reset invoices to draft expired on %(until)s.)"
+msgstr "\n\n(ملاحظة: انتهت صلاحية إذن إعادة تعيين الفواتير إلى مسودة بتاريخ %(until)s.)"
+
+#. module: invoice_reset_360
+#. odoo-python
+#: code:addons/invoice_reset_360/models/account_move.py:0
+#, python-format
+msgid "\n\n(Note: Your permission to reset invoices to draft will only be active starting %(from_date)s.)"
+msgstr "\n\n(ملاحظة: سيكون إذن إعادة تعيين الفواتير إلى مسودة مفعلاً بدءاً من %(from_date)s.)"
+
+#. module: invoice_reset_360
+#. odoo-python
+#: code:addons/invoice_reset_360/models/account_move.py:0
+#, python-format
+msgid "\n\n(Note: Only users with 'Allow Reset to Draft' permission can reset this invoice.)"
+msgstr "\n\n(ملاحظة: فقط المستخدمون الذين لديهم إذن 'السماح بالإعادة إلى مسودة' يمكنهم إعادة تعيين هذه الفاتورة.)"

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_users_form_inherit_invoice_reset" model="ir.ui.view">
+        <field name="name">res.users.form.inherit.invoice.reset.360</field>
+        <field name="model">res.users</field>
+        <field name="inherit_id" ref="base.view_users_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='access_rights']" position="inside">
+                <group string="Invoice Reset Validity Period" groups="account.group_account_manager,base.group_system">
+                    <div class="text-muted mb-2">
+                        Configure optional time-window restrictions for resetting posted QR invoices to draft. If left empty, the user's reset permission is permanent.
+                    </div>
+                    <group>
+                        <field name="reset_draft_valid_from"/>
+                        <field name="reset_draft_valid_until"/>
+                    </group>
+                </group>
+            </xpath>
+        </field>
+    </record>
+</odoo>
