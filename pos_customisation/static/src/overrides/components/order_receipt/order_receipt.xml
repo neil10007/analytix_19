@@ -1,65 +1,206 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates id="template" xml:space="preserve">
-    <!-- Receipt Header: Hide QR Code under Logo if configured -->
-    <t t-inherit="point_of_sale.ReceiptHeader" t-inherit-mode="extension">
-        <xpath expr="//img[@id='qrcode']" position="attributes">
-            <attribute name="t-if">asQrCode and !order.config_id?.hide_receipt_header_qr and !order.config?.hide_receipt_header_qr</attribute>
-        </xpath>
-        <xpath expr="//img[@id='qrcode']/following-sibling::br[1]" position="attributes">
-            <attribute name="t-if">asQrCode and !order.config_id?.hide_receipt_header_qr and !order.config?.hide_receipt_header_qr</attribute>
-        </xpath>
-    </t>
 
-    <!-- Order Receipt: Add Table Header & Remove "Powered by Odoo" -->
-    <t t-inherit="point_of_sale.OrderReceipt" t-inherit-mode="extension">
-        <xpath expr="//OrderDisplay" position="before">
-            <div class="pos-receipt-table-header d-flex align-items-center text-start fw-bolder border-top border-bottom py-1 my-1" style="font-size: 78%; border-top: 1px dashed black !important; border-bottom: 1px dashed black !important;">
-                <div class="col-item text-start pe-1" t-att-style="props.basic_receipt ? 'width: 70%;' : 'width: 44%;'">
-                    <t t-if="order.config_id?.l10n_gcc_dual_language_receipt">Item / الصنف</t>
-                    <t t-else="">Item Name</t>
-                </div>
-                <div t-if="!props.basic_receipt" class="col-unit text-end pe-1 font-monospace" style="width: 20%;">
-                    <t t-if="order.config_id?.l10n_gcc_dual_language_receipt">Price / السعر</t>
-                    <t t-else="">Unit Price</t>
-                </div>
-                <div class="col-qty text-center font-monospace" t-att-style="props.basic_receipt ? 'width: 30%;' : 'width: 14%;'">
-                    <t t-if="order.config_id?.l10n_gcc_dual_language_receipt">Qty / الكمية</t>
-                    <t t-else="">Qty</t>
-                </div>
-                <div t-if="!props.basic_receipt" class="col-amount text-end font-monospace ps-1" style="width: 22%;">
-                    <t t-if="order.config_id?.l10n_gcc_dual_language_receipt">Total / المبلغ</t>
-                    <t t-else="">Amount</t>
-                </div>
-            </div>
-        </xpath>
-        <!-- Remove "Powered by Odoo" from POS receipt footer -->
-        <xpath expr="//div[hasclass('pos-receipt-order-data') and hasclass('text-center')]" position="replace"/>
-    </t>
+    <t t-name="pos_customisation.OrderReceipt" t-inherit="point_of_sale.OrderReceipt" t-inherit-mode="extension">
+        <xpath expr="//div[hasclass('pos-receipt')]" position="inside">
+            <div class="custom-saudi-receipt" t-if="order">
 
-    <!-- Orderline: Re-format item rows into 4 table columns for receipt mode -->
-    <t t-inherit="point_of_sale.Orderline" t-inherit-mode="extension">
-        <xpath expr="//div[hasclass('line-details')]" position="attributes">
-            <attribute name="t-if">!vals.isReceipt</attribute>
-        </xpath>
-        <xpath expr="//div[hasclass('line-details')]" position="after">
-            <div t-if="vals.isReceipt" class="line-details-receipt d-flex align-items-center w-100 py-1" style="font-size: 80%;">
-                <div class="col-item text-start text-break pe-1" t-att-style="props.basic_receipt ? 'width: 70%;' : 'width: 44%;'">
-                    <span class="fw-bold" t-esc="vals.name"/>
-                    <small t-if="vals.attributeString" t-out="vals.attributeString" class="d-block fst-italic text-muted"/>
+                <!-- 1. HEADER WITH COMPANY LOGO -->
+                <div class="r-header text-center">
+                    <img t-if="order.companyLogoUrl"
+                         t-att-src="order.companyLogoUrl"
+                         alt="Logo"
+                         class="r-logo mx-auto d-block mb-1"/>
+
+                    <div class="r-company-en" t-out="order.company?.name || ''"/>
+
+                    <div t-if="order.config?.receipt_header"
+                         class="r-company-ar"
+                         style="white-space:pre-line"
+                         dir="rtl"
+                         t-out="order.config.receipt_header"/>
+
+                    <div class="r-address">
+                        <div t-if="order.company?.street" t-out="order.company.street"/>
+                        <div t-if="order.company?.city or order.company?.country_id">
+                            <t t-if="order.company?.city" t-out="order.company.city"/>
+                            <t t-if="order.company?.country_id">, <t t-out="order.company.country_id.code || ''"/></t>
+                        </div>
+                        <div t-if="order.company?.vat">Vat: <t t-out="order.company.vat"/></div>
+                    </div>
+
+                    <div class="r-title-ar" dir="rtl">فاتورة ضريبية مبسطة</div>
+                    <div class="r-title-en">Simplified Tax Invoice</div>
                 </div>
-                <div t-if="!props.basic_receipt" class="col-unit text-end font-monospace pe-1" style="width: 20%;">
-                    <span t-out="line.currencyDisplayPriceUnit"/>
+
+                <!-- 2. INVOICE DETAILS TABLE -->
+                <table class="r-details-table">
+                    <tr class="r-details-row">
+                        <td class="r-details-en">Invoice Number:</td>
+                        <td class="r-details-val" t-esc="order.orderNumber"/>
+                        <td class="r-details-ar" dir="rtl">رقم الفاتورة</td>
+                    </tr>
+                    <tr class="r-details-row">
+                        <td class="r-details-en">Invoice Issue Date</td>
+                        <td class="r-details-val" t-esc="order.orderIssueDate"/>
+                        <td class="r-details-ar" dir="rtl">تاريخ اصدار الفاتورة</td>
+                    </tr>
+                    <tr class="r-details-row">
+                        <td class="r-details-en">Date of Supply:</td>
+                        <td class="r-details-val" t-esc="order.dateOfSupply"/>
+                        <td class="r-details-ar" dir="rtl">تاريخ التوريد</td>
+                    </tr>
+                </table>
+
+                <!-- 3. PRODUCT TABLE (WITH SERIAL NUMBER BEFORE ITEM NAME) -->
+                <table class="r-items-table">
+                    <thead>
+                        <tr class="r-items-head">
+                            <th class="r-col-sno">#</th>
+                            <th class="r-col-name">
+                                <div>Item Name</div>
+                                <div dir="rtl">تفاصيل السلع أو الخدمة</div>
+                            </th>
+                            <th class="r-col-price">
+                                <div>Unit price</div>
+                                <div dir="rtl">سعر الوحدة</div>
+                            </th>
+                            <th class="r-col-qty">
+                                <div>Quantity</div>
+                                <div dir="rtl">الكمية</div>
+                            </th>
+                            <th class="r-col-total">
+                                <div>Item Subtotal</div>
+                                <div>(Inc. VAT)</div>
+                                <div dir="rtl">المجموع شامل الضريبة</div>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <t t-foreach="order.lines || []" t-as="line" t-key="line.uuid || line_index">
+                            <tr class="r-item-row">
+                                <td class="r-col-sno"><t t-esc="line_index + 1"/></td>
+                                <td class="r-col-name">
+                                    <div class="r-item-name"
+                                         t-esc="line.productDisplayName || line.full_product_name || (line.product_id ? line.product_id.display_name : '')"/>
+                                    <!-- NEW: Arabic name -->
+                                    <div t-if="line.productArabicName"
+                                         class="r-item-name-ar"
+                                         dir="rtl"
+                                         t-esc="line.productArabicName"/>
+                                    <div t-if="line.serialNumber" class="r-sn">SN: <t t-esc="line.serialNumber"/></div>
+                                </td>
+                                <td class="r-col-price"><t t-esc="line.unitPriceExclFormatted"/></td>
+                                <td class="r-col-qty"><t t-esc="line.quantityFormatted"/></td>
+                                <td class="r-col-total"><t t-esc="line.subtotalInclFormatted"/></td>
+                            </tr>
+                        </t>
+                    </tbody>
+                </table>
+
+                <!-- 4. TOTALS TABLE (3 COLUMNS: ENGLISH, ARABIC, VALUE) -->
+                <table class="r-totals-table">
+                    <tr>
+                        <td class="r-total-en">Total Taxable Amount (Excluding VAT)</td>
+                        <td class="r-total-ar" dir="rtl">الإجمالي الخاضع للضريبة (غير شاملة ضريبة القيمة المضافة)</td>
+                        <td class="r-total-val"><span class="r-sar-symbol">&#65020;</span>&#160;<t
+                                t-esc="order.totalTaxableAmountExcl"/></td>
+                    </tr>
+                    <tr>
+                        <td class="r-total-en">Discount</td>
+                        <td class="r-total-ar" dir="rtl">مجموع الخصومات</td>
+                        <td class="r-total-val"><span class="r-sar-symbol">&#65020;</span>&#160;<t
+                                t-esc="order.totalDiscountAmount"/></td>
+                    </tr>
+
+                    <t t-if="order.taxDetails and order.taxDetails.length > 0">
+                        <t t-foreach="order.taxDetails" t-as="tax" t-key="tax.id">
+                            <tr>
+                                <td class="r-total-en"><t t-esc="tax.name.toLowerCase().includes('vat') ? tax.name : ('Total VAT ' + tax.name)"/></td>
+                                <td class="r-total-ar" dir="rtl">مجموع ضريبة القيمة المضافة 15%</td>
+                                <td class="r-total-val"><span class="r-sar-symbol">&#65020;</span>&#160;<t
+                                        t-esc="tax.amountFormatted"/></td>
+                            </tr>
+                        </t>
+                    </t>
+                    <t t-else="">
+                        <tr>
+                            <td class="r-total-en">Total VAT 15%</td>
+                            <td class="r-total-ar" dir="rtl">مجموع ضريبة القيمة المضافة 15%</td>
+                            <td class="r-total-val"><span class="r-sar-symbol">&#65020;</span>&#160;<t
+                                    t-esc="order.totalVatAmount"/></td>
+                        </tr>
+                    </t>
+
+                    <tr class="r-grand-total">
+                        <td class="r-total-en">Total Amount Due</td>
+                        <td class="r-total-ar" dir="rtl">إجمالي المبلغ المستحق</td>
+                        <td class="r-total-val"><span class="r-sar-symbol">&#65020;</span>&#160;<t
+                                t-esc="order.totalAmountDue"/></td>
+                    </tr>
+                </table>
+
+                <!-- 5. AMOUNT IN WORDS -->
+                <div class="r-amount-words">
+                    <t t-esc="order.amountInWordsSAR"/>
                 </div>
-                <div class="col-qty text-center font-monospace" t-att-style="props.basic_receipt ? 'width: 30%;' : 'width: 14%;'">
-                    <span t-esc="vals.unitPart"/><small t-if="vals.decimalPart" t-out="vals.decimalPart"/>
+
+                <!-- 6. ITEMS COUNT -->
+                <div class="r-items-count">
+                    Items : <t t-esc="order.totalItemsCount"/>
                 </div>
-                <div t-if="!props.basic_receipt" class="col-amount text-end font-monospace ps-1" style="width: 22%;">
-                    <span t-out="vals.price"/>
+
+                <!-- 7. PAYMENT SECTION -->
+                <div class="r-payment-section">
+                    <t t-if="paymentLines and paymentLines.length > 0">
+                        <t t-foreach="paymentLines" t-as="pline" t-key="pline.uuid || pline_index">
+                            <div class="r-payment-row">
+                                <span class="r-pay-method" t-esc="pline.payment_method_id?.name || 'Cash'"/>
+                                <span class="r-pay-amount" t-esc="pline.amountFormatted"/>
+                                <span class="r-pay-status">Status : Paid</span>
+                            </div>
+                        </t>
+                    </t>
+                    <t t-else="">
+                        <div class="r-payment-row">
+                            <span class="r-pay-method">Cash</span>
+                            <span class="r-pay-amount" t-esc="order.totalAmountDue"/>
+                            <span class="r-pay-status">Status : Paid</span>
+                        </div>
+                    </t>
+                    <div class="r-payment-row">
+                        <span class="r-pay-method">Balance</span>
+                        <span class="r-pay-amount" t-esc="order.balanceAmount"/>
+                        <span class="r-pay-status"></span>
+                    </div>
                 </div>
+
+                <!-- 8. QR CODE -->
+                <div class="r-qr text-center">
+                    <img t-if="order.saQrCode"
+                         id="zatca_bottom_qrcode"
+                         t-att-src="order.saQrCode"
+                         class="mx-auto d-block"/>
+                </div>
+
+                <!-- 9. FOOTER -->
+                <div class="r-footer">
+                    <div class="r-footer-row">
+                        <span class="r-cashier"><t t-esc="order.cashierDisplayName"/>
+                            -
+                            <t t-esc="order.orderNumber"/></span>
+                        <span class="r-print-date">Print Date : <t t-esc="order.orderPrintDate"/></span>
+                    </div>
+                    <div class="r-barcode">
+                        *<t t-esc="order.orderBarcodeRaw"/>*
+                    </div>
+                    <div class="r-thank-you">
+                        <div>Thank you</div>
+                        <div>Visit Again</div>
+                    </div>
+                </div>
+
             </div>
-        </xpath>
-        <xpath expr="//li[hasclass('price-per-unit')][@t-if='vals.displayPriceUnit']" position="attributes">
-            <attribute name="t-if">!vals.isReceipt and vals.displayPriceUnit</attribute>
         </xpath>
     </t>
 </templates>

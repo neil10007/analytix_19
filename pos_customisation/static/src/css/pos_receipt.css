@@ -1,23 +1,538 @@
-/* POS Customisation: Table format for receipt lines */
-.pos-receipt .pos-receipt-table-header {
-    border-top: 1px dashed #333 !important;
-    border-bottom: 1px dashed #333 !important;
-    padding-top: 4px;
-    padding-bottom: 4px;
+/* ================================================================
+   POS Customisation – Saudi Simplified Tax Invoice
+   Optimised for 80mm thermal receipt printers - Full Width Expanded
+   ================================================================ */
+
+/* 1. Hide default Odoo receipt content */
+.pos-receipt > *:not(.custom-saudi-receipt) {
+    display: none !important;
+}
+
+/* 2. OVERRIDE ODOO CORE & BOOTSTRAP TO USE FULL PAPER WIDTH (EXPAND TO SIDES) */
+.pos-receipt,
+.pos-receipt.p-2,
+div.pos-receipt {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 100% !important;
+    padding: 0 2px !important; /* Minimal 2px padding expands receipt across paper */
+    margin: 0 !important;
+    box-sizing: border-box !important;
+}
+
+/* Ensure off-screen printing buffer stays off-screen on the live POS UI */
+@media screen {
+    .render-container-parent {
+        left: -2000px !important;
+        position: fixed !important;
+    }
+}
+
+
+/* ----------------------------------------------------------------
+   WRAPPER - Full width expanded, crisp modern sans-serif
+   ---------------------------------------------------------------- */
+.pos-receipt > .custom-saudi-receipt {
+    display: block !important;
+    font-family: Arial, "Segoe UI", Tahoma, "Helvetica Neue", Helvetica, sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    color: #000;
+    line-height: 1.35;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+}
+
+.pos-receipt .custom-saudi-receipt * {
+    box-sizing: border-box;
+}
+
+/* ----------------------------------------------------------------
+   HEADER WITH COMPANY LOGO ABOVE COMPANY NAME
+   ---------------------------------------------------------------- */
+.pos-receipt .r-header {
+    text-align: center;
+    margin-bottom: 6px;
+    width: 100%;
+}
+
+.pos-receipt .r-logo {
+    max-width: 80px;
+    max-height: 80px;
+    width: auto;
+    height: auto;
+    margin: 0 auto 4px;
+    display: block;
+    object-fit: contain;
+}
+
+.pos-receipt .r-company-en {
+    font-size: 15px;
     font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-bottom: 2px;
+    display: block;
 }
 
-.pos-receipt .line-details-receipt {
-    border-bottom: 1px dotted #e0e0e0;
-    padding-top: 3px;
-    padding-bottom: 3px;
+.pos-receipt .r-company-ar {
+    font-size: 13.5px;
+    font-weight: 700;
+    margin-bottom: 2px;
+    display: block;
+    direction: rtl;
 }
 
-.pos-receipt .line-details-receipt:last-child {
+.pos-receipt .r-address {
+    font-size: 10.5px;
+    font-weight: 500;
+    line-height: 1.35;
+    margin-bottom: 4px;
+}
+
+.pos-receipt .r-title-ar {
+    font-size: 14px;
+    font-weight: 700;
+    direction: rtl;
+    margin-bottom: 1px;
+}
+
+.pos-receipt .r-title-en {
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 5px;
+}
+
+/* ----------------------------------------------------------------
+   INVOICE DETAILS TABLE (EXPANDED BOX WITH BORDERS)
+   ---------------------------------------------------------------- */
+.pos-receipt .r-details-table {
+    width: 100% !important;
+    border-collapse: collapse;
+    border: 1px solid #000;
+    font-size: 10px;
+    margin: 6px 0;
+    table-layout: fixed;
+    box-sizing: border-box;
+}
+
+.pos-receipt .r-details-row {
+    border-bottom: 1px solid #333;
+}
+
+.pos-receipt .r-details-row:last-child {
     border-bottom: none;
 }
 
-/* Hide Powered by Odoo */
-.pos-receipt .pos-receipt-order-data.text-center {
-    display: none !important;
+.pos-receipt .r-details-en {
+    width: 37%;
+    padding: 4px 2px 4px 4px;
+    text-align: left;
+    vertical-align: middle;
+    white-space: nowrap;
+    font-weight: 600;
+    font-size: 10px;
+}
+
+.pos-receipt .r-details-val {
+    width: 33%;
+    padding: 4px 1px;
+    text-align: center;
+    vertical-align: middle;
+    font-size: 10px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.pos-receipt .r-details-ar {
+    width: 30%;
+    padding: 4px 4px 4px 1px;
+    text-align: right;
+    vertical-align: middle;
+    direction: rtl;
+    font-size: 10px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+/* ----------------------------------------------------------------
+   PRODUCT ITEMS TABLE (EXPANDED 4 COLUMNS: NATURE, PRICE, QTY, TOTAL)
+   ---------------------------------------------------------------- */
+.pos-receipt .r-items-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+    margin-bottom: 0;
+    table-layout: fixed;
+    box-sizing: border-box;
+}
+
+/* Column widths with serial number (#) column before item name */
+.pos-receipt .r-col-sno   { width: 6%; }
+.pos-receipt .r-col-name  { width: 40%; }
+.pos-receipt .r-col-price { width: 17%; }
+.pos-receipt .r-col-qty   { width: 14%; }
+.pos-receipt .r-col-total { width: 23%; }
+
+.pos-receipt .r-items-head {
+    border-top:    1px solid #000;
+    border-bottom: 1px solid #000;
+    font-size: 10.5px;
+    font-weight: 700 !important;
+    line-height: 1.25;
+}
+
+.pos-receipt .r-items-head th {
+    padding: 4px 1px;
+    vertical-align: top;
+    font-weight: 700 !important;
+}
+
+.pos-receipt .r-items-head th.r-col-sno   { text-align: left;  padding-left: 2px; }
+.pos-receipt .r-items-head th.r-col-name  { text-align: left;  padding-left: 2px; }
+.pos-receipt .r-items-head th.r-col-price { text-align: right; }
+.pos-receipt .r-items-head th.r-col-qty   { text-align: right; }
+.pos-receipt .r-items-head th.r-col-total { text-align: right; padding-right: 2px; }
+
+.pos-receipt .r-item-row {
+    font-size: 11px;
+}
+
+.pos-receipt .r-item-row td {
+    padding: 3px 1px;
+    vertical-align: top;
+}
+
+.pos-receipt .r-item-row .r-col-sno {
+    text-align: left;
+    font-weight: 600;
+    padding-left: 2px;
+}
+
+.pos-receipt .r-item-row .r-col-name {
+    text-align: left;
+    line-height: 1.3;
+    word-break: break-word;
+    font-weight: 600;
+    padding-left: 2px;
+}
+
+.pos-receipt .r-item-name {
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.3;
+    word-break: break-word;
+}
+
+.pos-receipt .r-item-name-ar {
+    font-size: 10.5px;
+    font-weight: 600;
+    line-height: 1.3;
+    direction: rtl;
+    word-break: break-word;
+    margin-top: 1px;
+}
+
+
+.pos-receipt .r-item-row .r-col-price {
+    text-align: right;
+    white-space: nowrap;
+    font-weight: 500;
+}
+
+.pos-receipt .r-item-row .r-col-qty {
+    text-align: right;
+    white-space: nowrap;
+    font-weight: 500;
+}
+
+.pos-receipt .r-item-row .r-col-total {
+    text-align: right;
+    white-space: nowrap;
+    font-weight: 600;
+    padding-right: 2px;
+}
+
+.pos-receipt .r-sn {
+    font-size: 9.5px;
+    color: #444;
+    margin-top: 1px;
+    font-weight: normal;
+}
+
+/* ----------------------------------------------------------------
+   TOTALS TABLE (DIVIDER LINE ABOVE AND BELOW)
+   ---------------------------------------------------------------- */
+.pos-receipt .r-totals-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 10.5px;
+    margin: 0 0 4px 0;
+    table-layout: fixed;
+    border-top:    1px solid #000;
+    border-bottom: 1px solid #000;
+    box-sizing: border-box;
+}
+
+.pos-receipt .r-totals-table tr {
+    border: none;
+}
+
+.pos-receipt .r-total-en {
+    width: 38%;
+    padding: 3px 1px 3px 2px;
+    text-align: left;
+    vertical-align: middle;
+    line-height: 1.3;
+    font-weight: 600;
+    font-size: 10px;
+}
+
+.pos-receipt .r-total-ar {
+    width: 36%;
+    padding: 3px 2px;
+    text-align: right;
+    vertical-align: middle;
+    line-height: 1.3;
+    direction: rtl;
+    font-weight: 600;
+    font-size: 10px;
+}
+
+.pos-receipt .r-total-val {
+    width: 26%;
+    padding: 3px 2px 3px 1px;
+    text-align: right;
+    vertical-align: middle;
+    white-space: nowrap;
+    font-weight: 600;
+    font-size: 11px;
+}
+
+.pos-receipt .r-grand-total .r-total-en,
+.pos-receipt .r-grand-total .r-total-ar,
+.pos-receipt .r-grand-total .r-total-val {
+    font-size: 12px;
+    font-weight: 700;
+    padding: 4px 1px;
+}
+
+.pos-receipt .r-grand-total .r-total-val {
+    padding-right: 2px;
+}
+
+.pos-receipt .r-sar-symbol {
+    font-family: 'sr_symbol', Arial, sans-serif;
+    font-size: 11px;
+    margin-right: 1px;
+}
+
+/* ----------------------------------------------------------------
+   AMOUNT IN WORDS
+   ---------------------------------------------------------------- */
+.pos-receipt .r-amount-words {
+    font-size: 11px;
+    font-weight: 700;
+    text-align: left;
+    padding: 5px 2px 3px 2px;
+    line-height: 1.35;
+}
+
+/* ----------------------------------------------------------------
+   ITEMS COUNT
+   ---------------------------------------------------------------- */
+.pos-receipt .r-items-count {
+    font-size: 11px;
+    font-weight: 700;
+    text-align: left;
+    padding: 3px 2px 2px 2px;
+}
+
+/* ----------------------------------------------------------------
+   PAYMENT SECTION
+   ---------------------------------------------------------------- */
+.pos-receipt .r-payment-section {
+    font-size: 11px;
+    padding: 2px 0 6px 0;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.pos-receipt .r-payment-row {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    padding: 2px 0;
+    width: 100%;
+}
+
+.pos-receipt .r-pay-method {
+    width: 30%;
+    text-align: left;
+    font-weight: 600;
+    padding-left: 2px;
+}
+
+.pos-receipt .r-pay-amount {
+    width: 32%;
+    text-align: left;
+    font-weight: 600;
+}
+
+.pos-receipt .r-pay-status {
+    width: 38%;
+    text-align: right;
+    padding-right: 2px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+/* ----------------------------------------------------------------
+   QR CODE
+   ---------------------------------------------------------------- */
+.pos-receipt .r-qr {
+    text-align: center;
+    margin: 10px 0 6px 0;
+}
+
+.pos-receipt .r-qr img {
+    width: 140px !important;
+    height: 140px !important;
+    display: block;
+    margin: 0 auto;
+}
+
+/* ----------------------------------------------------------------
+   FOOTER
+   ---------------------------------------------------------------- */
+.pos-receipt .r-footer {
+    padding-top: 4px;
+    font-size: 10px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.pos-receipt .r-footer-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 2px 0;
+    width: 100%;
+    font-size: 10px;
+}
+
+.pos-receipt .r-cashier {
+    font-size: 10px;
+    font-weight: 600;
+    white-space: nowrap;
+    padding-left: 2px;
+}
+
+.pos-receipt .r-print-date {
+    font-size: 10px;
+    font-weight: 600;
+    white-space: nowrap;
+    text-align: right;
+    padding-right: 2px;
+}
+
+.pos-receipt .r-barcode {
+    text-align: center;
+    letter-spacing: 2px;
+    font-size: 13.5px;
+    font-weight: 700;
+    padding: 6px 0 4px;
+    font-family: "Courier New", Courier, monospace, sans-serif;
+}
+
+.pos-receipt .r-thank-you {
+    text-align: center;
+    font-size: 10.5px;
+    font-weight: 600;
+    line-height: 1.4;
+    padding-bottom: 6px;
+}
+
+/* ----------------------------------------------------------------
+   @MEDIA PRINT - FULL 80MM WIDTH EXPANDED
+   ---------------------------------------------------------------- */
+@media print {
+    @page {
+        margin: 0 !important;
+        padding: 0 !important;
+        size: 80mm auto;
+    }
+
+    body, html {
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+        min-width: 100% !important;
+    }
+
+    .render-container-parent,
+    .render-container {
+        position: static !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    .render-container .pos-receipt,
+    .pos-receipt,
+    .pos-receipt.p-2,
+    div.pos-receipt {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 2px !important;
+        box-sizing: border-box !important;
+    }
+
+    .pos-receipt > .custom-saudi-receipt {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        font-family: Arial, "Segoe UI", Tahoma, "Helvetica Neue", Helvetica, sans-serif !important;
+        color: #000 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    .pos-receipt .r-details-table,
+    .pos-receipt .r-items-table,
+    .pos-receipt .r-totals-table {
+        border-color: #000 !important;
+    }
+
+    .pos-receipt .r-items-head {
+        border-top:    1px solid #000 !important;
+        border-bottom: 1px solid #000 !important;
+    }
+
+    .pos-receipt .r-totals-table {
+        border-top:    1px solid #000 !important;
+        border-bottom: 1px solid #000 !important;
+    }
+
+    .pos-receipt .r-details-table {
+        border: 1px solid #000 !important;
+    }
+
+    .pos-receipt .r-details-row {
+        border-bottom: 1px solid #000 !important;
+    }
+
+    .pos-receipt .r-barcode {
+        font-size: 13.5px !important;
+    }
 }
