@@ -453,4 +453,50 @@ patch(PosPayment.prototype, {
         } catch (e) {}
         return "0.00";
     },
+
+    get isCustomerAccount() {
+        try {
+            let pm = this.payment_method_id;
+            if (typeof pm === "number" || typeof pm === "string") {
+                const pmModel =
+                    this.models?.["pos.payment.method"] ||
+                    this.pos?.models?.["pos.payment.method"] ||
+                    this.pos_order_id?.pos?.models?.["pos.payment.method"];
+                pm = pmModel?.get(pm) || pm;
+            }
+            if (pm && typeof pm === "object") {
+                if (pm.type === "pay_later") {
+                    return true;
+                }
+                const name = String(pm.name || "").trim().toLowerCase();
+                if (
+                    name.includes("customer account") ||
+                    name.includes("customer") ||
+                    name.includes("pay later") ||
+                    name.includes("pay_later") ||
+                    name.includes("حساب العميل") ||
+                    name.includes("على الحساب") ||
+                    name.includes("آجل") ||
+                    name === "account"
+                ) {
+                    return true;
+                }
+            }
+            const lineName = String(this.name || "").trim().toLowerCase();
+            if (
+                lineName.includes("customer account") ||
+                lineName.includes("customer") ||
+                lineName.includes("pay later") ||
+                lineName.includes("حساب العميل") ||
+                lineName.includes("آجل")
+            ) {
+                return true;
+            }
+        } catch (e) {}
+        return false;
+    },
+
+    get statusDisplayName() {
+        return this.isCustomerAccount ? "Status : Amount Due" : "Status : Paid";
+    },
 });

@@ -157,7 +157,7 @@
                             <div class="r-payment-row">
                                 <span class="r-pay-method" t-esc="pline.payment_method_id?.name || 'Cash'"/>
                                 <span class="r-pay-amount" t-esc="pline.amountFormatted"/>
-                                <span class="r-pay-status">Status : Paid</span>
+                                <span class="r-pay-status" t-esc="pline.statusDisplayName || (pline.isCustomerAccount ? 'Status : Amount Due' : ((pline.payment_method_id?.type === 'pay_later' || (pline.payment_method_id?.name and (pline.payment_method_id.name.toLowerCase().includes('customer') || pline.payment_method_id.name.includes('حساب')))) ? 'Status : Amount Due' : 'Status : Paid'))"/>
                             </div>
                         </t>
                     </t>
