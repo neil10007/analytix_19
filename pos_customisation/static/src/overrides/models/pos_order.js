@@ -164,8 +164,61 @@ patch(PosOrder.prototype, {
 
     get totalDiscountAmount() {
         try {
-            const disc = typeof this.getTotalDiscount === "function" ? this.getTotalDiscount() : 0;
-            return Number(disc || 0).toFixed(2);
+            let discountLinesTotal = 0;
+            let lineDiscountsTotal = 0;
+
+            if (this.lines) {
+                for (const line of this.lines) {
+                    const isDiscountLine =
+                        Boolean(line.isDiscountLine) ||
+                        Boolean(this.config?.discount_product_id && line.product_id?.id === this.config.discount_product_id?.id) ||
+                        Boolean(line.reward_identifier_code) ||
+                        Boolean(line.is_reward_line) ||
+                        (line.product_id?.name && /discount|خصم/i.test(line.product_id.name)) ||
+                        (line.full_product_name && /discount|خصم/i.test(line.full_product_name)) ||
+                        (Number(line.qty || 0) > 0 && (Number(line.price_unit || 0) < 0 || Number(line.priceIncl || 0) < 0 || Number(line.priceExcl || 0) < 0));
+
+                    if (isDiscountLine) {
+                        let lineVal = 0;
+                        if (typeof line.priceIncl === "number" && line.priceIncl !== 0) {
+                            lineVal = Math.abs(line.priceIncl);
+                        } else if (typeof line.price_unit === "number" && line.price_unit !== 0) {
+                            lineVal = Math.abs(line.price_unit * Number(line.qty || 1));
+                        } else if (typeof line.priceExcl === "number" && line.priceExcl !== 0) {
+                            lineVal = Math.abs(line.priceExcl * 1.15);
+                        }
+                        discountLinesTotal += lineVal;
+                    } else if (Number(line.discount || 0) > 0) {
+                        let lineDisc = 0;
+                        try {
+                            const data = this.prices?.baseLineByLineUuids?.[line.uuid];
+                            if (data?.tax_details?.discount_amount) {
+                                lineDisc = Math.abs(Number(data.tax_details.discount_amount));
+                            }
+                        } catch (e) {}
+                        if (!lineDisc) {
+                            const noDiscIncl = typeof line.priceInclNoDiscount === "number"
+                                ? line.priceInclNoDiscount
+                                : (typeof line.priceIncl === "number" && line.discount < 100
+                                    ? line.priceIncl / (1 - (line.discount / 100))
+                                    : 0);
+                            lineDisc = Math.abs(Number(noDiscIncl || 0) - Number(line.priceIncl || 0));
+                        }
+                        lineDiscountsTotal += lineDisc;
+                    }
+                }
+            }
+
+            // Also check native getTotalDiscount in case of other discount policies
+            let nativeDiscount = 0;
+            try {
+                if (typeof this.getTotalDiscount === "function") {
+                    nativeDiscount = Number(this.getTotalDiscount() || 0);
+                }
+            } catch (e) {}
+
+            const total = discountLinesTotal + Math.max(lineDiscountsTotal, nativeDiscount);
+            return Number(total || 0).toFixed(2);
         } catch (e) {}
         return "0.00";
     },
